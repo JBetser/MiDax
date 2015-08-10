@@ -1,0 +1,54 @@
+<html>
+<body>
+    <h1 style="color:darkred">IG Web API .NET Sample Trading Applications</h1>
+	
+	<div style="max-width:800px">
+	
+	<h2>Overview</h2>
+	The IG Web API .NET Sample Trading Applications package contains a portable class library (SDK) and two reference applications.
+	Full source is available for the portable class library as well as the two reference applications.
+	<ol>
+	<li>The portable class library (PublicPcl) contains a Rest API for static data and an asynchronous streaming API for dynamic data.</li>
+	
+	<li>The reference applications (Windows Forms and WPF) demonstrate how to:
+		<ul>
+			<li>log into your demo or live account via the Rest API</li>
+			<li>retrieve positions, watchlists and market orders via the Rest API</li>			
+			<li>search, and browse markets via the Rest API</li>
+			<li>stream live data via the Lightstreamer API.</li>
+		</ul>
+	</li>
+	</ol>
+	
+	<h2>Installation</h2>
+	<ol>
+	<li>Using Visual Studio 2012 or Visual Studio 2013, open the solution file IGPublicSDK.sln containing the three projects: IGPublicPcl, SampleWpfTrader and SampleWinFormTrader.</li>
+    <li>Add references to the LightStreamer (DotNetClient_N2) and Json.net (Newtonsoft.Json) libraries:
+		<ul>
+			<li>the LightStreamer asynchronous Streaming API(DotNetClient_N2) is contained in the 3rdPartyDlls directory</li>
+			<li>Json.net (Newtonsoft.Json) is installable using NuGet</li>			
+		</ul>
+	</li>
+	<li>Build the solution, then set either the SampleWinFormTrader or SampleWPFTrader as the start project.</li>
+	<li>Check which IG environment you want to access, and set this to the correct value. The environment is set in the 
+	PublicPcl project in the IGRestService.cs file in the IgRestService class: parameter BaseUrl.</li>
+
+	<li>Before you run your project, you will need to set the API key, your user identifier and password.
+		<ul>
+			<li>In the SampleWPFTrader application, you set these in the ApplicationViewModel.cs in the Login method.</li>
+			<li>In the SampleWinFormTrader application, you set these in the IGApiClientApplication.cs file, in the DemoDotNetClientForm constructor.</li>
+		</ul>
+	</li>
+	
+	</ol>
+		
+    <h2>Upgrading</h2>
+	<ol>	
+	<li>Should you choose to upgrade to a newer version of the IG Web API .NET Trading Applications package, we recommend importing the new 
+    portable class library (PublicPcl) to your existing project making changes as required for this new API.</li> 
+	</ol>
+		
+	</div>
+
+</body>
+</html>

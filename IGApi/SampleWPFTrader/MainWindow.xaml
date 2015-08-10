@@ -1,0 +1,265 @@
+﻿<Window x:Class="SampleWPFTrader.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"                   
+        xmlns:viewModel="clr-namespace:SampleWPFTrader.ViewModel"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:Converters="clr-namespace:SampleWPFTrader.Converters"
+        xmlns:command="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Extras"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+
+        Title="IG WPF Trader version 0.5" Height="800" Width="1280">
+    <Window.Resources>
+        <viewModel:ApplicationViewModel x:Key="avm" />
+        <viewModel:PositionsViewModel x:Key="pvm" />
+        <viewModel:WatchlistsViewModel x:Key="wvm"/>
+        <viewModel:OrdersViewModel x:Key="ovm" />
+        <viewModel:BrowseViewModel x:Key="bvm" />        
+    </Window.Resources>
+
+    <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" DataContext="{Binding Source={StaticResource avm}}">
+        <Grid.Resources>
+            <Converters:BoolToVisibility x:Key="boolToVis"/>
+        </Grid.Resources>
+
+        <Grid.Background>
+            <ImageBrush Stretch="Fill"  ImageSource="Resources\Background.jpg"></ImageBrush>
+        </Grid.Background>
+
+        <Grid Margin="0,0,0,0" >
+
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+
+            <TabControl Grid.Row="0" Margin="20,20,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" HorizontalContentAlignment="Stretch" Height="700" Width="1240" Grid.RowSpan="2">
+                <TabControl.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform AngleY="0.048"/>
+                        <RotateTransform/>
+                        <TranslateTransform Y="0.499"/>
+                    </TransformGroup>
+                </TabControl.RenderTransform>
+                
+                <TabItem Header="Home" DataContext="{Binding Source={StaticResource avm}}" IsSelected="{Binding Path=LoginTabSelected}" >
+                    <Grid x:Name="LoginPanel2">
+                       																		
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="150"></RowDefinition>
+                            <RowDefinition Height="150"></RowDefinition>
+							<RowDefinition Height="150"></RowDefinition>
+							<RowDefinition Height="150"></RowDefinition>							
+							<RowDefinition Height="40"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Grid.Row="0" Margin="20,0,20,0">
+                            <DataGrid VerticalAlignment="Top" ItemsSource="{Binding Path=Accounts}" AutoGenerateColumns="False" Margin="10">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="account name" Binding="{Binding Path=AccountName}"/>                                   
+                                    <DataGridTextColumn Header="account type" Binding="{Binding Path=AccountType}"/>
+                                    <DataGridTextColumn Header="amount due" Binding="{Binding Path=AmountDue}"/>
+                                    <DataGridTextColumn Header="available cash" Binding="{Binding Path=AvailableCash}"/>
+                                    <DataGridTextColumn Header="deposit" Binding="{Binding Path=Deposit}"/>
+                                    <DataGridTextColumn Header="ls endpoint" Binding="{Binding Path=LsEndpoint}"/>
+                                    <DataGridTextColumn Header="profitloss" Binding="{Binding Path=ProfitLoss}"/>
+                                    <DataGridTextColumn Header="used margin" Binding="{Binding Path=UsedMargin}"/>
+                                    <DataGridTextColumn Header="account id" Binding="{Binding Path=AccountId}"/>
+									<DataGridTextColumn Header="balance" Binding="{Binding Path=Balance}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                        </DockPanel>
+                                             
+                        <DockPanel Grid.Row="1" Margin="20,0,20,0" >
+                            <DataGrid VerticalAlignment="Top" ItemsSource="{Binding Path=TradeSubscriptions}" AutoGenerateColumns="False" Margin="10">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Trade Type" Binding="{Binding Path=TradeType}"/>
+                                    <DataGridTextColumn Header="epic" Binding="{Binding Path=Epic}"/>
+                                    <DataGridTextColumn Header="Item Name" Binding="{Binding Path=ItemName}"/>
+                                    <DataGridTextColumn Header="dealId" Binding="{Binding Path=DealId}"/>
+                                    <DataGridTextColumn Header="dealReference" Binding="{Binding Path=DealReference}"/>
+                                    <DataGridTextColumn Header="deal status" Binding="{Binding Path=DealStatus}"/>
+                                    <DataGridTextColumn Header="direction" Binding="{Binding Path=Direction}"/>
+                                    <DataGridTextColumn Header="expiry" Binding="{Binding Path=Expiry}"/>
+                                    <DataGridTextColumn Header="guaranteed stop" Binding="{Binding Path=GuaranteedStop}"/>
+                                    <DataGridTextColumn Header="level" Binding="{Binding Path=Level}"/>
+                                    <DataGridTextColumn Header="limit level" Binding="{Binding Path=Limitlevel}"/>
+                                    <DataGridTextColumn Header="size" Binding="{Binding Path=Size}"/>
+                                    <DataGridTextColumn Header="status" Binding="{Binding Path=Status}"/>
+									<DataGridTextColumn Header="stop level" Binding="{Binding Path=StopLevel}"/>
+								</DataGrid.Columns>
+                            </DataGrid>
+
+                        </DockPanel>
+
+						<DockPanel Grid.Row="2" Margin="20,0,20,0" >
+							<DataGrid VerticalAlignment="Top" ItemsSource="{Binding Path=AffectedDeals}" AutoGenerateColumns="False" Margin="10">
+								<DataGrid.Columns>									
+									<DataGridTextColumn Header="affected deal id" Binding="{Binding Path=AffectedDeal_Id}"/>
+									<DataGridTextColumn Header="affected deal status" Binding="{Binding Path=AffectedDeal_Status}"/>
+								</DataGrid.Columns>
+							</DataGrid>
+						</DockPanel>
+						
+						<TextBox x:Name="CustomerDebugDataTextBox" Background="WhiteSmoke" Foreground="Black" BorderBrush="YellowGreen" BorderThickness="2" Grid.Row="3" DataContext="{Binding Source={StaticResource avm}}" Margin="30,0,30,0" VerticalScrollBarVisibility="Visible"  Height="100" Text="{Binding ApplicationDebugData}" />
+
+                        <Button x:Name="btnExit" Content="Exit" HorizontalAlignment="Center" Height="23"  Grid.Row="4" VerticalAlignment="Center" Width="73" Command="{Binding ExitCommand}" />
+
+                    </Grid>
+                </TabItem>
+                <TabItem x:Name="PositionsTab" Header="Positions" DataContext="{Binding Source={StaticResource pvm}}" IsSelected="{Binding Path=PositionsTabSelected}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="300"/>
+                            <RowDefinition Height="300"/>                           
+                        </Grid.RowDefinitions>
+
+                        <DataGrid Grid.Row="0" VerticalAlignment="Top" ItemsSource="{Binding Path=Positions}" AutoGenerateColumns="False" DataContext="{Binding Source={StaticResource pvm}}" Margin="20">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="name" Binding="{Binding Path=Model.InstrumentName}"/>
+                                <DataGridTextColumn Header="epic" Binding="{Binding Path=Model.Epic}"/>
+                                <DataGridTextColumn Header="market status" Binding="{Binding Path=Model.MarketStatus}"/>
+                                <DataGridTextColumn Header="created date" Binding="{Binding Path=CreatedDate}"/>                              
+                                <DataGridTextColumn Header="streaming prices available" Binding="{Binding Path=Model.StreamingPricesAvailable}"/>
+                                <DataGridTextColumn Header="high" Binding="{Binding Path=Model.High}"/>
+                                <DataGridTextColumn Header="low" Binding="{Binding Path=Model.Low}"/>
+                                <DataGridTextColumn Header="size" Binding="{Binding Path=DealSize}"/>
+                                <DataGridTextColumn Header="direction" Binding="{Binding Path=Direction}"/>
+                                <DataGridTextColumn Header="open level" Binding="{Binding Path=OpenLevel}"/>
+                                <DataGridTextColumn Header="bid" Binding="{Binding Path=Model.Bid}"/>
+                                <DataGridTextColumn Header="offer" Binding="{Binding Path=Model.Offer}"/>
+                                <DataGridTextColumn Header="change" Binding="{Binding Path=Model.NetChange}"/>
+                                <DataGridTextColumn Header="pctChange" Binding="{Binding Path=Model.PctChange}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <TextBox Background="WhiteSmoke" Foreground="Black" BorderBrush="YellowGreen" BorderThickness="2" Grid.Row="2" DataContext="{Binding Source={StaticResource pvm}}" Margin="20" VerticalScrollBarVisibility="Visible"  Text="{Binding PositionDebugData}" VerticalAlignment="Top"/>
+
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Working Orders" x:Name="OrdersTab" DataContext="{Binding Source={StaticResource ovm}}" IsSelected="{Binding Path=OrdersTabSelected}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="300"/>
+                            <RowDefinition Height="300"/>                           
+                        </Grid.RowDefinitions>
+
+                        <DataGrid Margin="20" Grid.Row="0" VerticalAlignment="Top" ItemsSource="{Binding Path=Orders}" AutoGenerateColumns="False" DataContext="{Binding Source={StaticResource ovm}}" >
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="name" Binding="{Binding Path=Model.InstrumentName}"/>
+                                <DataGridTextColumn Header="epic" Binding="{Binding Path=Model.Epic}"/>
+                                <DataGridTextColumn Header="status" Binding="{Binding Model.MarketStatus}"/>
+                                <DataGridTextColumn Header="offer" Binding="{Binding Path=Model.Offer}"/>
+                                <DataGridTextColumn Header="bid" Binding="{Binding Path=Model.Bid}"/>
+                                <DataGridTextColumn Header="size" Binding="{Binding Path=OrderSize}"/>
+                                <DataGridTextColumn Header="direction" Binding="{Binding Path=Direction}"/>
+                                <DataGridTextColumn Header="creation date" Binding="{Binding Path=CreationDate}"/>
+                                <DataGridTextColumn Header="change" Binding="{Binding Path=Model.NetChange}"/>
+                                <DataGridTextColumn Header="% change" Binding="{Binding Path=Model.PctChange}"/>
+                                <DataGridTextColumn Header="streaming prices?" Binding="{Binding Path=Model.StreamingPricesAvailable}"/>
+                                <DataGridTextColumn Header="dealId" Binding="{Binding Path=DealId}"/>
+                                <DataGridTextColumn Header="Streaming Id." Binding="{Binding Model.LsItemName}"/>
+                                <DataGridTextColumn Header="Market Status" Binding="{Binding Model.MarketStatus}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <TextBox Background="WhiteSmoke" Foreground="Black" BorderBrush="YellowGreen" BorderThickness="2" Grid.Row="1" DataContext="{Binding Source={StaticResource ovm}}" Margin="20,0,20,0" VerticalScrollBarVisibility="Visible"  Text="{Binding OrderData}" VerticalAlignment="Top" Height="300" />
+
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Watchlists" x:Name="WatchlistsTab" DataContext="{Binding Source={StaticResource wvm}}" IsSelected="{Binding Path=WatchlistTabSelected}">
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="300"/>                         
+                            <RowDefinition Height="300"/>                          
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Grid.Row="0" Margin="20" DataContext="{Binding Source={StaticResource wvm}}" Grid.Column="0">
+                            <DataGrid x:Name="WatchlistsGrid" VerticalAlignment="Top" ItemsSource="{Binding Path=Watchlists}" SelectedIndex="{Binding Path=WatchlistIndex, Mode=OneWayToSource}" AutoGenerateColumns="False" >
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Watchlist Name" Binding="{Binding WatchlistName}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="ID" Binding="{Binding WatchlistId}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="editable" Binding="{Binding Editable}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="deletable" Binding="{Binding Deletable}"></DataGridTextColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+
+                        <DockPanel Grid.Row="0"  Grid.Column="1" Margin="20" DataContext="{Binding Source={StaticResource wvm}}">
+                            <DataGrid x:Name="WatchlistsInstruments" VerticalAlignment="Top" ItemsSource="{Binding Path=WatchlistMarkets}" SelectedIndex="{Binding Path=WatchlistMarketIndex, Mode=OneWayToSource}" AutoGenerateColumns="False" >
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Instrument Name" Binding="{Binding Model.InstrumentName}"></DataGridTextColumn>                                   
+                                    <DataGridTextColumn Header="UpdateTime" Binding="{Binding UpdateTime}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="High" Binding="{Binding Model.High}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="Low" Binding="{Binding Model.Low}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="Offer" Binding="{Binding Model.Offer}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="Bid" Binding="{Binding Model.Bid}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="Change" Binding="{Binding Model.NetChange}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="PctChange" Binding="{Binding Model.PctChange}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="Streaming Prices Available" Binding="{Binding Model.StreamingPricesAvailable}"></DataGridTextColumn>
+                                    <DataGridTextColumn Header="MarketStatus" Binding="{Binding Model.MarketStatus}"></DataGridTextColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    
+                        <TextBox Background="WhiteSmoke" Foreground="Black" VerticalAlignment="Top"  BorderBrush="YellowGreen" BorderThickness="2" Grid.Row="1" DataContext="{Binding Source={StaticResource wvm}}" Margin="20,0,20,0" Height="200" VerticalScrollBarVisibility="Visible"  Text="{Binding WatchlistsData}" Grid.ColumnSpan="2"/>
+
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Browse" x:Name="BrowseTab" DataContext="{Binding Source={StaticResource bvm}}" IsSelected="{Binding Path=BrowseTabSelected}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="3*"/>                                                     
+                        </Grid.ColumnDefinitions>
+                        
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="300" />
+                            <RowDefinition Height="40"/>                          
+                            <RowDefinition Height="200"/>
+                        </Grid.RowDefinitions>
+
+                        <DataGrid  DataContext="{Binding Source={StaticResource bvm}}" VerticalAlignment="Top" ItemsSource="{Binding Path=BrowseNodes}" AutoGenerateColumns="False" SelectedIndex="{Binding Path=NodeIndex, Mode=TwoWay}" Margin="10,10,10,10" VerticalScrollBarVisibility="Visible">
+                            <DataGrid.Columns>                               
+                                <DataGridTextColumn Header="name" Binding="{Binding Path=name}"/>
+                                <DataGridTextColumn Header="id" Binding="{Binding Path=id}"/>                               
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <DataGrid Grid.Row="0" Grid.Column="1" DataContext="{Binding Source={StaticResource bvm}}" VerticalAlignment="Top" ItemsSource="{Binding Path=BrowseMarkets}" AutoGenerateColumns="False" Margin="10,10,10,10" VerticalScrollBarVisibility="Visible">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="name" Binding="{Binding Path=Model.Epic}"/>
+                                <DataGridTextColumn Header="id" Binding="{Binding Path=Model.InstrumentName}"/>
+                                <DataGridTextColumn Header="bid" Binding="{Binding Path=Model.Bid}"/>
+                                <DataGridTextColumn Header="offer" Binding="{Binding Path=Model.Offer}"/>
+                                <DataGridTextColumn Header="high" Binding="{Binding Path=Model.High}"/>
+                                <DataGridTextColumn Header="low" Binding="{Binding Path=Model.Low}"/>
+                                <DataGridTextColumn Header="Change" Binding="{Binding Path=Model.NetChange}"/>
+                                <DataGridTextColumn Header="% Change" Binding="{Binding Path=Model.PctChange}"/>
+                                <DataGridTextColumn Header="Streaming allowed" Binding="{Binding Path=Model.StreamingPricesAvailable}" />
+                                <DataGridTextColumn Header="Market Status" Binding="{Binding Path=Model.MarketStatus}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                                               
+                        <Button Grid.Row="1" Margin="5" Grid.Column="0" Width="120" Command="{Binding GetBrowseRootCommand}" Content="Root"  IsEnabled="True" DataContext="{Binding Source={StaticResource bvm}}" />
+                        <Button Grid.Row="1" Margin="5" Grid.Column="1" Width="120" Command="{Binding GetBrowseMarketsCommand}" Content="SubNode/Markets"  IsEnabled="True" DataContext="{Binding Source={StaticResource bvm}}" />
+                                               
+                        <TextBox Background="WhiteSmoke" Foreground="Black" BorderBrush="YellowGreen" BorderThickness="2" Grid.Row="2" DataContext="{Binding Source={StaticResource bvm}}" Margin="20,0,20,0" Height="200" VerticalScrollBarVisibility="Visible"  Text="{Binding BrowseData}" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+                       
+                    </Grid>
+                </TabItem>
+
+            </TabControl>
+
+
+        </Grid>
+    </Grid>
+</Window>
+
