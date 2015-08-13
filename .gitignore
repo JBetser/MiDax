@@ -71,3 +71,16 @@ IGApi/IGPublicPcl/bin/Debug/System.Net.Http.Primitives.xml
 IGApi/IGPublicPcl/bin/Debug/Validation.xml
 IGApi/IGPublicPcl/obj/Debug/IGPublicPcl.csproj.FileListAbsolute.txt
 IGApi/IGPublicPcl/obj/Debug/IGPublicPcl.csproj.FileListAbsolute.txt
+BPModel/obj/Debug/BPModel.csproj.FileListAbsolute.txt
+*.cache
+BPModel/obj/Debug/TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs
+BPModel/obj/Debug/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
+BPModel/obj/Debug/TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs
+IGApi/IGPublicPcl/obj/Debug/IGPublicPcl.csproj.App.config
+IGApi/IGPublicPcl/obj/Debug/TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs
+IGApi/IGPublicPcl/obj/Debug/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
+IGApi/IGPublicPcl/obj/Debug/TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs
+Midax/obj/Debug/Midax.csproj.FileListAbsolute.txt
+Midax/obj/Debug/TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs
+Midax/obj/Debug/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
+Midax/obj/Debug/TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs
