@@ -41,3 +41,25 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+*.dll
+*.pdb
+*.suo
+*.suo
+*.dll
+IGApi/IGPublicPcl/bin/Debug/IgPublicPcl.dll
+*.dll
+Midax/bin/Debug/Glacier2.xml
+Midax/bin/Debug/Ice.xml
+Midax/bin/Debug/IceBox.xml
+Midax/bin/Debug/IceGrid.xml
+Midax/bin/Debug/IceSSL.xml
+Midax/bin/Debug/IceStorm.xml
+*.exe
+Midax/bin/Debug/Midax.exe.config
+Midax/bin/Debug/Newtonsoft.Json.xml
+Midax/bin/Debug/PCLCrypto.xml
+Midax/bin/Debug/Validation.xml
+Midax/obj/Debug/Midax.csprojResolveAssemblyReference.cache
+BPModel/bin/Debug/Newtonsoft.Json.xml
+BPModel/bin/Debug/PCLCrypto.xml
+BPModel/bin/Debug/Validation.xml

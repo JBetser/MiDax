@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace BPModel
 {
-    class IGConnection
+    public class IGConnection
     {
         IgRestApiClient _igRestApiClient = null;
         IGStreamingApiClient _igStreamApiClient = null;
@@ -53,8 +53,10 @@ namespace BPModel
                 _appName = appname;
                 _apikey = apikey;
                 _userName = username;
-                _password = password;
-                _logMgr = new EventLog(appname, Environment.MachineName, "Connection Manager");
+                _password = password;                
+                if (!EventLog.SourceExists(_appName))
+                    EventLog.CreateEventSource(new EventSourceCreationData(_appName, "BPModel"));
+                _logMgr = new EventLog("BPModel", Environment.MachineName, _appName);
                 _logMgr.WriteEntry("Attempting login", EventLogEntryType.Information);
 
                 _igRestApiClient = new IgRestApiClient();
@@ -137,6 +139,11 @@ namespace BPModel
         public void StartListening()
         {
             _mktDataListener.StartListening();
-        }        
+        }
+
+        public void StopListening()
+        {
+            _mktDataListener.StopListening();
+        } 
     }
 }

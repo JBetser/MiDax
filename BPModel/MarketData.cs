@@ -10,16 +10,17 @@ namespace BPModel
 {    
     public class MarketData
     {
-        public MarketData(string id, Dictionary<DateTime, L1LsPriceData> values)
+        public MarketData(string name_id, Dictionary<DateTime, L1LsPriceData> values)
         {
-            this._id = id;
+            this._id = name_id.Split(':')[1];
+            this._name = name_id.Split(':')[0];
             this._values = values;
             this._eventHandlers = new List<Tick>();
         }
 
-        public delegate void Tick(string id, DateTime time, L1LsPriceData value);
+        public delegate void Tick(MarketData mktData, DateTime time, L1LsPriceData value);
 
-        public void Subscribe(Tick eventHandler)
+        public virtual void Subscribe(Tick eventHandler)
         {
             bool subscribe = (this._eventHandlers.Count == 0);
             this._eventHandlers.Add(eventHandler);
@@ -31,16 +32,22 @@ namespace BPModel
         {
             _values[time] = value;
             foreach (Tick ticker in this._eventHandlers)
-                ticker(_id, time, value);
+                ticker(this, time, value);
         }
 
         protected Dictionary<DateTime, L1LsPriceData> _values;
-        private string _id;
-        private List<Tick> _eventHandlers;
+        protected string _id;
+        protected string _name;
+        protected List<Tick> _eventHandlers;
 
         public string Id
         {
             get { return _id; }
+        }
+
+        public string Name
+        {
+            get { return _name; }
         }
 
         public Dictionary<DateTime, L1LsPriceData> Values
@@ -48,11 +55,7 @@ namespace BPModel
             get { return _values; }
         }
     }
-
-    public class CompositeData : MarketData
-    {
-    }
-
+    
     public class MarketDataSubscription : HandyTableListenerAdapter
     {
         public List<MarketData> MarketData = new List<MarketData>();
@@ -75,7 +78,18 @@ namespace BPModel
 
         public void StartListening()
         {
-            MarketDataTableKey = IGConnection.Instance.StreamClient.subscribeToMarketDetails((from MarketData mktData in MarketData select mktData.Id).ToArray(), this);
+            string [] epics = (from MarketData mktData in MarketData select mktData.Id).ToArray();
+            string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray());            
+            MarketDataTableKey = IGConnection.Instance.StreamClient.subscribeToMarketDetails(epics, this);
+            IGConnection.Instance.Log.WriteEntry("Subscribed to market data: " + epicsMsg, System.Diagnostics.EventLogEntryType.Information);
+        }
+
+        public void StopListening()
+        {
+            string[] epics = (from MarketData mktData in MarketData select mktData.Id).ToArray();
+            string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray());            
+            IGConnection.Instance.StreamClient.UnsubscribeTableKey(MarketDataTableKey);
+            IGConnection.Instance.Log.WriteEntry("Unsubscribed to market data: " + epicsMsg, System.Diagnostics.EventLogEntryType.Information);
         }
     }
 }

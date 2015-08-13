@@ -23,7 +23,6 @@ D:\Shared\Sources\api-sample-net-1.0.1\IGPublicPcl\obj\Debug\IgPublicPcl.pdb
 D:\Shared\Sources\Midax\IGApi\IGPublicPcl\obj\Debug\IgPublicPcl.dll
 D:\Shared\Sources\Midax\IGApi\IGPublicPcl\obj\Debug\IgPublicPcl.pdb
 D:\Shared\Sources\Midax\IGApi\IGPublicPcl\obj\Debug\IGPublicPcl.csproj.App.config
-D:\Shared\Sources\Midax\IGApi\IGPublicPcl\obj\Debug\IGPublicPcl.csprojResolveAssemblyReference.cache
 D:\Shared\Sources\Midax\IGApi\IGPublicPcl\bin\Debug\IgPublicPcl.dll.config
 D:\Shared\Sources\Midax\IGApi\IGPublicPcl\bin\Debug\IgPublicPcl.dll
 D:\Shared\Sources\Midax\IGApi\IGPublicPcl\bin\Debug\IgPublicPcl.pdb
