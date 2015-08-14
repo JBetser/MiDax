@@ -1,0 +1,18 @@
+# Configuration file (08/14/15 04:19:02.504)
+
+# Server configuration
+Ice.Admin.ServerId=MidaxServer
+Ice.Admin.Endpoints=tcp -h localhost
+Ice.ProgramName=MidaxServer
+# Object adapter MidaxIce
+MidaxIce.Endpoints=tcp -h 192.168.1.25
+MidaxIce.AdapterId=MidaxServer.MidaxIce
+# Server descriptor properties
+Identity=serverController
+IceMX.Metrics.Debug.GroupBy=id
+IceMX.Metrics.Debug.Disabled=1
+IceMX.Metrics.ByParent.GroupBy=parent
+IceMX.Metrics.ByParent.Disabled=1
+Ice.StdErr=C:\Midax\db\logs/MidaxServer.out
+Ice.StdOut=C:\Midax\db\logs/MidaxServer.out
+Ice.Default.Locator=MidaxIceGrid/Locator:default -h 192.168.1.25 -p 5062

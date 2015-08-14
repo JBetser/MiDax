@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="IGConnection.cs" />
     <Compile Include="Indicator.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="MarketData.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

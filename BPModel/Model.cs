@@ -30,6 +30,7 @@ namespace BPModel
         {
             foreach (Signal sig in _mktSignals)
                 sig.Subscribe(OnBuy, OnSell);
+            IGConnection.Instance.StartListening();
         }
 
         public void StopSignals()
@@ -55,17 +56,18 @@ namespace BPModel
             List<MarketData> mktDataDAX = new List<MarketData>();
             mktDataDAX.Add(_daxIndex);
             this._macD = new SignalMacD(mktDataDAX);
+            _mktSignals = new List<Signal>();
             _mktSignals.Add(this._macD);
         }
 
         protected override void OnBuy(MarketData mktData, DateTime time, L1LsPriceData value)
         {
-            IGConnection.Instance.Log.WriteEntry(mktData.Id + ": BUY " + value.ToString(), EventLogEntryType.Information);
+            Log.Instance.WriteEntry(mktData.Id + ": BUY " + value.ToString(), EventLogEntryType.Information);
         }
 
         protected override void OnSell(MarketData mktData, DateTime time, L1LsPriceData value)
         {
-            IGConnection.Instance.Log.WriteEntry(mktData.Id + ": SELL " + value.ToString(), EventLogEntryType.Information);
+            Log.Instance.WriteEntry(mktData.Id + ": SELL " + value.ToString(), EventLogEntryType.Information);
         }
     }
 }

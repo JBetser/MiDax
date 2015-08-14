@@ -12,7 +12,8 @@ namespace BPModel
     {
         public MarketData(string name_id, Dictionary<DateTime, L1LsPriceData> values)
         {
-            this._id = name_id.Split(':')[1];
+            Log.Instance.WriteEntry(name_id, System.Diagnostics.EventLogEntryType.Information);
+            this._id = name_id.Split(':').Count() > 1 ? name_id.Split(':')[1] : name_id;
             this._name = name_id.Split(':')[0];
             this._values = values;
             this._eventHandlers = new List<Tick>();
@@ -66,22 +67,22 @@ namespace BPModel
             try
             {
                 L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
-                IGConnection.Instance.Log.WriteEntry(priceData.ToString(), System.Diagnostics.EventLogEntryType.Information);
-                foreach (var data in (from MarketData mktData in MarketData where mktData.Id == itemName select mktData).ToList())
+                Log.Instance.WriteEntry("Update " + itemName + ": " + priceData.Bid + "/" + priceData.Offer, System.Diagnostics.EventLogEntryType.Information);
+                foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
                     data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
             }
             catch (Exception ex)
             {
-                IGConnection.Instance.Log.WriteEntry(ex.Message, System.Diagnostics.EventLogEntryType.Error);
+                Log.Instance.WriteEntry(ex.Message, System.Diagnostics.EventLogEntryType.Error);
             }
         }
 
         public void StartListening()
         {
             string [] epics = (from MarketData mktData in MarketData select mktData.Id).ToArray();
-            string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray());            
-            MarketDataTableKey = IGConnection.Instance.StreamClient.subscribeToMarketDetails(epics, this);
-            IGConnection.Instance.Log.WriteEntry("Subscribed to market data: " + epicsMsg, System.Diagnostics.EventLogEntryType.Information);
+            string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray()).TrimEnd(new char[]{',',' '});
+            Log.Instance.WriteEntry("Subscribing to market data: " + epicsMsg + "...", System.Diagnostics.EventLogEntryType.Information);
+            MarketDataTableKey = IGConnection.Instance.StreamClient.subscribeToMarketDetails(epics, this);            
         }
 
         public void StopListening()
@@ -89,7 +90,7 @@ namespace BPModel
             string[] epics = (from MarketData mktData in MarketData select mktData.Id).ToArray();
             string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray());            
             IGConnection.Instance.StreamClient.UnsubscribeTableKey(MarketDataTableKey);
-            IGConnection.Instance.Log.WriteEntry("Unsubscribed to market data: " + epicsMsg, System.Diagnostics.EventLogEntryType.Information);
+            Log.Instance.WriteEntry("Unsubscribed to market data: " + epicsMsg, System.Diagnostics.EventLogEntryType.Information);
         }
     }
 }

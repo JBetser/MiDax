@@ -16,7 +16,6 @@ namespace BPModel
         IgRestApiClient _igRestApiClient = null;
         IGStreamingApiClient _igStreamApiClient = null;
         static IGConnection _instance = null;
-        EventLog _logMgr = null;
         string _appName = null;
         string _apikey = null;
         string _userName = null;
@@ -40,12 +39,7 @@ namespace BPModel
         {
             get { return _igStreamApiClient; }
         }
-
-        public EventLog Log
-        {
-            get { return _logMgr; }
-        }
-
+        
         public async void Init(string appname, string apikey, string username, string password)
         {
             try
@@ -53,11 +47,7 @@ namespace BPModel
                 _appName = appname;
                 _apikey = apikey;
                 _userName = username;
-                _password = password;                
-                if (!EventLog.SourceExists(_appName))
-                    EventLog.CreateEventSource(new EventSourceCreationData(_appName, "BPModel"));
-                _logMgr = new EventLog("BPModel", Environment.MachineName, _appName);
-                _logMgr.WriteEntry("Attempting login", EventLogEntryType.Information);
+                _password = password;
 
                 _igRestApiClient = new IgRestApiClient();
                 _igStreamApiClient = new IGStreamingApiClient();
@@ -66,7 +56,7 @@ namespace BPModel
                 if (String.IsNullOrEmpty(_apikey) || String.IsNullOrEmpty(_password) ||
                     String.IsNullOrEmpty(_userName) || (_igRestApiClient == null))
                 {
-                    _logMgr.WriteEntry("Please enter API key, Password and Username", EventLogEntryType.Error);
+                    Log.Instance.WriteEntry("Please enter API key, Password and Username", EventLogEntryType.Error);
                     return;
                 }
 
@@ -82,14 +72,14 @@ namespace BPModel
                 {
                     if (authenticationResponse.Response.accounts.Count > 0)
                     {
-                        _logMgr.WriteEntry(JsonConvert.SerializeObject(authenticationResponse, Formatting.Indented), EventLogEntryType.Information);
-                        _logMgr.WriteEntry("Logged in, current account: " + authenticationResponse.Response.currentAccountId, EventLogEntryType.Information);
+                        Log.Instance.WriteEntry(JsonConvert.SerializeObject(authenticationResponse, Formatting.Indented), EventLogEntryType.Information);
+                        Log.Instance.WriteEntry("Logged in, current account: " + authenticationResponse.Response.currentAccountId, EventLogEntryType.Information);
 
                         _currentAccount = authenticationResponse.Response.currentAccountId;
 
                         ConversationContext context = _igRestApiClient.GetConversationContext();
 
-                        _logMgr.WriteEntry("establishing streaming data connection", EventLogEntryType.Information);
+                        Log.Instance.WriteEntry("establishing streaming data connection", EventLogEntryType.Information);
 
                         if ((context != null) && (authenticationResponse.Response.currentAccountId != null) &&
                             (authenticationResponse.Response.lightstreamerEndpoint != null))
@@ -102,32 +92,32 @@ namespace BPModel
                                                                authenticationResponse.Response.lightstreamerEndpoint);
                                 if (connectionEstablished)
                                 {
-                                    _logMgr.WriteEntry("streaming data connection established", EventLogEntryType.Information);
+                                    Log.Instance.WriteEntry("streaming data connection established", EventLogEntryType.Information);
                                 }
                                 else
                                 {
-                                    _logMgr.WriteEntry("streaming data connection could NOT be established", EventLogEntryType.Error);
+                                    Log.Instance.WriteEntry("streaming data connection could NOT be established", EventLogEntryType.Error);
                                 }
                             }
                         }
                         else
                         {
-                            _logMgr.WriteEntry("Could not establish streaming data connection.", EventLogEntryType.Error);
+                            Log.Instance.WriteEntry("Could not establish streaming data connection.", EventLogEntryType.Error);
                         }
                     }
                     else
                     {
-                        _logMgr.WriteEntry("no accounts", EventLogEntryType.Error);
+                        Log.Instance.WriteEntry("no accounts", EventLogEntryType.Error);
                     }
                 }
                 else
                 {
-                    _logMgr.WriteEntry("Authentication Rest Response error : " + authenticationResponse.StatusCode, EventLogEntryType.Error);
+                    Log.Instance.WriteEntry("Authentication Rest Response error : " + authenticationResponse.StatusCode, EventLogEntryType.Error);
                 }
             }
             catch (Exception ex)
             {
-                _logMgr.WriteEntry(ex.Message, EventLogEntryType.Error);
+                Log.Instance.WriteEntry(ex.Message, EventLogEntryType.Error);
             }
         }
 

@@ -23,7 +23,7 @@ IceGrid.Registry.AdminSSLPermissionsVerifier=MidaxIceGrid/NullSSLPermissionsVeri
 #
 # IceGrid node configuration.
 #
-IceGrid.Node.Name=node1
+IceGrid.Node.Name=nodeMidax
 IceGrid.Node.Endpoints=default -h 192.168.1.25
 IceGrid.Node.Data=C:\Midax\db\node
 IceGrid.Node.CollocateRegistry=1
@@ -37,7 +37,7 @@ IceGrid.Node.Trace.Activator=1
 #IceGrid.Node.Trace.Adapter=2
 #IceGrid.Node.Trace.Server=3
 
-Ice.LogFile=C:\Midax\db\logs\logs_IGSMDesktop.txt
+Ice.LogFile=C:\Midax\db\logs\logs_Midax.txt
 
 #
 # Dummy username and password for icegridadmin.

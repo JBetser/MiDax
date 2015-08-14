@@ -1,0 +1,4 @@
+#
+# The IceGrid locator proxy.
+#
+Ice.Default.Locator=MidaxIceGrid/Locator:default -h 192.168.1.25 -p 5062

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BPModel;
 using Midax;
+using System.Collections.Specialized;
 
 public class Server
 {
@@ -19,6 +20,7 @@ public class Server
         {           
             try
             {
+                Log.Instance.WriteEntry("Hello", EventLogEntryType.Information);
                 if (args.Length != 0)
                     throw new ApplicationException("starting: too many arguments in application call.");
 
@@ -29,7 +31,15 @@ public class Server
                 foreach (SettingsPropertyValue prop in Midax.Properties.Settings.Default.PropertyValues)
                 {
                     if (prop.Name == "STOCKS")
-                        stockList = ((string[])prop.PropertyValue).ToList();
+                    {
+                        string[] stockArray = new string[100];
+                        ((StringCollection)prop.PropertyValue).CopyTo(stockArray, 0);
+                        foreach (string stock in stockArray)
+                        {
+                            if (stock != null && stock != "")
+                                stockList.Add(stock);
+                        }
+                    }
                     else
                         dicSettings.Add(prop.Name, (string)prop.PropertyValue);
                 }
@@ -38,6 +48,7 @@ public class Server
                 Ice.Properties properties = communicator().getProperties();
                 Ice.Identity id = communicator().stringToIdentity(properties.getProperty("Identity"));
 
+                Log.APPNAME = dicSettings["APP_NAME"];
                 IGConnection.Instance.Init(dicSettings["APP_NAME"],dicSettings["API_KEY"],dicSettings["USER_NAME"],dicSettings["PASSWORD"]);
 
                 MarketData index = new MarketData(dicSettings["INDEX"], new Dictionary<DateTime, IGPublicPcl.L1LsPriceData>());
@@ -45,15 +56,16 @@ public class Server
                 foreach (string stock in stockList)
                     stocks.Add(new MarketData(stock, new Dictionary<DateTime, IGPublicPcl.L1LsPriceData>()));
                 _model = new ModelMidax(index,stocks);
-                adapter.add(new MidaxIceI(_model, properties.getProperty("Ice.ProgramName")), id);
+                adapter.add(new MidaxIceI(_model, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
 
-                IGConnection.Instance.Log.WriteEntry("Midax service initialized", EventLogEntryType.Information);
+                Log.Instance.WriteEntry("Midax service initialized", EventLogEntryType.Information);
+                _model.StartSignals();
                 communicator().waitForShutdown();
             }
             catch (Exception exc)
             {
-                IGConnection.Instance.Log.WriteEntry(exc.ToString(), EventLogEntryType.Error);
+                Log.Instance.WriteEntry(exc.ToString(), EventLogEntryType.Error);
             }
 
             return 0;
