@@ -20,7 +20,6 @@ public class Server
         {           
             try
             {
-                Log.Instance.WriteEntry("Hello", EventLogEntryType.Information);
                 if (args.Length != 0)
                     throw new ApplicationException("starting: too many arguments in application call.");
 
@@ -51,10 +50,10 @@ public class Server
                 Log.APPNAME = dicSettings["APP_NAME"];
                 IGConnection.Instance.Init(dicSettings["APP_NAME"],dicSettings["API_KEY"],dicSettings["USER_NAME"],dicSettings["PASSWORD"]);
 
-                MarketData index = new MarketData(dicSettings["INDEX"], new Dictionary<DateTime, IGPublicPcl.L1LsPriceData>());
+                MarketData index = new MarketData(dicSettings["INDEX"], new TimeSeries());
                 List<MarketData> stocks = new List<MarketData>();
                 foreach (string stock in stockList)
-                    stocks.Add(new MarketData(stock, new Dictionary<DateTime, IGPublicPcl.L1LsPriceData>()));
+                    stocks.Add(new MarketData(stock, new TimeSeries()));
                 _model = new ModelMidax(index,stocks);
                 adapter.add(new MidaxIceI(_model, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();

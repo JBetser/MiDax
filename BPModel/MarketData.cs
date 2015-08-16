@@ -7,10 +7,10 @@ using IGPublicPcl;
 using Lightstreamer.DotNet.Client;
 
 namespace BPModel
-{    
+{
     public class MarketData
     {
-        public MarketData(string name_id, Dictionary<DateTime, L1LsPriceData> values)
+        public MarketData(string name_id, TimeSeries values)
         {
             Log.Instance.WriteEntry(name_id, System.Diagnostics.EventLogEntryType.Information);
             this._id = name_id.Split(':').Count() > 1 ? name_id.Split(':')[1] : name_id;
@@ -19,7 +19,7 @@ namespace BPModel
             this._eventHandlers = new List<Tick>();
         }
 
-        public delegate void Tick(MarketData mktData, DateTime time, L1LsPriceData value);
+        public delegate void Tick(MarketData mktData, DateTime time, Price value);
 
         public virtual void Subscribe(Tick eventHandler)
         {
@@ -29,14 +29,16 @@ namespace BPModel
                 IGConnection.Instance.SubscribeMarketData(this); 
         }
 
-        public void FireTick(DateTime time, L1LsPriceData value)
+        public void FireTick(DateTime updateTime, L1LsPriceData value)
         {
-            _values[time] = value;
+            Price livePrice = new Price(value);
+            _values.Add(updateTime, livePrice);
+            CassandraConnection.Instance.Insert(updateTime, this, livePrice);
             foreach (Tick ticker in this._eventHandlers)
-                ticker(this, time, value);
+                ticker(this, updateTime, livePrice);
         }
 
-        protected Dictionary<DateTime, L1LsPriceData> _values;
+        protected TimeSeries _values;
         protected string _id;
         protected string _name;
         protected List<Tick> _eventHandlers;
@@ -51,7 +53,7 @@ namespace BPModel
             get { return _name; }
         }
 
-        public Dictionary<DateTime, L1LsPriceData> Values
+        public TimeSeries Values
         {
             get { return _values; }
         }
@@ -67,7 +69,6 @@ namespace BPModel
             try
             {
                 L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
-                Log.Instance.WriteEntry("Update " + itemName + ": " + priceData.Bid + "/" + priceData.Offer, System.Diagnostics.EventLogEntryType.Information);
                 foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
                     data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
             }

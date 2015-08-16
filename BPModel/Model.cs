@@ -23,8 +23,8 @@ namespace BPModel
             this._mktSignals = mktSignals;
         }
 
-        protected abstract void OnBuy(MarketData mktData, DateTime time, L1LsPriceData value);
-        protected abstract void OnSell(MarketData mktData, DateTime time, L1LsPriceData value);
+        protected abstract void OnBuy(MarketData mktData, DateTime time, Price value);
+        protected abstract void OnSell(MarketData mktData, DateTime time, Price value);
 
         public void StartSignals()
         {
@@ -60,14 +60,14 @@ namespace BPModel
             _mktSignals.Add(this._macD);
         }
 
-        protected override void OnBuy(MarketData mktData, DateTime time, L1LsPriceData value)
+        protected override void OnBuy(MarketData mktData, DateTime time, Price value)
         {
-            Log.Instance.WriteEntry(mktData.Id + ": BUY " + value.ToString(), EventLogEntryType.Information);
+            Log.Instance.WriteEntry(time + ": BUY " + mktData.Id + " " + value.Offer, EventLogEntryType.Information);
         }
 
-        protected override void OnSell(MarketData mktData, DateTime time, L1LsPriceData value)
+        protected override void OnSell(MarketData mktData, DateTime time, Price value)
         {
-            Log.Instance.WriteEntry(mktData.Id + ": SELL " + value.ToString(), EventLogEntryType.Information);
+            Log.Instance.WriteEntry(time + ": SELL " + mktData.Id + " " + value.Bid, EventLogEntryType.Information);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace BPModel
         List<MarketData> _mktData = null;
 
         public Indicator(string id, List<MarketData> mktData)
-            : base(id, new Dictionary<DateTime,L1LsPriceData>())
+            : base(id, new TimeSeries())
         {
             this._mktData = mktData;
         }
@@ -22,9 +22,9 @@ namespace BPModel
             this._eventHandlers.Add(eventHandler);
             foreach (MarketData mktData in _mktData)
                 mktData.Subscribe(OnUpdate);
-        }    
-    
-        protected abstract void OnUpdate(MarketData mktData, DateTime time, L1LsPriceData value);
+        }
+
+        protected abstract void OnUpdate(MarketData mktData, DateTime time, Price value);
     }
 
     public class IndicatorWMA : Indicator
@@ -38,25 +38,18 @@ namespace BPModel
             _periodMinutes = periodMinutes;
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime time, L1LsPriceData value)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             if (mktData.Values.Count > 1)
-                _values[time] = average(mktData);
+                _values.Add(updateTime, average(mktData, updateTime));
         }
 
-        L1LsPriceData average(MarketData mktData)
+        Price average(MarketData mktData, DateTime updateTime)
         {
-            L1LsPriceData avg = new L1LsPriceData();
-            DateTime lastTime = mktData.Values.Keys.ElementAt(mktData.Values.Keys.Count - 1);
-            foreach (KeyValuePair<DateTime, L1LsPriceData> timeVal in mktData.Values)
-            {
-                if (timeVal.Key < lastTime)
-                {
-                    int nPeriod = _periodMinutes * 60 - (lastTime - timeVal.Key).Seconds;
-                    if (nPeriod > 0)
-                        avg.Bid += (timeVal.Value.Bid.Value - avg.Bid) / (nPeriod + 1);
-                }
-            }
+            Price avg = new Price();
+            decimal weight = (1m / (60m * _periodMinutes)) / 2m;
+            for (int idxSecond = 0; idxSecond < 60 * _periodMinutes; idxSecond++)
+                avg += (mktData.Values.Value(updateTime.AddSeconds(-1 * idxSecond)).Value.Value + mktData.Values.Value(updateTime.AddSeconds(-1 * (idxSecond+1))).Value.Value) * weight;
             return avg;
         }
     }

@@ -1,8 +1,12 @@
-CREATE TABLE users (
-  userid text PRIMARY KEY,
-  first_name text,
-  last_name text,
-  emails set<text>,
-  top_scores list<int>,
-  todo map<timestamp, text>
-);
+CREATE KEYSPACE HistoricalData
+  WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
+CREATE TABLE HistoricalData.Stocks (
+  stockid text,
+  trading_time timestamp,
+  name text,
+  bid decimal,
+  offer decimal,
+  volume int,
+  PRIMARY KEY (stockid, trading_time)
+)
+WITH CLUSTERING ORDER BY (trading_time DESC);

@@ -18,12 +18,12 @@ namespace MidaxTester
             string password = "Kotik0483";
 
             IGConnection.Instance.Init(appName, apiKey, userName, password);
-            MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP", new Dictionary<DateTime, IGPublicPcl.L1LsPriceData>());
+            MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP", new TimeSeries());
             List<MarketData> marketData = new List<MarketData>();
-            marketData.Add(new MarketData("Adidas AG:ED.D.ADSGY.DAILY.IP", new Dictionary<DateTime,IGPublicPcl.L1LsPriceData>()));
-            marketData.Add(new MarketData("Allianz SE:ED.D.ALVGY.DAILY.IP", new Dictionary<DateTime,IGPublicPcl.L1LsPriceData>()));
-            marketData.Add(new MarketData("BASF SE:ED.D.BAS.DAILY.IP", new Dictionary<DateTime,IGPublicPcl.L1LsPriceData>()));
-            marketData.Add(new MarketData("Bayer AG:ED.D.BAY.DAILY.IP", new Dictionary<DateTime,IGPublicPcl.L1LsPriceData>()));
+            marketData.Add(new MarketData("Adidas AG:ED.D.ADSGY.DAILY.IP", new TimeSeries()));
+            marketData.Add(new MarketData("Allianz SE:ED.D.ALVGY.DAILY.IP", new TimeSeries()));
+            marketData.Add(new MarketData("BASF SE:ED.D.BAS.DAILY.IP", new TimeSeries()));
+            marketData.Add(new MarketData("Bayer AG:ED.D.BAY.DAILY.IP", new TimeSeries()));
             ModelMidax model = new ModelMidax(index, marketData);
             model.StartSignals();
             while (true)

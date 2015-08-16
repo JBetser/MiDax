@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,15 +12,30 @@ namespace BPModel
     {
         public decimal Bid;
         public decimal Offer;
+        public decimal Volume;
         public Price()
         { 
             this.Bid = 0;
             this.Offer = 0;
+            this.Volume = 0;
+        }
+        public Price(Price cpy)
+        {
+            this.Bid = cpy.Bid;
+            this.Offer = cpy.Offer;
+            this.Volume = cpy.Volume;
         }
         public Price(L1LsPriceData priceData)
         {
             this.Bid = priceData.Bid.Value;
             this.Offer = priceData.Offer.Value;
+        }
+        public static Price operator +(Price p1, Price p2)
+        {
+            Price sum = new Price();
+            sum.Bid = p1.Bid + p2.Bid;
+            sum.Offer = p1.Offer + p2.Offer;
+            return sum;
         }
         public static Price operator -(Price p1, Price p2)
         {
@@ -28,6 +44,13 @@ namespace BPModel
             diff.Offer = p1.Offer - p2.Offer;
             return diff;
         }
+        public static Price operator *(Price p, decimal factor)
+        {
+            Price mult = new Price(p);
+            mult.Bid *= factor;
+            mult.Offer *= factor;
+            return mult;
+        }
     }
 
     public abstract class Signal
@@ -35,14 +58,14 @@ namespace BPModel
         List<MarketData> _mktData = null;
         protected MarketData.Tick _onBuy = null;
         protected MarketData.Tick _onSell = null;
-        protected Dictionary<DateTime, Price> _values = null;
+        protected TimeSeries _values = null;
         protected List<Indicator> _mktIndicator = null;
 
         public Signal()
         {
             this._mktData = new List<MarketData>();
             this._mktIndicator = new List<Indicator>();
-            this._values = new Dictionary<DateTime, Price>();
+            this._values = new TimeSeries();
         }
         
         public void Subscribe(MarketData.Tick onBuy, MarketData.Tick onSell)
@@ -55,12 +78,12 @@ namespace BPModel
                 indicator.Subscribe(OnUpdate);
         }
 
-        public Dictionary<DateTime, Price> Values
+        public TimeSeries Values
         {
             get { return _values; }
         }
 
-        protected abstract void OnUpdate(MarketData mktData, DateTime time, L1LsPriceData value);
+        protected abstract void OnUpdate(MarketData mktData, DateTime time, Price value);
     }
        
 
@@ -77,18 +100,18 @@ namespace BPModel
             _mktIndicator.Add(_high);
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime time, L1LsPriceData value)
+        protected override void OnUpdate(MarketData mktData, DateTime time, Price value)
         {
-            Price lowWMA = new Price(_low.Values[time]);
-            Price highWMA = new Price(_high.Values[time]);
-            _values[time] = lowWMA - highWMA;
+            Price lowWMA = _low.Values[time].Value.Value;
+            Price highWMA = _high.Values[time].Value.Value;
+            _values.Add(time, lowWMA - highWMA);
             if (_values.Count > 1)
             {
-                if (_values[time].Offer > 0 && _values[mktData.Values.Keys.ElementAt(mktData.Values.Keys.Count - 2)].Offer <= 0)
+                if (_values[time].Value.Value.Offer > 0 && _values[time.AddSeconds(-1)].Value.Value.Offer <= 0)
                 {
                     _onBuy(mktData, time, value);
                 }
-                else if (_values[time].Bid < 0 && _values[mktData.Values.Keys.ElementAt(mktData.Values.Keys.Count - 2)].Bid >= 0)
+                else if (_values[time].Value.Value.Bid < 0 && _values[time.AddSeconds(-1)].Value.Value.Bid >= 0)
                 {
                     _onSell(mktData, time, value);
                 }

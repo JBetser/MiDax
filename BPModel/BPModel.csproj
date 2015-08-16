@@ -32,8 +32,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Cassandra, Version=2.6.0.0, Culture=neutral, PublicKeyToken=10b231fbfc8c4b4d, processorArchitecture=MSIL">
+      <HintPath>..\packages\CassandraCSharpDriver.2.6.0\lib\net40\Cassandra.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="DotNetClient_N2">
       <HintPath>..\IGApi\3rdPartyDlls\DotNetClient_N2.dll</HintPath>
+    </Reference>
+    <Reference Include="LZ4, Version=1.0.5.93, Culture=neutral, PublicKeyToken=fd2bda0a70c5a705, processorArchitecture=MSIL">
+      <HintPath>..\packages\lz4net.1.0.5.93\lib\net40-client\LZ4.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -48,6 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CassandraConnection.cs" />
     <Compile Include="IGConnection.cs" />
     <Compile Include="Indicator.cs" />
     <Compile Include="Log.cs" />
@@ -55,6 +64,7 @@
     <Compile Include="Model.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Signal.cs" />
+    <Compile Include="TimeSeries.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IGApi\IGPublicPcl\IGPublicPcl.csproj">
