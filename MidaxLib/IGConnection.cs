@@ -9,7 +9,7 @@ using IGPublicPcl;
 using Lightstreamer.DotNet.Client;
 using Newtonsoft.Json;
 
-namespace BPModel
+namespace MidaxLib
 {
     public class IGConnection
     {
@@ -124,6 +124,7 @@ namespace BPModel
         public void SubscribeMarketData(MarketData mktData)
         {
             _mktDataListener.MarketData.Add(mktData);
+            Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
         }
 
         public void StartListening()

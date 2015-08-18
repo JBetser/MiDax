@@ -1,11 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BPModel", "BPModel\BPModel.csproj", "{11173942-8295-4B93-8707-0DE9423F861A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{269D3A2F-289F-4A78-98FD-21E3F5AC5E4F} = {269D3A2F-289F-4A78-98FD-21E3F5AC5E4F}
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{F44B31AB-7778-4AE4-B9C0-90906A6ADAD4}"
 	ProjectSection(SolutionItems) = preProject
 		.nuget\NuGet.Config = .nuget\NuGet.Config
@@ -21,7 +16,30 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MidaxTester", "MidaxTester\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventLogSourceInstaller", "EventLogSourceInstaller\EventLogSourceInstaller.csproj", "{1CD2685F-12E4-4B20-9971-5A3D78E9085B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientConsole", "ClientConsole\ClientConsole.csproj", "{A4AC7CB7-966F-4E24-9749-41AD28D82BE7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IceClientConsole", "ClientConsole\IceClientConsole.csproj", "{A4AC7CB7-966F-4E24-9749-41AD28D82BE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MidaxLib", "MidaxLib\MidaxLib.csproj", "{11173942-8295-4B93-8707-0DE9423F861A}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebUI", "WebUI", "{146728EF-B80D-46EC-950D-64EF04BCFB0F}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		ProjectReferences = "{11173942-8295-4b93-8707-0de9423f861a}|MidaxLib.dll;{269D3A2F-289F-4A78-98FD-21E3F5AC5E4F}|IgPublicPcl.dll;"
+		Debug.AspNetCompiler.VirtualPath = "/WebUI"
+		Debug.AspNetCompiler.PhysicalPath = "WebUI\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\WebUI\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/WebUI"
+		Release.AspNetCompiler.PhysicalPath = "WebUI\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\WebUI\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "9369"
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +47,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{11173942-8295-4B93-8707-0DE9423F861A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{11173942-8295-4B93-8707-0DE9423F861A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{11173942-8295-4B93-8707-0DE9423F861A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{11173942-8295-4B93-8707-0DE9423F861A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{269D3A2F-289F-4A78-98FD-21E3F5AC5E4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{269D3A2F-289F-4A78-98FD-21E3F5AC5E4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{269D3A2F-289F-4A78-98FD-21E3F5AC5E4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -53,6 +67,14 @@ Global
 		{A4AC7CB7-966F-4E24-9749-41AD28D82BE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4AC7CB7-966F-4E24-9749-41AD28D82BE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4AC7CB7-966F-4E24-9749-41AD28D82BE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11173942-8295-4B93-8707-0DE9423F861A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11173942-8295-4B93-8707-0DE9423F861A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11173942-8295-4B93-8707-0DE9423F861A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11173942-8295-4B93-8707-0DE9423F861A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{146728EF-B80D-46EC-950D-64EF04BCFB0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{146728EF-B80D-46EC-950D-64EF04BCFB0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{146728EF-B80D-46EC-950D-64EF04BCFB0F}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{146728EF-B80D-46EC-950D-64EF04BCFB0F}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

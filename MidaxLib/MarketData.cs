@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 using IGPublicPcl;
 using Lightstreamer.DotNet.Client;
 
-namespace BPModel
+namespace MidaxLib
 {
     public class MarketData
     {
         public MarketData(string name_id, TimeSeries values)
         {
-            Log.Instance.WriteEntry(name_id, System.Diagnostics.EventLogEntryType.Information);
             this._id = name_id.Split(':').Count() > 1 ? name_id.Split(':')[1] : name_id;
             this._name = name_id.Split(':')[0];
             this._values = values;
@@ -32,10 +31,15 @@ namespace BPModel
         public void FireTick(DateTime updateTime, L1LsPriceData value)
         {
             Price livePrice = new Price(value);
-            _values.Add(updateTime, livePrice);
-            CassandraConnection.Instance.Insert(updateTime, this, livePrice);
+            _values.Add(updateTime, livePrice);            
             foreach (Tick ticker in this._eventHandlers)
                 ticker(this, updateTime, livePrice);
+            Publish(updateTime, livePrice);
+        }
+
+        public virtual void Publish(DateTime updateTime, Price price)
+        {
+            CassandraConnection.Instance.Insert(updateTime, this, price);
         }
 
         protected TimeSeries _values;
@@ -69,8 +73,11 @@ namespace BPModel
             try
             {
                 L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
-                foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
-                    data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
+                if (priceData.MarketState == "TRADEABLE")
+                {
+                    foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
+                        data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
+                }
             }
             catch (Exception ex)
             {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Midax;
 using System.Threading;
-using BPModel;
+using MidaxLib;
 using System.Diagnostics;
 
 namespace Midax

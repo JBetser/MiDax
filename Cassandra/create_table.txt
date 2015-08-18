@@ -1,6 +1,7 @@
-CREATE KEYSPACE HistoricalData
+CREATE KEYSPACE historicaldata
   WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
-CREATE TABLE HistoricalData.Stocks (
+
+CREATE TABLE historicaldata.stocks (
   stockid text,
   trading_time timestamp,
   name text,
@@ -8,5 +9,21 @@ CREATE TABLE HistoricalData.Stocks (
   offer decimal,
   volume int,
   PRIMARY KEY (stockid, trading_time)
+)
+WITH CLUSTERING ORDER BY (trading_time DESC);
+
+CREATE TABLE historicaldata.indicators (
+  indicatorid text,
+  trading_time timestamp,
+  value decimal,
+  PRIMARY KEY (indicatorid, trading_time)
+)
+WITH CLUSTERING ORDER BY (trading_time DESC);
+
+CREATE TABLE historicaldata.signals (
+  signalid text,
+  trading_time timestamp,
+  value blob,
+  PRIMARY KEY (signalid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);

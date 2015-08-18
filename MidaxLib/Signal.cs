@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IGPublicPcl;
 
-namespace BPModel
+namespace MidaxLib
 {
     public class Price
     {
@@ -53,16 +53,23 @@ namespace BPModel
         }
     }
 
+    public enum SIGNAL_CODE { HOLD = 0, BUY = 1, SELL = 2 }
+
     public abstract class Signal
     {
-        List<MarketData> _mktData = null;
+        protected string _id = null;
+        protected string _name = null;
+        protected List<MarketData> _mktData = null;
         protected MarketData.Tick _onBuy = null;
         protected MarketData.Tick _onSell = null;
         protected TimeSeries _values = null;
         protected List<Indicator> _mktIndicator = null;
+        protected SIGNAL_CODE _signalCode = SIGNAL_CODE.HOLD;
 
-        public Signal()
+        public Signal(string id)
         {
+            this._id = id;
+            this._name = id;
             this._mktData = new List<MarketData>();
             this._mktIndicator = new List<Indicator>();
             this._values = new TimeSeries();
@@ -72,10 +79,18 @@ namespace BPModel
         {
             _onBuy = onBuy;
             _onSell = onSell;
-            foreach (MarketData mktData in _mktData)
-                mktData.Subscribe(OnUpdate);
             foreach (Indicator indicator in _mktIndicator)
                 indicator.Subscribe(OnUpdate);
+        }
+
+        public string Id
+        {
+            get { return _id; }
+        }
+
+        public string Name
+        {
+            get { return _name; }
         }
 
         public TimeSeries Values
@@ -83,7 +98,23 @@ namespace BPModel
             get { return _values; }
         }
 
-        protected abstract void OnUpdate(MarketData mktData, DateTime time, Price value);
+        protected void OnDoNothing(MarketData mktData, DateTime updateTime, Price value)
+        {
+        }
+
+        protected void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            SIGNAL_CODE oldSignalCode = _signalCode;
+            MarketData.Tick tradingOrder = OnDoNothing;
+            bool signaled = OnSignal(mktData, updateTime, value, ref tradingOrder);
+            if (signaled && _signalCode != oldSignalCode)
+            {
+                tradingOrder(mktData, updateTime, value);
+                CassandraConnection.Instance.Insert(updateTime, this, _signalCode);
+            }
+        }
+
+        protected abstract bool OnSignal(MarketData mktData, DateTime updateTime, Price value, ref MarketData.Tick tradingOrder);
     }
        
 
@@ -92,30 +123,37 @@ namespace BPModel
         IndicatorWMA _low = null;
         IndicatorWMA _high = null;
 
-        public SignalMacD(List<MarketData> mktData, int lowPeriod = 5, int highPeriod = 60)
+        public SignalMacD(MarketData mktData, int lowPeriod = 5, int highPeriod = 60)
+            : base("MacD_" + mktData.Id)
         {
+            _id += "_" + lowPeriod + "_" + highPeriod;
             _low = new IndicatorWMA("WMA_Low", mktData, lowPeriod);
             _high = new IndicatorWMA("WMA_High", mktData, highPeriod);
             _mktIndicator.Add(_low);
             _mktIndicator.Add(_high);
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime time, Price value)
+        protected override bool OnSignal(MarketData mktData, DateTime updateTime, Price value, ref MarketData.Tick tradingOrder)
         {
-            Price lowWMA = _low.Values[time].Value.Value;
-            Price highWMA = _high.Values[time].Value.Value;
-            _values.Add(time, lowWMA - highWMA);
+            Price lowWMA = _low.Values[updateTime].Value.Value;
+            Price highWMA = _high.Values[updateTime].Value.Value;
+            _values.Add(updateTime, lowWMA - highWMA);
             if (_values.Count > 1)
             {
-                if (_values[time].Value.Value.Offer > 0 && _values[time.AddSeconds(-1)].Value.Value.Offer <= 0)
+                if (_values[updateTime].Value.Value.Offer > 0 && _values[updateTime.AddSeconds(-1)].Value.Value.Offer <= 0)
                 {
-                    _onBuy(mktData, time, value);
+                    tradingOrder = _onBuy;
+                    _signalCode = SIGNAL_CODE.BUY;
+                    return true;
                 }
-                else if (_values[time].Value.Value.Bid < 0 && _values[time.AddSeconds(-1)].Value.Value.Bid >= 0)
+                else if (_values[updateTime].Value.Value.Bid < 0 && _values[updateTime.AddSeconds(-1)].Value.Value.Bid >= 0)
                 {
-                    _onSell(mktData, time, value);
+                    tradingOrder = _onSell;
+                    _signalCode = SIGNAL_CODE.SELL;
+                    return true;
                 }
             }
+            return false;
         }
     }
 }

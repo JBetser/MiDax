@@ -47,10 +47,14 @@ Temporary Items
 *.suo
 *.dll
 *.cache
+Midax/db/logs/*.*
+WebUI/bin/*.*
 MidaxTester/bin/Debug/*.*
 MidaxTester/obj/Debug/*.*
 Midax/bin/Debug/*.*
 Midax/obj/Debug/*.*
+MidaxLib/bin/Debug/*.*
+MidaxLib/obj/Debug/*.*
 BPModel/bin/Debug/*.*
 BPModel/obj/Debug/*.*
 IGApi/IGPublicPcl/bin/Debug/*.*
@@ -63,6 +67,8 @@ MidaxTester/bin/Release/*.*
 MidaxTester/obj/Release/*.*
 Midax/bin/Release/*.*
 Midax/obj/Release/*.*
+MidaxLib/bin/Release/*.*
+MidaxLib/obj/Release/*.*
 BPModel/bin/Release/*.*
 BPModel/obj/Release/*.*
 IGApi/IGPublicPcl/bin/Release/*.*

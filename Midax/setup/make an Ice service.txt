@@ -1,1 +1,6 @@
 iceserviceinstall.exe icegridnode --ImagePath="C:\Program Files (x86)\ZeroC\Ice-3.5.0\bin\icegridnode.exe" "D:\Shared\Sources\Midax\Midax\config.grid" --DisplayName="Midax Server" --EventLog=Midax --Description="The Ice grid computing service of Midax"
+
+then:
+- copy all files from this folder to the target server
+- launch DeployRegistry_node.cmd
+- launch DeployRegistry.cmd

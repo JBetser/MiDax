@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IGPublicPcl;
 
-namespace BPModel
+namespace MidaxLib
 {
     public abstract class Indicator : MarketData
     {
@@ -18,10 +18,10 @@ namespace BPModel
         }
 
         public override void Subscribe(Tick eventHandler)
-        {
-            this._eventHandlers.Add(eventHandler);
+        {            
             foreach (MarketData mktData in _mktData)
                 mktData.Subscribe(OnUpdate);
+            this._eventHandlers.Add(eventHandler);
         }
 
         protected abstract void OnUpdate(MarketData mktData, DateTime time, Price value);
@@ -32,8 +32,8 @@ namespace BPModel
         const double SMOOTHING = 0.2;
         int _periodMinutes;
 
-        public IndicatorWMA(string id, List<MarketData> mktData, int periodMinutes)
-            : base(id, mktData)
+        public IndicatorWMA(string id, MarketData mktData, int periodMinutes)
+            : base(id + "_" + mktData.Id + "_" + periodMinutes, new List<MarketData> { mktData })
         {
             _periodMinutes = periodMinutes;
         }
@@ -41,15 +41,28 @@ namespace BPModel
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             if (mktData.Values.Count > 1)
-                _values.Add(updateTime, average(mktData, updateTime));
+            {
+                Price avgPrice = average(mktData, updateTime);
+                if (avgPrice != null)
+                    _values.Add(updateTime, avgPrice);
+            }
+        }
+
+        public override void Publish(DateTime updateTime, Price price)
+        {
+            CassandraConnection.Instance.Insert(updateTime, this, (price.Bid + price.Offer) / 2m);
         }
 
         Price average(MarketData mktData, DateTime updateTime)
         {
             Price avg = new Price();
             decimal weight = (1m / (60m * _periodMinutes)) / 2m;
-            for (int idxSecond = 0; idxSecond < 60 * _periodMinutes; idxSecond++)
-                avg += (mktData.Values.Value(updateTime.AddSeconds(-1 * idxSecond)).Value.Value + mktData.Values.Value(updateTime.AddSeconds(-1 * (idxSecond+1))).Value.Value) * weight;
+            for (int idxSecond = 0; idxSecond < 60 * _periodMinutes; idxSecond++){
+                KeyValuePair<DateTime,Price>? lastPeriodValue = mktData.Values.Value(updateTime.AddSeconds(-1 * (idxSecond+1)));
+                if (!lastPeriodValue.HasValue)
+                    return null;
+                avg += (mktData.Values.Value(updateTime.AddSeconds(-1 * idxSecond)).Value.Value + lastPeriodValue.Value.Value) * weight;
+            }
             return avg;
         }
     }

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IGPublicPcl;
 
-namespace BPModel
+namespace MidaxLib
 {
     public abstract class Model
     {
@@ -53,9 +53,7 @@ namespace BPModel
             this._mktData = mktData;
             this._daxIndex = daxIndex;
             this._daxStocks = daxStocks;
-            List<MarketData> mktDataDAX = new List<MarketData>();
-            mktDataDAX.Add(_daxIndex);
-            this._macD = new SignalMacD(mktDataDAX);
+            this._macD = new SignalMacD(_daxIndex);
             _mktSignals = new List<Signal>();
             _mktSignals.Add(this._macD);
         }
