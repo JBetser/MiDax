@@ -72,11 +72,14 @@ namespace MidaxLib
         {
             try
             {
-                L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
-                if (priceData.MarketState == "TRADEABLE")
+                if (PublishingEnabled)
                 {
-                    foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
-                        data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
+                    L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
+                    if (priceData.MarketState == "TRADEABLE")
+                    {
+                        foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
+                            data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
+                    }
                 }
             }
             catch (Exception ex)
@@ -100,5 +103,14 @@ namespace MidaxLib
             IGConnection.Instance.StreamClient.UnsubscribeTableKey(MarketDataTableKey);
             Log.Instance.WriteEntry("Unsubscribed to market data: " + epicsMsg, System.Diagnostics.EventLogEntryType.Information);
         }
+
+        public static bool PublishingEnabled
+        {
+            get
+            {
+                return DateTime.Now.TimeOfDay > TimeSpan.Parse(Model.Settings["PUBLISHING_START_TIME"]) &&
+                    DateTime.Now.TimeOfDay < TimeSpan.Parse(Model.Settings["PUBLISHING_STOP_TIME"]);
+            }
+        }        
     }
 }

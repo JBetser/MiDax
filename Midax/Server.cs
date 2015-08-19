@@ -14,7 +14,6 @@ public class Server
     public class App : Ice.Application
     {
         Model _model = null;
-        public string _sServerManagerPort;
 
         public override int run(string[] args)
         {           
@@ -23,8 +22,8 @@ public class Server
                 if (args.Length != 0)
                     throw new ApplicationException("starting: too many arguments in application call.");
 
-                _sServerManagerPort = Midax.Properties.Settings.Default.PORT_INPUT;
-
+                Log.APPNAME = Midax.Properties.Settings.Default.APP_NAME;
+                
                 Dictionary<string, string> dicSettings = new Dictionary<string, string>();
                 List<string> stockList = new List<string>();
                 foreach (SettingsPropertyValue prop in Midax.Properties.Settings.Default.PropertyValues)
@@ -42,19 +41,19 @@ public class Server
                     else
                         dicSettings.Add(prop.Name, (string)prop.PropertyValue);
                 }
+                Model.Settings = dicSettings;
 
                 Ice.ObjectAdapter adapter = communicator().createObjectAdapter("MidaxIce");
                 Ice.Properties properties = communicator().getProperties();
                 Ice.Identity id = communicator().stringToIdentity(properties.getProperty("Identity"));
-
-                Log.APPNAME = dicSettings["APP_NAME"];
+                
                 IGConnection.Instance.Init(dicSettings["APP_NAME"],dicSettings["API_KEY"],dicSettings["USER_NAME"],dicSettings["PASSWORD"]);
 
                 MarketData index = new MarketData(dicSettings["INDEX"], new TimeSeries());
                 List<MarketData> stocks = new List<MarketData>();
                 foreach (string stock in stockList)
                     stocks.Add(new MarketData(stock, new TimeSeries()));
-                _model = new ModelMidax(index,stocks);
+                _model = new ModelMidax(index, stocks);
                 adapter.add(new MidaxIceI(_model, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
 

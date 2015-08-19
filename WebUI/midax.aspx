@@ -3,11 +3,11 @@
     <meta charset="utf-8">
     <title>MiDAX</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="description" content="MiDAX Automatic Trader"/>
+    <meta name="description" content="DAX Trading Signals"/>
     <meta name="author" content="Bitlsoft"/>
     <meta property="og:url" content="http://bitlsoft.com/midax/midax.aspx" />
     <meta property="og:title" content="MiDAX" />
-    <meta property="og:description" content="MiDAX Automatic Trader" />
+    <meta property="og:description" content="DAX Trading Signals" />
     <meta property="og:image" content="http://bitlsoft.com/images/logo.png" />
 
     <!-- official bootstrap styles -->
@@ -137,9 +137,9 @@
     <script type="text/javascript">
         $(document).ready(function () { 
             $("#GO").click(function () {
-                var equityParams = { "begin": "", "end": "", "stockid" : $("#equity").val() };
-                var indicatorParams = { "begin": "", "end": "", "indicatorid": $("#indicator").val() };
-                var signalParams = { "begin": "", "end": "", "signalid": $("#signal").val() };
+                var equityParams = { "begin": "2015-08-18 06:45:00", "end": "2015-08-18 17:15:00", "stockid": $("#equity").val() };
+                var indicatorParams = { "begin": "2015-08-18 06:45:00", "end": "2015-08-18 17:15:00", "indicatorid": $("#indicator").val() };
+                var signalParams = { "begin": "2015-08-18 06:45:00", "end": "2015-08-18 17:15:00", "signalid": $("#signal").val() };
                 
                 if (window.document.getElementById("equity").selectedIndex > 0) {
                     MidaxAPI("GetStockData", equityParams);
@@ -162,7 +162,7 @@
         <h3 class="muted">
         <div><table>
             <tr><th><img alt="BitL" src="images/logo_mini.png" class="logo"/></th>
-                <th style="text-align: left; padding-left: 20px"><img alt="MiDAX" src="images/midax.png" class="logo" style="width: 150px"/><br/>DAX Automatic Trader</th></tr></table></div></h3>
+                <th style="text-align: left; padding-left: 20px"><img alt="MiDAX" src="images/midax.png" class="logo" style="width: 150px"/><br/>DAX Trading Signals</th></tr></table></div></h3>
       </div>
 
       <!-- Jumbotron -->

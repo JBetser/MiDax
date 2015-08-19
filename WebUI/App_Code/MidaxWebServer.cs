@@ -76,19 +76,19 @@ namespace MidaxWebService
             return WEBSERVICE_RESULT_OK;
         }
 
-        public string GetStockData(string stockId)
+        public string GetStockData(string begin, string end, string stockId)
         {
-            return _midaxDB.GetJSON(DateTime.Now, DateTime.Now, CassandraConnection.DATATYPE_STOCK, stockId);
+            return _midaxDB.GetJSON(DateTime.Parse(begin), DateTime.Parse(end), CassandraConnection.DATATYPE_STOCK, stockId);
         }
 
-        public string GetIndicatorData(string indicatorId)
+        public string GetIndicatorData(string begin, string end, string indicatorId)
         {
-            return _midaxDB.GetJSON(DateTime.Now, DateTime.Now, CassandraConnection.DATATYPE_INDICATOR, indicatorId);
+            return _midaxDB.GetJSON(DateTime.Parse(begin), DateTime.Parse(end), CassandraConnection.DATATYPE_INDICATOR, indicatorId);
         }
 
-        public string GetSignalData(string signalId)
+        public string GetSignalData(string begin, string end, string signalId)
         {
-            return _midaxDB.GetJSON(DateTime.Now, DateTime.Now, CassandraConnection.DATATYPE_SIGNAL, signalId);
+            return _midaxDB.GetJSON(DateTime.Parse(begin), DateTime.Parse(end), CassandraConnection.DATATYPE_SIGNAL, signalId);
         }
     }    
 }

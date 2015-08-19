@@ -12,7 +12,7 @@ namespace MidaxLib
     {
         protected List<MarketData> _mktData = null;
         protected List<Signal> _mktSignals = null;
-
+        static protected Dictionary<string, string> _settings = null;
         public Model()
         {
         }
@@ -21,6 +21,21 @@ namespace MidaxLib
         {
             this._mktData = mktData;
             this._mktSignals = mktSignals;
+        }
+
+        public static Dictionary<string, string> Settings
+        {
+            get { return _settings; }
+            set { _settings = value; }
+        }
+
+        public static bool TradingEnabled
+        {
+            get
+            {
+                return DateTime.Now.TimeOfDay > TimeSpan.Parse(Model.Settings["TRADING_START_TIME"]) &&
+                    DateTime.Now.TimeOfDay < TimeSpan.Parse(Model.Settings["TRADING_STOP_TIME"]);
+            }
         }
 
         protected abstract void OnBuy(MarketData mktData, DateTime time, Price value);
