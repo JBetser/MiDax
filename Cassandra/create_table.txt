@@ -12,6 +12,8 @@ CREATE TABLE historicaldata.stocks (
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);
 
+ALTER TABLE historicaldata.stocks WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+
 CREATE TABLE historicaldata.indicators (
   indicatorid text,
   trading_time timestamp,
@@ -20,6 +22,8 @@ CREATE TABLE historicaldata.indicators (
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);
 
+ALTER TABLE historicaldata.indicators WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+
 CREATE TABLE historicaldata.signals (
   signalid text,
   trading_time timestamp,
@@ -27,3 +31,5 @@ CREATE TABLE historicaldata.signals (
   PRIMARY KEY (signalid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);
+
+ALTER TABLE historicaldata.signals WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};

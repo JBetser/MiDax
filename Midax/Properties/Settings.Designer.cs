@@ -172,15 +172,6 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("18:00:00")]
-        public string PUBLISHING_STOP_TIME {
-            get {
-                return ((string)(this["PUBLISHING_STOP_TIME"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("08:00:00")]
         public string TRADING_START_TIME {
             get {
@@ -203,6 +194,33 @@ namespace Midax.Properties {
         public string MINIMUM_BET {
             get {
                 return ((string)(this["MINIMUM_BET"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public string PUBLISHING_DISABLED {
+            get {
+                return ((string)(this["PUBLISHING_DISABLED"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("PRODUCTION")]
+        public string TRADING_MODE {
+            get {
+                return ((string)(this["TRADING_MODE"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("18:00:00")]
+        public string PUBLISHING_STOP_TIME {
+            get {
+                return ((string)(this["PUBLISHING_STOP_TIME"]));
             }
         }
     }

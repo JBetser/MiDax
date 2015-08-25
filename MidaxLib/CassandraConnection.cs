@@ -30,11 +30,13 @@ namespace MidaxLib
     public class Gap
     {
         public decimal value;
-        public Tuple<CqlQuote, CqlQuote> quotes;
+        public CqlQuote quoteLow;
+        public CqlQuote quoteHigh;
         public Gap(decimal val, Tuple<CqlQuote, CqlQuote> quotes)
         {
             this.value = val;
-            this.quotes = quotes;
+            this.quoteLow = quotes.Item1;
+            this.quoteHigh = quotes.Item2;
         }
     }
 
@@ -58,8 +60,11 @@ namespace MidaxLib
 
         CassandraConnection() 
         {
-            _cluster = Cluster.Builder().AddContactPoint("127.0.0.1").Build();
-            _session = _cluster.Connect();
+            if (Config.Settings == null || Config.PublishingEnabled)
+            {
+                _cluster = Cluster.Builder().AddContactPoint("127.0.0.1").Build();
+                _session = _cluster.Connect();
+            }
         }
 
         static public CassandraConnection Instance
@@ -69,6 +74,8 @@ namespace MidaxLib
 
         public void Insert(DateTime updateTime, MarketData mktData, Price price)
         {
+            if (_session == null)
+                return;
             long tmp = ToUnixTimestamp(updateTime);
             _session.Execute(string.Format("insert into historicaldata.{0} (stockid, trading_time,  name,  bid,  offer,  volume) values ('{1}', {2}, '{3}', {4}, {5}, {6})",
                 DATATYPE_STOCK, mktData.Id, ToUnixTimestamp(updateTime), mktData.Name, price.Bid, price.Offer, price.Volume));
@@ -76,12 +83,16 @@ namespace MidaxLib
 
         public void Insert(DateTime updateTime, Indicator indicator, decimal value)
         {
+            if (_session == null)
+                return;
             _session.Execute(string.Format("insert into historicaldata.{0} (indicatorid, trading_time, value) values ('{1}', {2}, {3})",
                 DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
         }
 
         public void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
         {
+            if (_session == null)
+                return;
             _session.Execute(string.Format("insert into historicaldata.{0} (signalid, trading_time,  value) values ('{1}', {2}, {3})",
                 DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), (int)code));
         }
@@ -93,8 +104,10 @@ namespace MidaxLib
 
         public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id)
         {
+            if (_session == null)
+                return "[]";
             RowSet rowSet = getRow(startTime, stopTime, type, id);
-
+            double intervalSeconds = Math.Ceiling((stopTime - startTime).TotalHours);
             List<CqlQuote> filteredQuotes = new List<CqlQuote>();
             decimal? prevQuoteValue = null;
             CqlQuote prevQuote = new CqlQuote();
@@ -119,23 +132,29 @@ namespace MidaxLib
                     prevQuote = cqlQuote;
                     continue;
                 }
-                if (Math.Abs((cqlQuote.t - prevQuote.t).TotalSeconds) < 10)
+                if (Math.Abs((cqlQuote.t - prevQuote.t).TotalSeconds) < intervalSeconds)
                     continue;
                 if (Math.Abs(quoteValue - prevQuoteValue.Value) < 2)
                     continue;
                 if (((quoteValue < prevQuoteValue) && trendUp.Value) ||
                     ((quoteValue > prevQuoteValue) && !trendUp.Value))
                 {
-                    filteredQuotes.Add(prevQuote);
-                    //gaps.Add(new Gap(Math.Abs(quoteValue - prevQuoteValue.Value), new Tuple<CqlQuote, CqlQuote>(prevQuote, cqlQuote)));
                     trendUp = !trendUp;
+                    filteredQuotes.Add(prevQuote);
+                    gaps.Add(new Gap(Math.Abs(quoteValue - prevQuoteValue.Value), 
+                        new Tuple<CqlQuote,CqlQuote>(trendUp.Value ? prevQuote : cqlQuote, trendUp.Value ? cqlQuote : prevQuote)));
                 }
                 prevQuoteValue = quoteValue;
                 prevQuote = cqlQuote;
             }
             filteredQuotes.Add(prevQuote);
 
-            //gaps.Sort(new GapSorter());
+            gaps.Sort(new GapSorter());
+            while (filteredQuotes.Count > 500)
+            {
+                filteredQuotes.Remove(gaps.ElementAt(0).quoteLow);
+                gaps.RemoveAt(0);
+            }
                                     
             string json = "[";
             foreach (var row in filteredQuotes)

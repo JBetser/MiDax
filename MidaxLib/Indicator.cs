@@ -32,8 +32,8 @@ namespace MidaxLib
         const double SMOOTHING = 0.2;
         int _periodMinutes;
 
-        public IndicatorWMA(string id, MarketData mktData, int periodMinutes)
-            : base(id + "_" + mktData.Id + "_" + periodMinutes, new List<MarketData> { mktData })
+        public IndicatorWMA(MarketData mktData, int periodMinutes)
+            : base("WMA" + "_" + periodMinutes + "_" + mktData.Id, new List<MarketData> { mktData })
         {
             _periodMinutes = periodMinutes;
         }
@@ -44,7 +44,10 @@ namespace MidaxLib
             {
                 Price avgPrice = average(mktData, updateTime);
                 if (avgPrice != null)
+                {
                     _values.Add(updateTime, avgPrice);
+                    Publish(updateTime, avgPrice);
+                }
             }
         }
 

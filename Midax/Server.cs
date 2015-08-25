@@ -41,13 +41,13 @@ public class Server
                     else
                         dicSettings.Add(prop.Name, (string)prop.PropertyValue);
                 }
-                Model.Settings = dicSettings;
+                Config.Settings = dicSettings;
 
                 Ice.ObjectAdapter adapter = communicator().createObjectAdapter("MidaxIce");
                 Ice.Properties properties = communicator().getProperties();
                 Ice.Identity id = communicator().stringToIdentity(properties.getProperty("Identity"));
                 
-                IGConnection.Instance.Init(dicSettings["APP_NAME"],dicSettings["API_KEY"],dicSettings["USER_NAME"],dicSettings["PASSWORD"]);
+                MarketDataConnection.Instance.Connect();
 
                 MarketData index = new MarketData(dicSettings["INDEX"], new TimeSeries());
                 List<MarketData> stocks = new List<MarketData>();

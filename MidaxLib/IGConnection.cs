@@ -11,130 +11,106 @@ using Newtonsoft.Json;
 
 namespace MidaxLib
 {
-    public class IGConnection
+    public class IGTradingStreamingClient : IAbstractStreamingClient
     {
-        IgRestApiClient _igRestApiClient = null;
-        IGStreamingApiClient _igStreamApiClient = null;
-        static IGConnection _instance = null;
-        string _appName = null;
-        string _apikey = null;
-        string _userName = null;
-        string _password = null;
+        IGStreamingApiClient _igStreamApiClient = new IGStreamingApiClient();
+        IgRestApiClient _igRestApiClient = new IgRestApiClient();
+        SubscribedTableKey _igSubscribedTableKey = null;
         string _currentAccount = null;
-        MarketDataSubscription _mktDataListener = null;        
 
-        IGConnection(){}
-
-        static public IGConnection Instance
+        public async void Connect(string username, string password, string apikey)
         {
-            get { return _instance == null ? _instance = new IGConnection() : _instance; }
-        }
-
-        public IgRestApiClient RestClient
-        {
-            get { return _igRestApiClient; }
-        }
-
-        public IGStreamingApiClient StreamClient
-        {
-            get { return _igStreamApiClient; }
-        }
-        
-        public async void Init(string appname, string apikey, string username, string password)
-        {
-            try
+            if (String.IsNullOrEmpty(apikey) || String.IsNullOrEmpty(password) ||
+                String.IsNullOrEmpty(username))
             {
-                _appName = appname;
-                _apikey = apikey;
-                _userName = username;
-                _password = password;
+                Log.Instance.WriteEntry("Please enter API key, Password and Username", EventLogEntryType.Error);
+                return;
+            }
 
-                _igRestApiClient = new IgRestApiClient();
-                _igStreamApiClient = new IGStreamingApiClient();
-                _mktDataListener = new MarketDataSubscription();                
+            // use v1 login...
+            var ar = new AuthenticationRequest();
+            ar.identifier = username;
+            ar.password = password;
 
-                if (String.IsNullOrEmpty(_apikey) || String.IsNullOrEmpty(_password) ||
-                    String.IsNullOrEmpty(_userName) || (_igRestApiClient == null))
+            //log in...
+            var authenticationResponse = await _igRestApiClient.SecureAuthenticate(ar, apikey);
+
+            if (authenticationResponse && (authenticationResponse.Response != null) && (authenticationResponse.Response.accounts != null))
+            {
+                if (authenticationResponse.Response.accounts.Count > 0)
                 {
-                    Log.Instance.WriteEntry("Please enter API key, Password and Username", EventLogEntryType.Error);
-                    return;
-                }
+                    Log.Instance.WriteEntry(JsonConvert.SerializeObject(authenticationResponse, Formatting.Indented), EventLogEntryType.Information);
+                    Log.Instance.WriteEntry("Logged in, current account: " + authenticationResponse.Response.currentAccountId, EventLogEntryType.Information);
 
-                // use v1 login...
-                var ar = new AuthenticationRequest();
-                ar.identifier = _userName;
-                ar.password = _password;
+                    _currentAccount = authenticationResponse.Response.currentAccountId;
 
-                //log in...
-                var authenticationResponse = await _igRestApiClient.SecureAuthenticate(ar, _apikey);
+                    ConversationContext context = _igRestApiClient.GetConversationContext();
 
-                if (authenticationResponse && (authenticationResponse.Response != null) && (authenticationResponse.Response.accounts != null))
-                {
-                    if (authenticationResponse.Response.accounts.Count > 0)
+                    Log.Instance.WriteEntry("establishing streaming data connection", EventLogEntryType.Information);
+
+                    if ((context != null) && (authenticationResponse.Response.currentAccountId != null) &&
+                        (authenticationResponse.Response.lightstreamerEndpoint != null))
                     {
-                        Log.Instance.WriteEntry(JsonConvert.SerializeObject(authenticationResponse, Formatting.Indented), EventLogEntryType.Information);
-                        Log.Instance.WriteEntry("Logged in, current account: " + authenticationResponse.Response.currentAccountId, EventLogEntryType.Information);
-
-                        _currentAccount = authenticationResponse.Response.currentAccountId;
-
-                        ConversationContext context = _igRestApiClient.GetConversationContext();
-
-                        Log.Instance.WriteEntry("establishing streaming data connection", EventLogEntryType.Information);
-
-                        if ((context != null) && (authenticationResponse.Response.currentAccountId != null) &&
-                            (authenticationResponse.Response.lightstreamerEndpoint != null))
+                        if (_igStreamApiClient != null)
                         {
-                            if (_igStreamApiClient != null)
+                            var connectionEstablished =
+                                _igStreamApiClient.Connect(authenticationResponse.Response.currentAccountId, context.cst,
+                                                           context.xSecurityToken, context.apiKey,
+                                                           authenticationResponse.Response.lightstreamerEndpoint);
+                            if (connectionEstablished)
                             {
-                                var connectionEstablished =
-                                    _igStreamApiClient.Connect(authenticationResponse.Response.currentAccountId, context.cst,
-                                                               context.xSecurityToken, context.apiKey,
-                                                               authenticationResponse.Response.lightstreamerEndpoint);
-                                if (connectionEstablished)
-                                {
-                                    Log.Instance.WriteEntry("streaming data connection established", EventLogEntryType.Information);
-                                }
-                                else
-                                {
-                                    Log.Instance.WriteEntry("streaming data connection could NOT be established", EventLogEntryType.Error);
-                                }
+                                Log.Instance.WriteEntry("streaming data connection established", EventLogEntryType.Information);
                             }
-                        }
-                        else
-                        {
-                            Log.Instance.WriteEntry("Could not establish streaming data connection.", EventLogEntryType.Error);
+                            else
+                            {
+                                Log.Instance.WriteEntry("streaming data connection could NOT be established", EventLogEntryType.Error);
+                            }
                         }
                     }
                     else
                     {
-                        Log.Instance.WriteEntry("no accounts", EventLogEntryType.Error);
+                        Log.Instance.WriteEntry("Could not establish streaming data connection.", EventLogEntryType.Error);
                     }
                 }
                 else
                 {
-                    Log.Instance.WriteEntry("Authentication Rest Response error : " + authenticationResponse.StatusCode, EventLogEntryType.Error);
+                    Log.Instance.WriteEntry("no accounts", EventLogEntryType.Error);
                 }
+            }
+            else
+            {
+                Log.Instance.WriteEntry("Authentication Rest Response error : " + authenticationResponse.StatusCode, EventLogEntryType.Error);
+            }
+        }
+
+        void IAbstractStreamingClient.Subscribe(string[] epics, IHandyTableListener tableListener)
+        {
+            _igSubscribedTableKey = _igStreamApiClient.subscribeToMarketDetails(epics, tableListener);
+        }
+
+        void IAbstractStreamingClient.Unsubscribe()
+        {
+            _igStreamApiClient.UnsubscribeTableKey(_igSubscribedTableKey);
+        }
+    }
+
+    public class IGConnection : MarketDataConnection
+    {     
+        public IGConnection()
+        {
+            _apiStreamingClient = new IGTradingStreamingClient();
+        }
+
+        public override void Connect()
+        {
+            try
+            {
+                _apiStreamingClient.Connect(Config.Settings["USER_NAME"], Config.Settings["PASSWORD"], Config.Settings["API_KEY"]);
             }
             catch (Exception ex)
             {
                 Log.Instance.WriteEntry(ex.Message, EventLogEntryType.Error);
             }
         }
-
-        public void SubscribeMarketData(MarketData mktData)
-        {
-            _mktDataListener.MarketData.Add(mktData);
-            Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
-        }
-
-        public void StartListening()
-        {
-            _mktDataListener.StartListening();
-        }
-
-        public void StopListening()
-        {
-            _mktDataListener.StopListening();
-        } 
     }
 }

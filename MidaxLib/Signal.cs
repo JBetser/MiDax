@@ -127,8 +127,8 @@ namespace MidaxLib
             : base("MacD_" + mktData.Id)
         {
             _id += "_" + lowPeriod + "_" + highPeriod;
-            _low = new IndicatorWMA("WMA_Low", mktData, lowPeriod);
-            _high = new IndicatorWMA("WMA_High", mktData, highPeriod);
+            _low = new IndicatorWMA(mktData, lowPeriod);
+            _high = new IndicatorWMA(mktData, highPeriod);
             _mktIndicator.Add(_low);
             _mktIndicator.Add(_high);
         }

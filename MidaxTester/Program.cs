@@ -12,18 +12,28 @@ namespace MidaxTester
     {
         static void Main(string[] args)
         {
-            string appName = "Midax";
-            string apiKey = "8d341413c2eae2c35bb5b47a594ef08ae18cb3b7";
-            string userName = "ksbitlsoftdemo";
-            string password = "Kotik0483";
+            Dictionary<string, string> dicSettings = new Dictionary<string, string>();
+            dicSettings["APP_NAME"] = "Midax";
+            dicSettings["STOP_LOSS"] = "50";
+            dicSettings["STOP_GAIN"] = "200";
+            dicSettings["LIMIT"] = "200";
+            dicSettings["PUBLISHING_START_TIME"] = "00:00:01";
+            dicSettings["PUBLISHING_STOP_TIME"] = "23:59:59";
+            dicSettings["PUBLISHING_DISABLED"] = "1";
+            dicSettings["TRADING_START_TIME"] = "00:00:01";
+            dicSettings["TRADING_STOP_TIME"] = "23:59:59";
+            dicSettings["TRADING_MODE"] = "REPLAY";
+            dicSettings["MINIMUM_BET"] = "2";
+            Config.Settings = dicSettings;
 
-            IGConnection.Instance.Init(appName, apiKey, userName, password);
+            MarketDataConnection.Instance.Connect();
             MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP", new TimeSeries());
             List<MarketData> marketData = new List<MarketData>();
             marketData.Add(new MarketData("Adidas AG:ED.D.ADSGY.DAILY.IP", new TimeSeries()));
             marketData.Add(new MarketData("Allianz SE:ED.D.ALVGY.DAILY.IP", new TimeSeries()));
             marketData.Add(new MarketData("BASF SE:ED.D.BAS.DAILY.IP", new TimeSeries()));
             marketData.Add(new MarketData("Bayer AG:ED.D.BAY.DAILY.IP", new TimeSeries()));
+        
             ModelMidax model = new ModelMidax(index, marketData);
             model.StartSignals();
             while (true)

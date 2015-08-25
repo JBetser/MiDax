@@ -126,27 +126,50 @@
     <link rel="shortcut icon" href="ico/favicon.png">
     <link rel="icon" type="image/png" href="images/favicon.ico" />
 
-    <script type="text/javascript" src="jscript/jquery-1.9.1.js"></script>	
+    <script src="jscript/jquery-1.9.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 	<script type="text/javascript" src="jscript/Init.js"></script>
     <script type="text/javascript" src="jscript/Modal.js"></script>
-    <script type="text/javascript" src="jscript/Midax.js"></script>    
+    <script type="text/javascript" src="jscript/Midax.js"></script>        
     <!--[if lte IE 9]>
     <script type='text/javascript' src='//cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.0/jquery.xdomainrequest.min.js'></script>
     <![endif]--> 
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script>
+      function formatDate(date) {
+          return date.getFullYear() + "-" + (date.getMonth() + 1)  + "-" + date.getDate();
+      }
+
+      $(function () {
+          $("#datepicker").datepicker();
+      });
+    </script>
     <script type="text/javascript">
         $(document).ready(function () { 
             $("#GO").click(function () {
-                var equityParams = { "begin": "2015-08-18 06:45:00", "end": "2015-08-18 17:15:00", "stockid": $("#equity").val() };
-                var indicatorParams = { "begin": "2015-08-18 06:45:00", "end": "2015-08-18 17:15:00", "indicatorid": $("#indicator").val() };
-                var signalParams = { "begin": "2015-08-18 06:45:00", "end": "2015-08-18 17:15:00", "signalid": $("#signal").val() };
+                var currentDate = $("#datepicker").datepicker("getDate");
+                if (currentDate == null)
+                    currentDate = "";
+                else
+                    currentDate = formatDate(currentDate);
+                var genericParams = { "begin": currentDate + " " + $('#timestart option:selected').text(), "end": currentDate + " " + $('#timestop option:selected').text() };
+                var equityParams = $.extend({"stockid" : $("#equity").val()}, genericParams);
                 
                 if (window.document.getElementById("equity").selectedIndex > 0) {
-                    MidaxAPI("GetStockData", equityParams);
-                    if (window.document.getElementById("indicator").selectedIndex > 0)
-                        MidaxAPI("GetIndicatorData", indicatorParams);
-                    if (window.document.getElementById("signal").selectedIndex > 0)
-                        MidaxAPI("GetSignalData", signalParams);
+                    var requests = { "GetStockData": equityParams };
+                    if (window.document.getElementById("indicator").selectedIndex > 0) {
+                        var indicatorIds = $("#indicator").val().split('#');
+                        for(var id in indicatorIds){
+                            var indicatorParams = $.extend({ "indicatorid": indicatorIds[id] + "_" + $("#equity").val() }, genericParams);
+                            $.extend(requests, { "GetIndicatorData": indicatorParams });
+                        }
+                    }
+                    if (window.document.getElementById("signal").selectedIndex > 0) {
+                        var signalParams = $.extend({ "signalid": $("#signal").val() }, genericParams);
+                        $.extend(requests, { "GetSignalData": signalParams });
+                    }
+                    MidaxAPI(requests);
                 }
                 else
                     IG_internalAlertClient("Please select at least one filter", false);
@@ -167,12 +190,42 @@
 
       <!-- Jumbotron -->
       <div class="jumbotron" style="margin-top: 5px">   
-        <div class="control-group">
-            <div>
-                <button type="button" id="Refresh" class="btn btn-danger btn-sm" onclick="document.location.reload();" style="float:right">
-                    <span class="glyphicon glyphicon-refresh"></span> Refresh!</button>
-            </div> 
+        <div class="control-group">             
            <div class="controls">
+             <input class="form-control input-medium" placeholder="Today" id="datepicker">
+             <select class="combobox input-medium" id="timestart">
+               <option value="0">06:45</option>
+               <option value="15">07:00</option>
+               <option value="45">07:30</option>
+               <option value="75">08:00</option>
+               <option value="135">09:00</option>
+               <option value="195">10:00</option>
+               <option value="255">11:00</option>
+               <option value="315">12:00</option>
+               <option value="375">13:00</option>
+               <option value="435">14:00</option>
+               <option value="495">15:00</option>
+               <option value="555">16:00</option>
+               <option value="615">17:00</option>
+             </select>
+             <select class="combobox input-medium" id="timestop">
+               <option value="790">23:45</option>
+               <option value="690">18:15</option>
+               <option value="675">18:00</option>
+               <option value="645">17:30</option>
+               <option value="615">17:00</option>
+               <option value="555">16:00</option>
+               <option value="495">15:00</option>
+               <option value="435">14:00</option>
+               <option value="375">13:00</option>
+               <option value="315">12:00</option>
+               <option value="255">11:00</option>
+               <option value="195">10:00</option>
+               <option value="135">09:00</option>
+               <option value="75">08:00</option>
+               <option value="45">07:30</option>
+             </select>
+               <br />
              <select class="combobox input-large" id="equity">
                <option value="">Choose a market data</option>
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
@@ -216,8 +269,15 @@
              </select>          
              <button type="button" id="GO" class="btn btn-primary">
                     <span class="glyphicon glyphicon-ok"></span> </button>
+            <div>
+                <button type="button" id="Refresh" class="btn btn-danger btn-sm" onclick="document.location.reload();" style="float:right">
+                    <span class="glyphicon glyphicon-refresh"></span>Clear!</button>
+            </div>
            </div>
         </div>  
+      </div>
+
+      <div id="graphs">
       </div>
 
       <hr/>
