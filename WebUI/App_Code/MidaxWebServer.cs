@@ -49,12 +49,16 @@ namespace MidaxWebService
                 Configuration rootWebConfig = null;
                 try
                 {
-                    rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/Web.config");
+                    rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/Midax/Web.config");
                 }
                 catch (Exception)
                 {
                     rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/WebDebug/Web.config");
                 }
+                Dictionary<string,string> dicSettings = new Dictionary<string,string>();
+                foreach (var key in rootWebConfig.AppSettings.Settings.AllKeys)
+                    dicSettings[key] = rootWebConfig.AppSettings.Settings[key].Value;
+                Config.Settings = dicSettings;
                 _midaxDB = CassandraConnection.Instance;
             }
             catch (Exception exc)

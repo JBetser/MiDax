@@ -150,9 +150,8 @@
             $("#GO").click(function () {
                 var currentDate = $("#datepicker").datepicker("getDate");
                 if (currentDate == null)
-                    currentDate = "";
-                else
-                    currentDate = formatDate(currentDate);
+                    currentDate = new Date();
+                currentDate = formatDate(currentDate);
                 var genericParams = { "begin": currentDate + " " + $('#timestart option:selected').text(), "end": currentDate + " " + $('#timestop option:selected').text() };
                 var equityParams = $.extend({"stockid" : $("#equity").val()}, genericParams);
                 
