@@ -25,15 +25,6 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("127.0.0.1")]
-        public string IP_LOCAL {
-            get {
-                return ((string)(this["IP_LOCAL"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("3000")]
         public string PORT_INPUT {
             get {
@@ -221,6 +212,15 @@ namespace Midax.Properties {
         public string PUBLISHING_STOP_TIME {
             get {
                 return ((string)(this["PUBLISHING_STOP_TIME"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("127.0.0.1")]
+        public string PUBLISHING_CONTACTPOINT {
+            get {
+                return ((string)(this["PUBLISHING_CONTACTPOINT"]));
             }
         }
     }

@@ -60,9 +60,9 @@ namespace MidaxLib
 
         CassandraConnection() 
         {
-            if (Config.Settings == null || Config.PublishingEnabled)
+            if (Config.Settings != null)
             {
-                _cluster = Cluster.Builder().AddContactPoint("127.0.0.1").Build();
+                _cluster = Cluster.Builder().AddContactPoint(Config.Settings["PUBLISHING_CONTACTPOINT"]).Build();
                 _session = _cluster.Connect();
             }
         }
@@ -74,16 +74,15 @@ namespace MidaxLib
 
         public void Insert(DateTime updateTime, MarketData mktData, Price price)
         {
-            if (_session == null)
+            if (_session == null || !Config.PublishingEnabled)
                 return;
-            long tmp = ToUnixTimestamp(updateTime);
             _session.Execute(string.Format("insert into historicaldata.{0} (stockid, trading_time,  name,  bid,  offer,  volume) values ('{1}', {2}, '{3}', {4}, {5}, {6})",
                 DATATYPE_STOCK, mktData.Id, ToUnixTimestamp(updateTime), mktData.Name, price.Bid, price.Offer, price.Volume));
         }
 
         public void Insert(DateTime updateTime, Indicator indicator, decimal value)
         {
-            if (_session == null)
+            if (_session == null || !Config.PublishingEnabled)
                 return;
             _session.Execute(string.Format("insert into historicaldata.{0} (indicatorid, trading_time, value) values ('{1}', {2}, {3})",
                 DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
@@ -91,22 +90,33 @@ namespace MidaxLib
 
         public void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
         {
-            if (_session == null)
+            if (_session == null || !Config.PublishingEnabled)
                 return;
             _session.Execute(string.Format("insert into historicaldata.{0} (signalid, trading_time,  value) values ('{1}', {2}, {3})",
                 DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), (int)code));
         }
 
-        RowSet getRow(DateTime startTime, DateTime stopTime, string type, string id){
+        RowSet getRows(DateTime startTime, DateTime stopTime, string type, string id){
+            if (_session == null)
+                return null; 
             return _session.Execute(string.Format("select * from historicaldata.{0} where {1}id='{2}' and trading_time >= {3} and trading_time <= {4};",
                                 type, type.Substring(0, type.Length - 1), id, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
+        }
+
+        public List<CqlQuote> GetRows(DateTime startTime, DateTime stopTime, string type, string id)
+        {
+            RowSet rowSet = getRows(startTime, stopTime, type, id);
+            List<CqlQuote> quotes = new List<CqlQuote>();
+            foreach (Row row in rowSet.GetRows())
+                quotes.Add(new CqlQuote(row));
+            return quotes;
         }
 
         public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id)
         {
             if (_session == null)
                 return "[]";
-            RowSet rowSet = getRow(startTime, stopTime, type, id);
+            RowSet rowSet = getRows(startTime, stopTime, type, id);
             double intervalSeconds = Math.Ceiling((stopTime - startTime).TotalHours);
             List<CqlQuote> filteredQuotes = new List<CqlQuote>();
             decimal? prevQuoteValue = null;
@@ -166,7 +176,7 @@ namespace MidaxLib
 
         protected static long ToUnixTimestamp(DateTime dateTime)
         {
-            return Convert.ToInt64((dateTime - new DateTime(1970, 1, 1).ToLocalTime()).TotalMilliseconds);
+            return Convert.ToInt64((DateTime.SpecifyKind(dateTime,DateTimeKind.Utc) - new DateTime(1970, 1, 1).ToUniversalTime()).TotalMilliseconds);
         }
         
     }

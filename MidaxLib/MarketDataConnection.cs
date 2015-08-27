@@ -60,34 +60,14 @@ namespace MidaxLib
         public void StopListening()
         {
             _mktDataListener.StopListening();
-        } 
+        }        
     }
 
     public class MarketDataSubscription : HandyTableListenerAdapter
     {
         public List<MarketData> MarketData = new List<MarketData>();
         public SubscribedTableKey MarketDataTableKey = null;
-
-        public override void OnUpdate(int itemPos, string itemName, IUpdateInfo update)
-        {
-            try
-            {
-                if (Config.PublishingEnabled)
-                {
-                    L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
-                    if (priceData.MarketState == "TRADEABLE")
-                    {
-                        foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
-                            data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Instance.WriteEntry(ex.Message, System.Diagnostics.EventLogEntryType.Error);
-            }
-        }
-
+        
         public void StartListening()
         {
             string[] epics = (from MarketData mktData in MarketData select mktData.Id).ToArray();
@@ -102,6 +82,26 @@ namespace MidaxLib
             string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray());
             MarketDataConnection.Instance.StreamClient.Unsubscribe();
             Log.Instance.WriteEntry("Unsubscribed to market data: " + epicsMsg, System.Diagnostics.EventLogEntryType.Information);
+        }
+
+        public override void OnUpdate(int itemPos, string itemName, IUpdateInfo update)
+        {
+            try
+            {
+                if (Config.PublishingOpen)
+                {
+                    L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
+                    if (priceData.MarketState == "TRADEABLE")
+                    {
+                        foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
+                            data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.WriteEntry(ex.Message, System.Diagnostics.EventLogEntryType.Error);
+            }
         }
     }
 }

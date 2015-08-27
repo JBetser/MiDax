@@ -20,8 +20,9 @@ namespace MidaxTester
             dicSettings["PUBLISHING_START_TIME"] = "00:00:01";
             dicSettings["PUBLISHING_STOP_TIME"] = "23:59:59";
             dicSettings["PUBLISHING_DISABLED"] = "1";
-            dicSettings["TRADING_START_TIME"] = "00:00:01";
-            dicSettings["TRADING_STOP_TIME"] = "23:59:59";
+            dicSettings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
+            dicSettings["TRADING_START_TIME"] = "2015-08-26 08:00:00";
+            dicSettings["TRADING_STOP_TIME"] = "2015-08-26 09:00:00";
             dicSettings["TRADING_MODE"] = "REPLAY";
             dicSettings["MINIMUM_BET"] = "2";
             Config.Settings = dicSettings;
@@ -36,8 +37,6 @@ namespace MidaxTester
         
             ModelMidax model = new ModelMidax(index, marketData);
             model.StartSignals();
-            while (true)
-                Thread.Sleep(1000);
         }
     }
 }

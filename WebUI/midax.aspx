@@ -209,7 +209,7 @@
                <option value="615">17:00</option>
              </select>
              <select class="combobox input-medium" id="timestop">
-               <option value="790">23:45</option>
+               <!--option value="790">23:45</option!-->
                <option value="690">18:15</option>
                <option value="675">18:00</option>
                <option value="645">17:30</option>
