@@ -48,31 +48,29 @@ namespace MidaxLib
         }
     }
 
-    public class CassandraConnection
-    {
-        public const string DATATYPE_STOCK = "stocks";
-        public const string DATATYPE_INDICATOR = "indicators";
-        public const string DATATYPE_SIGNAL = "signals";
-
-        static CassandraConnection _instance = null;
+    public class CassandraConnection : PublisherConnection
+    { 
         Cluster _cluster = null;
         ISession _session = null;
 
-        CassandraConnection() 
+        static public new CassandraConnection Instance
+        {
+            get
+            {
+                return (CassandraConnection)_instance;
+            }
+        }
+
+        public CassandraConnection() 
         {
             if (Config.Settings != null)
             {
                 _cluster = Cluster.Builder().AddContactPoint(Config.Settings["PUBLISHING_CONTACTPOINT"]).Build();
                 _session = _cluster.Connect();
             }
-        }
+        }        
 
-        static public CassandraConnection Instance
-        {
-            get { return _instance == null ? _instance = new CassandraConnection() : _instance; }
-        }
-
-        public void Insert(DateTime updateTime, MarketData mktData, Price price)
+        public override void Insert(DateTime updateTime, MarketData mktData, Price price)
         {
             if (_session == null || !Config.PublishingEnabled)
                 return;
@@ -80,7 +78,7 @@ namespace MidaxLib
                 DATATYPE_STOCK, mktData.Id, ToUnixTimestamp(updateTime), mktData.Name, price.Bid, price.Offer, price.Volume));
         }
 
-        public void Insert(DateTime updateTime, Indicator indicator, decimal value)
+        public override void Insert(DateTime updateTime, Indicator indicator, decimal value)
         {
             if (_session == null || !Config.PublishingEnabled)
                 return;
@@ -88,7 +86,7 @@ namespace MidaxLib
                 DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
         }
 
-        public void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
+        public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
         {
             if (_session == null || !Config.PublishingEnabled)
                 return;
@@ -172,12 +170,6 @@ namespace MidaxLib
                 json += JsonConvert.SerializeObject(row) + ",";
             }
             return json.Substring(0, json.Length - 1) + "]";
-        }
-
-        protected static long ToUnixTimestamp(DateTime dateTime)
-        {
-            return Convert.ToInt64((DateTime.SpecifyKind(dateTime,DateTimeKind.Utc) - new DateTime(1970, 1, 1).ToUniversalTime()).TotalMilliseconds);
-        }
-        
+        } 
     }
 }

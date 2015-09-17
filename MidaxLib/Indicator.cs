@@ -53,7 +53,7 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime, Price price)
         {
-            CassandraConnection.Instance.Insert(updateTime, this, (price.Bid + price.Offer) / 2m);
+            PublisherConnection.Instance.Insert(updateTime, this, (price.Bid + price.Offer) / 2m);
         }
 
         Price average(MarketData mktData, DateTime updateTime)

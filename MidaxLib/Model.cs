@@ -29,12 +29,12 @@ namespace MidaxLib
         {
             foreach (Signal sig in _mktSignals)
                 sig.Subscribe(OnBuy, OnSell);
-            IGConnection.Instance.StartListening();
+            MarketDataConnection.Instance.StartListening();
         }
 
         public void StopSignals()
         {
-            IGConnection.Instance.StopListening();
+            MarketDataConnection.Instance.StopListening();
         }
     }
 

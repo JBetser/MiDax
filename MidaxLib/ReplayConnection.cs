@@ -81,14 +81,14 @@ namespace MidaxLib
         {
             _startTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_START_TIME"]), DateTimeKind.Utc);
             _stopTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_STOP_TIME"]), DateTimeKind.Utc);
-            _instance = CassandraConnection.Instance;
+            _instance = new CassandraConnection();
         }
 
         void IAbstractStreamingClient.Subscribe(string[] epics, IHandyTableListener tableListener)
         {
             Dictionary<string, List<CqlQuote>> priceData = new Dictionary<string, List<CqlQuote>>();
             foreach(string epic in epics)
-                priceData[epic] = CassandraConnection.Instance.GetRows(_startTime, _stopTime,
+                priceData[epic] = _instance.GetRows(_startTime, _stopTime,
                     CassandraConnection.DATATYPE_STOCK, epic);
             Replay(priceData, tableListener);
         }

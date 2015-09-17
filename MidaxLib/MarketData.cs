@@ -39,7 +39,7 @@ namespace MidaxLib
 
         public virtual void Publish(DateTime updateTime, Price price)
         {
-            CassandraConnection.Instance.Insert(updateTime, this, price);
+            PublisherConnection.Instance.Insert(updateTime, this, price);
         }
 
         protected TimeSeries _values;

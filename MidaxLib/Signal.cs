@@ -110,7 +110,7 @@ namespace MidaxLib
             if (signaled && _signalCode != oldSignalCode)
             {
                 tradingOrder(mktData, updateTime, value);
-                CassandraConnection.Instance.Insert(updateTime, this, _signalCode);
+                PublisherConnection.Instance.Insert(updateTime, this, _signalCode);
             }
         }
 
