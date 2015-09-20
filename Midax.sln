@@ -14,8 +14,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Midax", "Midax\Midax.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MidaxTester", "MidaxTester\MidaxTester.csproj", "{DC9B0354-3AA6-411A-9F1B-0E555C3F9EE5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventLogSourceInstaller", "EventLogSourceInstaller\EventLogSourceInstaller.csproj", "{1CD2685F-12E4-4B20-9971-5A3D78E9085B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IceClientConsole", "ClientConsole\IceClientConsole.csproj", "{A4AC7CB7-966F-4E24-9749-41AD28D82BE7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MidaxLib", "MidaxLib\MidaxLib.csproj", "{11173942-8295-4B93-8707-0DE9423F861A}"
@@ -59,10 +57,6 @@ Global
 		{DC9B0354-3AA6-411A-9F1B-0E555C3F9EE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC9B0354-3AA6-411A-9F1B-0E555C3F9EE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC9B0354-3AA6-411A-9F1B-0E555C3F9EE5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1CD2685F-12E4-4B20-9971-5A3D78E9085B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1CD2685F-12E4-4B20-9971-5A3D78E9085B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1CD2685F-12E4-4B20-9971-5A3D78E9085B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1CD2685F-12E4-4B20-9971-5A3D78E9085B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A4AC7CB7-966F-4E24-9749-41AD28D82BE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A4AC7CB7-966F-4E24-9749-41AD28D82BE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4AC7CB7-966F-4E24-9749-41AD28D82BE7}.Release|Any CPU.ActiveCfg = Release|Any CPU

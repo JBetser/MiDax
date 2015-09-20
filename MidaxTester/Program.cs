@@ -22,9 +22,11 @@ namespace MidaxTester
             dicSettings["PUBLISHING_DISABLED"] = "1";
             dicSettings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
             dicSettings["PUBLISHING_CSV"] = @"D:\Shared\Tests\test.csv";
+            dicSettings["REPLAY_CSV"] = @"D:\Shared\Tests\mktdata_26_8_2015.csv";
             dicSettings["TRADING_START_TIME"] = "2015-08-26 08:00:00";
             dicSettings["TRADING_STOP_TIME"] = "2015-08-26 09:00:00";
             dicSettings["TRADING_MODE"] = "REPLAY";
+            dicSettings["REPLAY_MODE"] = "CSV";
             dicSettings["MINIMUM_BET"] = "2";
             Config.Settings = dicSettings;
 

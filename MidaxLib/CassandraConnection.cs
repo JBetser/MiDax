@@ -25,6 +25,15 @@ namespace MidaxLib
             o = (decimal)row[4];
             v = (int)row[5];
         }
+        public CqlQuote(string stockId, DateTimeOffset tradingTime, string stockName, decimal bid, decimal offer, int volume)
+        {
+            s = stockId;
+            t = tradingTime;
+            b = bid;
+            n = stockName;
+            o = offer;
+            v = volume;
+        }
     }
 
     public class Gap
@@ -48,7 +57,7 @@ namespace MidaxLib
         }
     }
 
-    public class CassandraConnection : PublisherConnection
+    public class CassandraConnection : PublisherConnection, IReaderConnection
     { 
         Cluster _cluster = null;
         ISession _session = null;

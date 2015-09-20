@@ -73,7 +73,7 @@ namespace MidaxLib
 
     public class ReplayStreamingClient : IAbstractStreamingClient
     {
-        CassandraConnection _instance = null;
+        IReaderConnection _instance = null;
         DateTime _startTime;
         DateTime _stopTime; 
         
@@ -81,7 +81,8 @@ namespace MidaxLib
         {
             _startTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_START_TIME"]), DateTimeKind.Utc);
             _stopTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_STOP_TIME"]), DateTimeKind.Utc);
-            _instance = new CassandraConnection();
+            _instance = (Config.Settings["REPLAY_MODE"] == "DB" ? new CassandraConnection()
+                : (IReaderConnection)(Config.Settings["REPLAY_MODE"] == "CSV" ? new CsvReader() : null));
         }
 
         void IAbstractStreamingClient.Subscribe(string[] epics, IHandyTableListener tableListener)

@@ -11,6 +11,63 @@ using Newtonsoft.Json;
 
 namespace MidaxLib
 {
+    public class IGMidaxStreamingApiClient : IGStreamingApiClient
+    {
+        public override void OnActivityWarning(bool warningOn)
+        {
+            Log.Instance.WriteEntry("Activity warning: " + warningOn, EventLogEntryType.Information);
+            base.OnActivityWarning(warningOn);
+        }
+
+        public override void OnClose()
+        {
+            Log.Instance.WriteEntry("Connection closed", EventLogEntryType.Information);
+            base.OnClose();
+        }
+
+        public override void OnConnectionEstablished()
+        {
+            Log.Instance.WriteEntry("Connection established", EventLogEntryType.Information);
+            base.OnConnectionEstablished();
+        }
+
+        public override void OnDataError(PushServerException e)
+        {
+            Log.Instance.WriteEntry("Data error: " + e.ToString(), EventLogEntryType.Information);
+            base.OnDataError(e);
+        }
+
+        public override void OnEnd(int cause)
+        {
+            Log.Instance.WriteEntry("End, cause: " + cause, EventLogEntryType.Information);
+            base.OnEnd(cause);
+        }
+
+        public override void OnFailure(PushConnException e)
+        {
+            Log.Instance.WriteEntry("Failure: " + e.ToString(), EventLogEntryType.Information);
+            base.OnFailure(e);
+        }
+
+        public override void OnFailure(PushServerException e)
+        {
+            Log.Instance.WriteEntry("Failure: " + e.ToString(), EventLogEntryType.Information);
+            base.OnFailure(e);
+        }
+
+        public override void OnNewBytes(long bytes)
+        {
+            Log.Instance.WriteEntry("New bytes: " + bytes, EventLogEntryType.Information);
+            base.OnNewBytes(bytes);
+        }
+
+        public override void OnSessionStarted(bool isPolling)
+        {
+            Log.Instance.WriteEntry("Session started, polling: " + isPolling, EventLogEntryType.Information);
+            base.OnSessionStarted(isPolling);
+        }
+    }       
+
     public class IGTradingStreamingClient : IAbstractStreamingClient
     {
         IGStreamingApiClient _igStreamApiClient = new IGStreamingApiClient();
