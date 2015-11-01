@@ -67,7 +67,7 @@ namespace MidaxLib
         {
             get
             {
-                return (CassandraConnection)_instance;
+                return (CassandraConnection)(_instance == null ? _instance = new CassandraConnection() : _instance);
             }
         }
 
