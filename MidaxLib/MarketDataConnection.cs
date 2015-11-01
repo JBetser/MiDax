@@ -24,6 +24,12 @@ namespace MidaxLib
         protected MarketDataConnection() {
             _mktDataListener = new MarketDataSubscription();             
         }
+
+        protected MarketDataConnection(IAbstractStreamingClient iclient)
+        {
+            _apiStreamingClient = iclient;
+            _mktDataListener = new MarketDataSubscription();
+        }
         
         static public MarketDataConnection Instance
         {
@@ -52,12 +58,12 @@ namespace MidaxLib
             Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
         }
 
-        public void StartListening()
+        public virtual void StartListening()
         {
             _mktDataListener.StartListening();
         }
 
-        public void StopListening()
+        public virtual void StopListening()
         {
             _mktDataListener.StopListening();
         }        

@@ -24,7 +24,12 @@ namespace MidaxLib
             this._eventHandlers.Add(eventHandler);
         }
 
-        protected abstract void OnUpdate(MarketData mktData, DateTime time, Price value);
+        protected virtual void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            _values.Add(updateTime, value);
+            foreach (Tick ticker in this._eventHandlers)
+                ticker(this, updateTime, value);
+        }
     }
 
     public class IndicatorWMA : Indicator
@@ -46,6 +51,7 @@ namespace MidaxLib
                 if (avgPrice != null)
                 {
                     _values.Add(updateTime, avgPrice);
+                    base.OnUpdate(mktData, updateTime, avgPrice);
                     Publish(updateTime, avgPrice);
                 }
             }

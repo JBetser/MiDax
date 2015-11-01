@@ -19,6 +19,12 @@ namespace MidaxLib
             this.Offer = 0;
             this.Volume = 0;
         }
+        public Price(decimal b, decimal o, decimal v)
+        {
+            this.Bid = b;
+            this.Offer = o;
+            this.Volume = v;
+        }
         public Price(Price cpy)
         {
             this.Bid = cpy.Bid;
@@ -53,7 +59,7 @@ namespace MidaxLib
         }
     }
 
-    public enum SIGNAL_CODE { HOLD = 0, BUY = 1, SELL = 2 }
+    public enum SIGNAL_CODE { UNKNOWN = 0, HOLD = 1, BUY = 2, SELL = 3 }
 
     public abstract class Signal
     {
@@ -64,7 +70,7 @@ namespace MidaxLib
         protected MarketData.Tick _onSell = null;
         protected TimeSeries _values = null;
         protected List<Indicator> _mktIndicator = null;
-        protected SIGNAL_CODE _signalCode = SIGNAL_CODE.HOLD;
+        protected SIGNAL_CODE _signalCode = SIGNAL_CODE.UNKNOWN;
 
         public Signal(string id)
         {
@@ -98,14 +104,14 @@ namespace MidaxLib
             get { return _values; }
         }
 
-        protected void OnDoNothing(MarketData mktData, DateTime updateTime, Price value)
+        void _onHold(MarketData mktData, DateTime updateTime, Price value)
         {
         }
 
         protected void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             SIGNAL_CODE oldSignalCode = _signalCode;
-            MarketData.Tick tradingOrder = OnDoNothing;
+            MarketData.Tick tradingOrder = _onHold;
             bool signaled = OnSignal(mktData, updateTime, value, ref tradingOrder);
             if (signaled && _signalCode != oldSignalCode)
             {
@@ -135,18 +141,22 @@ namespace MidaxLib
 
         protected override bool OnSignal(MarketData mktData, DateTime updateTime, Price value, ref MarketData.Tick tradingOrder)
         {
-            Price lowWMA = _low.Values[updateTime].Value.Value;
-            Price highWMA = _high.Values[updateTime].Value.Value;
+            KeyValuePair<DateTime, Price>? timeValueLow = _low.Values[updateTime];
+            KeyValuePair<DateTime, Price>? timeValueHigh = _high.Values[updateTime];
+            if (timeValueLow == null || timeValueHigh == null)
+                return false;
+            Price lowWMA = timeValueLow.Value.Value;
+            Price highWMA = timeValueHigh.Value.Value;
             _values.Add(updateTime, lowWMA - highWMA);
             if (_values.Count > 1)
             {
-                if (_values[updateTime].Value.Value.Offer > 0 && _values[updateTime.AddSeconds(-1)].Value.Value.Offer <= 0)
+                if (_values[updateTime].Value.Value.Offer > 0 && _signalCode != SIGNAL_CODE.BUY)
                 {
                     tradingOrder = _onBuy;
                     _signalCode = SIGNAL_CODE.BUY;
                     return true;
                 }
-                else if (_values[updateTime].Value.Value.Bid < 0 && _values[updateTime.AddSeconds(-1)].Value.Value.Bid >= 0)
+                else if (_values[updateTime].Value.Value.Bid < 0 && _signalCode != SIGNAL_CODE.SELL)
                 {
                     tradingOrder = _onSell;
                     _signalCode = SIGNAL_CODE.SELL;

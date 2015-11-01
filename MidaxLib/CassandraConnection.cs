@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,10 +13,10 @@ namespace MidaxLib
     {
         public string s;
         public DateTimeOffset t;
-        public decimal b;
+        public decimal? b;
         public string n;
-        public decimal o;
-        public int v;
+        public decimal? o;
+        public int? v;
         public CqlQuote(Row row)
         {
             s = (string)row[0];
@@ -25,7 +26,7 @@ namespace MidaxLib
             o = (decimal)row[4];
             v = (int)row[5];
         }
-        public CqlQuote(string stockId, DateTimeOffset tradingTime, string stockName, decimal bid, decimal offer, int volume)
+        public CqlQuote(string stockId, DateTimeOffset tradingTime, string stockName, decimal? bid, decimal? offer, int? volume)
         {
             s = stockId;
             t = tradingTime;
@@ -77,7 +78,19 @@ namespace MidaxLib
                 _cluster = Cluster.Builder().AddContactPoint(Config.Settings["PUBLISHING_CONTACTPOINT"]).Build();
                 _session = _cluster.Connect();
             }
-        }        
+        }
+
+        public override string Close()
+        {
+            if (_session != null)
+            {
+                _session.Dispose();
+                string info = "Closed connection to Cassandra";
+                Log.Instance.WriteEntry(info, EventLogEntryType.Information);
+                return info;
+            }
+            return "";
+        }
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
         {
@@ -110,13 +123,28 @@ namespace MidaxLib
                                 type, type.Substring(0, type.Length - 1), id, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
         }
 
-        public List<CqlQuote> GetRows(DateTime startTime, DateTime stopTime, string type, string id)
+        List<CqlQuote> getQuotes(DateTime startTime, DateTime stopTime, string type, string id)
         {
             RowSet rowSet = getRows(startTime, stopTime, type, id);
             List<CqlQuote> quotes = new List<CqlQuote>();
             foreach (Row row in rowSet.GetRows())
                 quotes.Add(new CqlQuote(row));
             return quotes;
+        }
+
+        List<CqlQuote> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
+        {
+            return getQuotes(startTime, stopTime, type, id);            
+        }
+
+        List<CqlQuote> IReaderConnection.GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
+        {
+            return getQuotes(startTime, stopTime, type, id);
+        }
+
+        List<CqlQuote> IReaderConnection.GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
+        {
+            return getQuotes(startTime, stopTime, type, id);
         }
 
         public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id)
@@ -134,7 +162,7 @@ namespace MidaxLib
             foreach (Row row in rowSet.GetRows())
             {
                 CqlQuote cqlQuote = new CqlQuote(row);
-                decimal quoteValue = (cqlQuote.b + cqlQuote.o) / 2m;
+                decimal quoteValue = (cqlQuote.b + cqlQuote.o).Value / 2m;
                 if (!prevQuoteValue.HasValue)
                 {
                     filteredQuotes.Add(cqlQuote);
