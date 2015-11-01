@@ -65,18 +65,18 @@ namespace MidaxLib
     {
         protected string _id = null;
         protected string _name = null;
-        protected List<MarketData> _mktData = null;
+        protected MarketData _asset = null;
         protected MarketData.Tick _onBuy = null;
         protected MarketData.Tick _onSell = null;
         protected TimeSeries _values = null;
         protected List<Indicator> _mktIndicator = null;
         protected SIGNAL_CODE _signalCode = SIGNAL_CODE.UNKNOWN;
 
-        public Signal(string id)
+        public Signal(string id, MarketData asset)
         {
             this._id = id;
             this._name = id;
-            this._mktData = new List<MarketData>();
+            this._asset = asset;
             this._mktIndicator = new List<Indicator>();
             this._values = new TimeSeries();
         }
@@ -115,31 +115,30 @@ namespace MidaxLib
             bool signaled = OnSignal(mktData, updateTime, value, ref tradingOrder);
             if (signaled && _signalCode != oldSignalCode)
             {
-                tradingOrder(mktData, updateTime, value);
+                tradingOrder(_asset, updateTime, value);
                 PublisherConnection.Instance.Insert(updateTime, this, _signalCode);
             }
         }
 
-        protected abstract bool OnSignal(MarketData mktData, DateTime updateTime, Price value, ref MarketData.Tick tradingOrder);
+        protected abstract bool OnSignal(MarketData indicator, DateTime updateTime, Price value, ref MarketData.Tick tradingOrder);
     }
        
-
     public class SignalMacD : Signal
     {
         IndicatorWMA _low = null;
         IndicatorWMA _high = null;
 
-        public SignalMacD(MarketData mktData, int lowPeriod = 5, int highPeriod = 60)
-            : base("MacD_" + mktData.Id)
+        public SignalMacD(MarketData asset, int lowPeriod = 5, int highPeriod = 60)
+            : base("MacD_" + asset.Id, asset)
         {
             _id += "_" + lowPeriod + "_" + highPeriod;
-            _low = new IndicatorWMA(mktData, lowPeriod);
-            _high = new IndicatorWMA(mktData, highPeriod);
+            _low = new IndicatorWMA(asset, lowPeriod);
+            _high = new IndicatorWMA(asset, highPeriod);
             _mktIndicator.Add(_low);
             _mktIndicator.Add(_high);
         }
 
-        protected override bool OnSignal(MarketData mktData, DateTime updateTime, Price value, ref MarketData.Tick tradingOrder)
+        protected override bool OnSignal(MarketData indicator, DateTime updateTime, Price value, ref MarketData.Tick tradingOrder)
         {
             KeyValuePair<DateTime, Price>? timeValueLow = _low.Values[updateTime];
             KeyValuePair<DateTime, Price>? timeValueHigh = _high.Values[updateTime];

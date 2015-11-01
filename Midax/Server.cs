@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using MidaxLib;
 using Midax;
 using System.Collections.Specialized;
+using System.Reflection;
 
 public class Server
 {
@@ -57,7 +58,11 @@ public class Server
                 adapter.add(new MidaxIceI(_model, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
 
-                Log.Instance.WriteEntry("Midax service initialized", EventLogEntryType.Information);
+                Assembly thisAssem = typeof(Server).Assembly;
+                AssemblyName thisAssemName = thisAssem.GetName();
+                Version ver = thisAssemName.Version;
+
+                Log.Instance.WriteEntry("Midax " + ver + " service initialized", EventLogEntryType.Information);
                 _model.StartSignals();
                 communicator().waitForShutdown();
             }

@@ -76,13 +76,10 @@
       <Name>MidaxLib</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="application.xml" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties ZerocIce_ProjectVersion="1" ZerocIce_Prefix="True" ZerocIce_OutputDir=".\slice" ZerocIce_Enabled="True" />
+      <UserProperties ZerocIce_Enabled="True" ZerocIce_OutputDir=".\slice" ZerocIce_Prefix="True" ZerocIce_ProjectVersion="1" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

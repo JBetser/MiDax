@@ -15,7 +15,7 @@ namespace MidaxLib
     {
         public override void OnActivityWarning(bool warningOn)
         {
-            Log.Instance.WriteEntry("Activity warning: " + warningOn, EventLogEntryType.Information);
+            Log.Instance.WriteEntry("Activity warning: " + warningOn, EventLogEntryType.Warning);
             base.OnActivityWarning(warningOn);
         }
 
@@ -33,25 +33,25 @@ namespace MidaxLib
 
         public override void OnDataError(PushServerException e)
         {
-            Log.Instance.WriteEntry("Data error: " + e.ToString(), EventLogEntryType.Information);
+            Log.Instance.WriteEntry("Data error: " + e.ToString(), EventLogEntryType.Error);
             base.OnDataError(e);
         }
 
         public override void OnEnd(int cause)
         {
-            Log.Instance.WriteEntry("End, cause: " + cause, EventLogEntryType.Information);
+            Log.Instance.WriteEntry("End, cause: " + cause, EventLogEntryType.Error);
             base.OnEnd(cause);
         }
 
         public override void OnFailure(PushConnException e)
         {
-            Log.Instance.WriteEntry("Failure: " + e.ToString(), EventLogEntryType.Information);
+            Log.Instance.WriteEntry("Failure: " + e.ToString(), EventLogEntryType.Error);
             base.OnFailure(e);
         }
 
         public override void OnFailure(PushServerException e)
         {
-            Log.Instance.WriteEntry("Failure: " + e.ToString(), EventLogEntryType.Information);
+            Log.Instance.WriteEntry("Failure: " + e.ToString(), EventLogEntryType.Error);
             base.OnFailure(e);
         }
 
