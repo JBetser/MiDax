@@ -7,23 +7,10 @@ using System.Threading.Tasks;
 
 namespace MidaxLib
 {
-    public class ModelTest : Model
+    public class ModelTest : ModelMidax
     {
-        MarketData _daxIndex = null;
-        List<MarketData> _daxStocks = null;
-        SignalMacD _macD = null;
-
-        public ModelTest(MarketData daxIndex, List<MarketData> daxStocks)
+        public ModelTest(MarketData daxIndex, List<MarketData> daxStocks) : base(daxIndex, daxStocks, 1, 5)
         {
-            List<MarketData> mktData = new List<MarketData>();
-            mktData.Add(daxIndex);
-            mktData.AddRange(daxStocks);
-            this._mktData = mktData;
-            this._daxIndex = daxIndex;
-            this._daxStocks = daxStocks;
-            this._macD = new SignalMacD(_daxIndex, 1, 5);
-            _mktSignals = new List<Signal>();
-            _mktSignals.Add(this._macD);
         }
 
         protected override void OnBuy(MarketData mktData, DateTime time, Price value)

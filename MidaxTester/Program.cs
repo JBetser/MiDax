@@ -12,18 +12,21 @@ namespace MidaxTester
     class Program
     {
         static void Main(string[] args)
-        {
+        {      
+            List<string> tests = new List<string>();
+            tests.Add(@"..\..\expected_results\mktdata_26_8_2015.csv");
+
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["STOP_LOSS"] = "50";
             dicSettings["STOP_GAIN"] = "200";
             dicSettings["LIMIT"] = "200";
-            dicSettings["PUBLISHING_START_TIME"] = "00:00:01";
-            dicSettings["PUBLISHING_STOP_TIME"] = "23:59:59";
+            dicSettings["PUBLISHING_START_TIME"] = "2015-08-26 00:00:01";
+            dicSettings["PUBLISHING_STOP_TIME"] = "2015-08-26 23:59:59";
             dicSettings["PUBLISHING_DISABLED"] = "1";
             dicSettings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
             //dicSettings["PUBLISHING_CSV"] = @"..\..\expected_results\new_results.csv";   // uncomment this line to generate new test results
-            dicSettings["REPLAY_CSV"] = @"..\..\expected_results\mktdata_26_8_2015.csv";
+            dicSettings["REPLAY_CSV"] = TestList(tests);
             dicSettings["TRADING_START_TIME"] = "2015-08-26 08:00:00";
             dicSettings["TRADING_STOP_TIME"] = "2015-08-26 09:00:00";
             dicSettings["TRADING_MODE"] = "REPLAY";
@@ -31,7 +34,7 @@ namespace MidaxTester
             dicSettings["MINIMUM_BET"] = "2";
             Config.Settings = dicSettings;
 
-            MarketDataConnection.Instance.Connect();
+            MarketDataConnection.Instance.Connect(null);
             
             MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP", new TimeSeries());
             List<MarketData> marketData = new List<MarketData>();
@@ -42,10 +45,46 @@ namespace MidaxTester
 
             ModelTest model = new ModelTest(index, marketData);
             model.StartSignals();
+            string status = model.StopSignals();
 
-            string status = PublisherConnection.Instance.Close();
-
+            if (!dicSettings.ContainsKey("PUBLISHING_CSV"))
+            {
+                // Test exceptions
+                List<string> testError = new List<string>();
+                testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");
+                dicSettings["REPLAY_CSV"] = TestList(testError);
+                MarketDataConnection.Instance.Connect(null);
+                model = new ModelTest(index, marketData);
+                bool success = false;
+                try
+                {
+                    model.StartSignals();
+                }
+                catch (ApplicationException exc)
+                {
+                    success = (exc.Message == "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9975.323333333333333333333414 != 9975.133333333333333333333413");
+                }
+                finally
+                {
+                    success = false;
+                    try
+                    {
+                        model.StopSignals();
+                    }
+                    catch (Exception exc)
+                    {
+                        success = (exc.Message == "The given key was not present in the dictionary.");
+                    }
+                }
+                if (!success)
+                    throw new ApplicationException("An expected exception has not been thrown");
+            }
             MessageBox.Show(status);
+        }
+
+        static string TestList(List<string> tests)
+        {
+            return tests.Aggregate("", (prev, next) => prev + next + ";", res => res.Substring(0, res.Length - 1));
         }
     }
 }

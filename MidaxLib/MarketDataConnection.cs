@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using IGPublicPcl;
 using Lightstreamer.DotNet.Client;
@@ -20,6 +21,7 @@ namespace MidaxLib
         protected MarketDataSubscription _mktDataListener = null;
         static MarketDataConnection _instance = null;
         protected IAbstractStreamingClient _apiStreamingClient = null;
+        protected TimerCallback _callbackConnectionClosed = null;
 
         protected MarketDataConnection() {
             _mktDataListener = new MarketDataSubscription();             
@@ -45,7 +47,7 @@ namespace MidaxLib
             }
         }
 
-        public abstract void Connect();
+        public abstract void Connect(TimerCallback connectionClosed);
         
         public IAbstractStreamingClient StreamClient
         {
@@ -86,8 +88,8 @@ namespace MidaxLib
         {
             string[] epics = (from MarketData mktData in MarketData select mktData.Id).ToArray();
             string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray());
-            MarketDataConnection.Instance.StreamClient.Unsubscribe();
-            Log.Instance.WriteEntry("Unsubscribed to market data: " + epicsMsg, System.Diagnostics.EventLogEntryType.Information);
+            Log.Instance.WriteEntry("Unsubscribing to market data: " + epicsMsg + "...", System.Diagnostics.EventLogEntryType.Information);
+            MarketDataConnection.Instance.StreamClient.Unsubscribe();            
         }
 
         public override void OnUpdate(int itemPos, string itemName, IUpdateInfo update)
@@ -107,6 +109,7 @@ namespace MidaxLib
             catch (Exception ex)
             {
                 Log.Instance.WriteEntry(ex.Message, System.Diagnostics.EventLogEntryType.Error);
+                throw;
             }
         }
     }

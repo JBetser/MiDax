@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using dto.colibri.endpoint.auth.v2;
 using IGPublicPcl;
@@ -13,6 +14,8 @@ namespace MidaxLib
 {
     public class IGMidaxStreamingApiClient : IGStreamingApiClient
     {
+        public TimerCallback ConnectionClosed = null;
+
         public override void OnActivityWarning(bool warningOn)
         {
             Log.Instance.WriteEntry("Activity warning: " + warningOn, EventLogEntryType.Warning);
@@ -23,6 +26,8 @@ namespace MidaxLib
         {
             Log.Instance.WriteEntry("Connection closed", EventLogEntryType.Information);
             base.OnClose();
+            if (ConnectionClosed != null)
+                ConnectionClosed(null);
         }
 
         public override void OnConnectionEstablished()
@@ -55,12 +60,6 @@ namespace MidaxLib
             base.OnFailure(e);
         }
 
-        public override void OnNewBytes(long bytes)
-        {
-            Log.Instance.WriteEntry("New bytes: " + bytes, EventLogEntryType.Information);
-            base.OnNewBytes(bytes);
-        }
-
         public override void OnSessionStarted(bool isPolling)
         {
             Log.Instance.WriteEntry("Session started, polling: " + isPolling, EventLogEntryType.Information);
@@ -70,7 +69,9 @@ namespace MidaxLib
 
     public class IGTradingStreamingClient : IAbstractStreamingClient
     {
-        IGStreamingApiClient _igStreamApiClient = new IGStreamingApiClient();
+        public TimerCallback ConnectionClosed = null;
+
+        IGMidaxStreamingApiClient _igStreamApiClient = new IGMidaxStreamingApiClient();
         IgRestApiClient _igRestApiClient = new IgRestApiClient();
         SubscribedTableKey _igSubscribedTableKey = null;
         string _currentAccount = null;
@@ -110,13 +111,14 @@ namespace MidaxLib
                     {
                         if (_igStreamApiClient != null)
                         {
+                            _igStreamApiClient.ConnectionClosed = ConnectionClosed;
                             var connectionEstablished =
                                 _igStreamApiClient.Connect(authenticationResponse.Response.currentAccountId, context.cst,
                                                            context.xSecurityToken, context.apiKey,
                                                            authenticationResponse.Response.lightstreamerEndpoint);
                             if (connectionEstablished)
                             {
-                                Log.Instance.WriteEntry("streaming data connection established", EventLogEntryType.Information);
+                                Log.Instance.WriteEntry("streaming data connection established", EventLogEntryType.Information);                                
                             }
                             else
                             {
@@ -152,16 +154,17 @@ namespace MidaxLib
     }
 
     public class IGConnection : MarketDataConnection
-    {     
+    {
         public IGConnection()
         {
             _apiStreamingClient = new IGTradingStreamingClient();
         }
 
-        public override void Connect()
+        public override void Connect(TimerCallback connectionClosed)
         {
             try
             {
+                ((IGTradingStreamingClient)_apiStreamingClient).ConnectionClosed = connectionClosed;
                 _apiStreamingClient.Connect(Config.Settings["USER_NAME"], Config.Settings["PASSWORD"], Config.Settings["API_KEY"]);
             }
             catch (Exception ex)

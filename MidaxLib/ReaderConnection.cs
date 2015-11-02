@@ -16,12 +16,12 @@ namespace MidaxLib
 
     public class CsvReader : IReaderConnection
     {
-        string _csvFile;
+        string _csvFile = null;
         StreamReader _csvReader;
 
-        public CsvReader()
+        public CsvReader(string csv)
         {
-            _csvFile = Config.Settings["REPLAY_CSV"];
+            _csvFile = csv;
             _csvReader = new StreamReader(File.OpenRead(_csvFile));
         }
 
@@ -37,10 +37,13 @@ namespace MidaxLib
                     break;
                 var values = line.Split(',');
                 DateTime curTime = DateTime.SpecifyKind(DateTime.Parse(values[2]), DateTimeKind.Local);
-                if (curTime < startTime)
-                    continue;
-                if (curTime > stopTime)
-                    break;
+                if (!values[1].StartsWith("WMA_1D")) // Do not check time for daily market data
+                {
+                    if (curTime < startTime)
+                        continue;
+                    if (curTime > stopTime)
+                        continue;
+                }
                 readData(quotes, values);
             }
             quotes.Reverse();

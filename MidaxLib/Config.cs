@@ -36,8 +36,8 @@ namespace MidaxLib
         {
             get
             {
-                return DateTime.Now.TimeOfDay > TimeSpan.Parse(_settings["TRADING_START_TIME"]) &&
-                    DateTime.Now.TimeOfDay < TimeSpan.Parse(_settings["TRADING_STOP_TIME"]);
+                return DateTime.Now.TimeOfDay > DateTime.Parse(_settings["TRADING_START_TIME"]).TimeOfDay &&
+                    DateTime.Now.TimeOfDay < DateTime.Parse(_settings["TRADING_STOP_TIME"]).TimeOfDay;
             }
         }
 
@@ -53,8 +53,8 @@ namespace MidaxLib
         {
             get
             {
-                return DateTime.Now.TimeOfDay > TimeSpan.Parse(_settings["PUBLISHING_START_TIME"]) &&
-                    DateTime.Now.TimeOfDay < TimeSpan.Parse(_settings["PUBLISHING_STOP_TIME"]);
+                return DateTime.Now.TimeOfDay > DateTime.Parse(_settings["PUBLISHING_START_TIME"]).TimeOfDay &&
+                    DateTime.Now.TimeOfDay < DateTime.Parse(_settings["PUBLISHING_STOP_TIME"]).TimeOfDay;
             }
         } 
     }

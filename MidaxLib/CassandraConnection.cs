@@ -82,14 +82,15 @@ namespace MidaxLib
 
         public override string Close()
         {
+            string info = "";
             if (_session != null)
             {
                 _session.Dispose();
-                string info = "Closed connection to Cassandra";
-                Log.Instance.WriteEntry(info, EventLogEntryType.Information);
-                return info;
+                info = "Closed connection to Cassandra";
+                Log.Instance.WriteEntry(info, EventLogEntryType.Information);                
             }
-            return "";
+            _instance = null;
+            return info;
         }
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)

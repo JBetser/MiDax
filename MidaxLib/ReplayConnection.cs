@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Cassandra;
 using Lightstreamer.DotNet.Client;
@@ -80,6 +81,7 @@ namespace MidaxLib
         Dictionary<string, List<CqlQuote>> _expectedIndicatorData = null;
         Dictionary<string, List<CqlQuote>> _expectedSignalData = null;
         bool _replayTest = false;
+        List<string> _testReplayFiles = new List<string>();
 
         public Dictionary<string, List<CqlQuote>> ExpectedIndicatorData { get { return _expectedIndicatorData; } }
         public Dictionary<string, List<CqlQuote>> ExpectedSignalData { get { return _expectedSignalData; } }
@@ -89,48 +91,36 @@ namespace MidaxLib
         {
             _startTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_START_TIME"]), DateTimeKind.Utc);
             _stopTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_STOP_TIME"]), DateTimeKind.Utc);
-            _instance = (Config.Settings["REPLAY_MODE"] == "DB" ? new CassandraConnection()
-                : (IReaderConnection)(Config.Settings["REPLAY_MODE"] == "CSV" ? new CsvReader() : null));
+            if (Config.Settings["REPLAY_MODE"] == "DB")
+            {
+                _testReplayFiles.Add(null); // Add a fake element to trigger the replay from db
+                _instance = new CassandraConnection();
+            }
+            else if (Config.Settings["REPLAY_MODE"] == "CSV")
+            {
+                _testReplayFiles = Config.Settings["REPLAY_CSV"].Split(';').ToList();
+                _instance = new CsvReader(_testReplayFiles[0]);
+            }
+            else
+                _instance = null;
             _replayTest = Config.Settings["REPLAY_MODE"] == "CSV" && !Config.Settings.ContainsKey("PUBLISHING_CSV");
         }
 
         void IAbstractStreamingClient.Subscribe(string[] epics, IHandyTableListener tableListener)
         {
-            Dictionary<string, List<CqlQuote>> priceData = new Dictionary<string, List<CqlQuote>>();
-            foreach(string epic in epics)
-                priceData[epic] = _instance.GetMarketDataQuotes(_startTime, _stopTime,
-                    CassandraConnection.DATATYPE_STOCK, epic);
-            if (_replayTest)
+            while (_testReplayFiles.Count > 0)
             {
-                _expectedIndicatorData = new Dictionary<string, List<CqlQuote>>();
-                foreach (string epic in epics)
-                {
-                    List<CqlQuote> quotes = _instance.GetIndicatorDataQuotes(_startTime, _stopTime,
-                        CassandraConnection.DATATYPE_INDICATOR, epic);
-                    Dictionary<string, List<CqlQuote>> indicatorData = (from quote in quotes group quote by quote.s into g
-                                              select new { Key = g.Key, Quotes = g.ToList() }).ToDictionary(keyVal => keyVal.Key, keyVal => keyVal.Quotes);
-                    indicatorData.Aggregate(_expectedIndicatorData, (agg, keyVal) => {agg.Add(keyVal.Key, keyVal.Value); return agg;});
-                }
-                _expectedSignalData = new Dictionary<string, List<CqlQuote>>();
-                foreach (string epic in epics)
-                {
-                    List<CqlQuote> quotes = _instance.GetSignalDataQuotes(_startTime, _stopTime,
-                        CassandraConnection.DATATYPE_SIGNAL, epic);
-                    Dictionary<string, List<CqlQuote>> signalData = (from quote in quotes
-                                                                        group quote by quote.s into g
-                                                                        select new { Key = g.Key, Quotes = g.ToList() }).ToDictionary(keyVal => keyVal.Key, keyVal => keyVal.Quotes);
-                    signalData.Aggregate(_expectedSignalData, (agg, keyVal) => { agg.Add(keyVal.Key, keyVal.Value); return agg; });
-                }
-                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData);
+                Dictionary<string, List<CqlQuote>> priceData = getReplayData(epics);
+                replay(priceData, tableListener);
+                _testReplayFiles.RemoveAt(0);
             }
-            Replay(priceData, tableListener);
         }
 
         void IAbstractStreamingClient.Unsubscribe()
         {
         }
 
-        void Replay(Dictionary<string, List<CqlQuote>> priceData, IHandyTableListener tableListener)
+        void replay(Dictionary<string, List<CqlQuote>> priceData, IHandyTableListener tableListener)
         {
             DateTime curtime = _startTime;
             while (priceData.Count > 0)
@@ -165,6 +155,39 @@ namespace MidaxLib
                 }
             }
         }
+
+        Dictionary<string, List<CqlQuote>> getReplayData(string[] epics)
+        {
+            Dictionary<string, List<CqlQuote>> priceData = new Dictionary<string, List<CqlQuote>>();
+            foreach (string epic in epics)
+                priceData[epic] = _instance.GetMarketDataQuotes(_startTime, _stopTime,
+                    CassandraConnection.DATATYPE_STOCK, epic);
+            if (_replayTest)
+            {
+                _expectedIndicatorData = new Dictionary<string, List<CqlQuote>>();
+                foreach (string epic in epics)
+                {
+                    List<CqlQuote> quotes = _instance.GetIndicatorDataQuotes(_startTime, _stopTime,
+                        CassandraConnection.DATATYPE_INDICATOR, epic);
+                    Dictionary<string, List<CqlQuote>> indicatorData = (from quote in quotes
+                                                                        group quote by quote.s into g
+                                                                        select new { Key = g.Key, Quotes = g.ToList() }).ToDictionary(keyVal => keyVal.Key, keyVal => keyVal.Quotes);
+                    indicatorData.Aggregate(_expectedIndicatorData, (agg, keyVal) => { agg.Add(keyVal.Key, keyVal.Value); return agg; });
+                }
+                _expectedSignalData = new Dictionary<string, List<CqlQuote>>();
+                foreach (string epic in epics)
+                {
+                    List<CqlQuote> quotes = _instance.GetSignalDataQuotes(_startTime, _stopTime,
+                        CassandraConnection.DATATYPE_SIGNAL, epic);
+                    Dictionary<string, List<CqlQuote>> signalData = (from quote in quotes
+                                                                     group quote by quote.s into g
+                                                                     select new { Key = g.Key, Quotes = g.ToList() }).ToDictionary(keyVal => keyVal.Key, keyVal => keyVal.Quotes);
+                    signalData.Aggregate(_expectedSignalData, (agg, keyVal) => { agg.Add(keyVal.Key, keyVal.Value); return agg; });
+                }
+                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData);
+            }
+            return priceData;
+        }
     }
 
     public class ReplayConnection : MarketDataConnection
@@ -175,8 +198,8 @@ namespace MidaxLib
         {
             _replayStreamingClient = (ReplayStreamingClient)_apiStreamingClient;
         }
-            
-        public override void Connect()
+
+        public override void Connect(TimerCallback connectionClosed)
         {
             try
             {
@@ -279,7 +302,6 @@ namespace MidaxLib
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }
-
         }
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)

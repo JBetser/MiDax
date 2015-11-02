@@ -9,12 +9,13 @@ using MidaxLib;
 using Midax;
 using System.Collections.Specialized;
 using System.Reflection;
+using System.Threading;
 
 public class Server
 {
     public class App : Ice.Application
     {
-        Model _model = null;
+        Model _model = null;        
 
         public override int run(string[] args)
         {           
@@ -47,8 +48,8 @@ public class Server
                 Ice.ObjectAdapter adapter = communicator().createObjectAdapter("MidaxIce");
                 Ice.Properties properties = communicator().getProperties();
                 Ice.Identity id = communicator().stringToIdentity(properties.getProperty("Identity"));
-                
-                MarketDataConnection.Instance.Connect();
+
+                MarketDataConnection.Instance.Connect(stopSignalCallback);
 
                 MarketData index = new MarketData(dicSettings["INDEX"], new TimeSeries());
                 List<MarketData> stocks = new List<MarketData>();
@@ -63,7 +64,34 @@ public class Server
                 Version ver = thisAssemName.Version;
 
                 Log.Instance.WriteEntry("Midax " + ver + " service initialized", EventLogEntryType.Information);
-                _model.StartSignals();
+                
+                var timerStart = new System.Threading.Timer(startSignalCallback);
+                var timerStop = new System.Threading.Timer(stopSignalCallback);
+
+                // Figure how much time until PUBLISHING_STOP_TIME
+                DateTime now = DateTime.Now;
+                DateTime startTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_START_TIME"]), DateTimeKind.Utc);
+                DateTime stopTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]), DateTimeKind.Utc);
+
+                // If it's already past PUBLISHING_STOP_TIME, wait until PUBLISHING_STOP_TIME tomorrow  
+                int msUntilStartTime = 10;
+                if (now > startTime)
+                {
+                    if (now > stopTime)
+                    {
+                        startTime = startTime.AddDays(1.0);
+                        stopTime = stopTime.AddDays(1.0);
+                        msUntilStartTime = (int)((startTime - now).TotalMilliseconds);
+                    }
+                }
+                else
+                    msUntilStartTime = (int)((startTime - now).TotalMilliseconds);
+                int msUntilStopTime = (int)((stopTime - now).TotalMilliseconds);
+                
+                // Set the timer to elapse only once, at PUBLISHING_STOP_TIME.
+                timerStart.Change(msUntilStartTime, Timeout.Infinite);
+                timerStop.Change(msUntilStopTime, Timeout.Infinite);
+
                 communicator().waitForShutdown();
             }
             catch (Exception exc)
@@ -72,6 +100,22 @@ public class Server
             }
 
             return 0;
+        }
+
+        void startSignalCallback(object state)
+        {
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Starting signals", EventLogEntryType.Information);
+            _model.StartSignals();
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
+        }
+
+        void stopSignalCallback(object state)
+        {
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Stopping signals", EventLogEntryType.Information);
+            _model.StopSignals();
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);
+            communicator().shutdown();
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Disconnected", EventLogEntryType.Information);
         }
     }
 

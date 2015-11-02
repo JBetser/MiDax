@@ -57,6 +57,13 @@ namespace MidaxLib
             mult.Offer *= factor;
             return mult;
         }
+        public static Price operator /(Price p, decimal factor)
+        {
+            Price mult = new Price(p);
+            mult.Bid /= factor;
+            mult.Offer /= factor;
+            return mult;
+        }
     }
 
     public enum SIGNAL_CODE { UNKNOWN = 0, HOLD = 1, BUY = 2, SELL = 3 }
