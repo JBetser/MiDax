@@ -62,18 +62,21 @@ namespace MidaxTester
                 }
                 catch (ApplicationException exc)
                 {
-                    success = (exc.Message == "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9975.323333333333333333333414 != 9975.133333333333333333333413");
+                    success = (exc.Message == "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9975.133333333333333333333413 != 9975.323333333333333333333414");
+                    if (!success)
+                        throw new ApplicationException("An exception message test failed");
                 }
                 finally
                 {
-                    success = false;
                     try
                     {
                         model.StopSignals();
                     }
                     catch (Exception exc)
                     {
-                        success = (exc.Message == "The given key was not present in the dictionary.");
+                        success = (exc.Message == "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360168776371308016877542 != 9964.363544303797468354430284");
+                        if (!success)
+                            throw new ApplicationException("An exception message test failed");
                     }
                 }
                 if (!success)

@@ -69,7 +69,7 @@ namespace MidaxLib
             PublisherConnection.Instance.Insert(updateTime, this, (price.Bid + price.Offer) / 2m);
         }
 
-        protected Price average(MarketData mktData, DateTime updateTime, bool acceptMissingValues = false, bool linearInterpolation = false)
+        protected Price average(MarketData mktData, DateTime updateTime, bool acceptMissingValues = false, bool linearInterpolation = true)
         {
             Price avg = new Price();
             decimal weight = (1m / (60m * _periodMinutes)) / 2m;
