@@ -74,7 +74,7 @@ namespace MidaxTester
                     }
                     catch (Exception exc)
                     {
-                        success = (exc.Message == "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360168776371308016877542 != 9964.363544303797468354430284");
+                        success = (exc.Message == "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360168776371308016877542 != 9972.779391891891891891891958");
                         if (!success)
                             throw new ApplicationException("An exception message test failed");
                     }

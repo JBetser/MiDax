@@ -72,7 +72,7 @@ namespace MidaxLib
         protected Price average(MarketData mktData, DateTime updateTime, bool acceptMissingValues = false, bool linearInterpolation = true)
         {
             Price avg = new Price();
-            decimal weight = (1m / (60m * _periodMinutes)) / 2m;
+            decimal weight = 0;
             bool started = false;
             int idxSecondStart = 0;
             for (int idxSecond = 0; idxSecond < 60 * _periodMinutes; idxSecond++){
@@ -84,27 +84,27 @@ namespace MidaxLib
                     {
                         if (started)
                         {
-                            decimal realWeight = (1m / (idxSecond - idxSecondStart + 1)) / 2m;
+                            decimal realWeight = (1m / (idxSecond - idxSecondStart)) / 2m;
                             return avg * realWeight / weight;
                         }
                         else
-                        {
-                            weight = (1m / (60m * _periodMinutes - (idxSecond + 1))) / 2m;
+                        {                            
                             continue;
                         }
                     }
                     else
                         return null;
                 }
-                if (linearInterpolation)
-                    avg += (beginPeriodValue.Value.Value + endPeriodValue.Value.Value) * weight;
-                else
-                    avg += beginPeriodValue.Value.Value * weight * 2m;
                 if (!started)
                 {
                     started = true;
                     idxSecondStart = idxSecond;
+                    weight = (1m / (60m * _periodMinutes - idxSecond)) / 2m;
                 }
+                if (linearInterpolation)
+                    avg += (beginPeriodValue.Value.Value + endPeriodValue.Value.Value) * weight;
+                else
+                    avg += beginPeriodValue.Value.Value * weight * 2m;                
             }
             return avg;
         }
