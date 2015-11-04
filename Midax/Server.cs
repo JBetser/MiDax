@@ -56,8 +56,8 @@ public class Server
                 foreach (string stock in stockList)
                     stocks.Add(new MarketData(stock, new TimeSeries()));
                 List<MarketData> volIndices = new List<MarketData>();
-                volIndices.Add(new MarketData(dicSettings["IN.D.VIX.MONTH2.IP"], new TimeSeries()));
-                volIndices.Add(new MarketData(dicSettings["IN.D.VIX.MONTH3.IP"], new TimeSeries()));
+                volIndices.Add(new MarketData(dicSettings["VOLATILITY_2M"], new TimeSeries()));
+                volIndices.Add(new MarketData(dicSettings["VOLATILITY_3M"], new TimeSeries()));
                 _model = new ModelMidax(index, stocks, volIndices);
                 adapter.add(new MidaxIceI(_model, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
