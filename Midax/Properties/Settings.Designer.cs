@@ -223,5 +223,23 @@ namespace Midax.Properties {
                 return ((string)(this["PUBLISHING_CONTACTPOINT"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("IN.D.VIX.MONTH2.IP")]
+        public string VOLATILITY_2M {
+            get {
+                return ((string)(this["VOLATILITY_2M"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("IN.D.VIX.MONTH3.IP")]
+        public string VOLATILITY_3M {
+            get {
+                return ((string)(this["VOLATILITY_3M"]));
+            }
+        }
     }
 }

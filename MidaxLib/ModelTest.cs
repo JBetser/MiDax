@@ -9,8 +9,9 @@ namespace MidaxLib
 {
     public class ModelTest : ModelMidax
     {
-        public ModelTest(MarketData daxIndex, List<MarketData> daxStocks) : base(daxIndex, daxStocks, 1, 5)
+        public ModelTest(MarketData daxIndex, List<MarketData> daxStocks) : base(daxIndex, daxStocks, new List<MarketData>(), 1, 5)
         {
+            this._mktIndicators = new List<Indicator>();
         }
 
         protected override void OnBuy(MarketData mktData, DateTime time, Price value)

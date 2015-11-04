@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,17 @@ namespace MidaxLib
             foreach (Tick ticker in this._eventHandlers)
                 ticker(this, updateTime, value);
         }
+
+        public override void Publish(DateTime updateTime, Price price)
+        {
+            if (price.Bid != price.Offer)
+            {
+                string error = "Inconsistent indicator " + _name + " values";
+                Log.Instance.WriteEntry(error, EventLogEntryType.Error);
+                throw new ApplicationException(error);
+            }
+            PublisherConnection.Instance.Insert(updateTime, this, price.Bid);
+        }
     }
 
     public class IndicatorWMA : Indicator
@@ -37,7 +49,7 @@ namespace MidaxLib
         int _periodMinutes;
 
         public IndicatorWMA(MarketData mktData, int periodMinutes)
-            : base("WMA" + "_" + periodMinutes + "_" + mktData.Id, new List<MarketData> { mktData })
+            : base("WMA_" + periodMinutes + "_" + mktData.Id, new List<MarketData> { mktData })
         {
             _periodMinutes = periodMinutes;
         }
@@ -52,22 +64,16 @@ namespace MidaxLib
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
-            if (mktData.Values.Count > 1)
+            if (mktData.TimeSeries.Count > 1)
             {
                 Price avgPrice = average(mktData, updateTime);
                 if (avgPrice != null)
                 {
-                    _values.Add(updateTime, avgPrice);
                     base.OnUpdate(mktData, updateTime, avgPrice);
-                    Publish(updateTime, avgPrice);
+                    Publish(updateTime, avgPrice.MidPrice());
                 }
             }
-        }
-
-        public override void Publish(DateTime updateTime, Price price)
-        {
-            PublisherConnection.Instance.Insert(updateTime, this, (price.Bid + price.Offer) / 2m);
-        }
+        }        
 
         protected Price average(MarketData mktData, DateTime updateTime, bool acceptMissingValues = false, bool linearInterpolation = true)
         {
@@ -76,8 +82,8 @@ namespace MidaxLib
             bool started = false;
             int idxSecondStart = 0;
             for (int idxSecond = 0; idxSecond < 60 * _periodMinutes; idxSecond++){
-                KeyValuePair<DateTime, Price>? beginPeriodValue = mktData.Values.Value(updateTime.AddSeconds(-1 * (idxSecond + 1)));
-                KeyValuePair<DateTime, Price>? endPeriodValue = mktData.Values.Value(updateTime.AddSeconds(-1 * idxSecond));
+                KeyValuePair<DateTime, Price>? beginPeriodValue = mktData.TimeSeries.Value(updateTime.AddSeconds(-1 * (idxSecond + 1)));
+                KeyValuePair<DateTime, Price>? endPeriodValue = mktData.TimeSeries.Value(updateTime.AddSeconds(-1 * idxSecond));
                 if (!beginPeriodValue.HasValue || !endPeriodValue.HasValue)
                 {
                     if (acceptMissingValues)
@@ -138,7 +144,7 @@ namespace MidaxLib
         public override void Publish(DateTime updateTime)
         {
             Price avg = average(_mktData[0], updateTime, true);
-            PublisherConnection.Instance.Insert(updateTime, this, (avg.Bid + avg.Offer) / 2m);
+            Publish(updateTime, avg.MidPrice());
         }
     }
 }

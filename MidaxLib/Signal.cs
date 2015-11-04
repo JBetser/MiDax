@@ -25,6 +25,12 @@ namespace MidaxLib
             this.Offer = o;
             this.Volume = v;
         }
+        public Price(decimal value)
+        {
+            this.Bid = value;
+            this.Offer = value;
+            this.Volume = 0;
+        }
         public Price(Price cpy)
         {
             this.Bid = cpy.Bid;
@@ -35,6 +41,14 @@ namespace MidaxLib
         {
             this.Bid = priceData.Bid.Value;
             this.Offer = priceData.Offer.Value;
+        }
+        public decimal Mid()
+        {
+            return (this.Bid + this.Offer) / 2m;
+        }
+        public Price MidPrice()
+        {
+            return new Price(Mid());
         }
         public static Price operator +(Price p1, Price p2)
         {
@@ -147,8 +161,8 @@ namespace MidaxLib
 
         protected override bool OnSignal(MarketData indicator, DateTime updateTime, Price value, ref MarketData.Tick tradingOrder)
         {
-            KeyValuePair<DateTime, Price>? timeValueLow = _low.Values[updateTime];
-            KeyValuePair<DateTime, Price>? timeValueHigh = _high.Values[updateTime];
+            KeyValuePair<DateTime, Price>? timeValueLow = _low.TimeSeries[updateTime];
+            KeyValuePair<DateTime, Price>? timeValueHigh = _high.TimeSeries[updateTime];
             if (timeValueLow == null || timeValueHigh == null)
                 return false;
             Price lowWMA = timeValueLow.Value.Value;

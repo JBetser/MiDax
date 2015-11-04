@@ -48,6 +48,49 @@ namespace MidaxLib
             return null;
         }
 
+        public List<KeyValuePair<DateTime, Price>> Values(DateTime endTime, TimeSpan interval)
+        {
+            if (_series.Count == 0)
+                return null;
+            if (endTime < _series[0].Keys.ElementAt(0))
+                return null;
+            DateTime startTime = endTime - interval;
+            if (startTime < _series[0].Keys.ElementAt(0))
+                return null;
+            bool started = false;
+            List<KeyValuePair<DateTime, Price>> values = null;
+            for (int idx = 0; idx < _series.Count; idx++)
+            {
+                if (started)
+                {
+                    if (endTime <= _series[idx].Keys.ElementAt(_series[idx].Keys.Count - 1))
+                    {
+                        values.AddRange(from keyval in _series[idx]
+                                          where keyval.Key <= endTime
+                                          select keyval);
+                        break;
+                    }
+                    else
+                    {
+                        values.AddRange(from keyval in _series[idx] select keyval);
+                    }
+                }
+                else
+                {
+                    if (startTime <= _series[idx].Keys.ElementAt(_series[idx].Keys.Count - 1))
+                    {
+                        values = (from keyval in _series[idx]
+                                  where keyval.Key >= startTime && keyval.Key <= endTime
+                                  select keyval).ToList();
+                        if (endTime <= _series[idx].Keys.ElementAt(_series[idx].Keys.Count - 1))
+                            break;
+                        started = true;
+                    }
+                }
+            }
+            return values;
+        }
+
         public KeyValuePair<DateTime, Price>? this[DateTime time]
         {
             get { return Value(time); }

@@ -26,17 +26,18 @@ namespace MidaxTester
             dicSettings["PUBLISHING_DISABLED"] = "1";
             dicSettings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
             //dicSettings["PUBLISHING_CSV"] = @"..\..\expected_results\new_results.csv";   // uncomment this line to generate new test results
+            dicSettings["REPLAY_MODE"] = "CSV";
             dicSettings["REPLAY_CSV"] = TestList(tests);
             dicSettings["TRADING_START_TIME"] = "2015-08-26 08:00:00";
             dicSettings["TRADING_STOP_TIME"] = "2015-08-26 09:00:00";
             dicSettings["TRADING_MODE"] = "REPLAY";
-            dicSettings["REPLAY_MODE"] = "CSV";
             dicSettings["MINIMUM_BET"] = "2";
             Config.Settings = dicSettings;
 
             MarketDataConnection.Instance.Connect(null);
             
             MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP", new TimeSeries());
+
             List<MarketData> marketData = new List<MarketData>();
             marketData.Add(new MarketData("Adidas AG:ED.D.ADSGY.DAILY.IP", new TimeSeries()));
             marketData.Add(new MarketData("Allianz SE:ED.D.ALVGY.DAILY.IP", new TimeSeries()));

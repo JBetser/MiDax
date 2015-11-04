@@ -57,7 +57,7 @@ namespace MidaxLib
             get { return _name; }
         }
 
-        public TimeSeries Values
+        public TimeSeries TimeSeries
         {
             get { return _values; }
         }

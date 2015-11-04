@@ -113,8 +113,8 @@ namespace MidaxLib
         {
             if (_session == null || !Config.PublishingEnabled)
                 return;
-            _session.Execute(string.Format("insert into historicaldata.{0} (signalid, trading_time,  value) values ('{1}', {2}, {3})",
-                DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), (int)code));
+            _session.Execute(string.Format("insert into historicaldata.{0} (signalid, trading_time, value) values ('{1}', {2}, {3})",
+                DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), Convert.ToInt32(code)));
         }
 
         RowSet getRows(DateTime startTime, DateTime stopTime, string type, string id){

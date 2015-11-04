@@ -13,6 +13,8 @@ namespace MidaxLib
     {
         protected List<MarketData> _mktData = null;
         protected List<Signal> _mktSignals = null;
+        protected List<MarketData> _mktIndices = new List<MarketData>();
+        protected List<Indicator> _mktIndicators = new List<Indicator>();
         protected List<IndicatorLevel> _mktUnsubscribedIndicators = new List<IndicatorLevel>();
  
         public Model()
@@ -27,11 +29,24 @@ namespace MidaxLib
 
         protected abstract void OnBuy(MarketData mktData, DateTime time, Price value);
         protected abstract void OnSell(MarketData mktData, DateTime time, Price value);
+
+        protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)
+        {
+            PublisherConnection.Instance.Insert(updateTime, mktData, value);
+        }
+        protected virtual void OnUpdateIndicator(MarketData mktData, DateTime updateTime, Price value)
+        {
+            PublisherConnection.Instance.Insert(updateTime, (Indicator)mktData, value.Mid());
+        }
         
         public void StartSignals()
         {
+            foreach (MarketData idx in _mktIndices)
+                idx.Subscribe(OnUpdateMktData);
+            foreach (Indicator ind in _mktIndicators)
+                ind.Subscribe(OnUpdateIndicator);
             foreach (Signal sig in _mktSignals)
-                sig.Subscribe(OnBuy, OnSell);
+                sig.Subscribe(OnBuy, OnSell);            
             MarketDataConnection.Instance.StartListening();
         }
 
@@ -49,9 +64,10 @@ namespace MidaxLib
     {
         protected MarketData _daxIndex = null;
         protected List<MarketData> _daxStocks = null;
+        protected List<MarketData> _volatilityIndices = null;
         protected SignalMacD _macD = null;
 
-        public ModelMidax(MarketData daxIndex, List<MarketData> daxStocks, int lowPeriod = 5, int highPeriod = 60)
+        public ModelMidax(MarketData daxIndex, List<MarketData> daxStocks, List<MarketData> volatilityIndices, int lowPeriod = 5, int highPeriod = 60)
         {
             List<MarketData> mktData = new List<MarketData>();
             mktData.Add(daxIndex);
@@ -59,9 +75,12 @@ namespace MidaxLib
             this._mktData = mktData;
             this._daxIndex = daxIndex;
             this._daxStocks = daxStocks;
+            this._volatilityIndices = volatilityIndices;
             this._macD = new SignalMacD(_daxIndex, lowPeriod, highPeriod);
-            _mktSignals = new List<Signal>();
-            _mktSignals.Add(this._macD);
+            this._mktSignals = new List<Signal>();
+            this._mktSignals.Add(this._macD);
+            this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, lowPeriod, 0)));
+            this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, highPeriod, 0)));
             this._mktUnsubscribedIndicators.Add(new IndicatorLevelMean(_daxIndex));
         }
 
