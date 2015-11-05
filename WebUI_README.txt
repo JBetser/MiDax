@@ -1,0 +1,1 @@
+blas_win32.dll and lapack_win32.dll should be copied to the web server c:\windows\syswow64
