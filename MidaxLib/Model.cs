@@ -76,6 +76,7 @@ namespace MidaxLib
             this._daxIndex = daxIndex;
             this._daxStocks = daxStocks;
             this._volatilityIndices = volatilityIndices;
+            this._mktIndices.AddRange(volatilityIndices);
             this._macD = new SignalMacD(_daxIndex, lowPeriod, highPeriod);
             this._mktSignals = new List<Signal>();
             this._mktSignals.Add(this._macD);
