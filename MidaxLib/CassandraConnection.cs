@@ -153,7 +153,7 @@ namespace MidaxLib
             if (_session == null)
                 return "[]";
             RowSet rowSet = getRows(startTime, stopTime, type, id);
-            double intervalSeconds = Math.Ceiling((stopTime - startTime).TotalHours);
+            double intervalSeconds = Math.Ceiling((stopTime - startTime).TotalHours); // 1s interval per requested hour (to limit data size)
             List<CqlQuote> filteredQuotes = new List<CqlQuote>();
             decimal? prevQuoteValue = null;
             CqlQuote prevQuote = new CqlQuote();

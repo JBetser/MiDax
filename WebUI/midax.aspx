@@ -260,7 +260,7 @@
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>
-               <option value="WMA_Low_5#WMA_High_60">WMA 5mn/1h</option>
+               <option value="WMA_5#WMA_60">WMA 5mn/1h</option>
              </select>   
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
