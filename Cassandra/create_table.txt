@@ -27,7 +27,7 @@ ALTER TABLE historicaldata.indicators WITH compaction = {'class': 'DateTieredCom
 CREATE TABLE historicaldata.signals (
   signalid text,
   trading_time timestamp,
-  value blob,
+  value int,
   PRIMARY KEY (signalid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);

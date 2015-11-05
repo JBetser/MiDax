@@ -49,7 +49,7 @@ public class Server
                 Ice.Properties properties = communicator().getProperties();
                 Ice.Identity id = communicator().stringToIdentity(properties.getProperty("Identity"));
 
-                MarketDataConnection.Instance.Connect(stopSignalCallback);
+                MarketDataConnection.Instance.Connect(connectionLostCallback);
 
                 MarketData index = new MarketData(dicSettings["INDEX"], new TimeSeries());
                 List<MarketData> stocks = new List<MarketData>();
@@ -119,6 +119,15 @@ public class Server
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);
             communicator().shutdown();
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Disconnected", EventLogEntryType.Information);
+        }
+
+        void connectionLostCallback(object state)
+        {
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Connection lost. Reconnecting...", EventLogEntryType.Warning);
+            MarketDataConnection.Instance.Connect(connectionLostCallback);
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Connected. Restarting the signals...", EventLogEntryType.Information);
+            MarketDataConnection.Instance.StartListening();
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
         }
     }
 
