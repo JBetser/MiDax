@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MidaxLib;
+using NLapack.Matrices;
+using NLapack.Numbers;
 
 namespace MidaxTester
 {   
@@ -34,6 +36,37 @@ namespace MidaxTester
             dicSettings["TRADING_MODE"] = "REPLAY";
             dicSettings["MINIMUM_BET"] = "2";
             Config.Settings = dicSettings;
+
+            Console.WriteLine("Testing calibration...");
+
+            LevenbergMarquardt.objective_func objFunc = (NRealMatrix x) => { NRealMatrix y = new NRealMatrix(x.Rows, 1);
+                                                 for (int idxRow = 0; idxRow < y.Rows; idxRow++)
+                                                     y.SetAt(idxRow, 0, new NDouble(2 * Math.Cos(x[idxRow, 0]) + Math.Sin(2 * x[idxRow, 0])));
+                                                 return y; };
+            List<double> inputs = new List<double>();
+            Random rnd = new Random(155);    
+            for (int idxPt = 0; idxPt < 20; idxPt++)
+                inputs.Add(rnd.NextDouble() * 2);
+            List<double> modelParams = new List<double>(); 
+            modelParams.Add(1.8); modelParams.Add(1.2);
+            LevenbergMarquardt.model_func modelFunc = (NRealMatrix x, NRealMatrix weights) => { NRealMatrix y = new NRealMatrix(x.Rows, 1);
+                                                double a = weights[0, 0]; double b = weights[1, 0];                                                
+                                                for (int idxRow = 0; idxRow < y.Rows; idxRow++)
+                                                     y.SetAt(idxRow, 0, new NDouble(a * Math.Cos(b * x[idxRow, 0]) + b * Math.Sin(a * x[idxRow, 0])));
+                                                return y; };
+            Func<double,double,double,double> derA = (double a, double b, double x) => Math.Cos(b * x) + b * x * Math.Cos(a * x);
+            Func<double,double,double,double> derB = (double a, double b, double x) => - a * x * Math.Sin(b * x) + Math.Sin(a * x);
+            LevenbergMarquardt.model_func jacFunc = (NRealMatrix x, NRealMatrix weights) => { NRealMatrix jac = new NRealMatrix(2, x.Rows);
+                                                double a = weights[0, 0]; double b = weights[1, 0];                                                
+                                                for (int idxCol = 0; idxCol < jac.Columns; idxCol++){
+                                                    jac.SetAt(0, idxCol, new NDouble(derA(a, b, x[idxCol, 0])));
+                                                    jac.SetAt(1, idxCol, new NDouble(derB(a, b, x[idxCol, 0])));
+                                                }
+                                                return jac; };
+            LevenbergMarquardt calibModel = new LevenbergMarquardt(objFunc, inputs, modelParams, modelFunc, jacFunc, 0.001, 0.001, 1000);
+            calibModel.Solve();
+            if (Math.Abs(modelParams[0] - 2) > calibModel.ObjectiveError || Math.Abs(modelParams[1] - 1) > calibModel.ObjectiveError)
+                throw new ApplicationException("LevenbergMarquardt calibration error");
 
             MarketDataConnection.Instance.Connect(null);
             
