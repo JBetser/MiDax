@@ -228,7 +228,9 @@
              <select class="combobox input-large" id="equity">
                <option value="">Choose a market data</option>
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
-               <option value="ED.D.ADSGY.DAILY.IP">Adidas AG</option>
+               <option value="IN.D.VIX.MONTH2.IP">VIX 2M</option>
+               <option value="IN.D.VIX.MONTH3.IP">VIX 3M</option>
+               <!--option value="ED.D.ADSGY.DAILY.IP">Adidas AG</!--option>
                <option value="ED.D.ALVGY.DAILY.IP">Allianz SE</option>
                <option value="ED.D.BAS.DAILY.IP">BASF SE</option>
                <option value="ED.D.BAY.DAILY.IP">Bayer AG</option>
@@ -256,7 +258,7 @@
                <option value="ED.D.SAPG.DAILY.IP">SAP AG</option>
                <option value="ED.D.SIEGn.DAILY.IP">Siemens AG</option>
                <option value="ED.D.TKAG.DAILY.IP">ThyssenKrupp AG</option>
-               <option value="ED.D.VOW.DAILY.IP">Volkswagen AG</option>
+               <option value="ED.D.VOW.DAILY.IP">Volkswagen AG</option-->
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>

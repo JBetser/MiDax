@@ -36,6 +36,17 @@ namespace MidaxLib
                 if (line == "")
                     break;
                 var values = line.Split(',');
+                bool empty = true;
+                foreach (var val in values)
+                {
+                    if (val != "")
+                    {
+                        empty = false;
+                        break;
+                    }
+                }
+                if (empty)
+                    break;
                 DateTime curTime = DateTime.SpecifyKind(DateTime.Parse(values[2]), DateTimeKind.Local);
                 if (!values[1].StartsWith("WMA_1D")) // Do not check time for daily market data
                 {

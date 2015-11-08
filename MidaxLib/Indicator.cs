@@ -11,11 +11,14 @@ namespace MidaxLib
     public abstract class Indicator : MarketData
     {
         protected List<MarketData> _mktData = null;
+        bool _publishingEnabled = true;
+
+        public bool PublishingEnabled { get { return _publishingEnabled; } set { _publishingEnabled = value; } }
 
         public Indicator(string id, List<MarketData> mktData)
             : base(id, new TimeSeries())
         {
-            this._mktData = mktData;
+            _mktData = mktData;
         }
 
         public override void Subscribe(Tick eventHandler)
@@ -40,7 +43,8 @@ namespace MidaxLib
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }
-            PublisherConnection.Instance.Insert(updateTime, this, price.Bid);
+            if (_publishingEnabled)
+                PublisherConnection.Instance.Insert(updateTime, this, price.Bid);
         }
     }
 
@@ -48,10 +52,19 @@ namespace MidaxLib
     {
         int _periodMinutes;
 
+        public MarketData Asset { get { return _mktData[0]; } }
+        public int Period { get { return _periodMinutes; } }
+        
         public IndicatorWMA(MarketData mktData, int periodMinutes)
             : base("WMA_" + periodMinutes + "_" + mktData.Id, new List<MarketData> { mktData })
         {
             _periodMinutes = periodMinutes;
+        }
+
+        public IndicatorWMA(IndicatorWMA indicator)
+            : base(indicator.Id, new List<MarketData> { indicator.Asset })
+        {
+            _periodMinutes = indicator.Period;
         }
 
         // Whole day average

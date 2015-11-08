@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace MidaxLib
 {
-    public struct CqlQuote
+    public class CqlQuote
     {
         public string s;
         public DateTimeOffset t;
@@ -17,6 +17,9 @@ namespace MidaxLib
         public string n;
         public decimal? o;
         public int? v;
+        public CqlQuote()
+        {
+        }
         public CqlQuote(Row row)
         {
             s = (string)row[0];
@@ -34,6 +37,63 @@ namespace MidaxLib
             n = stockName;
             o = offer;
             v = volume;
+        }
+        static public CqlQuote CreateInstance(string type, Row row)
+        {
+            switch(type)
+            {
+                case PublisherConnection.DATATYPE_STOCK:
+                    return new CqlQuote(row);
+                case PublisherConnection.DATATYPE_INDICATOR:
+                    return new CqlIndicator(row);
+                case PublisherConnection.DATATYPE_SIGNAL:
+                    return new CqlSignal(row);
+            }
+            return null;
+        }
+    }
+
+    public class CqlIndicator : CqlQuote
+    {
+        public CqlIndicator(Row row)
+        {
+            s = (string)row[0];
+            t = (DateTimeOffset)row[1];
+            b = (decimal)row[2];
+            n = (string)row[0];
+            o = (decimal)row[2];
+            v = 0;
+        }
+        public CqlIndicator(string stockId, DateTimeOffset tradingTime, string stockName, decimal? value)
+        {
+            s = stockId;
+            t = tradingTime;
+            b = value;
+            n = stockName;
+            o = value;
+            v = 0;
+        }
+    }
+
+    public class CqlSignal : CqlQuote
+    {
+        public CqlSignal(Row row)
+        {
+            s = (string)row[0];
+            t = (DateTimeOffset)row[1];
+            b = Convert.ToInt32(row[2]);
+            n = (string)row[0];
+            o = Convert.ToInt32(row[2]);
+            v = 0;
+        }
+        public CqlSignal(string stockId, DateTimeOffset tradingTime, string stockName, SIGNAL_CODE? value)
+        {
+            s = stockId;
+            t = tradingTime;
+            b = Convert.ToInt32(value);
+            n = stockName;
+            o = Convert.ToInt32(value);
+            v = 0;
         }
     }
 
@@ -162,7 +222,7 @@ namespace MidaxLib
             List<Gap> gaps = new List<Gap>();
             foreach (Row row in rowSet.GetRows())
             {
-                CqlQuote cqlQuote = new CqlQuote(row);
+                CqlQuote cqlQuote = CqlQuote.CreateInstance(type, row);
                 decimal quoteValue = (cqlQuote.b + cqlQuote.o).Value / 2m;
                 if (!prevQuoteValue.HasValue)
                 {

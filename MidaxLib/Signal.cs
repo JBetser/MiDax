@@ -84,11 +84,13 @@ namespace MidaxLib
 
     public abstract class Signal
     {
+        public delegate void Tick(Signal signal, DateTime time, Price value);
+
         protected string _id = null;
         protected string _name = null;
         protected MarketData _asset = null;
-        protected MarketData.Tick _onBuy = null;
-        protected MarketData.Tick _onSell = null;
+        protected Signal.Tick _onBuy = null;
+        protected Signal.Tick _onSell = null;
         protected TimeSeries _values = null;
         protected List<Indicator> _mktIndicator = null;
         protected SIGNAL_CODE _signalCode = SIGNAL_CODE.UNKNOWN;
@@ -101,8 +103,8 @@ namespace MidaxLib
             this._mktIndicator = new List<Indicator>();
             this._values = new TimeSeries();
         }
-        
-        public void Subscribe(MarketData.Tick onBuy, MarketData.Tick onSell)
+
+        public void Subscribe(Signal.Tick onBuy, Signal.Tick onSell)
         {
             _onBuy = onBuy;
             _onSell = onSell;
@@ -125,23 +127,28 @@ namespace MidaxLib
             get { return _values; }
         }
 
-        void _onHold(MarketData mktData, DateTime updateTime, Price value)
+        public MarketData Asset
+        {
+            get { return _asset; }
+        }
+
+        void _onHold(Signal signal, DateTime updateTime, Price value)
         {
         }
 
         protected void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             SIGNAL_CODE oldSignalCode = _signalCode;
-            MarketData.Tick tradingOrder = _onHold;
-            bool signaled = OnSignal(mktData, updateTime, value, ref tradingOrder);
+            Signal.Tick tradingOrder = _onHold;
+            bool signaled = Process(mktData, updateTime, value, ref tradingOrder);
             if (signaled && _signalCode != oldSignalCode)
             {
-                tradingOrder(_asset, updateTime, value);
+                tradingOrder(this, updateTime, value);
                 PublisherConnection.Instance.Insert(updateTime, this, _signalCode);
             }
         }
 
-        protected abstract bool OnSignal(MarketData indicator, DateTime updateTime, Price value, ref MarketData.Tick tradingOrder);
+        protected abstract bool Process(MarketData indicator, DateTime updateTime, Price value, ref Signal.Tick tradingOrder);
     }
        
     public class SignalMacD : Signal
@@ -149,17 +156,24 @@ namespace MidaxLib
         IndicatorWMA _low = null;
         IndicatorWMA _high = null;
 
-        public SignalMacD(MarketData asset, int lowPeriod = 5, int highPeriod = 60)
+        public IndicatorWMA IndicatorLow { get { return _low; } }
+        public IndicatorWMA IndicatorHigh { get { return _high; } }
+
+        public SignalMacD(MarketData asset, int lowPeriod = 5, int highPeriod = 60, IndicatorWMA low = null, IndicatorWMA high = null)
             : base("MacD_" + asset.Id, asset)
         {
             _id += "_" + lowPeriod + "_" + highPeriod;
-            _low = new IndicatorWMA(asset, lowPeriod);
-            _high = new IndicatorWMA(asset, highPeriod);
+            _low = low == null ? new IndicatorWMA(asset, lowPeriod) : new IndicatorWMA(low);
+            if (low != null)
+                _low.PublishingEnabled = false;
+            _high = high == null ? new IndicatorWMA(asset, highPeriod) : new IndicatorWMA(high);
+            if (high != null)
+                _high.PublishingEnabled = false;
             _mktIndicator.Add(_low);
             _mktIndicator.Add(_high);
         }
 
-        protected override bool OnSignal(MarketData indicator, DateTime updateTime, Price value, ref MarketData.Tick tradingOrder)
+        protected override bool Process(MarketData indicator, DateTime updateTime, Price value, ref Signal.Tick tradingOrder)
         {
             KeyValuePair<DateTime, Price>? timeValueLow = _low.TimeSeries[updateTime];
             KeyValuePair<DateTime, Price>? timeValueHigh = _high.TimeSeries[updateTime];

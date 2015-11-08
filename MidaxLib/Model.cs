@@ -11,8 +11,8 @@ namespace MidaxLib
 {
     public abstract class Model
     {
-        protected List<MarketData> _mktData = null;
-        protected List<Signal> _mktSignals = null;
+        protected List<MarketData> _mktData = new List<MarketData>();
+        protected List<Signal> _mktSignals = new List<Signal>();
         protected List<MarketData> _mktIndices = new List<MarketData>();
         protected List<Indicator> _mktIndicators = new List<Indicator>();
         protected List<IndicatorLevel> _mktUnsubscribedIndicators = new List<IndicatorLevel>();
@@ -21,22 +21,14 @@ namespace MidaxLib
         {            
         }
 
-        public Model(List<MarketData> mktData, List<Signal> mktSignals)
-        {
-            this._mktData = mktData;     
-            this._mktSignals = mktSignals;            
-        }
-
-        protected abstract void OnBuy(MarketData mktData, DateTime time, Price value);
-        protected abstract void OnSell(MarketData mktData, DateTime time, Price value);
+        protected abstract void OnBuy(Signal signal, DateTime time, Price value);
+        protected abstract void OnSell(Signal signal, DateTime time, Price value);
 
         protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)
         {
-            PublisherConnection.Instance.Insert(updateTime, mktData, value);
         }
         protected virtual void OnUpdateIndicator(MarketData mktData, DateTime updateTime, Price value)
         {
-            PublisherConnection.Instance.Insert(updateTime, (Indicator)mktData, value.Mid());
         }
         
         public void StartSignals()
@@ -65,9 +57,10 @@ namespace MidaxLib
         protected MarketData _daxIndex = null;
         protected List<MarketData> _daxStocks = null;
         protected List<MarketData> _volatilityIndices = null;
-        protected SignalMacD _macD = null;
+        protected SignalMacD _macD_low = null;
+        protected SignalMacD _macD_high = null;
 
-        public ModelMidax(MarketData daxIndex, List<MarketData> daxStocks, List<MarketData> volatilityIndices, int lowPeriod = 5, int highPeriod = 60)
+        public ModelMidax(MarketData daxIndex, List<MarketData> daxStocks, List<MarketData> volatilityIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
         {
             List<MarketData> mktData = new List<MarketData>();
             mktData.Add(daxIndex);
@@ -77,22 +70,24 @@ namespace MidaxLib
             this._daxStocks = daxStocks;
             this._volatilityIndices = volatilityIndices;
             this._mktIndices.AddRange(volatilityIndices);
-            this._macD = new SignalMacD(_daxIndex, lowPeriod, highPeriod);
-            this._mktSignals = new List<Signal>();
-            this._mktSignals.Add(this._macD);
-            this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, lowPeriod, 0)));
-            this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, highPeriod, 0)));
+            this._macD_low = new SignalMacD(_daxIndex, lowPeriod, midPeriod);
+            this._macD_high = new SignalMacD(_daxIndex, midPeriod, highPeriod, this._macD_low.IndicatorHigh);
+            this._mktSignals.Add(this._macD_low);
+            this._mktSignals.Add(this._macD_high);
+            this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, lowPeriod * 30)));
+            this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, midPeriod * 30)));
+            this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, highPeriod * 30)));
             this._mktUnsubscribedIndicators.Add(new IndicatorLevelMean(_daxIndex));
         }
 
-        protected override void OnBuy(MarketData mktData, DateTime time, Price value)
+        protected override void OnBuy(Signal signal, DateTime time, Price value)
         {
-            Log.Instance.WriteEntry(time + ": BUY " + mktData.Id + " " + value.Offer, EventLogEntryType.Information);
+            Log.Instance.WriteEntry(time + "Signal " + signal.Id + ": BUY " + signal.Asset.Id + " " + value.Offer, EventLogEntryType.Information);
         }
 
-        protected override void OnSell(MarketData mktData, DateTime time, Price value)
+        protected override void OnSell(Signal signal, DateTime time, Price value)
         {
-            Log.Instance.WriteEntry(time + ": SELL " + mktData.Id + " " + value.Bid, EventLogEntryType.Information);
+            Log.Instance.WriteEntry(time + "Signal " + signal.Id + ": SELL " + signal.Asset.Id + " " + value.Bid, EventLogEntryType.Information);
         }
     }
 }

@@ -28,6 +28,7 @@ namespace MidaxTester
             //dicSettings["PUBLISHING_CSV"] = @"..\..\expected_results\new_results.csv";   // uncomment this line to generate new test results
             dicSettings["REPLAY_MODE"] = "CSV";
             dicSettings["REPLAY_CSV"] = TestList(tests);
+            dicSettings["REPLAY_POPUP"] = "1";
             dicSettings["TRADING_START_TIME"] = "2015-08-26 08:00:00";
             dicSettings["TRADING_STOP_TIME"] = "2015-08-26 09:00:00";
             dicSettings["TRADING_MODE"] = "REPLAY";
@@ -45,12 +46,16 @@ namespace MidaxTester
             marketData.Add(new MarketData("Bayer AG:ED.D.BAY.DAILY.IP", new TimeSeries()));
 
             ModelTest model = new ModelTest(index, marketData);
+            Console.WriteLine("Testing live indicators and signals...");
             model.StartSignals();
+            Console.WriteLine("Testing daily indicators...");
             string status = model.StopSignals();
 
             if (!dicSettings.ContainsKey("PUBLISHING_CSV"))
             {
                 // Test exceptions
+                Console.WriteLine("Testing expected exceptions...");
+                string expected;
                 List<string> testError = new List<string>();
                 testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");
                 dicSettings["REPLAY_CSV"] = TestList(testError);
@@ -61,29 +66,34 @@ namespace MidaxTester
                 {
                     model.StartSignals();
                 }
-                catch (ApplicationException exc)
+                catch (Exception exc)
                 {
-                    success = (exc.Message == "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9975.133333333333333333333413 != 9975.323333333333333333333414");
+                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9975.133333333333333333333413 != 9975.323333333333333333333414";
+                    success = (exc.Message == expected);
                     if (!success)
-                        throw new ApplicationException("An exception message test failed");
+                        model.ProcessError(exc.Message, expected);
                 }
-                finally
+                try
                 {
-                    try
-                    {
-                        model.StopSignals();
-                    }
-                    catch (Exception exc)
-                    {
-                        success = (exc.Message == "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360168776371308016877542 != 9972.779391891891891891891958");
-                        if (!success)
-                            throw new ApplicationException("An exception message test failed");
-                    }
+                    model.StopSignals();
+                }
+                catch (Exception exc)
+                {
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360168776371308016877542 != 9972.779391891891891891891958";
+                    success = (exc.Message == expected);
+                    if (!success)
+                        model.ProcessError(exc.Message, expected);
                 }
                 if (!success)
-                    throw new ApplicationException("An expected exception has not been thrown");
+                    model.ProcessError("An expected exception has not been thrown");
+
+                if (status != "Tests passed successfully")
+                    model.ProcessError(status);
             }
-            MessageBox.Show(status);
+            Console.WriteLine(status);
+
+            if (dicSettings["REPLAY_POPUP"] == "1")
+                MessageBox.Show(status);
         }
 
         static string TestList(List<string> tests)
