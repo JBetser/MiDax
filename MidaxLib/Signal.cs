@@ -159,10 +159,9 @@ namespace MidaxLib
         public IndicatorWMA IndicatorLow { get { return _low; } }
         public IndicatorWMA IndicatorHigh { get { return _high; } }
 
-        public SignalMacD(MarketData asset, int lowPeriod = 5, int highPeriod = 60, IndicatorWMA low = null, IndicatorWMA high = null)
-            : base("MacD_" + asset.Id, asset)
+        public SignalMacD(MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null)
+            : base("MacD_" + asset.Id + "_" + lowPeriod + "_" + highPeriod, asset)
         {
-            _id += "_" + lowPeriod + "_" + highPeriod;
             _low = low == null ? new IndicatorWMA(asset, lowPeriod) : new IndicatorWMA(low);
             if (low != null)
                 _low.PublishingEnabled = false;

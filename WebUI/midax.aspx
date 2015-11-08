@@ -165,7 +165,7 @@
                         }
                     }
                     if (window.document.getElementById("signal").selectedIndex > 0) {
-                        var signalParams = $.extend({ "signalid": $("#signal").val() }, genericParams);
+                        var signalParams = $.extend({ "signalid": $("#signal").val() + "_" + $("#equity").val() }, genericParams);
                         $.extend(requests, { "GetSignalData": signalParams });
                     }
                     MidaxAPI(requests);
@@ -262,11 +262,16 @@
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>
-               <option value="WMA_5#WMA_60">WMA 5mn/1h</option>
+               <option value="WMA_2#WMA_10">WMA 2mn/10mn</option>
+               <option value="WMA_10#WMA_60">WMA 10mn/1h</option>
+               <option value="LR_1">Linear regression 1mn</option>
+               <option value="LR_5">Linear regression 5mn</option>
+               <option value="LR_30">Linear regression 30mn</option>
              </select>   
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
-               <option value="MacD">MacD</option>
+               <option value="MacD_2_10">MacD 2mn/10mn</option>
+               <option value="MacD_10_60">MacD 10mn/60mn</option>
              </select>          
              <button type="button" id="GO" class="btn btn-primary">
                     <span class="glyphicon glyphicon-ok"></span> </button>
