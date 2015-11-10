@@ -47,8 +47,8 @@ namespace MidaxTester
             Random rnd = new Random(155);    
             for (int idxPt = 0; idxPt < 20; idxPt++)
                 inputs.Add(rnd.NextDouble() * 2);
-            List<double> modelParams = new List<double>(); 
-            modelParams.Add(1.8); modelParams.Add(1.2);
+            List<Value> modelParams = new List<Value>(); 
+            modelParams.Add(new Value(1.8)); modelParams.Add(new Value(1.2));
             LevenbergMarquardt.model_func modelFunc = (NRealMatrix x, NRealMatrix weights) => { NRealMatrix y = new NRealMatrix(x.Rows, 1);
                                                 double a = weights[0, 0]; double b = weights[1, 0];                                                
                                                 for (int idxRow = 0; idxRow < y.Rows; idxRow++)
@@ -65,7 +65,7 @@ namespace MidaxTester
                                                 return jac; };
             LevenbergMarquardt calibModel = new LevenbergMarquardt(objFunc, inputs, modelParams, modelFunc, jacFunc, 0.001, 0.001, 1000);
             calibModel.Solve();
-            if (Math.Abs(modelParams[0] - 2) > calibModel.ObjectiveError || Math.Abs(modelParams[1] - 1) > calibModel.ObjectiveError)
+            if (Math.Abs(modelParams[0].X - 2) > calibModel.ObjectiveError || Math.Abs(modelParams[1].X - 1) > calibModel.ObjectiveError)
                 throw new ApplicationException("LevenbergMarquardt calibration error");
 
             MarketDataConnection.Instance.Connect(null);

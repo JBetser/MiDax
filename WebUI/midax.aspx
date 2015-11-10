@@ -229,7 +229,6 @@
                <option value="">Choose a market data</option>
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
                <option value="IN.D.VIX.MONTH2.IP">VIX 2M</option>
-               <option value="IN.D.VIX.MONTH3.IP">VIX 3M</option>
                <!--option value="ED.D.ADSGY.DAILY.IP">Adidas AG</!--option>
                <option value="ED.D.ALVGY.DAILY.IP">Allianz SE</option>
                <option value="ED.D.BAS.DAILY.IP">BASF SE</option>

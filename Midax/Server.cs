@@ -10,6 +10,7 @@ using Midax;
 using System.Collections.Specialized;
 using System.Reflection;
 using System.Threading;
+using NLapack.Matrices;
 
 public class Server
 {
@@ -44,7 +45,7 @@ public class Server
                         dicSettings.Add(prop.Name, (string)prop.PropertyValue);
                 }
                 Config.Settings = dicSettings;
-
+            
                 Ice.ObjectAdapter adapter = communicator().createObjectAdapter("MidaxIce");
                 Ice.Properties properties = communicator().getProperties();
                 Ice.Identity id = communicator().stringToIdentity(properties.getProperty("Identity"));

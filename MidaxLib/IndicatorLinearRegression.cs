@@ -33,7 +33,7 @@ namespace MidaxLib
             }
         }
 
-        decimal? linearCoeff(DateTime updateTime)
+        public decimal? linearCoeff(DateTime updateTime)
         {
             List<KeyValuePair<DateTime, Price>> values = _mktData[0].TimeSeries.Values(updateTime, _interval);
             if (values == null)
