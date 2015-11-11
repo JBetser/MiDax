@@ -29,7 +29,7 @@ namespace MidaxLib
             _itemData["UPDATE_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", quote.t.Year, quote.t.Month,
                                                 quote.t.Day, quote.t.Hour, quote.t.Minute, quote.t.Second);
             _itemData["MARKET_DELAY"] = "0";
-            _itemData["MARKET_STATE"] = "TRADEABLE";
+            _itemData["MARKET_STATE"] = "REPLAY";
             _itemData["BID"] = quote.b.ToString();
             _itemData["OFFER"] = quote.o.ToString();
         }

@@ -45,6 +45,10 @@ namespace MidaxLib
                     _instance = new IGConnection();
                 return _instance;
             }
+            set
+            {
+                _instance = value;
+            }
         }
 
         public abstract void Connect(TimerCallback connectionClosed);
@@ -99,11 +103,10 @@ namespace MidaxLib
                 if (Config.PublishingOpen)
                 {
                     L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
-                    if (priceData.MarketState == "TRADEABLE")
-                    {
-                        foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
-                            data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
-                    }
+                    //if (priceData.MarketState == "TRADEABLE" || priceData.MarketState == "REPLAY")
+                    //{
+                    foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
+                        data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
                 }
             }
             catch (Exception ex)

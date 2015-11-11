@@ -70,13 +70,13 @@ namespace MidaxTester
 
             MarketDataConnection.Instance.Connect(null);
             
-            MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP", new TimeSeries());
+            MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
 
             List<MarketData> marketData = new List<MarketData>();
-            marketData.Add(new MarketData("Adidas AG:ED.D.ADSGY.DAILY.IP", new TimeSeries()));
-            marketData.Add(new MarketData("Allianz SE:ED.D.ALVGY.DAILY.IP", new TimeSeries()));
-            marketData.Add(new MarketData("BASF SE:ED.D.BAS.DAILY.IP", new TimeSeries()));
-            marketData.Add(new MarketData("Bayer AG:ED.D.BAY.DAILY.IP", new TimeSeries()));
+            marketData.Add(new MarketData("Adidas AG:ED.D.ADSGY.DAILY.IP"));
+            marketData.Add(new MarketData("Allianz SE:ED.D.ALVGY.DAILY.IP"));
+            marketData.Add(new MarketData("BASF SE:ED.D.BAS.DAILY.IP"));
+            marketData.Add(new MarketData("Bayer AG:ED.D.BAY.DAILY.IP"));
 
             ModelTest model = new ModelTest(index, marketData);
             Console.WriteLine("Testing live indicators and signals...");
@@ -92,11 +92,25 @@ namespace MidaxTester
                 List<string> testError = new List<string>();
                 testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");
                 dicSettings["REPLAY_CSV"] = TestList(testError);
-                MarketDataConnection.Instance.Connect(null);
-                model = new ModelTest(index, marketData);
+                MarketDataConnection.Instance.Connect(null);                
                 bool success = false;
                 try
                 {
+                    model = new ModelTest(index, marketData);
+                    model.StartSignals();
+                }
+                catch (Exception exc)
+                {
+                    expected = "An entry with the same key already exists.";
+                    success = (exc.Message == expected);
+                    if (!success)
+                        model.ProcessError(exc.Message, expected);
+                }
+                try
+                {
+                    MarketDataConnection.Instance = new ReplayConnection();
+                    MarketDataConnection.Instance.Connect(null);
+                    model = new ModelTest(new MarketData(index.Id), (from data in marketData select new MarketData(data.Id)).ToList());
                     model.StartSignals();
                 }
                 catch (Exception exc)
@@ -112,7 +126,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360168776371308016877542 != 9972.779391891891891891891958";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360168776371308016877542 != 9975.323333333333333333333412";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);

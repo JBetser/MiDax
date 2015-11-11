@@ -10,12 +10,16 @@ namespace MidaxLib
 {
     public class MarketData
     {
-        public MarketData(string name_id, TimeSeries values)
+        static bool? _replay = null;
+
+        public MarketData(string name_id)
         {
             this._id = name_id.Split(':').Count() > 1 ? name_id.Split(':')[1] : name_id;
             this._name = name_id.Split(':')[0];
-            this._values = values;
+            this._values = new TimeSeries();
             this._eventHandlers = new List<Tick>();
+            if (!_replay.HasValue)
+                _replay = Config.Settings["TRADING_MODE"] == "REPLAY";
         }
 
         public delegate void Tick(MarketData mktData, DateTime time, Price value);
@@ -31,7 +35,8 @@ namespace MidaxLib
         public void FireTick(DateTime updateTime, L1LsPriceData value)
         {
             Price livePrice = new Price(value);
-            _values.Add(updateTime, livePrice);            
+            if (!_replay.Value || value.MarketState == "REPLAY")
+                _values.Add(updateTime, livePrice);            
             foreach (Tick ticker in this._eventHandlers)
                 ticker(this, updateTime, livePrice);
             Publish(updateTime, livePrice);

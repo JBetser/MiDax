@@ -33,8 +33,8 @@ function processResponses(jsonData) {
       .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+    var keyValueMap = {};
     for (var marketData in jsonData) {
-        var keyValueMap = {};
         jsonData[marketData].response.forEach(function (d) {
             d.t = new Date(d.t);
             if (!keyValueMap[d.n])

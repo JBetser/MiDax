@@ -205,9 +205,8 @@ namespace MidaxLib
                 modelDeltas.AddRange(from deltas in layer.GetDeltas() select deltas);
 
             LevenbergMarquardt.model_func modelFunc = (NRealMatrix x, NRealMatrix weights) => { NRealMatrix y = new NRealMatrix(x.Rows, nbOutputs);
-                                                List<double> modelInputs = new List<double>();
-                                                for (int idxRow = 0; idxRow < x.Rows; idxRow++){
-                                                    CalculateOutput(inputValues[Convert.ToInt32(x[idxRow,0])]); 
+                                                for (int idxRow = 0; idxRow < x.Rows; idxRow++){                                                    
+                                                    CalculateOutput(inputValues[Convert.ToInt32(x[idxRow, 0])]); 
                                                     List<double> modelOutputs = GetOutput();
                                                     BackPropagate(modelOutputs);
                                                     for (int idxCol = 0; idxCol < nbOutputs; idxCol++)

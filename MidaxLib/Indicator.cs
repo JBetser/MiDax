@@ -16,7 +16,7 @@ namespace MidaxLib
         public bool PublishingEnabled { get { return _publishingEnabled; } set { _publishingEnabled = value; } }
 
         public Indicator(string id, List<MarketData> mktData)
-            : base(id, new TimeSeries())
+            : base(id)
         {
             _mktData = mktData;
         }
@@ -94,9 +94,10 @@ namespace MidaxLib
             decimal weight = 0;
             bool started = false;
             int idxSecondStart = 0;
+            int timeSeriesIndex = 0;
             for (int idxSecond = 0; idxSecond < 60 * _periodMinutes; idxSecond++){
-                KeyValuePair<DateTime, Price>? beginPeriodValue = mktData.TimeSeries.Value(updateTime.AddSeconds(-1 * (idxSecond + 1)));
-                KeyValuePair<DateTime, Price>? endPeriodValue = mktData.TimeSeries.Value(updateTime.AddSeconds(-1 * idxSecond));
+                KeyValuePair<DateTime, Price>? beginPeriodValue = mktData.TimeSeries.Value(updateTime.AddSeconds(-1 * (idxSecond + 1)), ref timeSeriesIndex);
+                KeyValuePair<DateTime, Price>? endPeriodValue = mktData.TimeSeries.Value(updateTime.AddSeconds(-1 * idxSecond), ref timeSeriesIndex);
                 if (!beginPeriodValue.HasValue || !endPeriodValue.HasValue)
                 {
                     if (acceptMissingValues)

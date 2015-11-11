@@ -52,13 +52,13 @@ public class Server
 
                 MarketDataConnection.Instance.Connect(connectionLostCallback);
 
-                MarketData index = new MarketData(dicSettings["INDEX"], new TimeSeries());
+                MarketData index = new MarketData(dicSettings["INDEX"]);
                 List<MarketData> stocks = new List<MarketData>();
                 foreach (string stock in stockList)
-                    stocks.Add(new MarketData(stock, new TimeSeries()));
+                    stocks.Add(new MarketData(stock));
                 List<MarketData> volIndices = new List<MarketData>();
-                volIndices.Add(new MarketData(dicSettings["VOLATILITY_2M"], new TimeSeries()));
-                volIndices.Add(new MarketData(dicSettings["VOLATILITY_3M"], new TimeSeries()));
+                volIndices.Add(new MarketData(dicSettings["VOLATILITY_2M"]));
+                volIndices.Add(new MarketData(dicSettings["VOLATILITY_3M"]));
                 _model = new ModelMidax(index, stocks, volIndices);
                 adapter.add(new MidaxIceI(_model, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
