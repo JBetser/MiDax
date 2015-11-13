@@ -38,6 +38,11 @@ namespace MidaxLib
             o = offer;
             v = volume;
         }
+        public virtual decimal ScaleValue(decimal avg, decimal scale)
+        {
+            b = o = (b + o).Value / 2m;
+            return b.Value;
+        }         
         static public CqlQuote CreateInstance(string type, Row row)
         {
             switch(type)
@@ -73,6 +78,12 @@ namespace MidaxLib
             o = value;
             v = 0;
         }
+        public override decimal ScaleValue(decimal avg, decimal scale)
+        {
+            if (s.StartsWith("LR"))
+                b = o = avg + b.Value * scale;
+            return b.Value;
+        }  
     }
 
     public class CqlSignal : CqlQuote
@@ -95,6 +106,11 @@ namespace MidaxLib
             o = Convert.ToInt32(value);
             v = 0;
         }
+        public override decimal ScaleValue(decimal avg, decimal scale)
+        {
+            b = o = avg + (b.Value - 2) * scale;
+            return b.Value;
+        } 
     }
 
     public class Gap
@@ -122,6 +138,8 @@ namespace MidaxLib
     { 
         Cluster _cluster = null;
         ISession _session = null;
+        decimal _avg = 0m;
+        decimal _scale = 0m;
 
         static public new CassandraConnection Instance
         {
@@ -213,17 +231,36 @@ namespace MidaxLib
             if (_session == null)
                 return "[]";
             RowSet rowSet = getRows(startTime, stopTime, type, id);
-            double intervalSeconds = Math.Ceiling((stopTime - startTime).TotalHours); // 1s interval per requested hour (to limit data size)
+            double intervalSeconds = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 500);
+            double intervalSecondsLarge = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 200);
             List<CqlQuote> filteredQuotes = new List<CqlQuote>();
             decimal? prevQuoteValue = null;
             CqlQuote prevQuote = new CqlQuote();
             bool? trendUp = null;
             // find local minima
             List<Gap> gaps = new List<Gap>();
+            SortedList<decimal, CqlQuote> buffer = new SortedList<decimal,CqlQuote>();
+
+            decimal min = 1000000;
+            decimal max = 0;
+            List<CqlQuote> quotes = new List<CqlQuote>();
             foreach (Row row in rowSet.GetRows())
             {
                 CqlQuote cqlQuote = CqlQuote.CreateInstance(type, row);
-                decimal quoteValue = (cqlQuote.b + cqlQuote.o).Value / 2m;
+                if (cqlQuote.b < min)
+                    min = cqlQuote.b.Value;
+                if (cqlQuote.b > max)
+                    max = cqlQuote.b.Value;
+                quotes.Add(cqlQuote);
+            }
+            if (type == PublisherConnection.DATATYPE_STOCK)
+            {
+                _avg = (min + max) / 2m;
+                _scale = (max - min) / 2m;
+            }
+            foreach (CqlQuote cqlQuote in quotes)
+            {
+                decimal quoteValue = cqlQuote.ScaleValue(_avg, _scale);
                 if (!prevQuoteValue.HasValue)
                 {
                     filteredQuotes.Add(cqlQuote);
@@ -236,31 +273,78 @@ namespace MidaxLib
                     trendUp = quoteValue > prevQuoteValue;
                     prevQuoteValue = quoteValue;
                     prevQuote = cqlQuote;
+                    if ((prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
+                        buffer.Add(quoteValue, cqlQuote);
+                    else
+                        filteredQuotes.Add(cqlQuote);
                     continue;
                 }
-                if (Math.Abs((cqlQuote.t - prevQuote.t).TotalSeconds) < intervalSeconds)
-                    continue;
-                if (Math.Abs(quoteValue - prevQuoteValue.Value) < 2)
-                    continue;
                 if (((quoteValue < prevQuoteValue) && trendUp.Value) ||
                     ((quoteValue > prevQuoteValue) && !trendUp.Value))
                 {
+                    if ((prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
+                    {
+                        if (!buffer.ContainsKey(quoteValue))
+                            buffer.Add(quoteValue, cqlQuote);
+                        continue;
+                    }
+                    if (buffer.Count > 1)
+                    {
+                        if (buffer.First().Value.t > buffer.Last().Value.t)
+                        {
+                            filteredQuotes.Add(buffer.First().Value);
+                            filteredQuotes.Add(buffer.Last().Value);
+                        }
+                        else
+                        {
+                            filteredQuotes.Add(buffer.Last().Value);
+                            filteredQuotes.Add(buffer.First().Value);
+                        }
+                    }
+                    else if (buffer.Count == 1)
+                        filteredQuotes.Add(buffer.First().Value);
+                    buffer.Clear();
                     trendUp = !trendUp;
-                    filteredQuotes.Add(prevQuote);
-                    gaps.Add(new Gap(Math.Abs(quoteValue - prevQuoteValue.Value), 
-                        new Tuple<CqlQuote,CqlQuote>(trendUp.Value ? prevQuote : cqlQuote, trendUp.Value ? cqlQuote : prevQuote)));
+                    //gaps.Add(new Gap(Math.Abs(quoteValue - prevQuoteValue.Value), 
+                    //    new Tuple<CqlQuote,CqlQuote>(trendUp.Value ? prevQuote : cqlQuote, trendUp.Value ? cqlQuote : prevQuote)));
+                }
+                else
+                {
+                    if ((prevQuote.t - cqlQuote.t).TotalSeconds < intervalSecondsLarge)
+                    {
+                        if (!buffer.ContainsKey(quoteValue))
+                            buffer.Add(quoteValue, cqlQuote);
+                        continue;
+                    }
+                    if (buffer.Count > 1)
+                    {
+                        if (buffer.First().Value.t > buffer.Last().Value.t)
+                        {
+                            filteredQuotes.Add(buffer.First().Value);
+                            filteredQuotes.Add(buffer.Last().Value);
+                        }
+                        else
+                        {
+                            filteredQuotes.Add(buffer.Last().Value);
+                            filteredQuotes.Add(buffer.First().Value);
+                        }
+                    }
+                    else if (buffer.Count == 1)
+                        filteredQuotes.Add(buffer.First().Value);
+                    buffer.Clear();
                 }
                 prevQuoteValue = quoteValue;
                 prevQuote = cqlQuote;
             }
-            filteredQuotes.Add(prevQuote);
-
+            if (filteredQuotes.Last() != prevQuote)
+                filteredQuotes.Add(prevQuote);
+            /*
             gaps.Sort(new GapSorter());
             while (filteredQuotes.Count > 500)
             {
                 filteredQuotes.Remove(gaps.ElementAt(0).quoteLow);
                 gaps.RemoveAt(0);
-            }
+            }*/
                                     
             string json = "[";
             foreach (var row in filteredQuotes)

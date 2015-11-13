@@ -156,17 +156,23 @@
                 var equityParams = $.extend({"stockid" : $("#equity").val()}, genericParams);
                 
                 if (window.document.getElementById("equity").selectedIndex > 0) {
-                    var requests = { "GetStockData": equityParams };
+                    var requests = { "GetStockData0": equityParams };
                     if (window.document.getElementById("indicator").selectedIndex > 0) {
                         var indicatorIds = $("#indicator").val().split('#');
+                        var idx = 0;
                         for(var id in indicatorIds){
                             var indicatorParams = $.extend({ "indicatorid": indicatorIds[id] + "_" + $("#equity").val() }, genericParams);
-                            $.extend(requests, { "GetIndicatorData": indicatorParams });
+                            var key = "GetIndicatorData";
+                            key = key.concat(idx.toString());
+                            var newDict = {};
+                            newDict[key] = indicatorParams;
+                            $.extend(requests, newDict);
+                            idx++;
                         }
                     }
                     if (window.document.getElementById("signal").selectedIndex > 0) {
                         var signalParams = $.extend({ "signalid": $("#signal").val() + "_" + $("#equity").val() }, genericParams);
-                        $.extend(requests, { "GetSignalData": signalParams });
+                        $.extend(requests, { "GetSignalData0": signalParams });
                     }
                     MidaxAPI(requests);
                 }

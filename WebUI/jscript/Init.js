@@ -1,2 +1,2 @@
-﻿IG_WEBSERVICE_DOMAIN = "https://bitlsoft.com";
+﻿IG_WEBSERVICE_DOMAIN = "http://192.168.1.26";
 IG_WEBSERVICE_URL = IG_WEBSERVICE_DOMAIN + "/midax/";

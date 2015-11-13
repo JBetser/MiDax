@@ -21,12 +21,7 @@ function processResponses(jsonData) {
     var yAxis = d3.svg.axis()
         .scale(y)
         .orient("left");
-
-    var line = d3.svg.line()
-        .interpolate("basis")
-        .x(function (d) { return x(d.t); })
-        .y(function (d) { return y((d.b + d.o)/2); });
-
+    
     var svg = d3.select("#graphs").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -48,6 +43,11 @@ function processResponses(jsonData) {
             });
         });
     }
+
+    var line = d3.svg.line()
+        .interpolate("linear")
+        .x(function (d) { return x(d.t); })
+        .y(function (d) { return y((d.b + d.o) / 2); });
     
     var stocks = Object.keys(keyValueMap);
     color.domain(stocks);
@@ -139,7 +139,7 @@ function internalAPI(functionName, jsonData, successCallback, errorCallback) {
 function recursiveAPICalls(requests, idx)
 {
     var key = Object.keys(requests)[idx];
-    internalAPI(key, requests[key], function (jsonResponse) {
+    internalAPI(key.substring(0, key.length - 1), requests[key], function (jsonResponse) {
         $.extend(requests[key], { "response": jsonResponse });
         if (idx < Object.keys(requests).length - 1)
             recursiveAPICalls(requests, idx + 1);
