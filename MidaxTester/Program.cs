@@ -39,6 +39,7 @@ namespace MidaxTester
 
             Console.WriteLine("Testing calibration...");
 
+            // Test the optimization of function a * cos(b * x) + b * sin(a * x) using Levenberg Marquardt
             LevenbergMarquardt.objective_func objFunc = (NRealMatrix x) => { NRealMatrix y = new NRealMatrix(x.Rows, 1);
                                                  for (int idxRow = 0; idxRow < y.Rows; idxRow++)
                                                      y.SetAt(idxRow, 0, new NDouble(2 * Math.Cos(x[idxRow, 0]) + Math.Sin(2 * x[idxRow, 0])));
@@ -101,11 +102,14 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "An entry with the same key already exists.";
+                    expected = "Time series do not accept values in the past";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
                 }
+                if (!success)
+                    model.ProcessError("An expected exception has not been thrown");
+                success = false;
                 try
                 {
                     MarketDataConnection.Instance = new ReplayConnection();
@@ -115,24 +119,28 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9975.133333333333333333333413 != 9975.323333333333333333333414";
-                    success = (exc.Message == expected);
-                    if (!success)
-                        model.ProcessError(exc.Message, expected);
-                }
-                try
-                {
-                    model.StopSignals();
-                }
-                catch (Exception exc)
-                {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360168776371308016877542 != 9975.323333333333333333333412";
+                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9975.133333 != 9975.356666666666666666666746";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
                 }
                 if (!success)
                     model.ProcessError("An expected exception has not been thrown");
+                success = false;
+                try
+                {
+                    model.StopSignals();
+                }
+                catch (Exception exc)
+                {
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9982.822762679691659529031265";
+                    success = (exc.Message == expected);
+                    if (!success)
+                        model.ProcessError(exc.Message, expected);
+                }
+                if (!success)
+                    model.ProcessError("An expected exception has not been thrown");
+                success = false;
 
                 if (status != "Tests passed successfully")
                     model.ProcessError(status);

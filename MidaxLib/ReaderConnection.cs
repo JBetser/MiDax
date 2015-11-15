@@ -57,27 +57,26 @@ namespace MidaxLib
                 }
                 readData(quotes, values);
             }
-            quotes.Reverse();
             return quotes;
         }
 
         void readMarketData(List<CqlQuote> quotes, string[] values)
         {
-            decimal? bid = values.Length >= 5 ? decimal.Parse(values[4]) : default(decimal?);
-            decimal? offer = values.Length >= 6 ? decimal.Parse(values[5]) : default(decimal?);
+            decimal? bid = values.Length >= 5 ? (decimal)double.Parse(values[4]) : default(decimal?);
+            decimal? offer = values.Length >= 6 ? (decimal)double.Parse(values[5]) : default(decimal?);
             int? volume = values.Length >= 7 ? int.Parse(values[6]) : default(int?);
             quotes.Add(new CqlQuote(values[1], DateTimeOffset.Parse(values[2]), values[3], bid, offer, volume)); 
         }
 
         void readIndicatorData(List<CqlQuote> quotes, string[] values)
         {
-            decimal? value = values.Length >= 2 ? decimal.Parse(values[3]) : default(decimal?);
+            decimal? value = values.Length >= 2 ? (decimal)double.Parse(values[3]) : default(decimal?);
             quotes.Add(new CqlQuote(values[1], DateTimeOffset.Parse(values[2]), values[1], value, value, 0));
         }
 
         void readSignalData(List<CqlQuote> quotes, string[] values)
         {
-            decimal? value = values.Length >= 2 ? decimal.Parse(values[3]) : default(decimal?);
+            decimal? value = values.Length >= 2 ? (decimal)double.Parse(values[3]) : default(decimal?);
             quotes.Add(new CqlQuote(values[1], DateTimeOffset.Parse(values[2]), values[1], value, value, 0));
         }
 

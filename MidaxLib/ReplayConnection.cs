@@ -127,7 +127,6 @@ namespace MidaxLib
             {
                 DateTimeOffset minNextTime = _stopTime;
                 ReplayUpdateInfo nextUpdate = null;
-                int lastIndex = -1;
                 List<string> epicsToDelete = new List<string>();
                 foreach (var epicQuotes in priceData)
                 {
@@ -135,11 +134,10 @@ namespace MidaxLib
                         epicsToDelete.Add(epicQuotes.Key);
                     else
                     {
-                        lastIndex = epicQuotes.Value.Count -1 ;
-                        if (epicQuotes.Value[lastIndex].t <= minNextTime)
+                        if (epicQuotes.Value[0].t <= minNextTime)
                         {
-                            minNextTime = epicQuotes.Value[lastIndex].t;
-                            nextUpdate = new ReplayUpdateInfo(epicQuotes.Value[lastIndex]);
+                            minNextTime = epicQuotes.Value[0].t;
+                            nextUpdate = new ReplayUpdateInfo(epicQuotes.Value[0]);
                         }
                     }
                 }
@@ -150,7 +148,7 @@ namespace MidaxLib
                 }
                 else
                 {
-                    priceData[nextUpdate.Id].RemoveAt(lastIndex);
+                    priceData[nextUpdate.Id].RemoveAt(0);
                     tableListener.OnUpdate(0, nextUpdate.Id, nextUpdate);
                 }
             }
@@ -277,6 +275,8 @@ namespace MidaxLib
 
     public class ReplayTester : PublisherConnection
     {
+        public const decimal TOLERANCE = 1e-4m;
+
         static public new ReplayTester Instance
         {
             get
@@ -295,7 +295,7 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Indicator indicator, decimal value)
         {
-            if ((_expectedIndicatorData[indicator.Id].Value(updateTime).Value.Value.Bid != value))
+            if ((Math.Abs(_expectedIndicatorData[indicator.Id].Value(updateTime).Value.Value.Bid - value) > TOLERANCE))
             {
                 string error = "Test failed: indicator " + indicator.Name + " time " + updateTime.ToShortTimeString() + " expected value " +
                    _expectedIndicatorData[indicator.Id].Value(updateTime).Value.Value.Bid + " != " + value;

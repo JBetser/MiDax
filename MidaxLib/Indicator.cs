@@ -50,21 +50,21 @@ namespace MidaxLib
 
     public class IndicatorWMA : Indicator
     {
-        int _periodMinutes;
+        int _periodSeconds;
 
         public MarketData Asset { get { return _mktData[0]; } }
-        public int Period { get { return _periodMinutes; } }
+        public int Period { get { return _periodSeconds; } }
         
         public IndicatorWMA(MarketData mktData, int periodMinutes)
             : base("WMA_" + periodMinutes + "_" + mktData.Id, new List<MarketData> { mktData })
         {
-            _periodMinutes = periodMinutes;
+            _periodSeconds = periodMinutes * 60;
         }
 
         public IndicatorWMA(IndicatorWMA indicator)
             : base(indicator.Id, new List<MarketData> { indicator.Asset })
         {
-            _periodMinutes = indicator.Period;
+            _periodSeconds = indicator.Period;
         }
 
         // Whole day average
@@ -72,7 +72,7 @@ namespace MidaxLib
             : base("WMA_1D_" + mktData.Id, new List<MarketData> { mktData })
         {
             TimeSpan timeDiff = (DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]) - DateTime.Parse(Config.Settings["PUBLISHING_START_TIME"]));
-            _periodMinutes = timeDiff.Hours * 60 + timeDiff.Minutes;
+            _periodSeconds = (timeDiff.Hours * 60 + timeDiff.Minutes) * 60 + timeDiff.Seconds;
         }
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
@@ -91,41 +91,36 @@ namespace MidaxLib
         protected Price average(MarketData mktData, DateTime updateTime, bool acceptMissingValues = false, bool linearInterpolation = true)
         {
             Price avg = new Price();
-            decimal weight = 0;
             bool started = false;
+            int idxSecond = 0;
             int idxSecondStart = 0;
-            int timeSeriesIndex = 0;
-            for (int idxSecond = 0; idxSecond < 60 * _periodMinutes; idxSecond++){
-                KeyValuePair<DateTime, Price>? beginPeriodValue = mktData.TimeSeries.Value(updateTime.AddSeconds(-1 * (idxSecond + 1)), ref timeSeriesIndex);
-                KeyValuePair<DateTime, Price>? endPeriodValue = mktData.TimeSeries.Value(updateTime.AddSeconds(-1 * idxSecond), ref timeSeriesIndex);
-                if (!beginPeriodValue.HasValue || !endPeriodValue.HasValue)
-                {
-                    if (acceptMissingValues)
-                    {
-                        if (started)
-                        {
-                            decimal realWeight = (1m / (idxSecond - idxSecondStart)) / 2m;
-                            return avg * realWeight / weight;
-                        }
-                        else
-                        {                            
-                            continue;
-                        }
-                    }
-                    else
-                        return null;
-                }
+            DateTime startTime = updateTime.AddSeconds(-_periodSeconds);
+            decimal weight = (1m / (decimal)_periodSeconds) / 2m;
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = mktData.TimeSeries.ValueGenerator(startTime, updateTime);
+            KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
+            foreach (var endPeriodValue in generator)
+            {
                 if (!started)
                 {
                     started = true;
-                    idxSecondStart = idxSecond;
-                    weight = (1m / (60m * _periodMinutes - idxSecond)) / 2m;
+                    idxSecondStart = Math.Max(0, (int)(endPeriodValue.Key - startTime).TotalSeconds);
+                    if (!acceptMissingValues && idxSecondStart != 0)
+                        return null;
+                    beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, endPeriodValue.Value);
+                    idxSecond = idxSecondStart;
+                    continue;
                 }
                 if (linearInterpolation)
-                    avg += (beginPeriodValue.Value.Value + endPeriodValue.Value.Value) * weight;
+                    avg += (beginPeriodValue.Value + endPeriodValue.Value) * weight * (decimal)(endPeriodValue.Key - beginPeriodValue.Key).TotalSeconds;
                 else
-                    avg += beginPeriodValue.Value.Value * weight * 2m;                
+                    avg += beginPeriodValue.Value * weight * 2m * (decimal)(endPeriodValue.Key - beginPeriodValue.Key).TotalSeconds;
+                idxSecond += (int)(endPeriodValue.Key - beginPeriodValue.Key).TotalSeconds;
+                beginPeriodValue = endPeriodValue;
             }
+            if (!acceptMissingValues && (idxSecond - idxSecondStart != _periodSeconds))
+                return null;
+            else
+                avg += beginPeriodValue.Value * weight * 2m * (decimal)(updateTime - beginPeriodValue.Key).TotalSeconds;
             return avg;
         }
     }
