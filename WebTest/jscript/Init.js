@@ -1,2 +1,2 @@
-﻿IG_WEBSERVICE_DOMAIN = "http://localhost:8080";
+﻿IG_WEBSERVICE_DOMAIN = "http://localhost:8080/WebDebug";
 IG_WEBSERVICE_URL = IG_WEBSERVICE_DOMAIN + "/";
