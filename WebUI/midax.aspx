@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content="DAX Trading Signals"/>
     <meta name="author" content="Bitlsoft"/>
-    <meta property="og:url" content="http://bitlsoft.com/midax/midax.aspx" />
+    <meta property="og:url" content="http://bitlsoft.com/midax.aspx" />
     <meta property="og:title" content="MiDAX" />
     <meta property="og:description" content="DAX Trading Signals" />
     <meta property="og:image" content="http://bitlsoft.com/images/logo.png" />

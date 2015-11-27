@@ -7,7 +7,7 @@ using MidaxWebService;
 using System.Collections;
 using System.Web.Script.Services;
 
-[WebService(Namespace = "http://192.168.1.26/")]
+[WebService(Namespace = "https://bitlsoft.com/")]
 [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
 
 [System.Web.Script.Services.ScriptService]

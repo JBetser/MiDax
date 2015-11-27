@@ -46,28 +46,85 @@ namespace MidaxTester
                                                  return y; };
             List<double> inputs = new List<double>();
             Random rnd = new Random(155);    
-            for (int idxPt = 0; idxPt < 20; idxPt++)
+            for (int idxPt = 0; idxPt < 10; idxPt++)
                 inputs.Add(rnd.NextDouble() * 2);
-            List<Value> modelParams = new List<Value>(); 
-            modelParams.Add(new Value(1.8)); modelParams.Add(new Value(1.2));
+            List<Value> modelParams = new List<Value>();
+            modelParams.Add(new Value(-0.2)); modelParams.Add(new Value(0.3));
             LevenbergMarquardt.model_func modelFunc = (NRealMatrix x, NRealMatrix weights) => { NRealMatrix y = new NRealMatrix(x.Rows, 1);
-                                                double a = weights[0, 0]; double b = weights[1, 0];                                                
+                                                double a = weights[0, 0]; double b = weights[0, 1];                                                
                                                 for (int idxRow = 0; idxRow < y.Rows; idxRow++)
                                                      y.SetAt(idxRow, 0, new NDouble(a * Math.Cos(b * x[idxRow, 0]) + b * Math.Sin(a * x[idxRow, 0])));
                                                 return y; };
             Func<double,double,double,double> derA = (double a, double b, double x) => Math.Cos(b * x) + b * x * Math.Cos(a * x);
             Func<double,double,double,double> derB = (double a, double b, double x) => - a * x * Math.Sin(b * x) + Math.Sin(a * x);
-            LevenbergMarquardt.model_func jacFunc = (NRealMatrix x, NRealMatrix weights) => { NRealMatrix jac = new NRealMatrix(2, x.Rows);
-                                                double a = weights[0, 0]; double b = weights[1, 0];                                                
-                                                for (int idxCol = 0; idxCol < jac.Columns; idxCol++){
-                                                    jac.SetAt(0, idxCol, new NDouble(derA(a, b, x[idxCol, 0])));
-                                                    jac.SetAt(1, idxCol, new NDouble(derB(a, b, x[idxCol, 0])));
-                                                }
-                                                return jac; };
-            LevenbergMarquardt calibModel = new LevenbergMarquardt(objFunc, inputs, modelParams, modelFunc, jacFunc, 0.001, 0.001, 1000);
+            LevenbergMarquardt.model_func jacFunc = (NRealMatrix x, NRealMatrix weights) =>
+            {
+                NRealMatrix jac = new NRealMatrix(x.Rows, 2);
+                double a = weights[0, 0]; double b = weights[0, 1];
+                for (int idxRow = 0; idxRow < jac.Rows; idxRow++)
+                {
+                    jac.SetAt(idxRow, 0, new NDouble(-derA(a, b, x[idxRow, 0])));
+                    jac.SetAt(idxRow, 1, new NDouble(-derB(a, b, x[idxRow, 0])));
+                }
+                return jac; 
+            };
+            LevenbergMarquardt calibModel = new LevenbergMarquardt(objFunc, inputs, modelParams, modelFunc, jacFunc);
             calibModel.Solve();
             if (Math.Abs(modelParams[0].X - 2) > calibModel.ObjectiveError || Math.Abs(modelParams[1].X - 1) > calibModel.ObjectiveError)
                 throw new ApplicationException("LevenbergMarquardt calibration error");
+
+            // Parity-2 problem
+            NeuralNetwork ann = new NeuralNetwork(2, 1, new List<int>() { 2 });
+            List<List<double>> annInputs = new List<List<double>>();
+            annInputs.Add(new List<double>() { -1, -1 });
+            annInputs.Add(new List<double>() { -1, 1 });
+            annInputs.Add(new List<double>() { 1, -1 });
+            annInputs.Add(new List<double>() { 1, 1 });
+            List<List<double>> annOutputs = new List<List<double>>();
+            annOutputs.Add(new List<double>() { 1 });
+            annOutputs.Add(new List<double>() { -1 });
+            annOutputs.Add(new List<double>() { -1 });
+            annOutputs.Add(new List<double>() { 1 });
+            // test forward propagation
+            ann._outputs.Neurons[0].Weights[0].X = 1;
+            ann._outputs.Neurons[0].Weights[1].X = -1;
+            ann._outputs.Neurons[0].Weights[2].X = -1;
+            ann._innerLayers[0].Neurons[0].Weights[0].X = 1;
+            ann._innerLayers[0].Neurons[0].Weights[1].X = 1;
+            ann._innerLayers[0].Neurons[0].Weights[2].X = 1;
+            ann._innerLayers[0].Neurons[1].Weights[0].X = 1;
+            ann._innerLayers[0].Neurons[1].Weights[1].X = 1;
+            ann._innerLayers[0].Neurons[1].Weights[2].X = -1;
+            ann._inputs.Neurons[0].Value.X = -1;
+            ann._inputs.Neurons[1].Value.X = -1;
+            if (Math.Abs(ann._outputs.Neurons[0].Activation() - -0.38873457229297215) > calibModel.ObjectiveError)
+                throw new ApplicationException("Neural network forward propagation error");
+
+            // Test neural network training for parity-2 problem
+            ann = new NeuralNetwork(2, 1, new List<int>() { 2 });
+            ann.Train(annInputs, annOutputs);
+
+            // Test neural network training for parity-3 problem
+            ann = new NeuralNetwork(3, 1, new List<int>() { 2 });
+            annInputs = new List<List<double>>();
+            annInputs.Add(new List<double>() {-1,-1,-1});
+            annInputs.Add(new List<double>() {-1,-1, 1});
+            annInputs.Add(new List<double>() {-1, 1,-1});
+            annInputs.Add(new List<double>() {-1, 1, 1});
+            annInputs.Add(new List<double>() { 1,-1,-1});
+            annInputs.Add(new List<double>() { 1,-1, 1});
+            annInputs.Add(new List<double>() { 1, 1,-1});
+            annInputs.Add(new List<double>() { 1, 1, 1});
+            annOutputs = new List<List<double>>();
+            annOutputs.Add(new List<double>() { -1 });
+            annOutputs.Add(new List<double>() {  1 });
+            annOutputs.Add(new List<double>() {  1 });
+            annOutputs.Add(new List<double>() { -1 });
+            annOutputs.Add(new List<double>() {  1 });
+            annOutputs.Add(new List<double>() { -1 });
+            annOutputs.Add(new List<double>() { -1 });
+            annOutputs.Add(new List<double>() {  1 });
+            ann.Train(annInputs, annOutputs);
 
             MarketDataConnection.Instance.Connect(null);
             

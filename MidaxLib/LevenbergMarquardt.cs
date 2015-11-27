@@ -26,20 +26,22 @@ namespace MidaxLib
         
         objective_func _obj_func;
         model_func _model;
-        model_func _jac;
+        model_func _jac_func;
         NRealMatrix _inputs;
         NRealMatrix _outputs;
         NRealMatrix _weights;
+        NRealMatrix _jac;
         NRealMatrix _error;
         double _obj_error;
         double _totalError;
         double _lambda;
         int _max_iter;
+        int _retry = 0;
         List<Value> _modelParams;  // The results are updated here
 
         public double ObjectiveError { get { return _obj_error; } }
 
-        public LevenbergMarquardt(objective_func obj_func, List<double> inputs, List<Value> modelParams, model_func model, model_func model_jac, double lambda = 0.001, double obj_error = 0.00001, int max_iter = 100)
+        public LevenbergMarquardt(objective_func obj_func, List<double> inputs, List<Value> modelParams, model_func model, model_func model_jac, double lambda = 0.001, double obj_error = 0.00001, int max_iter = 10000)
         {
             if (inputs.Count == 0)
                 throw new ApplicationException("Number of input data must be > 0");
@@ -47,7 +49,7 @@ namespace MidaxLib
                 throw new ApplicationException("Number of model parameters must be > 0");
             _obj_func = obj_func;
             _model = model;
-            _jac = model_jac;
+            _jac_func = model_jac;
             _lambda = lambda;
             _max_iter = max_iter;
             _inputs = new NRealMatrix(inputs.Count, 1);
@@ -57,10 +59,10 @@ namespace MidaxLib
 
             // initalize the weights with normal random distibution
             var seed = new MLapack.MCJIMatrix(4,1);
-            seed.setAt(0, 0, 123);
-            seed.setAt(1, 0, 123);
-            seed.setAt(2, 0, 123);
-            seed.setAt(3, 0, 123);
+            seed.setAt(0, 0, 321);
+            seed.setAt(1, 0, 321);
+            seed.setAt(2, 0, 321);
+            seed.setAt(3, 0, 321);
 
             // check if a guess has been provided
             bool modelParamInitialized = false;
@@ -71,17 +73,21 @@ namespace MidaxLib
             }
             if (modelParamInitialized)
             {
-                _weights = new NRealMatrix(modelParams.Count, 1);
-                _weights.SetArray((from param in modelParams select new NDouble[] { new NDouble(param.X) }).ToArray());
+                _weights = new NRealMatrix(1, modelParams.Count);
+                _weights.SetArray(new NDouble[][] {(from param in modelParams select new NDouble(param.X)).ToArray() });
             }
             else
-                _weights = LapackLib.Instance.RandomMatrix(RandomDistributionType.Normal, seed, modelParams.Count, 1);
+            {
+                _weights = LapackLib.Instance.RandomMatrix(RandomDistributionType.Uniform_0_1, seed, 1, modelParams.Count);
+                for (int idxWeight = 0; idxWeight < _weights.Columns; idxWeight++)
+                    _weights[0, idxWeight] = (_weights[0, idxWeight] * 2.0 - 1.0) / Math.Sqrt(inputs.Count);
+            }
 
             _obj_error = obj_error;
             _error = calcError(_weights);
             _totalError = calcTotalError(_error);
         }
-
+        
         public void Solve()
         {
             int nbIter = 0;
@@ -91,15 +97,15 @@ namespace MidaxLib
                     throw new ApplicationException("LevenbergMarquardt cannot converge within maximum number of iterations"); 
                 
                 nextStep();
-
-                for (int idxParam = 0; idxParam < _weights.Rows; idxParam++)
-                    _modelParams[idxParam].X = _weights[idxParam, 0];
-            }            
+            }
+            // update the weights
+            for (int idxWeight = 0; idxWeight < _weights.Columns; idxWeight++)
+                _modelParams[idxWeight].X = _weights[0, idxWeight];
         }
 
         NRealMatrix calcError(NRealMatrix weights)
         {
-            var error = new NRealMatrix(weights.Rows, 1);
+            var error = new NRealMatrix(_inputs.Rows, 1);
             NRealMatrix modelOutput = _model(_inputs, weights);
             for (int idxError = 0; idxError < error.Rows; idxError++)
                 error.SetAt(idxError, 0, new NDouble(_outputs[idxError, 0] - modelOutput[idxError, 0]));
@@ -117,38 +123,48 @@ namespace MidaxLib
         void nextStep()
         {
             // compute jacobian
-            var jac = _jac(_inputs, _weights);
+            if (_retry == 0)
+                _jac = _jac_func(_inputs, _weights);
             // compute hessian approximation with tykhonov damping coefficient
-            var jacT = new NRealMatrix(jac.Rows, jac.Columns);
-            jacT.SetArray(jac.ToArray());
+            var jacT = new NRealMatrix(_jac.Rows, _jac.Columns);
+            jacT.SetArray(_jac.ToArray());
             jacT.Transpose();
-            var dampedHessian = new NRealMatrix(jac.Columns, jac.Columns);
-            dampedHessian = jacT * jac;
+            var dampedHessian = new NRealMatrix(_jac.Columns, _jac.Columns);
+            dampedHessian = jacT * _jac;
             for (int idxRow = 0; idxRow < dampedHessian.Rows; idxRow++)
-                dampedHessian.SetAt(idxRow, idxRow, new NDouble(dampedHessian[idxRow, idxRow] + _lambda));            
-            var adj = new NRealMatrix(dampedHessian.Columns, 1);
+                dampedHessian.SetAt(idxRow, idxRow, new NDouble(dampedHessian[idxRow, idxRow] * (1.0 + _lambda) + 1e-10));
+            var adj = new NRealMatrix(dampedHessian.Rows, 1);
             var y = new NRealMatrix(dampedHessian.Rows, 1);
             y = jacT * _error;
             // solve dampedHessian * adj = y
             LapackLib.Instance.SolveSle(dampedHessian, y, adj);
-            var nextWeights = new NRealMatrix(_weights.Rows, 1);
-            for (int idxWeight = 0; idxWeight < nextWeights.Rows; idxWeight++)
-                nextWeights.SetAt(idxWeight, 0, new NDouble(_weights[idxWeight, 0] - adj[idxWeight, 0]));
+            var nextWeights = new NRealMatrix(1, _weights.Columns);
+            for (int idxWeight = 0; idxWeight < nextWeights.Columns; idxWeight++)
+                nextWeights.SetAt(0, idxWeight, new NDouble(_weights[0, idxWeight] - adj[idxWeight, 0]));
             // compute errors
             var error = calcError(nextWeights);
             var totalError = calcTotalError(error);
             if (totalError > _totalError)
             {
-                // revert step and increase damping factor
-                _lambda *= 10;
+                // revert step and increase damping factor                
+                if (_retry < 100)
+                {
+                    _lambda *= 11.0;
+                    _retry++;
+                }
+                else
+                {
+                    throw new ApplicationException("LevenbergMarquardt is in a stall"); 
+                }
             }
             else
             {
                 // accept step and decrease damping factor
-                _lambda /= 10;
+                _lambda /= 9.0;
                 _weights.SetArray(nextWeights.ToArray());
                 _error = error;
                 _totalError = totalError;
+                _retry = 0;
             }
         }
 
