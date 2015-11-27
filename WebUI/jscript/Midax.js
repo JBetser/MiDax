@@ -90,6 +90,7 @@ function processResponses(jsonData) {
     quote.append("path")
         .attr("class", "line")
         .attr("d", function (d) { return line(d.values); })
+        .attr("data-legend", function (d) { return d.name })
         .style("stroke", function (d) { return color(d.name); });
 
     quote.append("text")
@@ -98,6 +99,12 @@ function processResponses(jsonData) {
         .attr("x", 3)
         .attr("dy", ".35em")
         .text(function (d) { return d.n; });
+
+    legend = svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", "translate(50,30)")
+        .style("font-size", "12px")
+        .call(d3.legend)
 }
 
 function internalAPI(functionName, jsonData, successCallback, errorCallback) {

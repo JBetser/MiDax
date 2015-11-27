@@ -77,3 +77,4 @@ ClientConsole/bin/Release/*.*
 ClientConsole/obj/Release/*.*
 EventLogSourceInstaller/bin/Release/*.*
 EventLogSourceInstaller/obj/Release/*.*
+WebDebug/*.*

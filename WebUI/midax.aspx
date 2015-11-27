@@ -109,7 +109,12 @@
           stroke: steelblue;
           stroke-width: 1.5px;
         }
-      
+
+        .legend rect {
+          fill:white;
+          stroke:black;
+          opacity:0.8;
+        }        
     </style>
     <link href="css/bootstrap/bootstrap-responsive.css" rel="stylesheet">
 
@@ -128,7 +133,8 @@
 
     <script src="jscript/jquery-1.9.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-	<script type="text/javascript" src="jscript/Init.js"></script>
+	<script type="text/javascript" src="jscript/d3.legend.js"></script>
+    <script type="text/javascript" src="jscript/Init.js"></script>
     <script type="text/javascript" src="jscript/Modal.js"></script>
     <script type="text/javascript" src="jscript/Midax.js"></script>        
     <!--[if lte IE 9]>

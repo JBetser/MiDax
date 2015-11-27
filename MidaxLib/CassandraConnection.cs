@@ -302,11 +302,9 @@ namespace MidaxLib
                         }
                     }
                     else if (buffer.Count == 1)
-                        filteredQuotes.Add(buffer.First().Value);
+                        filteredQuotes.Add(buffer.First().Value);                        
                     buffer.Clear();
                     trendUp = !trendUp;
-                    //gaps.Add(new Gap(Math.Abs(quoteValue - prevQuoteValue.Value), 
-                    //    new Tuple<CqlQuote,CqlQuote>(trendUp.Value ? prevQuote : cqlQuote, trendUp.Value ? cqlQuote : prevQuote)));
                 }
                 else
                 {
@@ -333,18 +331,12 @@ namespace MidaxLib
                         filteredQuotes.Add(buffer.First().Value);
                     buffer.Clear();
                 }
+                buffer.Add(quoteValue, cqlQuote);
                 prevQuoteValue = quoteValue;
                 prevQuote = cqlQuote;
             }
             if (filteredQuotes.Last() != prevQuote)
                 filteredQuotes.Add(prevQuote);
-            /*
-            gaps.Sort(new GapSorter());
-            while (filteredQuotes.Count > 500)
-            {
-                filteredQuotes.Remove(gaps.ElementAt(0).quoteLow);
-                gaps.RemoveAt(0);
-            }*/
                                     
             string json = "[";
             foreach (var row in filteredQuotes)
