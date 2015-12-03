@@ -127,24 +127,6 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        public string STOP_LOSS {
-            get {
-                return ((string)(this["STOP_LOSS"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("200")]
-        public string STOP_GAIN {
-            get {
-                return ((string)(this["STOP_GAIN"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("200")]
         public string LIMIT {
             get {
@@ -176,15 +158,6 @@ namespace Midax.Properties {
         public string TRADING_STOP_TIME {
             get {
                 return ((string)(this["TRADING_STOP_TIME"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2")]
-        public string MINIMUM_BET {
-            get {
-                return ((string)(this["MINIMUM_BET"]));
             }
         }
         
@@ -239,6 +212,24 @@ namespace Midax.Properties {
         public string VOLATILITY_3M {
             get {
                 return ((string)(this["VOLATILITY_3M"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public string TRADE_EXPIRY_DAYS {
+            get {
+                return ((string)(this["TRADE_EXPIRY_DAYS"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("GBP")]
+        public string TRADE_CURRENCY {
+            get {
+                return ((string)(this["TRADE_CURRENCY"]));
             }
         }
     }

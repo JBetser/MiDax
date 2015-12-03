@@ -11,6 +11,8 @@ namespace MidaxLib
 {
     public abstract class Model
     {
+        protected int _amount = 0;
+        protected Portfolio _ptf = null;
         protected List<MarketData> _mktData = new List<MarketData>();
         protected List<Signal> _mktSignals = new List<Signal>();
         protected List<MarketData> _mktIndices = new List<MarketData>();
@@ -18,11 +20,25 @@ namespace MidaxLib
         protected List<IndicatorLevel> _mktUnsubscribedIndicators = new List<IndicatorLevel>();
  
         public Model()
-        {            
+        {
+            _amount = int.Parse(Config.Settings["LIMIT"]);            
+            _ptf = new Portfolio(MarketDataConnection.Instance.StreamClient);
         }
 
-        protected abstract void OnBuy(Signal signal, DateTime time, Price value);
-        protected abstract void OnSell(Signal signal, DateTime time, Price value);
+        protected void OnBuy(Signal signal, DateTime time, Price value)
+        {
+            signal.Trade = new Trade(time, signal.Asset.Id, SIGNAL_CODE.BUY, _amount, value.Offer);
+            Buy(signal, time, value);
+        }
+
+        protected void OnSell(Signal signal, DateTime time, Price value)
+        {
+            signal.Trade = new Trade(time, signal.Asset.Id, SIGNAL_CODE.SELL, _amount, value.Bid);
+            Sell(signal, time, value);                
+        }
+
+        protected abstract void Buy(Signal signal, DateTime time, Price value);
+        protected abstract void Sell(Signal signal, DateTime time, Price value);
 
         protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)
         {
@@ -38,7 +54,7 @@ namespace MidaxLib
             foreach (Indicator ind in _mktIndicators)
                 ind.Subscribe(OnUpdateIndicator);
             foreach (Signal sig in _mktSignals)
-                sig.Subscribe(OnBuy, OnSell);            
+                sig.Subscribe(OnBuy, OnSell);  
             MarketDataConnection.Instance.StartListening();
         }
 
@@ -80,14 +96,22 @@ namespace MidaxLib
             this._mktUnsubscribedIndicators.Add(new IndicatorLevelMean(_daxIndex));
         }
 
-        protected override void OnBuy(Signal signal, DateTime time, Price value)
+        protected override void Buy(Signal signal, DateTime time, Price value)
         {
-            Log.Instance.WriteEntry(time + "Signal " + signal.Id + ": BUY " + signal.Asset.Id + " " + value.Offer, EventLogEntryType.Information);
+            if (_ptf.Position(_daxIndex.Id).Value < 0)
+            {
+                _ptf.BookTrade(signal.Trade);
+                Log.Instance.WriteEntry(time + " " + signal.Trade.Reference + " Signal " + signal.Id + ": BUY " + signal.Asset.Id + " " + value.Offer, EventLogEntryType.Information);
+            }
         }
-
-        protected override void OnSell(Signal signal, DateTime time, Price value)
+         
+        protected override void Sell(Signal signal, DateTime time, Price value)
         {
-            Log.Instance.WriteEntry(time + "Signal " + signal.Id + ": SELL " + signal.Asset.Id + " " + value.Bid, EventLogEntryType.Information);
+            if (_ptf.Position(_daxIndex.Id).Value >= 0)
+            {
+                _ptf.BookTrade(signal.Trade);
+                Log.Instance.WriteEntry(time + " " + signal.Trade.Reference + " Signal " + signal.Id + ": SELL " + signal.Asset.Id + " " + value.Bid, EventLogEntryType.Information);
+            }
         }
     }
 }

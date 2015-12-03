@@ -12,6 +12,7 @@ namespace MidaxLib
         List<CqlQuote> GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, string id);
         List<CqlQuote> GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, string id);
         List<CqlQuote> GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, string id);
+        List<Trade> GetTrades(DateTime startTime, DateTime stopTime, string type, string id);
     }
 
     public class CsvReader : IReaderConnection
@@ -25,11 +26,11 @@ namespace MidaxLib
             _csvReader = new StreamReader(File.OpenRead(_csvFile));
         }
 
-        delegate void funcReadData(List<CqlQuote> quotes, string[] values);
+        delegate void funcReadData<T>(List<T> data, string[] values);
 
-        List<CqlQuote> getRows(DateTime startTime, DateTime stopTime, string type, string id, funcReadData readData)
+        List<T> getRows<T>(DateTime startTime, DateTime stopTime, string type, string id, funcReadData<T> readData)
         {
-            List<CqlQuote> quotes = new List<CqlQuote>();
+            var data = new List<T>();
             while (!_csvReader.EndOfStream)
             {
                 var line = _csvReader.ReadLine();
@@ -55,9 +56,9 @@ namespace MidaxLib
                     if (curTime > stopTime)
                         continue;
                 }
-                readData(quotes, values);
+                readData(data, values);
             }
-            return quotes;
+            return data;
         }
 
         void readMarketData(List<CqlQuote> quotes, string[] values)
@@ -76,23 +77,33 @@ namespace MidaxLib
 
         void readSignalData(List<CqlQuote> quotes, string[] values)
         {
-            decimal? value = values.Length >= 2 ? (decimal)double.Parse(values[3]) : default(decimal?);
+            decimal? value = (decimal)double.Parse(values[4]);
             quotes.Add(new CqlQuote(values[1], DateTimeOffset.Parse(values[2]), values[1], value, value, 0));
+        }
+
+        void readTradeData(List<Trade> trades, string[] values)
+        {
+            trades.Add(new Trade(DateTime.Parse(values[7]), values[6], (SIGNAL_CODE)Enum.Parse(typeof(SIGNAL_CODE),values[3]), int.Parse(values[5]), (decimal)double.Parse(values[4])));
         }
 
         List<CqlQuote> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
         {
-            return getRows(startTime, stopTime, type, id, readMarketData);
+            return getRows<CqlQuote>(startTime, stopTime, type, id, readMarketData);
         }
 
         List<CqlQuote> IReaderConnection.GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
         {
-            return getRows(startTime, stopTime, type, id, readIndicatorData);
+            return getRows<CqlQuote>(startTime, stopTime, type, id, readIndicatorData);
         }
 
         List<CqlQuote> IReaderConnection.GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
         {
-            return getRows(startTime, stopTime, type, id, readSignalData);
+            return getRows<CqlQuote>(startTime, stopTime, type, id, readSignalData);
+        }
+
+        List<Trade> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, string id)
+        {
+            return getRows<Trade>(startTime, stopTime, type, id, readTradeData);
         }
     }
 }

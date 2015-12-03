@@ -20,8 +20,6 @@ namespace MidaxTester
 
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
-            dicSettings["STOP_LOSS"] = "50";
-            dicSettings["STOP_GAIN"] = "200";
             dicSettings["LIMIT"] = "200";
             dicSettings["PUBLISHING_START_TIME"] = "2015-08-26 00:00:01";
             dicSettings["PUBLISHING_STOP_TIME"] = "2015-08-26 23:59:59";
@@ -34,7 +32,8 @@ namespace MidaxTester
             dicSettings["TRADING_START_TIME"] = "2015-08-26 08:00:00";
             dicSettings["TRADING_STOP_TIME"] = "2015-08-26 09:00:00";
             dicSettings["TRADING_MODE"] = "REPLAY";
-            dicSettings["MINIMUM_BET"] = "2";
+            dicSettings["TRADE_EXPIRY_DAYS"] = "1";
+            dicSettings["TRADE_CURRENCY"] = "GBP";
             Config.Settings = dicSettings;
 
             Console.WriteLine("Testing calibration...");
@@ -99,7 +98,6 @@ namespace MidaxTester
             ann._inputs.Neurons[1].Value.X = -1;
             if (Math.Abs(ann._outputs.Neurons[0].Activation() - -0.38873457229297215) > calibModel.ObjectiveError)
                 throw new ApplicationException("Neural network forward propagation error");
-
             // Test neural network training for parity-2 problem
             ann = new NeuralNetwork(2, 1, new List<int>() { 2 });
             ann.Train(annInputs, annOutputs);

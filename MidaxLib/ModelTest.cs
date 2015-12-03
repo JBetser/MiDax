@@ -17,17 +17,17 @@ namespace MidaxLib
             _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
         }
 
-        protected override void OnBuy(Signal signal, DateTime time, Price value)
+        protected override void Buy(Signal signal, DateTime time, Price value)
         {
-            string info = signal.Id + " buy " + signal.Asset.Id + " " + value.Offer;
-            Log.Instance.WriteEntry(time + ": TESTING " + info, EventLogEntryType.Information);
+            base.Buy(signal, time, value);
+            string info = time + " Signal " + signal.Id + " buy " + signal.Asset.Id + " " + value.Bid;
             Console.WriteLine(info);
         }
 
-        protected override void OnSell(Signal signal, DateTime time, Price value)
+        protected override void Sell(Signal signal, DateTime time, Price value)
         {
-            string info = signal.Id + " sell " + signal.Asset.Id + " " + value.Bid;
-            Log.Instance.WriteEntry(time + ": TESTING " + info, EventLogEntryType.Information);
+            base.Sell(signal, time, value);
+            string info = time + " Signal " + signal.Id + " sell " + signal.Asset.Id + " " + value.Bid;
             Console.WriteLine(info);
         }
 

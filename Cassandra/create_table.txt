@@ -27,9 +27,23 @@ ALTER TABLE historicaldata.indicators WITH compaction = {'class': 'DateTieredCom
 CREATE TABLE historicaldata.signals (
   signalid text,
   trading_time timestamp,
+  tradeid text,
   value int,
   PRIMARY KEY (signalid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);
 
 ALTER TABLE historicaldata.signals WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+
+CREATE TABLE historicaldata.trades (
+  tradeid text,  
+  confirmation_time timestamp,  
+  direction int,
+  price decimal,
+  size int,
+  stockid text,
+  trading_time timestamp,
+  PRIMARY KEY (tradeid)
+);
+
+ALTER TABLE historicaldata.trades WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};

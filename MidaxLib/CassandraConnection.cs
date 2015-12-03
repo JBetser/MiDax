@@ -92,9 +92,9 @@ namespace MidaxLib
         {
             s = (string)row[0];
             t = (DateTimeOffset)row[1];
-            b = Convert.ToInt32(row[2]);
+            b = Convert.ToInt32(row[3]);
             n = (string)row[0];
-            o = Convert.ToInt32(row[2]);
+            o = Convert.ToInt32(row[3]);
             v = 0;
         }
         public CqlSignal(string stockId, DateTimeOffset tradingTime, string stockName, SIGNAL_CODE? value)
@@ -140,6 +140,8 @@ namespace MidaxLib
         ISession _session = null;
         decimal _avg = 0m;
         decimal _scale = 0m;
+        const string DB_INSERTION = "insert into historicaldata.{0} ";
+        const string DB_SELECTION = "select * from historicaldata.{0} ";
 
         static public new CassandraConnection Instance
         {
@@ -174,32 +176,68 @@ namespace MidaxLib
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
         {
             if (_session == null || !Config.PublishingEnabled)
+
+
                 return;
-            _session.Execute(string.Format("insert into historicaldata.{0} (stockid, trading_time,  name,  bid,  offer,  volume) values ('{1}', {2}, '{3}', {4}, {5}, {6})",
+            _session.Execute(DB_INSERTION + string.Format("(stockid, trading_time,  name,  bid,  offer,  volume) values ('{1}', {2}, '{3}', {4}, {5}, {6})",
                 DATATYPE_STOCK, mktData.Id, ToUnixTimestamp(updateTime), mktData.Name, price.Bid, price.Offer, price.Volume));
         }
+
+
+
+
+
+
+
+
+
 
         public override void Insert(DateTime updateTime, Indicator indicator, decimal value)
         {
             if (_session == null || !Config.PublishingEnabled)
                 return;
-            _session.Execute(string.Format("insert into historicaldata.{0} (indicatorid, trading_time, value) values ('{1}', {2}, {3})",
+            _session.Execute(DB_INSERTION + string.Format("(indicatorid, trading_time, value) values ('{1}', {2}, {3})",
                 DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
+
+        
+        
         }
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
         {
             if (_session == null || !Config.PublishingEnabled)
                 return;
-            _session.Execute(string.Format("insert into historicaldata.{0} (signalid, trading_time, value) values ('{1}', {2}, {3})",
-                DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), Convert.ToInt32(code)));
+            _session.Execute(DB_INSERTION + string.Format("(signalid, trading_time, tradeid, value) values ('{1}', {2}, '{3}', {4})",
+                DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), signal.Trade.Reference, Convert.ToInt32(code)));
+        }
+
+        public override void Insert(Trade trade)
+        {
+            if (trade.TradingTime == DateTimeOffset.MinValue || trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "")
+                throw new ApplicationException("Cannot insert a trade without booking information");
+            if (_session == null || !Config.PublishingEnabled)
+                return;
+            _session.Execute(DB_INSERTION + string.Format("(tradeid, trading_time, confirmation_time, stockid, direction, size) values ('{1}', {2}, {3}, '{4}', {5}, {6})",
+                DATATYPE_TRADE, trade.Reference, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic, Convert.ToInt32(trade.Direction), trade.Size));
         }
 
         RowSet getRows(DateTime startTime, DateTime stopTime, string type, string id){
             if (_session == null)
-                return null; 
-            return _session.Execute(string.Format("select * from historicaldata.{0} where {1}id='{2}' and trading_time >= {3} and trading_time <= {4};",
+                return null;
+            return _session.Execute(DB_SELECTION + string.Format("where {1}id='{2}' and trading_time >= {3} and trading_time <= {4};",
                                 type, type.Substring(0, type.Length - 1), id, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
+        }
+
+        List<Trade> getTrades(DateTime startTime, DateTime stopTime, string type, string stockid)
+        {
+            if (_session == null)
+                return null;
+            RowSet rowSet = _session.Execute(DB_SELECTION + string.Format("where stockid='{1}' and trading_time >= {2} and trading_time <= {3};",
+                                type, stockid, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
+            List<Trade> trades = new List<Trade>();
+            foreach (Row row in rowSet.GetRows())
+                trades.Add(new Trade(row));
+            return trades;
         }
 
         List<CqlQuote> getQuotes(DateTime startTime, DateTime stopTime, string type, string id)
@@ -224,6 +262,11 @@ namespace MidaxLib
         List<CqlQuote> IReaderConnection.GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
         {
             return getQuotes(startTime, stopTime, type, id);
+        }
+
+        List<Trade> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, string id)
+        {
+            return getTrades(startTime, stopTime, type, id);
         }
 
         public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id)

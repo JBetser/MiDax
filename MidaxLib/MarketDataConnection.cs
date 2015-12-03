@@ -14,6 +14,9 @@ namespace MidaxLib
         void Connect(string username, string password, string apiKey);
         void Subscribe(string[] epics, IHandyTableListener tableListener);
         void Unsubscribe();
+        SubscribedTableKey SubscribeToTradeSubscription(IHandyTableListener tableListener);
+        void UnsubscribeTradeSubscription(SubscribedTableKey tableListener);
+        void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked);
     }
 
     public abstract class MarketDataConnection

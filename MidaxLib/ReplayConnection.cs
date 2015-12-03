@@ -80,11 +80,13 @@ namespace MidaxLib
         DateTime _stopTime;
         Dictionary<string, List<CqlQuote>> _expectedIndicatorData = null;
         Dictionary<string, List<CqlQuote>> _expectedSignalData = null;
+        Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
         bool _replayTest = false;
         List<string> _testReplayFiles = new List<string>();
 
         public Dictionary<string, List<CqlQuote>> ExpectedIndicatorData { get { return _expectedIndicatorData; } }
         public Dictionary<string, List<CqlQuote>> ExpectedSignalData { get { return _expectedSignalData; } }
+        public Dictionary<KeyValuePair<string, DateTime>, Trade> ExpectedTradeData { get { return _expectedTradeData; } }
         public bool ReplayTest { get { return _replayTest; } }
         
         void IAbstractStreamingClient.Connect(string username, string password, string apiKey)
@@ -118,6 +120,32 @@ namespace MidaxLib
 
         void IAbstractStreamingClient.Unsubscribe()
         {
+        }
+
+        IHandyTableListener _tradingEventTable = null;
+        Dictionary<string, int> _positions = new Dictionary<string, int>();
+        
+        SubscribedTableKey IAbstractStreamingClient.SubscribeToTradeSubscription(IHandyTableListener tableListener)
+        {
+            _tradingEventTable = tableListener;
+            return null;
+        }
+
+        void IAbstractStreamingClient.UnsubscribeTradeSubscription(SubscribedTableKey tableListener)
+        {
+            _tradingEventTable = null;
+        }
+
+        void IAbstractStreamingClient.BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
+        {
+            trade.Reference = "###DUMMY_TRADE###";
+            trade.ConfirmationTime = trade.TradingTime; 
+            if (!_positions.ContainsKey(trade.Epic))
+                _positions.Add(trade.Epic, trade.Size * (trade.Direction == SIGNAL_CODE.BUY ? 1 : -1));
+            else
+                _positions[trade.Epic] += trade.Size * (trade.Direction == SIGNAL_CODE.BUY ? 1 : -1);
+            onTradeBooked(trade);
+            _tradingEventTable.OnUpdate(_positions[trade.Epic], trade.Epic, null);
         }
 
         void replay(Dictionary<string, List<CqlQuote>> priceData, IHandyTableListener tableListener)
@@ -182,7 +210,15 @@ namespace MidaxLib
                                                                      select new { Key = g.Key, Quotes = g.ToList() }).ToDictionary(keyVal => keyVal.Key, keyVal => keyVal.Quotes);
                     signalData.Aggregate(_expectedSignalData, (agg, keyVal) => { agg.Add(keyVal.Key, keyVal.Value); return agg; });
                 }
-                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData);
+                _expectedTradeData = new Dictionary<KeyValuePair<string,DateTime>, Trade>();
+                foreach (string epic in epics)
+                {
+                    List<Trade> trades = _instance.GetTrades(_startTime, _stopTime,
+                                                                    CassandraConnection.DATATYPE_TRADE, epic);
+                    foreach (Trade trade in trades)
+                        _expectedTradeData.Add(new KeyValuePair<string, DateTime>(epic, trade.TradingTime), trade);
+                }
+                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData, _expectedTradeData);
             }
             return priceData;
         }
@@ -216,6 +252,7 @@ namespace MidaxLib
         StringBuilder _csvStockStringBuilder;
         StringBuilder _csvIndicatorStringBuilder;
         StringBuilder _csvSignalStringBuilder;
+        StringBuilder _csvTradeStringBuilder;
 
         static public new ReplayPublisher Instance
         {
@@ -231,6 +268,7 @@ namespace MidaxLib
             _csvStockStringBuilder = new StringBuilder();
             _csvIndicatorStringBuilder = new StringBuilder();
             _csvSignalStringBuilder = new StringBuilder();
+            _csvTradeStringBuilder = new StringBuilder();
         }
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
@@ -253,10 +291,20 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
         {
-            var newLine = string.Format("{0},{1},{2},{3}{4}",
+            var newLine = string.Format("{0},{1},{2},{3},{4}{5}",
                 DATATYPE_SIGNAL, signal.Id,
-                updateTime, (int)code, Environment.NewLine);
+                updateTime, signal.Trade.Reference, (int)code, Environment.NewLine);
             _csvSignalStringBuilder.Append(newLine);
+        }
+
+        public override void Insert(Trade trade)
+        {
+            if (trade.TradingTime == DateTimeOffset.MinValue || trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "")
+                throw new ApplicationException("Cannot insert a trade without booking information");
+            var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6},{7}{8}",
+                DATATYPE_TRADE, trade.Reference, trade.ConfirmationTime, trade.Direction, trade.Price, trade.Size, trade.Epic, trade.TradingTime,
+                Environment.NewLine);
+            _csvTradeStringBuilder.Append(newLine);
         }
 
         public override string Close()
@@ -266,6 +314,8 @@ namespace MidaxLib
             csvContent += _csvIndicatorStringBuilder.ToString();
             csvContent += Environment.NewLine;
             csvContent += _csvSignalStringBuilder.ToString();
+            csvContent += Environment.NewLine;
+            csvContent += _csvTradeStringBuilder.ToString();
             File.WriteAllText(_csvFile, csvContent);
             string info = "Generated results in " + _csvFile;
             Log.Instance.WriteEntry(info, EventLogEntryType.Information);
@@ -310,6 +360,32 @@ namespace MidaxLib
             {
                 string error = "Test failed: signal " + signal.Name + " time " + updateTime.ToShortTimeString() + " expected value " +
                    ((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Bid).ToString() + " != " + code.ToString();
+                Log.Instance.WriteEntry(error, EventLogEntryType.Error);
+                throw new ApplicationException(error);
+            }
+        }
+
+        public override void Insert(Trade trade)
+        {
+            var tradeKey = new KeyValuePair<string, DateTime>(trade.Epic, trade.TradingTime);
+            if (Math.Abs(_expectedTradeData[tradeKey].Price - trade.Price) > TOLERANCE)
+            {
+                string error = "Test failed: trade " + trade.Epic + " time " + trade.TradingTime.ToShortTimeString() + " expected Price " +
+                   _expectedTradeData[tradeKey].Price.ToString() + " != " + trade.Price.ToString();
+                Log.Instance.WriteEntry(error, EventLogEntryType.Error);
+                throw new ApplicationException(error);
+            }
+            if (_expectedTradeData[tradeKey].Direction != trade.Direction)
+            {
+                string error = "Test failed: trade " + trade.Epic + " time " + trade.TradingTime.ToShortTimeString() + " expected Direction " +
+                   _expectedTradeData[tradeKey].Direction.ToString() + " != " + trade.Direction.ToString();
+                Log.Instance.WriteEntry(error, EventLogEntryType.Error);
+                throw new ApplicationException(error);
+            }
+            if (_expectedTradeData[tradeKey].Size != trade.Size)
+            {
+                string error = "Test failed: trade " + trade.Epic + " time " + trade.TradingTime.ToShortTimeString() + " expected Size " +
+                   _expectedTradeData[tradeKey].Size.ToString() + " != " + trade.Size.ToString();
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }

@@ -11,9 +11,11 @@ namespace MidaxLib
         public const string DATATYPE_STOCK = "stocks";
         public const string DATATYPE_INDICATOR = "indicators";
         public const string DATATYPE_SIGNAL = "signals";
+        public const string DATATYPE_TRADE = "trades";
 
         protected Dictionary<string, TimeSeries> _expectedIndicatorData = null;
         protected Dictionary<string, TimeSeries> _expectedSignalData = null;
+        protected Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
 
         static protected PublisherConnection _instance = null;
         
@@ -32,17 +34,20 @@ namespace MidaxLib
 
         public abstract void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code);
 
-        public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData)
+        public abstract void Insert(Trade trade);
+
+        public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData)
         {
             _expectedIndicatorData = new Dictionary<string,TimeSeries>();
             _expectedSignalData = new Dictionary<string, TimeSeries>();
+            _expectedTradeData = tradeData;
             foreach (var indData in indicatorData)
             {
                 if (!_expectedIndicatorData.ContainsKey(indData.Key))
                     _expectedIndicatorData.Add(indData.Key, new TimeSeries());
                 foreach (var value in indData.Value)
                     _expectedIndicatorData[indData.Key].Add(value.t.DateTime, new Price(value.b.Value, value.o.Value, value.v.Value));
-            }
+            }   
             foreach (var sigData in signalData)
             {
                 if (!_expectedSignalData.ContainsKey(sigData.Key))

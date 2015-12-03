@@ -60,12 +60,6 @@
     <Setting Name="MODEL" Type="System.String" Scope="Application">
       <Value Profile="(Default)">MIDAX</Value>
     </Setting>
-    <Setting Name="STOP_LOSS" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">50</Value>
-    </Setting>
-    <Setting Name="STOP_GAIN" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">200</Value>
-    </Setting>
     <Setting Name="LIMIT" Type="System.String" Scope="Application">
       <Value Profile="(Default)">200</Value>
     </Setting>
@@ -77,9 +71,6 @@
     </Setting>
     <Setting Name="TRADING_STOP_TIME" Type="System.String" Scope="Application">
       <Value Profile="(Default)">17:00:00</Value>
-    </Setting>
-    <Setting Name="MINIMUM_BET" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">2</Value>
     </Setting>
     <Setting Name="PUBLISHING_DISABLED" Type="System.String" Scope="Application">
       <Value Profile="(Default)">0</Value>
@@ -98,6 +89,12 @@
     </Setting>
     <Setting Name="VOLATILITY_3M" Type="System.String" Scope="Application">
       <Value Profile="(Default)">IN.D.VIX.MONTH3.IP</Value>
+    </Setting>
+    <Setting Name="TRADE_EXPIRY_DAYS" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="TRADE_CURRENCY" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">GBP</Value>
     </Setting>
   </Settings>
 </SettingsFile>

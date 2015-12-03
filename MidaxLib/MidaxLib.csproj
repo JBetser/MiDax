@@ -78,12 +78,15 @@
     <Compile Include="Model.cs" />
     <Compile Include="ModelTest.cs" />
     <Compile Include="NeuralNetwork.cs" />
+    <Compile Include="Portfolio.cs" />
+    <Compile Include="Position.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublisherConnection.cs" />
     <Compile Include="ReaderConnection.cs" />
     <Compile Include="ReplayConnection.cs" />
     <Compile Include="Signal.cs" />
     <Compile Include="TimeSeries.cs" />
+    <Compile Include="Trade.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IGApi\IGPublicPcl\IGPublicPcl.csproj">

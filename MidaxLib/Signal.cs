@@ -94,7 +94,8 @@ namespace MidaxLib
         protected TimeSeries _values = null;
         protected List<Indicator> _mktIndicator = null;
         protected SIGNAL_CODE _signalCode = SIGNAL_CODE.UNKNOWN;
-
+        protected Trade _trade = null;
+        
         public Signal(string id, MarketData asset)
         {
             this._id = id;
@@ -130,6 +131,12 @@ namespace MidaxLib
         public MarketData Asset
         {
             get { return _asset; }
+        }
+
+        public Trade Trade
+        {
+            get { return _trade; }
+            set { _trade = value; }
         }
 
         void _onHold(Signal signal, DateTime updateTime, Price value)

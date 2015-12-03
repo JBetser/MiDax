@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using dto.colibri.endpoint.auth.v2;
+using dto.endpoint.positions.create.otc.v2;
 using IGPublicPcl;
 using Lightstreamer.DotNet.Client;
 using Newtonsoft.Json;
@@ -65,8 +66,8 @@ namespace MidaxLib
             Log.Instance.WriteEntry("Session started, polling: " + isPolling, EventLogEntryType.Information);
             base.OnSessionStarted(isPolling);
         }
-    }       
-
+    }
+    
     public class IGTradingStreamingClient : IAbstractStreamingClient
     {
         public TimerCallback ConnectionClosed = null;
@@ -151,12 +152,51 @@ namespace MidaxLib
         {
             _igStreamApiClient.UnsubscribeTableKey(_igSubscribedTableKey);
         }
+
+        SubscribedTableKey IAbstractStreamingClient.SubscribeToTradeSubscription(IHandyTableListener tableListener)
+        {
+            return _igStreamApiClient.subscribeToTradeSubscription(_currentAccount, tableListener);
+        }
+
+        void IAbstractStreamingClient.UnsubscribeTradeSubscription(SubscribedTableKey tableListener)
+        {
+            _igStreamApiClient.UnsubscribeTableKey(tableListener);
+        }
+
+        async void IAbstractStreamingClient.BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
+        {
+            DateTime expiry = DateTime.Today.AddDays(int.Parse(Config.Settings["TRADE_EXPIRY_DAYS"]));
+            CreatePositionRequest cpr = new CreatePositionRequest();
+            cpr.epic = trade.Epic;
+            cpr.expiry = string.Format("dd-MMM-yy", expiry);
+            cpr.direction = trade.Direction.ToString();
+            cpr.size = trade.Size;
+            cpr.orderType = "MARKET";
+            cpr.guaranteedStop = false;
+            cpr.forceOpen = false;
+            cpr.currencyCode = Config.Settings["TRADE_CURRENCY"];
+            var createPositionResponse = await _igRestApiClient.createPositionV2(cpr);
+
+            if (createPositionResponse && (createPositionResponse.Response != null) && (createPositionResponse.Response.dealReference != null))
+            {
+                trade.Reference = createPositionResponse.Response.dealReference;
+                trade.ConfirmationTime = DateTime.Now;
+                onTradeBooked(trade);
+            }
+            else
+            {
+                Log.Instance.WriteEntry("Trade booking failed : " + createPositionResponse.StatusCode, EventLogEntryType.Error);
+            }
+        }
     }
 
     public class IGConnection : MarketDataConnection
     {
+        IgRestApiClient _apiRestClient = null;
+
         public IGConnection()
         {
+            _apiRestClient = new IgRestApiClient();
             _apiStreamingClient = new IGTradingStreamingClient();
         }
 
