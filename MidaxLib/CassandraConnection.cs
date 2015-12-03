@@ -179,35 +179,23 @@ namespace MidaxLib
 
 
                 return;
-            _session.Execute(DB_INSERTION + string.Format("(stockid, trading_time,  name,  bid,  offer,  volume) values ('{1}', {2}, '{3}', {4}, {5}, {6})",
+            _session.Execute(string.Format(DB_INSERTION + "(stockid, trading_time,  name,  bid,  offer,  volume) values ('{1}', {2}, '{3}', {4}, {5}, {6})",
                 DATATYPE_STOCK, mktData.Id, ToUnixTimestamp(updateTime), mktData.Name, price.Bid, price.Offer, price.Volume));
         }
-
-
-
-
-
-
-
-
-
 
         public override void Insert(DateTime updateTime, Indicator indicator, decimal value)
         {
             if (_session == null || !Config.PublishingEnabled)
                 return;
-            _session.Execute(DB_INSERTION + string.Format("(indicatorid, trading_time, value) values ('{1}', {2}, {3})",
+            _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{1}', {2}, {3})",
                 DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
-
-        
-        
         }
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
         {
             if (_session == null || !Config.PublishingEnabled)
                 return;
-            _session.Execute(DB_INSERTION + string.Format("(signalid, trading_time, tradeid, value) values ('{1}', {2}, '{3}', {4})",
+            _session.Execute(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value) values ('{1}', {2}, '{3}', {4})",
                 DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), signal.Trade.Reference, Convert.ToInt32(code)));
         }
 
@@ -217,14 +205,14 @@ namespace MidaxLib
                 throw new ApplicationException("Cannot insert a trade without booking information");
             if (_session == null || !Config.PublishingEnabled)
                 return;
-            _session.Execute(DB_INSERTION + string.Format("(tradeid, trading_time, confirmation_time, stockid, direction, size) values ('{1}', {2}, {3}, '{4}', {5}, {6})",
+            _session.Execute(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, stockid, direction, size) values ('{1}', {2}, {3}, '{4}', {5}, {6})",
                 DATATYPE_TRADE, trade.Reference, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic, Convert.ToInt32(trade.Direction), trade.Size));
         }
 
         RowSet getRows(DateTime startTime, DateTime stopTime, string type, string id){
             if (_session == null)
                 return null;
-            return _session.Execute(DB_SELECTION + string.Format("where {1}id='{2}' and trading_time >= {3} and trading_time <= {4};",
+            return _session.Execute(string.Format(DB_SELECTION + "where {1}id='{2}' and trading_time >= {3} and trading_time <= {4};",
                                 type, type.Substring(0, type.Length - 1), id, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
         }
 
@@ -232,7 +220,7 @@ namespace MidaxLib
         {
             if (_session == null)
                 return null;
-            RowSet rowSet = _session.Execute(DB_SELECTION + string.Format("where stockid='{1}' and trading_time >= {2} and trading_time <= {3};",
+            RowSet rowSet = _session.Execute(string.Format(DB_SELECTION + "where stockid='{1}' and trading_time >= {2} and trading_time <= {3};",
                                 type, stockid, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
             List<Trade> trades = new List<Trade>();
             foreach (Row row in rowSet.GetRows())
