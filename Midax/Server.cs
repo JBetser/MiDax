@@ -71,11 +71,13 @@ public class Server
                 
                 var timerStart = new System.Threading.Timer(startSignalCallback);
                 var timerStop = new System.Threading.Timer(stopSignalCallback);
+                var timerClosePositions = new System.Threading.Timer(closePositionsCallback);
 
                 // Figure how much time until PUBLISHING_STOP_TIME
                 DateTime now = DateTime.Now;
                 DateTime startTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_START_TIME"]), DateTimeKind.Utc);
                 DateTime stopTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]), DateTimeKind.Utc);
+                DateTime closePositionsTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["FORCE_CLOSE_POSITIONS_TIME"]), DateTimeKind.Utc);
 
                 // If it's already past PUBLISHING_STOP_TIME, wait until PUBLISHING_STOP_TIME tomorrow  
                 int msUntilStartTime = 10;
@@ -120,6 +122,13 @@ public class Server
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);
             communicator().shutdown();
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Disconnected", EventLogEntryType.Information);
+        }
+
+        void closePositionsCallback(object state)
+        {
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Closing positions", EventLogEntryType.Information);
+            _model.CloseAllPositions();
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": All positions closed", EventLogEntryType.Information);
         }
 
         void connectionLostCallback(object state)

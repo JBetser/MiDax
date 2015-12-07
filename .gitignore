@@ -63,6 +63,10 @@ ClientConsole/bin/Debug/*.*
 ClientConsole/obj/Debug/*.*
 EventLogSourceInstaller/bin/Debug/*.*
 EventLogSourceInstaller/obj/Debug/*.*
+DBImporter/DBImporter/bin/Debug/*.*
+DBImporter/DBImporter/obj/Debug/*.*
+MarketSelector/MarketSelector/bin/Debug/*.*
+MarketSelector/MarketSelector/obj/Debug/*.*
 MidaxTester/bin/Release/*.*
 MidaxTester/obj/Release/*.*
 Midax/bin/Release/*.*
@@ -77,4 +81,8 @@ ClientConsole/bin/Release/*.*
 ClientConsole/obj/Release/*.*
 EventLogSourceInstaller/bin/Release/*.*
 EventLogSourceInstaller/obj/Release/*.*
+DBImporter/DBImporter/bin/Release/*.*
+DBImporter/DBImporter/obj/Release/*.*
+MarketSelector/MarketSelector/bin/Release/*.*
+MarketSelector/MarketSelector/obj/Release/*.*
 WebDebug/*

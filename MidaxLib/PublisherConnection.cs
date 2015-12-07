@@ -21,7 +21,9 @@ namespace MidaxLib
         
         static public PublisherConnection Instance
         {
-            get { return _instance == null ? (Config.Settings["TRADING_MODE"] == "REPLAY" ? 
+            get
+            {
+                return _instance == null ? ((Config.ReplayEnabled || Config.MarketSelectorEnabled) ? 
                     (Config.Settings.ContainsKey("PUBLISHING_CSV") ? _instance = new ReplayPublisher() :
                                                                         _instance = new ReplayTester()) : 
                                                                         _instance = new CassandraConnection()) 

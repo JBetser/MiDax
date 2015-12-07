@@ -28,6 +28,13 @@ namespace MidaxLib
             this._eventHandlers.Add(eventHandler);
         }
 
+        public override void Unsubscribe(Tick eventHandler)
+        {
+            this._eventHandlers.Remove(eventHandler);
+            foreach (MarketData mktData in _mktData)
+                mktData.Unsubscribe(OnUpdate);            
+        }
+
         protected virtual void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             _values.Add(updateTime, value);
@@ -154,6 +161,11 @@ namespace MidaxLib
         {
             Price avg = average(_mktData[0], updateTime, true);
             Publish(updateTime, avg.MidPrice());
+        }
+
+        public Price Average()
+        {
+            return average(_mktData[0], DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]), true);
         }
     }
 }

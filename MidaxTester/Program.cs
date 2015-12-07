@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using dto.endpoint.positions.create.otc.v2;
 using MidaxLib;
 using NLapack.Matrices;
 using NLapack.Numbers;
@@ -13,6 +14,33 @@ namespace MidaxTester
 {   
     class Program
     {
+        /*
+        static async void tmp()
+        {
+            try
+            {
+                CreatePositionRequest cpr = new CreatePositionRequest();
+                cpr.epic = "IX.D.DAX.DAILY.IP";
+                DateTime expiry = DateTime.Today.AddDays(int.Parse(Config.Settings["TRADE_EXPIRY_DAYS"]));
+                cpr.expiry = expiry.ToString("dd-MMM-yy").ToUpper();
+                SIGNAL_CODE code = SIGNAL_CODE.SELL;
+                cpr.direction = code.ToString();
+                cpr.size = 10;
+                cpr.orderType = "MARKET";
+                cpr.guaranteedStop = false;
+                cpr.forceOpen = false;
+                cpr.currencyCode = Config.Settings["TRADE_CURRENCY"];
+                IGTradingStreamingClient igApiClient = new IGTradingStreamingClient();
+                igApiClient.Connect("ksbitlsoftdemo", "Kotik0483", "8d341413c2eae2c35bb5b47a594ef08ae18cb3b7");            
+                var createPositionResponse = await igApiClient._igRestApiClient.createPositionV2(cpr);
+                Log.Instance.WriteEntry("Yes");
+            }
+            catch(Exception e)
+            {
+                Log.Instance.WriteEntry("Nooo");
+            }
+        }*/
+
         static void Main(string[] args)
         {      
             List<string> tests = new List<string>();
@@ -20,21 +48,24 @@ namespace MidaxTester
 
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
-            dicSettings["LIMIT"] = "200";
             dicSettings["PUBLISHING_START_TIME"] = "2015-08-26 00:00:01";
             dicSettings["PUBLISHING_STOP_TIME"] = "2015-08-26 23:59:59";
-            dicSettings["PUBLISHING_DISABLED"] = "1";
             dicSettings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
             //dicSettings["PUBLISHING_CSV"] = @"..\..\expected_results\new_results.csv";   // uncomment this line to generate new test results
             dicSettings["REPLAY_MODE"] = "CSV";
-            dicSettings["REPLAY_CSV"] = TestList(tests);
+            dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             dicSettings["REPLAY_POPUP"] = "1";
             dicSettings["TRADING_START_TIME"] = "2015-08-26 08:00:00";
             dicSettings["TRADING_STOP_TIME"] = "2015-08-26 09:00:00";
+            dicSettings["TRADING_CLOSING_TIME"] = "2015-08-26 08:57:00";
             dicSettings["TRADING_MODE"] = "REPLAY";
+            dicSettings["TRADING_SIGNAL"] = "MacD_10_60_IX.D.DAX.DAILY.IP";
+            dicSettings["TRADING_LIMIT_PER_BP"] = "10";
             dicSettings["TRADE_EXPIRY_DAYS"] = "1";
             dicSettings["TRADE_CURRENCY"] = "GBP";
             Config.Settings = dicSettings;
+
+            //tmp();
 
             Console.WriteLine("Testing calibration...");
 
@@ -138,22 +169,22 @@ namespace MidaxTester
             Console.WriteLine("Testing live indicators and signals...");
             model.StartSignals();
             Console.WriteLine("Testing daily indicators...");
-            string status = model.StopSignals();
 
             if (!dicSettings.ContainsKey("PUBLISHING_CSV"))
             {
-                // Test exceptions
+                // Test exceptions. the program is expected to throw exceptions here, just press continue if you are debugging
+                // all exceptions should be handled, and the program should terminate with a success message box
                 Console.WriteLine("Testing expected exceptions...");
                 string expected;
                 List<string> testError = new List<string>();
                 testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");
-                dicSettings["REPLAY_CSV"] = TestList(testError);
+                dicSettings["REPLAY_CSV"] = Config.TestList(testError);
                 MarketDataConnection.Instance.Connect(null);                
                 bool success = false;
+                var modelErr = new ModelTest(index, marketData);
                 try
                 {
-                    model = new ModelTest(index, marketData);
-                    model.StartSignals();
+                    modelErr.StartSignals();
                 }
                 catch (Exception exc)
                 {
@@ -164,6 +195,28 @@ namespace MidaxTester
                 }
                 if (!success)
                     model.ProcessError("An expected exception has not been thrown");
+                try
+                {
+                    modelErr.StopSignals();
+                }
+                catch (Exception exc)
+                {
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9973.319141068080279635978306";
+                    success = (exc.Message == expected);
+                    if (!success)
+                        model.ProcessError(exc.Message, expected);
+                }
+                try
+                {
+                    model.StopSignals();
+                }
+                catch (Exception exc)
+                {
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9973.319141068080279635978306";
+                    success = (exc.Message == expected);
+                    if (!success)
+                        model.ProcessError(exc.Message, expected);
+                }
                 success = false;
                 try
                 {
@@ -196,19 +249,12 @@ namespace MidaxTester
                 if (!success)
                     model.ProcessError("An expected exception has not been thrown");
                 success = false;
-
-                if (status != "Tests passed successfully")
-                    model.ProcessError(status);
             }
-            Console.WriteLine(status);
+            string statusSuccess = "Tests passed successfully";
+            Console.WriteLine(statusSuccess);
 
             if (dicSettings["REPLAY_POPUP"] == "1")
-                MessageBox.Show(status);
-        }
-
-        static string TestList(List<string> tests)
-        {
-            return tests.Aggregate("", (prev, next) => prev + next + ";", res => res.Substring(0, res.Length - 1));
-        }
+                MessageBox.Show(statusSuccess);
+        }        
     }
 }

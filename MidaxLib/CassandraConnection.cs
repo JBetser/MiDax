@@ -38,6 +38,10 @@ namespace MidaxLib
             o = offer;
             v = volume;
         }
+        public decimal MidPrice()
+        {
+            return ScaleValue(0,0);
+        } 
         public virtual decimal ScaleValue(decimal avg, decimal scale)
         {
             b = o = (b + o).Value / 2m;
@@ -143,14 +147,6 @@ namespace MidaxLib
         const string DB_INSERTION = "insert into historicaldata.{0} ";
         const string DB_SELECTION = "select * from historicaldata.{0} ";
 
-        static public new CassandraConnection Instance
-        {
-            get
-            {
-                return (CassandraConnection)(_instance == null ? _instance = new CassandraConnection() : _instance);
-            }
-        }
-
         public CassandraConnection() 
         {
             if (Config.Settings != null)
@@ -175,9 +171,7 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
         {
-            if (_session == null || !Config.PublishingEnabled)
-
-
+            if (_session == null)
                 return;
             _session.Execute(string.Format(DB_INSERTION + "(stockid, trading_time,  name,  bid,  offer,  volume) values ('{1}', {2}, '{3}', {4}, {5}, {6})",
                 DATATYPE_STOCK, mktData.Id, ToUnixTimestamp(updateTime), mktData.Name, price.Bid, price.Offer, price.Volume));
@@ -185,7 +179,7 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Indicator indicator, decimal value)
         {
-            if (_session == null || !Config.PublishingEnabled)
+            if (_session == null)
                 return;
             _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{1}', {2}, {3})",
                 DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
@@ -193,17 +187,18 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
         {
-            if (_session == null || !Config.PublishingEnabled)
+            if (_session == null)
                 return;
+            string tradeRef = signal.Trade == null ? null : " " + signal.Trade.Reference;
             _session.Execute(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value) values ('{1}', {2}, '{3}', {4})",
-                DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), signal.Trade.Reference, Convert.ToInt32(code)));
+                DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), tradeRef, Convert.ToInt32(code)));
         }
 
         public override void Insert(Trade trade)
         {
             if (trade.TradingTime == DateTimeOffset.MinValue || trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "")
                 throw new ApplicationException("Cannot insert a trade without booking information");
-            if (_session == null || !Config.PublishingEnabled)
+            if (_session == null)
                 return;
             _session.Execute(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, stockid, direction, size) values ('{1}', {2}, {3}, '{4}', {5}, {6})",
                 DATATYPE_TRADE, trade.Reference, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic, Convert.ToInt32(trade.Direction), trade.Size));
@@ -234,6 +229,7 @@ namespace MidaxLib
             List<CqlQuote> quotes = new List<CqlQuote>();
             foreach (Row row in rowSet.GetRows())
                 quotes.Add(new CqlQuote(row));
+            quotes.Reverse();
             return quotes;
         }
 
@@ -255,6 +251,11 @@ namespace MidaxLib
         List<Trade> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, string id)
         {
             return getTrades(startTime, stopTime, type, id);
+        }
+
+        void IReaderConnection.CloseConnection()
+        {
+            Close();
         }
 
         public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id)

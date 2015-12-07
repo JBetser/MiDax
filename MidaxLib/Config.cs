@@ -31,6 +31,30 @@ namespace MidaxLib
                 return _settings["TRADING_MODE"] == "REPLAY";
             }
         }
+
+        public static bool MarketSelectorEnabled
+        {
+            get
+            {
+                return _settings["TRADING_MODE"] == "SELECT";
+            }
+        }
+
+        public static bool TestReplayEnabled
+        {
+            get
+            {
+                return ReplayEnabled && (Config.Settings["REPLAY_MODE"] == "CSV" && !Config.Settings.ContainsKey("PUBLISHING_CSV"));
+            }
+        }
+
+        public static bool TestReplayGeneratorEnabled
+        {
+            get
+            {
+                return ReplayEnabled && Config.Settings.ContainsKey("PUBLISHING_CSV");
+            }
+        }
         
         public static bool TradingOpen
         {
@@ -40,22 +64,21 @@ namespace MidaxLib
                     DateTime.Now.TimeOfDay < DateTime.Parse(_settings["TRADING_STOP_TIME"]).TimeOfDay;
             }
         }
-
-        public static bool PublishingEnabled
-        {
-            get
-            {
-                return int.Parse(_settings["PUBLISHING_DISABLED"]) == 0;
-            }
-        }
-
+        
         public static bool PublishingOpen
         {
             get
             {
+                if (ReplayEnabled || MarketSelectorEnabled)
+                    return true;
                 return DateTime.Now.TimeOfDay > DateTime.Parse(_settings["PUBLISHING_START_TIME"]).TimeOfDay &&
                     DateTime.Now.TimeOfDay < DateTime.Parse(_settings["PUBLISHING_STOP_TIME"]).TimeOfDay;
             }
-        } 
+        }
+
+        public static string TestList(List<string> tests)
+        {
+            return tests.Aggregate("", (prev, next) => prev + next + ";", res => res.Substring(0, res.Length - 1));
+        }
     }
 }

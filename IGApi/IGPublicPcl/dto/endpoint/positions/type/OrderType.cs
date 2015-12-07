@@ -43,6 +43,6 @@ namespace dto.endpoint.positions.type
 	///Fill or Kill Limit order, i.e. a market order where the limit determines the price at which to kill the order
 	///</Summary>
 
-   LIMIT,}
+   TRADING_LIMIT_PER_BP,}
 
 }

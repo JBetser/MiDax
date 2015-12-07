@@ -9,16 +9,6 @@ using Lightstreamer.DotNet.Client;
 
 namespace MidaxLib
 {
-    public interface IAbstractStreamingClient
-    {
-        void Connect(string username, string password, string apiKey);
-        void Subscribe(string[] epics, IHandyTableListener tableListener);
-        void Unsubscribe();
-        SubscribedTableKey SubscribeToTradeSubscription(IHandyTableListener tableListener);
-        void UnsubscribeTradeSubscription(SubscribedTableKey tableListener);
-        void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked);
-    }
-
     public abstract class MarketDataConnection
     {
         protected MarketDataSubscription _mktDataListener = null;
@@ -44,6 +34,8 @@ namespace MidaxLib
                     return _instance;
                 if (Config.ReplayEnabled)
                     _instance = new ReplayConnection();
+                else if (Config.MarketSelectorEnabled)
+                    _instance = new MarketSelectorConnection();
                 else if (Config.TradingEnabled)
                     _instance = new IGConnection();
                 return _instance;
@@ -64,6 +56,12 @@ namespace MidaxLib
         public void SubscribeMarketData(MarketData mktData)
         {
             _mktDataListener.MarketData.Add(mktData);
+            Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
+        }
+
+        public void UnsubscribeMarketData(MarketData mktData)
+        {
+            _mktDataListener.MarketData.Remove(mktData);
             Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
         }
 

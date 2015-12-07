@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using dto.colibri.endpoint.auth.v2;
+using dto.endpoint.positions.close.v1;
 using dto.endpoint.positions.create.otc.v2;
 using IGPublicPcl;
 using Lightstreamer.DotNet.Client;
@@ -13,6 +14,17 @@ using Newtonsoft.Json;
 
 namespace MidaxLib
 {
+    public interface IAbstractStreamingClient
+    {
+        void Connect(string username, string password, string apiKey);
+        void Subscribe(string[] epics, IHandyTableListener tableListener);
+        void Unsubscribe();
+        SubscribedTableKey SubscribeToTradeSubscription(IHandyTableListener tableListener);
+        void UnsubscribeTradeSubscription(SubscribedTableKey tableListener);
+        void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked);
+        void ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed);
+    }
+
     public class IGMidaxStreamingApiClient : IGStreamingApiClient
     {
         public TimerCallback ConnectionClosed = null;
@@ -73,7 +85,7 @@ namespace MidaxLib
         public TimerCallback ConnectionClosed = null;
 
         IGMidaxStreamingApiClient _igStreamApiClient = new IGMidaxStreamingApiClient();
-        IgRestApiClient _igRestApiClient = new IgRestApiClient();
+        public IgRestApiClient _igRestApiClient = new IgRestApiClient();
         SubscribedTableKey _igSubscribedTableKey = null;
         string _currentAccount = null;
 
@@ -168,7 +180,7 @@ namespace MidaxLib
             DateTime expiry = DateTime.Today.AddDays(int.Parse(Config.Settings["TRADE_EXPIRY_DAYS"]));
             CreatePositionRequest cpr = new CreatePositionRequest();
             cpr.epic = trade.Epic;
-            cpr.expiry = string.Format("dd-MMM-yy", expiry);
+            cpr.expiry = expiry.ToString("dd-MMM-yy").ToUpper();
             cpr.direction = trade.Direction.ToString();
             cpr.size = trade.Size;
             cpr.orderType = "MARKET";
@@ -186,6 +198,28 @@ namespace MidaxLib
             else
             {
                 Log.Instance.WriteEntry("Trade booking failed : " + createPositionResponse.StatusCode, EventLogEntryType.Error);
+            }
+        }
+
+        async void IAbstractStreamingClient.ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
+        {
+            ClosePositionRequest cpr = new ClosePositionRequest();
+            cpr.epic = trade.Epic;
+            cpr.dealId = trade.Reference;
+            cpr.size = trade.Size;
+            cpr.orderType = "MARKET";
+            var closePositionResponse = await _igRestApiClient.closePosition(cpr);
+
+            if (closePositionResponse && (closePositionResponse.Response != null) && (closePositionResponse.Response.dealReference != null))
+            {
+                // tag the trade with '#' to represent a position closure
+                trade.Reference = "#" + closePositionResponse.Response.dealReference;
+                trade.ConfirmationTime = DateTime.Now;
+                onTradeClosed(trade);
+            }
+            else
+            {
+                Log.Instance.WriteEntry("Trade closing failed : " + closePositionResponse.StatusCode, EventLogEntryType.Error);
             }
         }
     }

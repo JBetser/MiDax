@@ -34,6 +34,6 @@ namespace dto.endpoint.workingorders.type
 	///Limit working order
 	///</Summary>
 
-   LIMIT,}
+   TRADING_LIMIT_PER_BP,}
 
 }

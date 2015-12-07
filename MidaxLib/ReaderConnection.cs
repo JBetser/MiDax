@@ -13,6 +13,7 @@ namespace MidaxLib
         List<CqlQuote> GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, string id);
         List<CqlQuote> GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, string id);
         List<Trade> GetTrades(DateTime startTime, DateTime stopTime, string type, string id);
+        void CloseConnection();
     }
 
     public class CsvReader : IReaderConnection
@@ -83,7 +84,9 @@ namespace MidaxLib
 
         void readTradeData(List<Trade> trades, string[] values)
         {
-            trades.Add(new Trade(DateTime.Parse(values[7]), values[6], (SIGNAL_CODE)Enum.Parse(typeof(SIGNAL_CODE),values[3]), int.Parse(values[5]), (decimal)double.Parse(values[4])));
+            Trade trade = new Trade(DateTime.Parse(values[7]), values[6], (SIGNAL_CODE)Enum.Parse(typeof(SIGNAL_CODE), values[3]), int.Parse(values[5]), (decimal)double.Parse(values[4]));
+            trade.Reference = values[1];
+            trades.Add(trade);
         }
 
         List<CqlQuote> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
@@ -104,6 +107,11 @@ namespace MidaxLib
         List<Trade> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, string id)
         {
             return getRows<Trade>(startTime, stopTime, type, id, readTradeData);
+        }
+
+        void IReaderConnection.CloseConnection()
+        {
+            _csvReader.Close();
         }
     }
 }

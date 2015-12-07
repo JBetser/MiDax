@@ -60,8 +60,8 @@
     <Setting Name="MODEL" Type="System.String" Scope="Application">
       <Value Profile="(Default)">MIDAX</Value>
     </Setting>
-    <Setting Name="LIMIT" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">200</Value>
+    <Setting Name="TRADING_LIMIT_PER_BP" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">10</Value>
     </Setting>
     <Setting Name="PUBLISHING_START_TIME" Type="System.String" Scope="Application">
       <Value Profile="(Default)">06:00:00</Value>
@@ -71,9 +71,6 @@
     </Setting>
     <Setting Name="TRADING_STOP_TIME" Type="System.String" Scope="Application">
       <Value Profile="(Default)">17:00:00</Value>
-    </Setting>
-    <Setting Name="PUBLISHING_DISABLED" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="TRADING_MODE" Type="System.String" Scope="Application">
       <Value Profile="(Default)">PRODUCTION</Value>
@@ -95,6 +92,15 @@
     </Setting>
     <Setting Name="TRADE_CURRENCY" Type="System.String" Scope="Application">
       <Value Profile="(Default)">GBP</Value>
+    </Setting>
+    <Setting Name="TRADING_CLOSING_TIME" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">16:00:00</Value>
+    </Setting>
+    <Setting Name="FORCE_CLOSE_POSITIONS_TIME" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">16:55:00</Value>
+    </Setting>
+    <Setting Name="TRADING_SIGNAL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">MacD_10_60_IX.D.DAX.DAILY.IP</Value>
     </Setting>
   </Settings>
 </SettingsFile>

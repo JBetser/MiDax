@@ -127,10 +127,10 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("200")]
-        public string LIMIT {
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public string TRADING_LIMIT_PER_BP {
             get {
-                return ((string)(this["LIMIT"]));
+                return ((string)(this["TRADING_LIMIT_PER_BP"]));
             }
         }
         
@@ -158,15 +158,6 @@ namespace Midax.Properties {
         public string TRADING_STOP_TIME {
             get {
                 return ((string)(this["TRADING_STOP_TIME"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public string PUBLISHING_DISABLED {
-            get {
-                return ((string)(this["PUBLISHING_DISABLED"]));
             }
         }
         
@@ -230,6 +221,33 @@ namespace Midax.Properties {
         public string TRADE_CURRENCY {
             get {
                 return ((string)(this["TRADE_CURRENCY"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("16:00:00")]
+        public string TRADING_CLOSING_TIME {
+            get {
+                return ((string)(this["TRADING_CLOSING_TIME"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("16:55:00")]
+        public string FORCE_CLOSE_POSITIONS_TIME {
+            get {
+                return ((string)(this["FORCE_CLOSE_POSITIONS_TIME"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("MacD_10_60_IX.D.DAX.DAILY.IP")]
+        public string TRADING_SIGNAL {
+            get {
+                return ((string)(this["TRADING_SIGNAL"]));
             }
         }
     }

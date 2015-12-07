@@ -11,6 +11,7 @@ namespace MidaxLib
 {
     public abstract class Model
     {
+        protected string _tradingSignal = null;
         protected int _amount = 0;
         protected Portfolio _ptf = null;
         protected List<MarketData> _mktData = new List<MarketData>();
@@ -18,23 +19,29 @@ namespace MidaxLib
         protected List<MarketData> _mktIndices = new List<MarketData>();
         protected List<Indicator> _mktIndicators = new List<Indicator>();
         protected List<IndicatorLevel> _mktUnsubscribedIndicators = new List<IndicatorLevel>();
- 
+        
         public Model()
         {
-            _amount = int.Parse(Config.Settings["LIMIT"]);            
+            if (Config.Settings.ContainsKey("TRADING_SIGNAL"))
+                _tradingSignal = Config.Settings["TRADING_SIGNAL"];
+            _amount = (Config.MarketSelectorEnabled || Config.TestReplayGeneratorEnabled) ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);
             _ptf = new Portfolio(MarketDataConnection.Instance.StreamClient);
         }
 
         protected void OnBuy(Signal signal, DateTime time, Price value)
         {
-            signal.Trade = new Trade(time, signal.Asset.Id, SIGNAL_CODE.BUY, _amount, value.Offer);
+            if (_tradingSignal != null)
+                if (signal.Id == _tradingSignal)
+                    signal.Trade = new Trade(time, signal.Asset.Id, SIGNAL_CODE.BUY, _amount, value.Offer);
             Buy(signal, time, value);
         }
 
         protected void OnSell(Signal signal, DateTime time, Price value)
         {
-            signal.Trade = new Trade(time, signal.Asset.Id, SIGNAL_CODE.SELL, _amount, value.Bid);
-            Sell(signal, time, value);                
+            if (_tradingSignal != null)
+                if (signal.Id == _tradingSignal)
+                    signal.Trade = new Trade(time, signal.Asset.Id, SIGNAL_CODE.SELL, _amount, value.Bid);
+            Sell(signal, time, value);
         }
 
         protected abstract void Buy(Signal signal, DateTime time, Price value);
@@ -64,12 +71,40 @@ namespace MidaxLib
             Log.Instance.WriteEntry("Publishing indicator levels...", EventLogEntryType.Information);
             foreach (var indicator in _mktUnsubscribedIndicators)
                 indicator.Publish(DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]), DateTimeKind.Utc));
-            return PublisherConnection.Instance.Close();
+            string status = PublisherConnection.Instance.Close();
+            foreach (Signal sig in _mktSignals)
+            {
+                sig.Unsubscribe();
+                sig.Clear();
+            }
+            foreach (Indicator ind in _mktIndicators)
+            {
+                ind.Unsubscribe(OnUpdateIndicator);
+                ind.Clear();
+            }
+            foreach (MarketData idx in _mktIndices)
+            {
+                idx.Unsubscribe(OnUpdateMktData);
+                idx.Clear();
+            }
+            foreach (MarketData stock in _mktData)
+                stock.Clear();
+            return status;
+        }
+
+        public void CloseAllPositions()
+        {
+            foreach (var position in _ptf.Positions)
+            {
+                if (position.Value.Value != 0)
+                    _ptf.ClosePosition(position.Value.Trade);
+            }
         }
     }
 
     public class ModelMidax : Model
     {
+        protected DateTime _closingTime = DateTime.MinValue;
         protected MarketData _daxIndex = null;
         protected List<MarketData> _daxStocks = null;
         protected List<MarketData> _volatilityIndices = null;
@@ -81,6 +116,7 @@ namespace MidaxLib
             List<MarketData> mktData = new List<MarketData>();
             mktData.Add(daxIndex);
             mktData.AddRange(daxStocks);
+            this._closingTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_CLOSING_TIME"]), DateTimeKind.Utc);            
             this._mktData = mktData;
             this._daxIndex = daxIndex;
             this._daxStocks = daxStocks;
@@ -100,8 +136,16 @@ namespace MidaxLib
         {
             if (_ptf.Position(_daxIndex.Id).Value < 0)
             {
-                _ptf.BookTrade(signal.Trade);
-                Log.Instance.WriteEntry(time + " " + signal.Trade.Reference + " Signal " + signal.Id + ": BUY " + signal.Asset.Id + " " + value.Offer, EventLogEntryType.Information);
+                if (time >= _closingTime)
+                {
+                    _ptf.ClosePosition(signal.Trade);
+                }
+                else
+                {
+                    _ptf.BookTrade(signal.Trade);
+                    string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.Asset.Id + " " + value.Offer, EventLogEntryType.Information);
+                }
             }
         }
          
@@ -109,8 +153,17 @@ namespace MidaxLib
         {
             if (_ptf.Position(_daxIndex.Id).Value >= 0)
             {
-                _ptf.BookTrade(signal.Trade);
-                Log.Instance.WriteEntry(time + " " + signal.Trade.Reference + " Signal " + signal.Id + ": SELL " + signal.Asset.Id + " " + value.Bid, EventLogEntryType.Information);
+                if (time >= _closingTime)
+                {
+                    if (_ptf.Position(_daxIndex.Id).Value > 0)
+                        _ptf.ClosePosition(signal.Trade);
+                }
+                else
+                {
+                    _ptf.BookTrade(signal.Trade);
+                    string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.Asset.Id + " " + value.Bid, EventLogEntryType.Information);
+                }
             }
         }
     }

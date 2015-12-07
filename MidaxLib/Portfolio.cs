@@ -40,6 +40,11 @@ namespace MidaxLib
             return _positions[stockid];
         }
 
+        public void ClosePosition(Trade trade)
+        {
+            _igStreamApiClient.ClosePosition(trade, OnTradeBooked);
+        }
+
         public void Unsubscribe()
         {
             if (_tradeSubscriptionStk != null)
@@ -54,11 +59,14 @@ namespace MidaxLib
         void OnTradeBooked(Trade newTrade)
         {
             _trades.Add(newTrade);
+            GetPosition(newTrade.Epic).Trade = newTrade;
             newTrade.Publish();                
         }
-
+        
         public void BookTrade(Trade newTrade)
         {
+            if (newTrade == null)
+                return;
             _igStreamApiClient.BookTrade(newTrade, OnTradeBooked);
         }
 

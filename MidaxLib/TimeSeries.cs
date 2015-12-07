@@ -16,17 +16,23 @@ namespace MidaxLib
             
         public void Add(DateTime updateTime, Price price)
         {
-            if (updateTime <= _latest)
+            if (updateTime < _latest)
                 throw new ApplicationException("Time series do not accept values in the past");
+            else if (updateTime == _latest)
+            {
+                if (_series.Last()[_series.Last().Count - 1].Key != updateTime)
+                    throw new ApplicationException("Time series is inconsistent");
+                _series.Last()[_series.Last().Count - 1] = new KeyValuePair<DateTime, Price>(updateTime, price);
+            }
             _latest = updateTime;
             if (_series.Count == 0)
                 _series.Add(new List<KeyValuePair<DateTime, Price>>());
-            else if ((updateTime - _series[_series.Count - 1][_series[_series.Count - 1].Count - 1].Key).Minutes > TIMESERIES_INTERVAL_MINUTES)
+            else if ((updateTime - _series.Last()[_series.Last().Count - 1].Key).Minutes > TIMESERIES_INTERVAL_MINUTES)
             {
                 deleteOldData(updateTime);
                 _series.Add(new List<KeyValuePair<DateTime, Price>>());
             }
-            _series[_series.Count - 1].Add(new KeyValuePair<DateTime, Price>(updateTime, price));            
+            _series.Last().Add(new KeyValuePair<DateTime, Price>(updateTime, price));            
         }
 
         public IEnumerable<KeyValuePair<DateTime, Price>> ValueGenerator(DateTime timeStart, DateTime timeEnd)

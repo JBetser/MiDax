@@ -94,7 +94,7 @@ namespace MidaxLib
         protected TimeSeries _values = null;
         protected List<Indicator> _mktIndicator = null;
         protected SIGNAL_CODE _signalCode = SIGNAL_CODE.UNKNOWN;
-        protected Trade _trade = null;
+        protected Trade _lastTrade = null;
         
         public Signal(string id, MarketData asset)
         {
@@ -111,6 +111,19 @@ namespace MidaxLib
             _onSell = onSell;
             foreach (Indicator indicator in _mktIndicator)
                 indicator.Subscribe(OnUpdate);
+        }
+
+        public void Unsubscribe()
+        {
+            _onBuy = null;
+            _onSell = null;
+            foreach (Indicator indicator in _mktIndicator)
+                indicator.Unsubscribe(OnUpdate);
+        }
+
+        public void Clear()
+        {
+            this._values = new TimeSeries();
         }
 
         public string Id
@@ -135,8 +148,8 @@ namespace MidaxLib
 
         public Trade Trade
         {
-            get { return _trade; }
-            set { _trade = value; }
+            get { return _lastTrade; }
+            set { _lastTrade = value; }
         }
 
         void _onHold(Signal signal, DateTime updateTime, Price value)

@@ -59,7 +59,7 @@ namespace MidaxWebService
                 foreach (var key in rootWebConfig.AppSettings.Settings.AllKeys)
                     dicSettings[key] = rootWebConfig.AppSettings.Settings[key].Value;
                 Config.Settings = dicSettings;
-                _midaxDB = CassandraConnection.Instance;
+                _midaxDB = (CassandraConnection)PublisherConnection.Instance;
             }
             catch (Exception exc)
             {

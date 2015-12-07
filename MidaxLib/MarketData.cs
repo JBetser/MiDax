@@ -29,7 +29,19 @@ namespace MidaxLib
             bool subscribe = (this._eventHandlers.Count == 0);
             this._eventHandlers.Add(eventHandler);
             if (subscribe)
-                IGConnection.Instance.SubscribeMarketData(this); 
+                MarketDataConnection.Instance.SubscribeMarketData(this); 
+        }
+
+        public virtual void Unsubscribe(Tick eventHandler)
+        {
+            this._eventHandlers.Remove(eventHandler);
+            if (this._eventHandlers.Count == 0)
+                MarketDataConnection.Instance.UnsubscribeMarketData(this);
+        }
+
+        public void Clear()
+        {
+            this._values = new TimeSeries();
         }
 
         public void FireTick(DateTime updateTime, L1LsPriceData value)
@@ -65,6 +77,7 @@ namespace MidaxLib
         public TimeSeries TimeSeries
         {
             get { return _values; }
+            set { _values = value; }
         }
     }
 }

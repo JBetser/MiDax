@@ -76,6 +76,7 @@
     <Compile Include="MarketData.cs" />
     <Compile Include="MarketDataConnection.cs" />
     <Compile Include="Model.cs" />
+    <Compile Include="MarketSelector.cs" />
     <Compile Include="ModelTest.cs" />
     <Compile Include="NeuralNetwork.cs" />
     <Compile Include="Portfolio.cs" />

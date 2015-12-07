@@ -81,18 +81,18 @@ namespace MidaxLib
         Dictionary<string, List<CqlQuote>> _expectedIndicatorData = null;
         Dictionary<string, List<CqlQuote>> _expectedSignalData = null;
         Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
-        bool _replayTest = false;
+        bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
 
         public Dictionary<string, List<CqlQuote>> ExpectedIndicatorData { get { return _expectedIndicatorData; } }
         public Dictionary<string, List<CqlQuote>> ExpectedSignalData { get { return _expectedSignalData; } }
         public Dictionary<KeyValuePair<string, DateTime>, Trade> ExpectedTradeData { get { return _expectedTradeData; } }
-        public bool ReplayTest { get { return _replayTest; } }
         
         void IAbstractStreamingClient.Connect(string username, string password, string apiKey)
         {
             _startTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_START_TIME"]), DateTimeKind.Utc);
             _stopTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_STOP_TIME"]), DateTimeKind.Utc);
+            _testReplayFiles.Clear();
             if (Config.Settings["REPLAY_MODE"] == "DB")
             {
                 _testReplayFiles.Add(null); // Add a fake element to trigger the replay from db
@@ -101,14 +101,16 @@ namespace MidaxLib
             else if (Config.Settings["REPLAY_MODE"] == "CSV")
             {
                 _testReplayFiles = Config.Settings["REPLAY_CSV"].Split(';').ToList();
+                if (_instance != null)
+                    _instance.CloseConnection();
                 _instance = new CsvReader(_testReplayFiles[0]);
             }
             else
                 _instance = null;
-            _replayTest = Config.Settings["REPLAY_MODE"] == "CSV" && !Config.Settings.ContainsKey("PUBLISHING_CSV");
+            _hasExpectedResults = Config.TestReplayEnabled || Config.MarketSelectorEnabled;
         }
 
-        void IAbstractStreamingClient.Subscribe(string[] epics, IHandyTableListener tableListener)
+        public virtual void Subscribe(string[] epics, IHandyTableListener tableListener)
         {
             while (_testReplayFiles.Count > 0)
             {
@@ -148,7 +150,16 @@ namespace MidaxLib
             _tradingEventTable.OnUpdate(_positions[trade.Epic], trade.Epic, null);
         }
 
-        void replay(Dictionary<string, List<CqlQuote>> priceData, IHandyTableListener tableListener)
+        void IAbstractStreamingClient.ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
+        {
+            trade.Reference = "###CLOSE_DUMMY_TRADE###";
+            trade.ConfirmationTime = trade.TradingTime;
+            _positions[trade.Epic] = 0;
+            onTradeClosed(trade);
+            _tradingEventTable.OnUpdate(_positions[trade.Epic], trade.Epic, null);
+        }
+
+        protected void replay(Dictionary<string, List<CqlQuote>> priceData, IHandyTableListener tableListener)
         {
             DateTime curtime = _startTime;
             while (priceData.Count > 0)
@@ -182,13 +193,13 @@ namespace MidaxLib
             }
         }
 
-        Dictionary<string, List<CqlQuote>> getReplayData(string[] epics)
+        protected Dictionary<string, List<CqlQuote>> getReplayData(string[] epics)
         {
             Dictionary<string, List<CqlQuote>> priceData = new Dictionary<string, List<CqlQuote>>();
             foreach (string epic in epics)
                 priceData[epic] = _instance.GetMarketDataQuotes(_startTime, _stopTime,
                     CassandraConnection.DATATYPE_STOCK, epic);
-            if (_replayTest)
+            if (_hasExpectedResults)
             {
                 _expectedIndicatorData = new Dictionary<string, List<CqlQuote>>();
                 foreach (string epic in epics)
@@ -231,6 +242,12 @@ namespace MidaxLib
         public ReplayConnection() : base(new ReplayStreamingClient())
         {
             _replayStreamingClient = (ReplayStreamingClient)_apiStreamingClient;
+        }
+
+        public ReplayConnection(ReplayStreamingClient client)
+            : base(client)
+        {
+            _replayStreamingClient = client;
         }
 
         public override void Connect(TimerCallback connectionClosed)
@@ -291,9 +308,10 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
         {
+            string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
             var newLine = string.Format("{0},{1},{2},{3},{4}{5}",
                 DATATYPE_SIGNAL, signal.Id,
-                updateTime, signal.Trade.Reference, (int)code, Environment.NewLine);
+                updateTime, tradeRef, (int)code, Environment.NewLine);
             _csvSignalStringBuilder.Append(newLine);
         }
 
@@ -319,6 +337,7 @@ namespace MidaxLib
             File.WriteAllText(_csvFile, csvContent);
             string info = "Generated results in " + _csvFile;
             Log.Instance.WriteEntry(info, EventLogEntryType.Information);
+            _instance = null;
             return info;
         }
     }
@@ -386,6 +405,13 @@ namespace MidaxLib
             {
                 string error = "Test failed: trade " + trade.Epic + " time " + trade.TradingTime.ToShortTimeString() + " expected Size " +
                    _expectedTradeData[tradeKey].Size.ToString() + " != " + trade.Size.ToString();
+                Log.Instance.WriteEntry(error, EventLogEntryType.Error);
+                throw new ApplicationException(error);
+            }
+            if (_expectedTradeData[tradeKey].Reference != trade.Reference)
+            {
+                string error = "Test failed: trade " + trade.Epic + " time " + trade.TradingTime.ToShortTimeString() + " expected Reference " +
+                   _expectedTradeData[tradeKey].Reference + " != " + trade.Reference;
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }

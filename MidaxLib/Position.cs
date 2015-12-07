@@ -11,7 +11,10 @@ namespace MidaxLib
     {
         string _name;
         int _pos = 0;
+        Trade _lastTrade = null;
         public int Value { get { return _pos; } }
+        public string Epic { get { return _name; } }
+        public Trade Trade { get { return _lastTrade; } set { _lastTrade = value; } }
 
         public Position(string name)
         {
