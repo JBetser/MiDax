@@ -31,12 +31,10 @@ namespace MidaxLib
         }
 
         public abstract void Insert(DateTime updateTime, MarketData mktData, Price price);
-
         public abstract void Insert(DateTime updateTime, Indicator indicator, decimal value);
-
         public abstract void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code);
-
         public abstract void Insert(Trade trade);
+        public abstract void Insert(Value gain);
 
         public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData)
         {

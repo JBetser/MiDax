@@ -241,14 +241,5 @@ namespace Midax.Properties {
                 return ((string)(this["FORCE_CLOSE_POSITIONS_TIME"]));
             }
         }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("MacD_10_60_IX.D.DAX.DAILY.IP")]
-        public string TRADING_SIGNAL {
-            get {
-                return ((string)(this["TRADING_SIGNAL"]));
-            }
-        }
     }
 }

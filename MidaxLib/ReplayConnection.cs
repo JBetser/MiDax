@@ -88,10 +88,10 @@ namespace MidaxLib
         public Dictionary<string, List<CqlQuote>> ExpectedSignalData { get { return _expectedSignalData; } }
         public Dictionary<KeyValuePair<string, DateTime>, Trade> ExpectedTradeData { get { return _expectedTradeData; } }
         
-        void IAbstractStreamingClient.Connect(string username, string password, string apiKey)
+        public void Connect(string username, string password, string apiKey)
         {
-            _startTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_START_TIME"]), DateTimeKind.Utc);
-            _stopTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_STOP_TIME"]), DateTimeKind.Utc);
+            _startTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_START_TIME"]), DateTimeKind.Utc);
+            _stopTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]), DateTimeKind.Utc);
             _testReplayFiles.Clear();
             if (Config.Settings["REPLAY_MODE"] == "DB")
             {
@@ -107,14 +107,14 @@ namespace MidaxLib
             }
             else
                 _instance = null;
-            _hasExpectedResults = Config.TestReplayEnabled || Config.MarketSelectorEnabled;
+            _hasExpectedResults = Config.TestReplayEnabled || Config.MarketSelectorEnabled || Config.CalibratorEnabled;
         }
 
         public virtual void Subscribe(string[] epics, IHandyTableListener tableListener)
         {
             while (_testReplayFiles.Count > 0)
             {
-                Dictionary<string, List<CqlQuote>> priceData = getReplayData(epics);
+                Dictionary<string, List<CqlQuote>> priceData = GetReplayData(epics);
                 replay(priceData, tableListener);
                 _testReplayFiles.RemoveAt(0);
             }
@@ -193,7 +193,7 @@ namespace MidaxLib
             }
         }
 
-        protected Dictionary<string, List<CqlQuote>> getReplayData(string[] epics)
+        public Dictionary<string, List<CqlQuote>> GetReplayData(string[] epics)
         {
             Dictionary<string, List<CqlQuote>> priceData = new Dictionary<string, List<CqlQuote>>();
             foreach (string epic in epics)
@@ -270,6 +270,7 @@ namespace MidaxLib
         StringBuilder _csvIndicatorStringBuilder;
         StringBuilder _csvSignalStringBuilder;
         StringBuilder _csvTradeStringBuilder;
+        StringBuilder _csvGainStringBuilder;
 
         static public new ReplayPublisher Instance
         {
@@ -286,6 +287,7 @@ namespace MidaxLib
             _csvIndicatorStringBuilder = new StringBuilder();
             _csvSignalStringBuilder = new StringBuilder();
             _csvTradeStringBuilder = new StringBuilder();
+            _csvGainStringBuilder = new StringBuilder();
         }
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
@@ -325,6 +327,13 @@ namespace MidaxLib
             _csvTradeStringBuilder.Append(newLine);
         }
 
+        public override void Insert(Value gain)
+        {
+            var newLine = string.Format("{0}{1}", gain.X,
+                Environment.NewLine);
+            _csvGainStringBuilder.Append(newLine);
+        }
+
         public override string Close()
         {
             string csvContent = _csvStockStringBuilder.ToString();
@@ -334,6 +343,8 @@ namespace MidaxLib
             csvContent += _csvSignalStringBuilder.ToString();
             csvContent += Environment.NewLine;
             csvContent += _csvTradeStringBuilder.ToString();
+            csvContent += Environment.NewLine;
+            csvContent += _csvGainStringBuilder.ToString();
             File.WriteAllText(_csvFile, csvContent);
             string info = "Generated results in " + _csvFile;
             Log.Instance.WriteEntry(info, EventLogEntryType.Information);
@@ -415,6 +426,10 @@ namespace MidaxLib
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }
+        }
+
+        public override void Insert(Value gain)
+        {
         }
 
         public override string Close()

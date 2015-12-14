@@ -60,6 +60,10 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebDebug", "WebDebug", "{FB
 		VWDDynamicPort = "false"
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MidaxTrader", "MidaxTrader\MidaxTrader.csproj", "{ACCA827D-D9F9-401F-9663-3052FD89BC87}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Calibrator", "Calibrator\Calibrator.csproj", "{2B76826B-164D-4A17-832C-5B8A57FB49A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -94,6 +98,14 @@ Global
 		{FB8FC1FB-E3ED-4CFB-8EBE-955AA824C2D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB8FC1FB-E3ED-4CFB-8EBE-955AA824C2D9}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{FB8FC1FB-E3ED-4CFB-8EBE-955AA824C2D9}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{ACCA827D-D9F9-401F-9663-3052FD89BC87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACCA827D-D9F9-401F-9663-3052FD89BC87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACCA827D-D9F9-401F-9663-3052FD89BC87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACCA827D-D9F9-401F-9663-3052FD89BC87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B76826B-164D-4A17-832C-5B8A57FB49A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B76826B-164D-4A17-832C-5B8A57FB49A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B76826B-164D-4A17-832C-5B8A57FB49A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B76826B-164D-4A17-832C-5B8A57FB49A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

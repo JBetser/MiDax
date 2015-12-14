@@ -32,6 +32,14 @@ namespace MidaxLib
             }
         }
 
+        public static bool CalibratorEnabled
+        {
+            get
+            {
+                return _settings["TRADING_MODE"] == "CALIBRATION";
+            }
+        }
+
         public static bool MarketSelectorEnabled
         {
             get
@@ -44,6 +52,8 @@ namespace MidaxLib
         {
             get
             {
+                if (!Config.Settings.ContainsKey("REPLAY_MODE"))
+                    return false;
                 return ReplayEnabled && (Config.Settings["REPLAY_MODE"] == "CSV" && !Config.Settings.ContainsKey("PUBLISHING_CSV"));
             }
         }

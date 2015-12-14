@@ -7,13 +7,14 @@ using Lightstreamer.DotNet.Client;
 
 namespace MidaxLib
 {
-    public class MarketSelectorStreamingClient : ReplayStreamingClient
+    class CalibrationStreamingClient : ReplayStreamingClient
     {
         public override void Subscribe(string[] epics, IHandyTableListener tableListener)
         {
             Dictionary<string, List<CqlQuote>> priceData = GetReplayData(epics);
 
-            foreach(var epic in epics){
+            foreach (var epic in epics)
+            {
                 // for each quote, associate the observed gains in the near future
                 var mktData = new MarketData(epic);
                 var wmaLow = new IndicatorWMA(mktData, 2);
@@ -25,7 +26,10 @@ namespace MidaxLib
                     mktData.TimeSeries.Add(quote.t.UtcDateTime, new Price(quote.MidPrice()));
                 foreach (var quote in ExpectedIndicatorData[wmaLow.Id])
                     wmaLow.TimeSeries.Add(quote.t.UtcDateTime, new Price(quote.ScaleValue(0, 1)));
-                
+                foreach (var quote in ExpectedIndicatorData[wmaLow.Id])
+                    wmaLow.TimeSeries.Add(quote.t.UtcDateTime, new Price(quote.ScaleValue(0, 1)));
+
+
                 var expectations = new Dictionary<DateTime, KeyValuePair<CqlQuote, decimal>>();
                 var gainDistribution = new SortedList<int, DateTime>();
                 int minGain = 1000000;
@@ -76,10 +80,10 @@ namespace MidaxLib
         }
     }
 
-    public class MarketSelectorConnection : ReplayConnection
+    public class CalibrationConnection : ReplayConnection
     {
-        public MarketSelectorConnection()
-            : base(new MarketSelectorStreamingClient())
+        public CalibrationConnection()
+            : base(new CalibrationStreamingClient())
         {
         }
     }

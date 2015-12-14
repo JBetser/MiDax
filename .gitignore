@@ -67,6 +67,10 @@ DBImporter/DBImporter/bin/Debug/*.*
 DBImporter/DBImporter/obj/Debug/*.*
 MarketSelector/MarketSelector/bin/Debug/*.*
 MarketSelector/MarketSelector/obj/Debug/*.*
+MidaxTrader/bin/Debug/*.*
+MidaxTrader/obj/Debug/*.*
+Calibrator/bin/Debug/*.*
+Calibrator/obj/Debug/*.*
 MidaxTester/bin/Release/*.*
 MidaxTester/obj/Release/*.*
 Midax/bin/Release/*.*
@@ -85,4 +89,8 @@ DBImporter/DBImporter/bin/Release/*.*
 DBImporter/DBImporter/obj/Release/*.*
 MarketSelector/MarketSelector/bin/Release/*.*
 MarketSelector/MarketSelector/obj/Release/*.*
+MidaxTrader/bin/Release/*.*
+MidaxTrader/obj/Release/*.*
+Calibrator/bin/Release/*.*
+Calibrator/obj/Release/*.*
 WebDebug/*

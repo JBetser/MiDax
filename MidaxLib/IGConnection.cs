@@ -180,7 +180,7 @@ namespace MidaxLib
             DateTime expiry = DateTime.Today.AddDays(int.Parse(Config.Settings["TRADE_EXPIRY_DAYS"]));
             CreatePositionRequest cpr = new CreatePositionRequest();
             cpr.epic = trade.Epic;
-            cpr.expiry = expiry.ToString("dd-MMM-yy").ToUpper();
+            cpr.expiry = "DFB";
             cpr.direction = trade.Direction.ToString();
             cpr.size = trade.Size;
             cpr.orderType = "MARKET";

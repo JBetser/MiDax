@@ -204,6 +204,11 @@ namespace MidaxLib
                 DATATYPE_TRADE, trade.Reference, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic, Convert.ToInt32(trade.Direction), trade.Size));
         }
 
+        public override void Insert(Value gain)
+        {
+            throw new ApplicationException("Gain insertion not implemented in Cassandra");
+        }
+
         RowSet getRows(DateTime startTime, DateTime stopTime, string type, string id){
             if (_session == null)
                 return null;
