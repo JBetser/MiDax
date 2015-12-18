@@ -59,6 +59,59 @@
             Type of the return value.
             </summary>
         </member>
+        <member name="T:Cassandra.Collections.CopyOnWriteDictionary`2">
+            <summary>
+            A thread-safe variant of Dictionary{TKey, TValue} in which all mutative operations (Add and Remove) are implemented by making a copy of the underlying dictionary,
+            intended to provide safe enumeration of its items.
+            </summary>
+        </member>
+        <member name="M:Cassandra.Collections.CopyOnWriteDictionary`2.GetOrAdd(`0,`1)">
+            <summary>
+            Adds a key/value pair to the underlying dictionary if the key does not already exist.
+            </summary>
+            <param name="key">The key of the element to add.</param>
+            <param name="value">the value to be added, if the key does not already exist</param>
+            <returns>
+            The value for the key. This will be either the existing value for the key if the 
+            key is already in the dictionary, or the new value if the key was not in the dictionary.
+            </returns>
+        </member>
+        <member name="M:Cassandra.Collections.CopyOnWriteDictionary`2.Add(`0,`1)">
+            <summary>
+            Adds a new item by copying the underlying dictionary.
+            </summary>
+            <remarks>
+            Adds or modifies an item.
+            </remarks>
+        </member>
+        <member name="M:Cassandra.Collections.CopyOnWriteDictionary`2.Add(System.Collections.Generic.KeyValuePair{`0,`1})">
+            <summary>
+            Adds a new item by copying the underlying dictionary.
+            </summary>
+            <remarks>
+            Adds or modifies an item.
+            </remarks>
+        </member>
+        <member name="M:Cassandra.Collections.CopyOnWriteDictionary`2.Remove(`0)">
+            <summary>
+            Removes an item with the specified key by copying the underlying dictionary
+            </summary>
+        </member>
+        <member name="M:Cassandra.Collections.CopyOnWriteDictionary`2.Remove(System.Collections.Generic.KeyValuePair{`0,`1})">
+            <summary>
+            Removes an item by copying the underlying dictionary
+            </summary>
+        </member>
+        <member name="M:Cassandra.Collections.CopyOnWriteDictionary`2.TryRemove(`0,`1@)">
+            <summary>
+            Attempts to remove and return the the value with the specified key from the dictionary.
+            </summary>
+        </member>
+        <member name="T:Cassandra.Collections.CopyOnWriteList`1">
+            <summary>
+            A thread-safe variant of List{T} in which all mutative operations (Add and Remove) are implemented by making a copy of the underlying array.
+            </summary>
+        </member>
         <member name="M:Snappy.SnappyDecompressor.DecompressTagSlow(System.Byte[],System.Int32,System.Byte[],System.Int32,System.Int32,System.Int32)">
             <summary>
              This is a second copy of the inner loop of decompressTags used when near the
@@ -730,6 +783,15 @@
             Once it is set using this method, the payload should not be modified.
             </summary>
         </member>
+        <member name="M:Cassandra.IStatement.SetIdempotence(System.Boolean)">
+            <summary>
+            Sets whether this statement is idempotent.
+            <para>
+            Idempotence of the statement plays a role in <see cref="T:Cassandra.ISpeculativeExecutionPolicy"/>.
+            If a statement is <em>not idempotent</em>, the driver will not schedule speculative executions for it.
+            </para>
+            </summary>
+        </member>
         <member name="P:Cassandra.IStatement.AutoPage">
             <summary>
             Determines if the <see cref="T:Cassandra.RowSet"/> returned when executing this <c>IStatement</c> will automatically fetch the following result pages. Defaults to true.
@@ -787,6 +849,17 @@
             Gets custom payload for that will be included when executing this Statement.
             </summary>
         </member>
+        <member name="P:Cassandra.IStatement.IsIdempotent">
+            <summary>
+            Determines if this statement is idempotent, i.e. whether it can be applied multiple times without 
+            changing the result beyond the initial application.
+            <para>
+            Idempotence of the statement plays a role in <see cref="T:Cassandra.ISpeculativeExecutionPolicy"/>.
+            If a statement is <em>not idempotent</em>, the driver will not schedule speculative executions for it.
+            </para>
+            When the property is null, the driver will use the default value from the <see cref="M:Cassandra.QueryOptions.GetDefaultIdempotence"/>.
+            </summary>
+        </member>
         <member name="M:Cassandra.Statement.#ctor(Cassandra.QueryProtocolOptions)">
             <inheritdoc />
         </member>
@@ -830,6 +903,9 @@
             <inheritdoc />
         </member>
         <member name="M:Cassandra.Statement.SetRetryPolicy(Cassandra.IRetryPolicy)">
+            <inheritdoc />
+        </member>
+        <member name="M:Cassandra.Statement.SetIdempotence(System.Boolean)">
             <inheritdoc />
         </member>
         <member name="M:Cassandra.Statement.SetPageSize(System.Int32)">
@@ -877,6 +953,9 @@
             <summary>
             Gets or sets the protocol version used for Routing Key parts encoding
             </summary>
+        </member>
+        <member name="P:Cassandra.Statement.IsIdempotent">
+            <inheritdoc />
         </member>
         <member name="T:Cassandra.Data.Linq.ClusteringKeyAttribute">
             <summary>
@@ -1065,12 +1144,12 @@
             Gets a cql DELETE statement based on the current state
             </summary>
         </member>
-        <member name="M:Cassandra.Data.Linq.CqlExpressionVisitor.GetUpdate(System.Object[]@,System.Nullable{System.Int32},System.Nullable{System.DateTimeOffset})">
+        <member name="M:Cassandra.Data.Linq.CqlExpressionVisitor.GetUpdate(System.Object[]@,System.Nullable{System.Int32},System.Nullable{System.DateTimeOffset},Cassandra.Mapping.MapperFactory)">
             <summary>
             Gets a cql UPDATE statement based on the current state
             </summary>
         </member>
-        <member name="M:Cassandra.Data.Linq.CqlExpressionVisitor.AddProjection(System.Linq.Expressions.Expression,System.String)">
+        <member name="M:Cassandra.Data.Linq.CqlExpressionVisitor.AddProjection(System.Linq.Expressions.Expression,Cassandra.Mapping.PocoColumn)">
             <summary>
             Tries to evaluate the current expression and add it as a projection
             </summary>
@@ -1721,6 +1800,11 @@
             Name types of the arguments
             </summary>
         </member>
+        <member name="T:Cassandra.OperationTimedOutException">
+            <summary>
+            Exception that thrown on a client-side timeout, when the client didn't hear back from the server within <see cref="P:Cassandra.SocketOptions.ReadTimeoutMillis"/>.
+            </summary>
+        </member>
         <member name="T:Cassandra.ReadFailureException">
             <summary>
              A Cassandra failure (non-timeout) during a read query.
@@ -1870,6 +1954,11 @@
             It returns null if the load balancing policy didn't allow connections to this host.
             </summary>
         </member>
+        <member name="M:Cassandra.HostConnectionPool.MinInFlight(Cassandra.Connection[])">
+            <summary> 
+            Gets the connection with the minimum number of InFlight requests
+            </summary>
+        </member>
         <member name="M:Cassandra.HostConnectionPool.CreateConnection">
             <exception cref="T:System.Net.Sockets.SocketException">Throws a SocketException when the connection could not be established with the host</exception>
             <exception cref="T:Cassandra.AuthenticationException"/>
@@ -1880,14 +1969,23 @@
             Handler that gets invoked when if there is a socket exception when making a heartbeat/idle request
             </summary>
         </member>
+        <member name="M:Cassandra.HostConnectionPool.AttemptReconnection">
+            <summary>
+            Handles the reconnection attempts.
+            If it succeeds, it marks the host as UP.
+            If not, it marks the host as DOWN
+            </summary>
+        </member>
         <member name="M:Cassandra.HostConnectionPool.MaybeCreateCorePool">
             <summary>
             Create the min amount of connections, if the pool is empty
             </summary>
+            <exception cref="T:System.Net.Sockets.SocketException"/>
         </member>
         <member name="M:Cassandra.HostConnectionPool.MaybeSpawnNewConnection(System.Int32)">
             <summary>
-            Creates a new connection, if the conditions apply
+            Creates a new connection, if the conditions apply.
+            Only creates a new connection if there isn't a thread already creating one
             </summary>
         </member>
         <member name="P:Cassandra.HostConnectionPool.OpenConnections">
@@ -2165,6 +2263,11 @@
             <seealso cref="T:Cassandra.PreparedStatement"/>
             </summary>
         </member>
+        <member name="M:Cassandra.BoundStatement.#ctor">
+            <summary>
+            Initializes a new instance of the Cassandra.BoundStatement class
+            </summary>
+        </member>
         <member name="M:Cassandra.BoundStatement.#ctor(Cassandra.PreparedStatement)">
             <summary>
              Creates a new <c>BoundStatement</c> from the provided prepared
@@ -2378,7 +2481,6 @@
              <link>Policies.DefaultLoadBalancingPolicy</link> will be used instead.</p>
             </summary>
             <param name="policy"> the load balancing policy to use </param>
-            
             <returns>this Builder</returns>
         </member>
         <member name="M:Cassandra.Builder.WithReconnectionPolicy(Cassandra.IReconnectionPolicy)">
@@ -2399,6 +2501,16 @@
             </summary>
             <param name="policy"> the retry policy to use </param>
             
+            <returns>this Builder</returns>
+        </member>
+        <member name="M:Cassandra.Builder.WithSpeculativeExecutionPolicy(Cassandra.ISpeculativeExecutionPolicy)">
+            <summary>
+             Configure the speculative execution to use for the new cluster. 
+            <para> 
+            If no speculative execution policy is set through this method, <see cref="P:Cassandra.Policies.DefaultSpeculativeExecutionPolicy"/> will be used instead.
+            </para>
+            </summary>
+            <param name="policy"> the speculative execution policy to use </param>
             <returns>this Builder</returns>
         </member>
         <member name="M:Cassandra.Builder.WithConnectionString(System.String)">
@@ -2440,10 +2552,16 @@
         </member>
         <member name="M:Cassandra.Builder.WithQueryTimeout(System.Int32)">
             <summary>
-             Sets the timeout for a single query within created cluster.
-             After the expiry of the timeout, query will be aborted.
-             Default timeout value is set to <c>Infinity</c>
+            Specifies the number of milliseconds that the driver should wait for the response before the query times out in a synchronous operation.
+            <para>
+            This will cause that synchronous operations like <see cref="M:Cassandra.ISession.Execute(System.String)"/> to throw a <see cref="T:System.TimeoutException"/> 
+            after the specified number of milliseconds.
+            </para>
+            Default timeout value is set to <code>20,000</code> (20 seconds).
             </summary>
+            <remarks>
+            If you want to define a read timeout at a lower level, you can use <see cref="M:Cassandra.SocketOptions.SetReadTimeoutMillis(System.Int32)"/>.
+            </remarks>
             <param name="queryAbortTimeout">Timeout specified in milliseconds.</param>
             <returns>this builder</returns>
         </member>
@@ -2761,9 +2879,9 @@
             Gets executed once the idle timeout has passed
             </summary>
         </member>
-        <member name="M:Cassandra.Connection.Init">
+        <member name="M:Cassandra.Connection.Open">
             <summary>
-            Initializes the connection. Thread safe.
+            Initializes the connection.
             </summary>
             <exception cref="T:System.Net.Sockets.SocketException">Throws a SocketException when the connection could not be established with the host</exception>
             <exception cref="T:Cassandra.AuthenticationException"/>
@@ -2806,6 +2924,18 @@
             <param name="state">The request and callback</param>
             <param name="useInlining">Determines if the current thread can be used to start sending the request</param>
         </member>
+        <member name="M:Cassandra.Connection.RemoveFromPending(System.Int16)">
+            <summary>
+            Removes an operation from pending and frees the stream id
+            </summary>
+            <param name="streamId"></param>
+        </member>
+        <member name="M:Cassandra.Connection.SetKeyspace(System.String)">
+            <summary>
+            Sets the keyspace of the connection.
+            If the keyspace is different from the current value, it sends a Query request to change it
+            </summary>
+        </member>
         <member name="M:Cassandra.Connection.SendQueueNext">
             <summary>
             Try to write the next item in the write queue. Thread safe.
@@ -2836,6 +2966,11 @@
             Determines the amount of operations that are not finished.
             </summary>
         </member>
+        <member name="P:Cassandra.Connection.TimedOutOperations">
+            <summary>
+            Gets the amount of operations that timed out and didn't get a response
+            </summary>
+        </member>
         <member name="P:Cassandra.Connection.IsClosed">
             <summary>
             Determine if the Connection is closed
@@ -2848,8 +2983,7 @@
         </member>
         <member name="P:Cassandra.Connection.Keyspace">
             <summary>
-            Gets or sets the keyspace.
-            When setting the keyspace, it will issue a Query Request and wait to complete.
+            Gets the current keyspace.
             </summary>
         </member>
         <member name="P:Cassandra.Connection.MaxConcurrentRequests">
@@ -4823,6 +4957,12 @@
              (tcpNoDelay, keepAlive, ...).</li> </ul>
             </summary>
         </member>
+        <member name="M:Cassandra.Configuration.#ctor(Cassandra.Policies,Cassandra.ProtocolOptions,Cassandra.PoolingOptions,Cassandra.SocketOptions,Cassandra.ClientOptions,Cassandra.IAuthProvider,Cassandra.IAuthInfoProvider,Cassandra.QueryOptions,Cassandra.IAddressTranslator)">
+            <summary>
+            Creates a new instance. This class is also used to shareable a context across all instance that are created below one Cluster instance.
+            One configuration instance per Cluster instance.
+            </summary>
+        </member>
         <member name="M:Cassandra.Configuration.GetPoolingOptions(System.Byte)">
             <summary>
             Gets the pooling options. If not specified, gets the default by protocol version
@@ -4881,6 +5021,11 @@
             </summary> 
             <returns>the address translator in use.</returns>
         </member>
+        <member name="P:Cassandra.Configuration.Timer">
+            <summary>
+            Shared reusable timer
+            </summary>
+        </member>
         <member name="M:Cassandra.ControlConnection.Init">
             <summary>
             Tries to create a connection to any of the contact points and retrieve cluster metadata for the first time. Not thread-safe.
@@ -4931,6 +5076,16 @@
         <member name="T:Cassandra.ClientOptions">
             <summary>
              Additional options of the .net Cassandra driver.
+            </summary>
+        </member>
+        <member name="P:Cassandra.ClientOptions.QueryAbortTimeout">
+            <summary>
+            Gets the query abort timeout.
+            </summary>
+        </member>
+        <member name="P:Cassandra.ClientOptions.DefaultKeyspace">
+            <summary>
+            Gets the keyspace to be used after connecting to the cluster.
             </summary>
         </member>
         <member name="T:Cassandra.AlreadyExistsException">
@@ -5079,6 +5234,11 @@
             Represents the state of the ongoing operation for the Connection
             </summary>
         </member>
+        <member name="M:Cassandra.OperationState.#ctor(System.Action{System.Exception,Cassandra.AbstractResponse})">
+            <summary>
+            Creates a new operation state with the provided callback
+            </summary>
+        </member>
         <member name="M:Cassandra.OperationState.AppendBody(System.Byte[],System.Int32,System.Int32)">
             <summary>
             Appends to the body stream
@@ -5087,7 +5247,18 @@
         </member>
         <member name="M:Cassandra.OperationState.InvokeCallback(System.Exception,Cassandra.AbstractResponse)">
             <summary>
-            Invokes the callback in a new thread using the default task scheduler
+            Invokes the callback in a new thread using the default task scheduler, and marks this operation as completed.
+            </summary>
+        </member>
+        <member name="M:Cassandra.OperationState.SetTimedOut(Cassandra.OperationTimedOutException,System.Action)">
+            <summary>
+            Marks this operation as timed-out, callbacks with the exception 
+            and sets a handler when the response is received
+            </summary>
+        </member>
+        <member name="M:Cassandra.OperationState.Cancel">
+            <summary>
+            Removes the context associated with this request, if possible
             </summary>
         </member>
         <member name="P:Cassandra.OperationState.BodyStream">
@@ -5103,6 +5274,11 @@
         <member name="P:Cassandra.OperationState.Header">
             <summary>
             8 byte header of the frame
+            </summary>
+        </member>
+        <member name="P:Cassandra.OperationState.Timeout">
+            <summary>
+            Read timeout associated with the request
             </summary>
         </member>
         <member name="T:Cassandra.OutputFunctionFailure">
@@ -5313,6 +5489,51 @@
             <returns>a time in milliseconds to wait before attempting the next
              reconnection.</returns>
         </member>
+        <member name="T:Cassandra.ConstantSpeculativeExecutionPolicy">
+            <summary>
+            A <see cref="T:Cassandra.ISpeculativeExecutionPolicy"/> that schedules a given number of speculative 
+            executions, separated by a fixed delay.
+            </summary>
+        </member>
+        <member name="T:Cassandra.ISpeculativeExecutionPolicy">
+            <summary>
+            The policy that decides if the driver will send speculative queries to the next hosts when the current host takes too long to respond.
+            only idempotent statements will be speculatively retried, see <see cref="P:Cassandra.IStatement.IsIdempotent"/> for more information.
+            </summary>
+        </member>
+        <member name="M:Cassandra.ISpeculativeExecutionPolicy.Initialize(Cassandra.ICluster)">
+            <summary>
+            Initializes the policy at cluster startup.
+            </summary>
+        </member>
+        <member name="M:Cassandra.ISpeculativeExecutionPolicy.NewPlan(System.String,Cassandra.IStatement)">
+            <summary>
+            Returns the plan to use for a new query.
+            </summary>
+            <param name="keyspace">the currently logged keyspace</param>
+            <param name="statement">the query for which to build a plan.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Cassandra.ConstantSpeculativeExecutionPolicy.#ctor(System.Int64,System.Int32)">
+            <summary>
+            Creates a new instance of a <see cref="T:Cassandra.ISpeculativeExecutionPolicy"/> that schedules a given
+             number of speculative executions, separated by a fixed delay.
+            </summary>
+            <param name="delay">The constant delay in milliseconds between each speculative execution. Must be strictly positive.</param>
+            <param name="maxSpeculativeExecutions">The number of speculative executions. Must be strictly positive.</param>
+        </member>
+        <member name="T:Cassandra.ISpeculativeExecutionPlan">
+            <summary>
+            Represents a plan that governs speculative executions for a given query.
+            </summary>
+        </member>
+        <member name="M:Cassandra.ISpeculativeExecutionPlan.NextExecution(Cassandra.Host)">
+            <summary>
+            Returns the time before the next speculative query.
+            </summary>
+            <param name="lastQueried">the host that was just queried.</param>
+            <returns>the time (in milliseconds) before a speculative query is sent to the next host. If zero or negative, no speculative query will be sent.</returns>
+        </member>
         <member name="T:Cassandra.FixedReconnectionPolicy">
             <summary>
             Represents a reconnection policy that is possible to specify custom reconnection delays for each attempt.
@@ -5395,6 +5616,11 @@
              returned, an
              <link>com.datastax.driver.core.exceptions.UnavailableException</link> will be
              thrown for the operation.</returns>
+        </member>
+        <member name="T:Cassandra.NoSpeculativeExecutionPolicy">
+            <summary>
+            A <see cref="T:Cassandra.ISpeculativeExecutionPolicy"/> that never schedules speculative executions.
+            </summary>
         </member>
         <member name="T:Cassandra.ILoadBalancingPolicy">
             <summary>
@@ -5849,8 +6075,10 @@
         </member>
         <member name="P:Cassandra.Policies.DefaultLoadBalancingPolicy">
             <summary>
-             The default load balancing policy. <p> The default load balancing policy is
-             <link>RoundRobinPolicy</link>.</p>
+             The default load balancing policy. 
+            <para> 
+            The default load balancing policy is <see cref="T:Cassandra.TokenAwarePolicy"/> with <see cref="T:Cassandra.DCAwareRoundRobinPolicy"/> as child policy.
+            </para>
             </summary>
         </member>
         <member name="P:Cassandra.Policies.DefaultReconnectionPolicy">
@@ -5864,6 +6092,14 @@
             <summary>
              The default retry policy. <p> The default retry policy is
              <link>DefaultRetryPolicy</link>.</p>
+            </summary>
+        </member>
+        <member name="P:Cassandra.Policies.DefaultSpeculativeExecutionPolicy">
+            <summary>
+            The <see cref="T:Cassandra.ISpeculativeExecutionPolicy"/> to be used by default.
+            <para> 
+            The default is <see cref="T:Cassandra.NoSpeculativeExecutionPolicy"/>.
+            </para>
             </summary>
         </member>
         <member name="P:Cassandra.Policies.LoadBalancingPolicy">
@@ -5884,6 +6120,11 @@
              query should be automatically retries by the driver.</p>
             </summary>
         </member>
+        <member name="P:Cassandra.Policies.SpeculativeExecutionPolicy">
+            <summary>
+            Gets the <see cref="P:Cassandra.Policies.SpeculativeExecutionPolicy"/> in use.
+            </summary>
+        </member>
         <member name="T:Cassandra.RetryDecision">
             <summary>
              A retry decision to adopt on a Cassandra exception (read/write timeout or
@@ -5899,24 +6140,28 @@
             <summary>
              Creates a Rethrow retry decision.
             </summary>
-            
             <returns>a Rethrow retry decision.</returns>
+        </member>
+        <member name="M:Cassandra.RetryDecision.Retry(System.Nullable{Cassandra.ConsistencyLevel},System.Boolean)">
+            <summary>
+             Creates a decision to retry using the provided consistency level.
+            </summary>
+            <param name="consistency"> the consistency level to use for the retry.</param>
+            <param name="useCurrentHost">Determines if the retry is made using the current host.</param>
+            <returns>a Retry with consistency level <c>consistency</c> retry
+             decision.</returns>
         </member>
         <member name="M:Cassandra.RetryDecision.Retry(System.Nullable{Cassandra.ConsistencyLevel})">
             <summary>
-             Creates a Retry retry decision using the provided consistency level.
+             Creates a decision to retry using the provided consistency level on the same host.
             </summary>
-            <param name="consistency"> the consistency level to use for the retry.
-             </param>
-            
-            <returns>a Retry with consistency level <c>consistency</c> retry
-             decision.</returns>
+            <param name="consistency"> the consistency level to use for the retry.</param>
+            <returns>a Retry with consistency level <c>consistency</c> retry decision.</returns>
         </member>
         <member name="M:Cassandra.RetryDecision.Ignore">
             <summary>
              Creates an Ignore retry decision.
             </summary>
-            
             <returns>an Ignore retry decision.</returns>
         </member>
         <member name="P:Cassandra.RetryDecision.DecisionType">
@@ -5929,6 +6174,11 @@
              Gets the consistency level for a retry decision or <c>null</c> if
              this retry decision is an <c>Ignore</c> or a
              <c>Rethrow</c>.</summary>
+        </member>
+        <member name="P:Cassandra.RetryDecision.UseCurrentHost">
+            <summary>
+            Determines whether the retry policy uses the same host for retry decision. Default: true.
+            </summary>
         </member>
         <member name="T:Cassandra.RetryDecision.RetryDecisionType">
             <summary>
@@ -6159,7 +6409,7 @@
         <member name="M:Cassandra.PoolingOptions.SetHeartBeatInterval(System.Int32)">
             <summary>
             Sets the amount of idle time in milliseconds that has to pass before the driver issues a request on an active connection to avoid idle time disconnections.
-            <remarks>When set to null the heartbeat functionality at connection level is disabled.</remarks>
+            <remarks>When set to 0 the heartbeat functionality at connection level is disabled.</remarks>
             </summary>
         </member>
         <member name="M:Cassandra.PoolingOptions.GetDefault(System.Byte)">
@@ -6174,6 +6424,11 @@
              executed once concrete values has been provided for the bound variables. The
              pair of a prepared statement and values for its bound variables is a
              BoundStatement and can be executed (by <link>Session#Execute</link>).</p>
+            </summary>
+        </member>
+        <member name="M:Cassandra.PreparedStatement.#ctor">
+            <summary>
+            Initializes a new instance of the Cassandra.PreparedStatement class
             </summary>
         </member>
         <member name="M:Cassandra.PreparedStatement.Bind(System.Object[])">
@@ -6238,6 +6493,15 @@
             </summary>
             <returns>this <c>PreparedStatement</c> object.</returns>
         </member>
+        <member name="M:Cassandra.PreparedStatement.SetIdempotence(System.Boolean)">
+            <summary>
+            Sets whether the prepared statement is idempotent.
+            <para>
+            Idempotence of the query plays a role in <see cref="T:Cassandra.ISpeculativeExecutionPolicy"/>.
+            If a query is <em>not idempotent</em>, the driver will not schedule speculative executions for it.
+            </para>
+            </summary>
+        </member>
         <member name="M:Cassandra.PreparedStatement.SetOutgoingPayload(System.Collections.Generic.IDictionary{System.String,System.Byte[]})">
             <summary>
             Sets a custom outgoing payload for this statement.
@@ -6286,57 +6550,91 @@
             Gets or sets the parameter indexes that are part of the partition key
             </summary>
         </member>
-        <member name="T:Cassandra.RequestHandler`1">
+        <member name="P:Cassandra.PreparedStatement.ConsistencyLevel">
             <summary>
-            Handles a request to cassandra, dealing with host failover and retries on error
+            Gets the default consistency level for all executions using this instance
             </summary>
         </member>
-        <member name="M:Cassandra.RequestHandler`1.#ctor(Cassandra.Session,Cassandra.IRequest,Cassandra.IStatement)">
+        <member name="P:Cassandra.PreparedStatement.IsIdempotent">
             <summary>
-            Creates a new instance of the RequestHandler that deals with host failover and retries on error
+            Determines if the query is idempotent, i.e. whether it can be applied multiple times without 
+            changing the result beyond the initial application.
+            <para>
+            Idempotence of the prepared statement plays a role in <see cref="T:Cassandra.ISpeculativeExecutionPolicy"/>.
+            If a query is <em>not idempotent</em>, the driver will not schedule speculative executions for it.
+            </para>
+            When the property is null, the driver will use the default value from the <see cref="M:Cassandra.QueryOptions.GetDefaultIdempotence"/>.
             </summary>
         </member>
-        <member name="M:Cassandra.RequestHandler`1.FillRowSet(Cassandra.RowSet,Cassandra.ResultResponse)">
+        <member name="T:Cassandra.Requests.RequestHandler`1">
             <summary>
-            Fills the common properties of the RowSet
+            Handles request executions, each execution handles retry and failover.
             </summary>
         </member>
-        <member name="M:Cassandra.RequestHandler`1.GetNextConnection(Cassandra.IStatement)">
+        <member name="M:Cassandra.Requests.RequestHandler`1.#ctor(Cassandra.ISession,Cassandra.IRequest,Cassandra.IStatement)">
+            <summary>
+            Creates a new instance using a request and the statement.
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestHandler`1.#ctor(Cassandra.ISession,Cassandra.IRequest)">
+            <summary>
+            Creates a new instance using a request with no statement.
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestHandler`1.#ctor(Cassandra.ISession,Cassandra.IStatement)">
+            <summary>
+            Creates a new instance using the statement to build the request.
+            Statement can not be null.
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestHandler`1.#ctor(Cassandra.ISession)">
+            <summary>
+            Creates a new instance with no request, suitable for getting a connection.
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestHandler`1.GetRequest(Cassandra.IStatement,System.Int32,Cassandra.Configuration)">
+            <summary>
+            Gets the Request to send to a cassandra node based on the statement type
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestHandler`1.SetCompleted(System.Exception,`0)">
+            <summary>
+            Marks this instance as completed (if not already) and sets the exception or result
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestHandler`1.SetCompleted(`0,System.Action)">
+            <summary>
+            Marks this instance as completed (if not already) and in a new Task using the default scheduler, it invokes the action and sets the result
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestHandler`1.SetCompleted(System.Exception,`0,System.Action)">
+            <summary>
+            Marks this instance as completed.
+            If ex is not null, sets the exception.
+            If action is not null, it invokes it using the default task scheduler.
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestHandler`1.GetNextConnection(System.Collections.Generic.Dictionary{System.Net.IPEndPoint,System.Exception})">
             <summary>
             Gets a connection from the next host according to the load balancing policy
             </summary>
-            <exception cref="T:Cassandra.NoHostAvailableException"/>
-            <exception cref="T:Cassandra.InvalidQueryException">When keyspace does not exist</exception>
-            <exception cref="T:Cassandra.UnsupportedProtocolVersionException"/>
+            <exception cref="T:Cassandra.InvalidQueryException">When the keyspace is not valid</exception>
+            <exception cref="T:Cassandra.UnsupportedProtocolVersionException">When the protocol version is not supported in the host</exception>
+            <exception cref="T:Cassandra.NoHostAvailableException"></exception>
         </member>
-        <member name="M:Cassandra.RequestHandler`1.GetRetryDecision(System.Exception)">
+        <member name="M:Cassandra.Requests.RequestHandler`1.SetHostDown(Cassandra.Connection)">
             <summary>
-            Gets the retry decision based on the exception from Cassandra
+            Sets a host down by the provided connection
             </summary>
         </member>
-        <member name="M:Cassandra.RequestHandler`1.HandleException(System.Exception)">
+        <member name="M:Cassandra.Requests.RequestHandler`1.StartNewExecution">
             <summary>
-            Checks if the exception is either a Cassandra response error or a socket exception to retry or failover if necessary.
+            Starts a new execution and adds it to the executions collection
             </summary>
         </member>
-        <member name="M:Cassandra.RequestHandler`1.HandlePreparedResult(Cassandra.AbstractResponse)">
+        <member name="M:Cassandra.Requests.RequestHandler`1.ScheduleNext">
             <summary>
-            Creates the prepared statement and transitions the task to completed
-            </summary>
-        </member>
-        <member name="M:Cassandra.RequestHandler`1.HandleRowSetResult(Cassandra.AbstractResponse)">
-            <summary>
-            Gets the resulting RowSet and transitions the task to completed.
-            </summary>
-        </member>
-        <member name="M:Cassandra.RequestHandler`1.ResponseHandler(System.Exception,Cassandra.AbstractResponse)">
-            <summary>
-            Generic handler for all the responses
-            </summary>
-        </member>
-        <member name="M:Cassandra.RequestHandler`1.ResponseReprepareHandler(System.Exception,Cassandra.AbstractResponse)">
-            <summary>
-            Handles the response of a (re)prepare request and retries to execute on the same connection
+            Schedules the next delayed execution
             </summary>
         </member>
         <member name="T:Cassandra.ProtocolOptions">
@@ -6435,6 +6733,53 @@
             Useful for using the driver against a cluster that contains nodes with different major/minor versions of Cassandra.
             </summary>
         </member>
+        <member name="M:Cassandra.Requests.RequestExecution`1.Start(System.Boolean)">
+            <summary>
+            Starts a new execution using the current request
+            </summary>
+            <param name="useCurrentHost"></param>
+        </member>
+        <member name="M:Cassandra.Requests.RequestExecution`1.Send(Cassandra.IRequest,System.Action{System.Exception,Cassandra.AbstractResponse})">
+            <summary>
+            Sends a new request using the active connection
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestExecution`1.FillRowSet(Cassandra.RowSet,Cassandra.ResultResponse)">
+            <summary>
+            Fills the common properties of the RowSet
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestExecution`1.HandleException(System.Exception)">
+            <summary>
+            Checks if the exception is either a Cassandra response error or a socket exception to retry or failover if necessary.
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestExecution`1.OnTimeout(System.Exception)">
+            <summary>
+            It handles the steps required when there is a client-level read timeout.
+            It is invoked by a thread from the default TaskScheduler
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestExecution`1.GetRetryDecision(System.Exception,Cassandra.IRetryPolicy,Cassandra.IStatement,System.Int32)">
+            <summary>
+            Gets the retry decision based on the exception from Cassandra
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestExecution`1.PrepareAndRetry(System.Byte[])">
+            <summary>
+            Sends a prepare request before retrying the statement
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestExecution`1.ReprepareResponseHandler(System.Exception,Cassandra.AbstractResponse)">
+            <summary>
+            Handles the response of a (re)prepare request and retries to execute on the same connection
+            </summary>
+        </member>
+        <member name="M:Cassandra.Requests.RequestExecution`1.HandlePreparedResult(Cassandra.AbstractResponse)">
+            <summary>
+            Creates the prepared statement and transitions the task to completed
+            </summary>
+        </member>
         <member name="T:Cassandra.QueryOptions">
             <summary>
             Options related to defaults for individual queries.
@@ -6453,6 +6798,11 @@
         <member name="F:Cassandra.QueryOptions.DefaultPageSize">
             <summary>
             The default page size for SELECT queries: 5000.
+            </summary>
+        </member>
+        <member name="F:Cassandra.QueryOptions.DefaultRetryOnTimeout">
+            <summary>
+            Default value for <see cref="P:Cassandra.QueryOptions.RetryOnTimeout"/>
             </summary>
         </member>
         <member name="M:Cassandra.QueryOptions.SetConsistencyLevel(Cassandra.ConsistencyLevel)">
@@ -6496,11 +6846,26 @@
             strictly positive but you can use int.MaxValue to disable paging.</param>
             <returns>this QueryOptions instance</returns>
         </member>
+        <member name="M:Cassandra.QueryOptions.SetRetryOnTimeout(System.Boolean)">
+            <summary>
+            Determines if the client should retry when it didn't hear back from a host within <see cref="P:Cassandra.SocketOptions.ReadTimeoutMillis"/>.
+            </summary>
+        </member>
         <member name="M:Cassandra.QueryOptions.GetPageSize">
             <summary>
             The default page size used by queries.
             </summary>
             <returns>the default page size used by queries.</returns> 
+        </member>
+        <member name="M:Cassandra.QueryOptions.SetDefaultIdempotence(System.Boolean)">
+            <summary>
+            Sets the default idempotence for all queries.
+            </summary>
+        </member>
+        <member name="P:Cassandra.QueryOptions.RetryOnTimeout">
+            <summary>
+            Gets a value that determines if the client should retry when it didn't hear back from a host within <see cref="P:Cassandra.SocketOptions.ReadTimeoutMillis"/>.
+            </summary>
         </member>
         <member name="P:Cassandra.QueryProtocolOptions.ValueNames">
             <summary>
@@ -7231,6 +7596,56 @@
             It returns null when partition keys were not parsed.
             </summary>
         </member>
+        <member name="T:Cassandra.Tasks.HashedWheelTimer">
+            <summary>
+            A reusable low precision timer with approximate scheduling
+            </summary>
+            <remarks>
+            <para>
+            Timeout actions are executed on a ThreadPool thread supplied by the system. If you need to execute blocking operations, 
+            it is recommended that you start a new Task using a TaskScheduler.
+            </para>
+            Based on George Varghese and Tony Lauck's paper, <a href="http://cseweb.ucsd.edu/users/varghese/PAPERS/twheel.ps.Z"> 
+            Hashed and Hierarchical Timing Wheels: data structures to efficiently implement a timer facility</a>
+            </remarks>
+        </member>
+        <member name="M:Cassandra.Tasks.HashedWheelTimer.Dispose">
+            <summary>
+            Releases the underlying timer instance.
+            </summary>
+        </member>
+        <member name="M:Cassandra.Tasks.HashedWheelTimer.NewTimeout(System.Action,System.Int64)">
+            <summary>
+            Adds a new action to be executed with a delay
+            </summary>
+        </member>
+        <member name="P:Cassandra.Tasks.HashedWheelTimer.Index">
+            <summary>
+            Represents the index of the next tick
+            </summary>
+        </member>
+        <member name="T:Cassandra.Tasks.HashedWheelTimer.Bucket">
+            <summary>
+            Linked list of Timeouts to allow easy removal of HashedWheelTimeouts in the middle.
+            Methods are not thread safe.
+            </summary>
+        </member>
+        <member name="T:Cassandra.Tasks.HashedWheelTimer.ITimeout">
+            <summary>
+            Represents an scheduled timeout
+            </summary>
+        </member>
+        <member name="M:Cassandra.Tasks.HashedWheelTimer.ITimeout.Cancel">
+            <summary>
+            Marks the timeout as cancelled if it hasn't expired yet.
+            </summary>
+            <returns>True if it has been cancelled by this call</returns>
+        </member>
+        <member name="M:Cassandra.Tasks.HashedWheelTimer.TimeoutItem.Expire">
+            <summary>
+            Execute the timeout action
+            </summary>
+        </member>
         <member name="T:Cassandra.Tasks.LimitedParallelismTaskScheduler">
             <summary>
             A task scheduler that runs on top of the ThreadPool but schedules limited amount of task in parallel.
@@ -7534,11 +7949,10 @@
         <member name="M:Cassandra.Session.Dispose">
             <inheritdoc />
         </member>
-        <member name="M:Cassandra.Session.Init(System.Boolean)">
+        <member name="M:Cassandra.Session.Init">
             <summary>
             Initialize the session
             </summary>
-            <param name="createConnection">Determine if a connection must be created to test the host</param>
         </member>
         <member name="M:Cassandra.Session.EndExecute(System.IAsyncResult)">
             <inheritdoc />
@@ -7566,14 +7980,14 @@
             Gets a list of all opened connections to all hosts
             </summary>
         </member>
-        <member name="M:Cassandra.Session.GetConnectionPool(Cassandra.Host,Cassandra.HostDistance)">
+        <member name="M:Cassandra.Session.GetOrCreateConnectionPool(Cassandra.Host,Cassandra.HostDistance)">
             <summary>
-            Gets the connection pool for a given host
+            Gets or creates the connection pool for a given host
             </summary>
         </member>
-        <member name="M:Cassandra.Session.GetRequest(Cassandra.IStatement)">
+        <member name="M:Cassandra.Session.GetExistingPool(Cassandra.Connection)">
             <summary>
-            Gets the Request to send to a cassandra node based on the statement type
+            Gets the existing connection pool for this host and session or null when it does not exists
             </summary>
         </member>
         <member name="M:Cassandra.Session.PrepareAsync(System.String)">
@@ -7587,9 +8001,22 @@
             Waits for all pending responses to be received on all open connections or until a timeout is reached
             </summary>
         </member>
+        <member name="P:Cassandra.Session.Cluster">
+            <inheritdoc />
+        </member>
         <member name="P:Cassandra.Session.Configuration">
             <summary>
             Gets the cluster configuration
+            </summary>
+        </member>
+        <member name="P:Cassandra.Session.IsDisposed">
+            <summary>
+            Determines if the session is already disposed
+            </summary>
+        </member>
+        <member name="P:Cassandra.Session.Keyspace">
+            <summary>
+            Gets or sets the keyspace
             </summary>
         </member>
         <member name="P:Cassandra.Session.UserDefinedTypes">
@@ -7639,6 +8066,21 @@
              Cassandra hosts.
             </summary>
         </member>
+        <member name="F:Cassandra.SocketOptions.DefaultConnectTimeoutMillis">
+            <summary>
+            Default value for <see cref="P:Cassandra.SocketOptions.ConnectTimeoutMillis"/>, 5000ms.
+            </summary>
+        </member>
+        <member name="F:Cassandra.SocketOptions.DefaultReadTimeoutMillis">
+            <summary>
+            Default value for <see cref="P:Cassandra.SocketOptions.ReadTimeoutMillis"/>, 0.
+            </summary>
+        </member>
+        <member name="F:Cassandra.SocketOptions.DefaultDefunctReadTimeoutThreshold">
+            <summary>
+            Default value for <see cref="P:Cassandra.SocketOptions.DefunctReadTimeoutThreshold"/>, 64.
+            </summary>
+        </member>
         <member name="M:Cassandra.SocketOptions.SetConnectTimeoutMillis(System.Int32)">
             <summary>
             Sets the number of milliseconds to wait for the socket to connect
@@ -7676,6 +8118,20 @@
             to handle the reading and writing
             </summary>
         </member>
+        <member name="M:Cassandra.SocketOptions.SetReadTimeoutMillis(System.Int32)">
+            <summary>
+            Sets the per-host read timeout in milliseconds.
+            <para>When setting this value, keep in mind the following:</para>
+            <para>- the timeout settings used on the Cassandra side (*_request_timeout_in_ms in cassandra.yaml) should be taken into account when picking a value for this read timeout. In particular, if this read timeout option is lower than Cassandra's timeout, the driver might assume that the host is not responsive and mark it down.</para>
+            <para>- the read timeout is only approximate and only control the timeout to one Cassandra host, not the full query (see <see cref="P:Cassandra.SocketOptions.ReadTimeoutMillis"/> for more details).</para>
+            Setting a value of 0 disables client read timeouts.
+            </summary>
+        </member>
+        <member name="M:Cassandra.SocketOptions.SetDefunctReadTimeoutThreshold(System.Int32)">
+            <summary>
+            Determines the amount of requests that simultaneously have to timeout before closing the connection.
+            </summary>
+        </member>
         <member name="P:Cassandra.SocketOptions.ConnectTimeoutMillis">
             <summary>
             Gets the number of milliseconds to wait for the socket to connect
@@ -7711,6 +8167,21 @@
             <summary>
             Determines if the driver should use either .NET NetworkStream interface (true) or SocketEventArgs interface (false, default)
             to handle the reading and writing
+            </summary>
+        </member>
+        <member name="P:Cassandra.SocketOptions.ReadTimeoutMillis">
+            <summary>
+            The per-host read timeout in milliseconds.
+            <para>
+            This defines how long the driver will wait for a given Cassandra node to answer a query.
+            </para>
+            Please note that this is not the maximum time a call to <see cref="M:Cassandra.Session.Execute(System.String)"/> may block; this is the maximum time that call will wait for one particular Cassandra host, but other hosts will be tried if one of them timeout. In other words, a <see cref="M:Cassandra.Session.Execute(System.String)"/> call may theoretically wait up to ReadTimeoutMillis * {number_of_cassandra_hosts} (though the total number of hosts tried for a given query also depends on the LoadBalancingPolicy in use).
+            Also note that for efficiency reasons, this read timeout is approximate, it may fire up to late. It is not meant to be used for precise timeout, but rather as a protection against misbehaving Cassandra nodes.
+            </summary>
+        </member>
+        <member name="P:Cassandra.SocketOptions.DefunctReadTimeoutThreshold">
+            <summary>
+            Gets the amount of requests that simultaneously have to timeout before closing the connection.
             </summary>
         </member>
         <member name="T:Cassandra.SSLOptions">
@@ -7929,9 +8400,35 @@
             Smart ContinueWith
             </summary>
         </member>
+        <member name="M:Cassandra.Tasks.TaskHelper.ContinueSync``2(System.Threading.Tasks.Task{``0},System.Func{``0,``1})">
+            <summary>
+            Smart ContinueWith that executes the sync delegate once the initial task is completed and returns 
+            a Task of the result of sync delegate while propagating exceptions
+            </summary>
+        </member>
         <member name="M:Cassandra.Tasks.TaskHelper.DoNext``2(System.Threading.Tasks.Task{``0},System.Func{System.Threading.Tasks.Task{``0},``1})">
             <summary>
-            Invokes the next task immediately
+            Invokes the next function immediately and assigns the result to a Task
+            </summary>
+        </member>
+        <member name="M:Cassandra.Tasks.TaskHelper.DoNextAndHandle``2(System.Threading.Tasks.TaskCompletionSource{``1},System.Threading.Tasks.Task{``0},System.Func{``0,``1})">
+            <summary>
+            Invokes the next function immediately and assigns the result to a Task, propagating exceptions to the new Task
+            </summary>
+        </member>
+        <member name="M:Cassandra.Tasks.TaskHelper.Then``2(System.Threading.Tasks.Task{``0},System.Func{``0,System.Threading.Tasks.Task{``1}})">
+            <summary>
+            Once Task is completed with another Task, returning the second task, propagating exceptions to the second Task.
+            </summary>
+        </member>
+        <member name="M:Cassandra.Tasks.TaskHelper.CancelAfterToken(System.Int32)">
+            <summary>
+            Returns a Cancellation Token that cancels the Task after milliseconds passed.
+            </summary>
+        </member>
+        <member name="P:Cassandra.Tasks.TaskHelper.Completed">
+            <summary>
+            Gets a single completed task
             </summary>
         </member>
         <member name="T:Cassandra.TcpSocket">

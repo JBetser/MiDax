@@ -8,8 +8,26 @@ namespace MidaxLib
 {
     public class TimeSeries
     {
-        const int MAX_RECORD_TIME_HOURS = 2;
-        const int TIMESERIES_INTERVAL_MINUTES = 5;
+        const int DEFAULT_MAX_RECORD_TIME_HOURS = 2;
+        static int _maxRecordTime = DEFAULT_MAX_RECORD_TIME_HOURS;
+        public static int MAX_RECORD_TIME_HOURS
+        {
+            get { return _maxRecordTime; }
+            set { _maxRecordTime = value; }
+        }
+        const int DEFAULT_INTERVAL_MINUTES = 20;
+        static int _tsInterval = DEFAULT_INTERVAL_MINUTES;
+        public static int INTERVAL_MINUTES
+        {
+            get { return _tsInterval; }
+            set { _tsInterval = value; }
+        }
+
+        static TimeSeries()
+        {
+            if (Config.Settings.ContainsKey("TIMESERIES_MAX_RECORD_TIME_HOURS"))
+                MAX_RECORD_TIME_HOURS = int.Parse(Config.Settings["TIMESERIES_MAX_RECORD_TIME_HOURS"]);
+        }
 
         List<List<KeyValuePair<DateTime, Price>>> _series = new List<List<KeyValuePair<DateTime, Price>>>();
         DateTime _latest = DateTime.MinValue;
@@ -20,14 +38,14 @@ namespace MidaxLib
                 throw new ApplicationException("Time series do not accept values in the past");
             else if (updateTime == _latest)
             {
-                if (_series.Last()[_series.Last().Count - 1].Key != updateTime)
+                if (_series.Last().Last().Key != updateTime)
                     throw new ApplicationException("Time series is inconsistent");
                 _series.Last()[_series.Last().Count - 1] = new KeyValuePair<DateTime, Price>(updateTime, price);
             }
             _latest = updateTime;
             if (_series.Count == 0)
                 _series.Add(new List<KeyValuePair<DateTime, Price>>());
-            else if ((updateTime - _series.Last()[_series.Last().Count - 1].Key).Minutes > TIMESERIES_INTERVAL_MINUTES)
+            else if ((updateTime - _series.Last().First().Key).Minutes > INTERVAL_MINUTES)
             {
                 deleteOldData(updateTime);
                 _series.Add(new List<KeyValuePair<DateTime, Price>>());
@@ -39,21 +57,22 @@ namespace MidaxLib
         {
             if (_series.Count == 0)
                 yield break;
-            if (timeEnd < _series[0][0].Key || timeStart > _series[_series.Count - 1][_series[_series.Count - 1].Count - 1].Key)
+            if (timeEnd < _series.First().First().Key || timeStart > _series.Last().Last().Key)
                 yield break;
-            if (timeStart < _series[0][0].Key)
-                timeStart = _series[0][0].Key;
+            if (timeStart < _series.First().First().Key)
+                timeStart = _series.First().First().Key;
             DateTime curTime = DateTime.MinValue;
             int curIdx = 0;
             int curPos = 0;
             for (int idx = 0; idx < _series.Count; idx++)
             {
-                if (timeStart <= _series[idx][_series[idx].Count - 1].Key)
+                if (timeStart <= _series[idx].Last().Key)
                 {
                     KeyValuePair<DateTime, Price> start = _series[idx].Last(keyValue => keyValue.Key <= timeStart);
                     curTime = start.Key;
                     curPos = _series[idx].IndexOf(start);
                     curIdx = idx;
+                    break;
                 }
             }
             if (curTime == DateTime.MinValue)
@@ -87,10 +106,10 @@ namespace MidaxLib
         {
             if (_series.Count == 0)
                 return null;
-            if (endTime < _series[0][0].Key)
+            if (endTime < _series.First().First().Key)
                 return null;
             DateTime startTime = endTime - interval;
-            if (startTime < _series[0][0].Key)
+            if (startTime < _series.First().First().Key)
                 return null;
             bool started = false;
             List<KeyValuePair<DateTime, Price>> values = null;
@@ -98,7 +117,7 @@ namespace MidaxLib
             {
                 if (started)
                 {
-                    if (endTime <= _series[idx][_series[idx].Count - 1].Key)
+                    if (endTime <= _series[idx].Last().Key)
                     {
                         values.AddRange(from keyval in _series[idx]
                                           where keyval.Key <= endTime
@@ -112,12 +131,12 @@ namespace MidaxLib
                 }
                 else
                 {
-                    if (startTime <= _series[idx][_series[idx].Count - 1].Key)
+                    if (startTime <= _series[idx].Last().Key)
                     {
                         values = (from keyval in _series[idx]
                                   where keyval.Key >= startTime && keyval.Key <= endTime
                                   select keyval).ToList();
-                        if (endTime <= _series[idx][_series[idx].Count - 1].Key)
+                        if (endTime <= _series[idx].Last().Key)
                             break;
                         started = true;
                     }
@@ -138,9 +157,9 @@ namespace MidaxLib
 
         void deleteOldData(DateTime updateTime)
         {
-            while (_series.Count > 0)
+            while (_series.Count > 1)
             {
-                if ((updateTime - _series[0][0].Key).Hours > MAX_RECORD_TIME_HOURS)
+                if ((updateTime - _series.First().First().Key).Hours > MAX_RECORD_TIME_HOURS)
                     _series.RemoveAt(0);
                 else
                     break;

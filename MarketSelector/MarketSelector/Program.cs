@@ -16,6 +16,7 @@ namespace MarketSelector
             
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
+            dicSettings["TIMESERIES_MAX_RECORD_TIME_HOURS"] = "12";
             dicSettings["LIMIT"] = "10";
             dicSettings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
             dicSettings["REPLAY_MODE"] = "CSV";
@@ -30,7 +31,7 @@ namespace MarketSelector
                 Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
                 Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 6, 45, 0);
                 Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 18, 0, 0);
-                Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 8, 30, 0);
+                Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 8, 0, 0);
                 Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 17, 0, 0);
                 Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 16, 55, 0);
                 Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\MktSelectorData\\mktselectdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year);
