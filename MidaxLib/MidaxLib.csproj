@@ -48,12 +48,12 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="NLapack, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLapack.1.0.14\lib\NLapack.dll</HintPath>
-      <Private>True</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\NLapack.dll</HintPath>
     </Reference>
     <Reference Include="NLapack.Managed, Version=1.0.4734.1329, Culture=neutral, processorArchitecture=x86">
-      <HintPath>..\packages\NLapack.1.0.14\lib\NLapack.Managed.dll</HintPath>
-      <Private>True</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\NLapack.Managed.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -117,7 +117,9 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>copy /Y $(ProjectDir)blas_win32.dll $(ProjectDir)..\Midax\blas_win32.dll
-copy /Y $(ProjectDir)lapack_win32.dll $(ProjectDir)..\Midax\lapack_win32.dll</PostBuildEvent>
+copy /Y $(ProjectDir)lapack_win32.dll $(ProjectDir)..\Midax\lapack_win32.dll
+copy /Y $(ProjectDir)blas_win32.dll $(ProjectDir)..\Calibrator\blas_win32.dll
+copy /Y $(ProjectDir)lapack_win32.dll $(ProjectDir)..\Calibrator\lapack_win32.dll</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

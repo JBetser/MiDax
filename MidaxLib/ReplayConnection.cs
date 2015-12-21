@@ -81,12 +81,15 @@ namespace MidaxLib
         Dictionary<string, List<CqlQuote>> _expectedIndicatorData = null;
         Dictionary<string, List<CqlQuote>> _expectedSignalData = null;
         Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
+        Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;
+        
         bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
 
         public Dictionary<string, List<CqlQuote>> ExpectedIndicatorData { get { return _expectedIndicatorData; } }
         public Dictionary<string, List<CqlQuote>> ExpectedSignalData { get { return _expectedSignalData; } }
         public Dictionary<KeyValuePair<string, DateTime>, Trade> ExpectedTradeData { get { return _expectedTradeData; } }
+        public Dictionary<KeyValuePair<string, DateTime>, double> ExpectedProfitData { get { return _expectedProfitData; } }
         
         public void Connect(string username, string password, string apiKey)
         {
@@ -108,6 +111,11 @@ namespace MidaxLib
             else
                 _instance = null;
             _hasExpectedResults = Config.TestReplayEnabled || Config.MarketSelectorEnabled || Config.CalibratorEnabled;
+        }
+
+        public void Connect()
+        {
+            Connect("A REPLAYER", "DOES NOT NEED", "A PASSWORD");
         }
 
         public virtual void Subscribe(string[] epics, IHandyTableListener tableListener)
@@ -229,7 +237,15 @@ namespace MidaxLib
                     foreach (Trade trade in trades)
                         _expectedTradeData.Add(new KeyValuePair<string, DateTime>(epic, trade.TradingTime), trade);
                 }
-                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData, _expectedTradeData);
+                _expectedProfitData = new Dictionary<KeyValuePair<string, DateTime>, double>();
+                foreach (string epic in epics)
+                {
+                    List<KeyValuePair<DateTime, double>> profits = _instance.GetProfits(_startTime, _stopTime,
+                                                                    CassandraConnection.DATATYPE_TRADE, epic);
+                    foreach (var profit in profits)
+                        _expectedProfitData.Add(new KeyValuePair<string, DateTime>(epic, profit.Key), profit.Value);
+                }
+                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData, _expectedTradeData, _expectedProfitData);
             }
             return priceData;
         }
@@ -270,7 +286,7 @@ namespace MidaxLib
         StringBuilder _csvIndicatorStringBuilder;
         StringBuilder _csvSignalStringBuilder;
         StringBuilder _csvTradeStringBuilder;
-        StringBuilder _csvGainStringBuilder;
+        StringBuilder _csvProfitStringBuilder;
 
         static public new ReplayPublisher Instance
         {
@@ -287,7 +303,7 @@ namespace MidaxLib
             _csvIndicatorStringBuilder = new StringBuilder();
             _csvSignalStringBuilder = new StringBuilder();
             _csvTradeStringBuilder = new StringBuilder();
-            _csvGainStringBuilder = new StringBuilder();
+            _csvProfitStringBuilder = new StringBuilder();
         }
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
@@ -327,11 +343,11 @@ namespace MidaxLib
             _csvTradeStringBuilder.Append(newLine);
         }
 
-        public override void Insert(Value gain)
+        public override void Insert(DateTime updateTime, Value profit)
         {
-            var newLine = string.Format("{0}{1}", gain.X,
+            var newLine = string.Format("{0},{1}{2}", updateTime, profit.X,
                 Environment.NewLine);
-            _csvGainStringBuilder.Append(newLine);
+            _csvProfitStringBuilder.Append(newLine);
         }
 
         public override string Close()
@@ -344,7 +360,7 @@ namespace MidaxLib
             csvContent += Environment.NewLine;
             csvContent += _csvTradeStringBuilder.ToString();
             csvContent += Environment.NewLine;
-            csvContent += _csvGainStringBuilder.ToString();
+            csvContent += _csvProfitStringBuilder.ToString();
             File.WriteAllText(_csvFile, csvContent);
             string info = "Generated results in " + _csvFile;
             Log.Instance.WriteEntry(info, EventLogEntryType.Information);
@@ -428,7 +444,7 @@ namespace MidaxLib
             }
         }
 
-        public override void Insert(Value gain)
+        public override void Insert(DateTime updateTime, Value profit)
         {
         }
 

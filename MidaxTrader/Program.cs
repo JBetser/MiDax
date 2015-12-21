@@ -27,7 +27,7 @@ namespace MidaxTrader
             Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 17, 0, 0);
             Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 16, 55, 0);
             Config.Settings["TRADING_MODE"] = "PRODUCTION";
-            Config.Settings["TRADING_SIGNAL"] = "MacD_2_10_IX.D.DAX.DAILY.IP";
+            //Config.Settings["TRADING_SIGNAL"] = "MacD_2_10_IX.D.DAX.DAILY.IP";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
             Config.Settings["TRADE_EXPIRY_DAYS"] = "1";
             Config.Settings["TRADE_CURRENCY"] = "GBP";
@@ -35,10 +35,11 @@ namespace MidaxTrader
             MarketDataConnection.Instance.Connect(null);
 
             MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
-            Model model = new ModelMidax(index, new List<MarketData>(), new List<MarketData>());
-            Console.WriteLine("Testing live indicators and signals...");
+            Model model = new ModelTest(index, new List<MarketData>());
+            Console.WriteLine("Starting signals...");
             model.StartSignals();
-
+            Console.WriteLine("Trading...");
+            
             _pauseEvent.WaitOne(Timeout.Infinite);
         }
     }

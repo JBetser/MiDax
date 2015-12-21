@@ -13,6 +13,7 @@ namespace MidaxLib
         List<CqlQuote> GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, string id);
         List<CqlQuote> GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, string id);
         List<Trade> GetTrades(DateTime startTime, DateTime stopTime, string type, string id);
+        List<KeyValuePair<DateTime, double>> GetProfits(DateTime startTime, DateTime stopTime, string type, string id);
         void CloseConnection();
     }
 
@@ -29,7 +30,7 @@ namespace MidaxLib
 
         delegate void funcReadData<T>(List<T> data, string[] values);
 
-        List<T> getRows<T>(DateTime startTime, DateTime stopTime, string type, string id, funcReadData<T> readData)
+        List<T> getRows<T>(DateTime startTime, DateTime stopTime, string type, string id, funcReadData<T> readData, int idxTime = 2)
         {
             var data = new List<T>();
             while (!_csvReader.EndOfStream)
@@ -49,7 +50,7 @@ namespace MidaxLib
                 }
                 if (empty)
                     break;
-                DateTime curTime = DateTime.SpecifyKind(DateTime.Parse(values[2]), DateTimeKind.Local);
+                DateTime curTime = DateTime.SpecifyKind(DateTime.Parse(values[idxTime]), DateTimeKind.Local);
                 if (!values[1].StartsWith("WMA_1D")) // Do not check time for daily market data
                 {
                     if (curTime < startTime)
@@ -89,6 +90,11 @@ namespace MidaxLib
             trades.Add(trade);
         }
 
+        void readProfitData(List<KeyValuePair<DateTime,double>> profits, string[] values)
+        {
+            profits.Add(new KeyValuePair<DateTime,double>(DateTime.Parse(values[0]), double.Parse(values[1])));
+        }
+
         List<CqlQuote> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
         {
             return getRows<CqlQuote>(startTime, stopTime, type, id, readMarketData);
@@ -107,6 +113,11 @@ namespace MidaxLib
         List<Trade> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, string id)
         {
             return getRows<Trade>(startTime, stopTime, type, id, readTradeData);
+        }
+
+        List<KeyValuePair<DateTime, double>> IReaderConnection.GetProfits(DateTime startTime, DateTime stopTime, string type, string id)
+        {
+            return getRows<KeyValuePair<DateTime, double>>(startTime, stopTime, type, id, readProfitData, 0);
         }
 
         void IReaderConnection.CloseConnection()

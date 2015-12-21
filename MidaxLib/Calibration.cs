@@ -32,8 +32,8 @@ namespace MidaxLib
 
                 var expectations = new Dictionary<DateTime, KeyValuePair<CqlQuote, decimal>>();
                 var gainDistribution = new SortedList<int, DateTime>();
-                int minGain = 1000000;
-                int maxGain = -1000000;
+                KeyValuePair<int, DateTime> minProfit = new KeyValuePair<int, DateTime>(1000000, DateTime.MinValue);
+                KeyValuePair<int, DateTime> maxProfit = new KeyValuePair<int, DateTime>(-1000000, DateTime.MinValue);
                 var rnd = new Random(155);
                 var openPrice = priceData[epic][0];
                 foreach (var quote in priceData[epic])
@@ -41,38 +41,38 @@ namespace MidaxLib
                     if (quote.t.TimeOfDay < DateTime.Parse(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
                         continue;
                     var futureVal = wmaLow.Average(mktData, quote.t.UtcDateTime.AddMinutes(2));
-                    var gain = (int)Math.Round(futureVal.Mid() - quote.MidPrice());
-                    expectations.Add(quote.t.UtcDateTime, new KeyValuePair<CqlQuote, decimal>(quote, gain));
-                    if (gainDistribution.ContainsKey(gain))
+                    var profit = (int)Math.Round(futureVal.Mid() - quote.MidPrice());
+                    expectations.Add(quote.t.UtcDateTime, new KeyValuePair<CqlQuote, decimal>(quote, profit));
+                    if (gainDistribution.ContainsKey(profit))
                     {
-                        if ((quote.t.UtcDateTime - gainDistribution[gain]).Hours > 3 && (rnd.Next(100) == 0))
-                            gainDistribution[gain] = quote.t.UtcDateTime;
+                        if ((quote.t.UtcDateTime - gainDistribution[profit]).Hours > 3 && (rnd.Next(100) == 0))
+                            gainDistribution[profit] = quote.t.UtcDateTime;
                     }
                     else
-                        gainDistribution[gain] = quote.t.UtcDateTime;
-                    if (gain < minGain)
-                        minGain = gain;
-                    if (gain > maxGain)
-                        maxGain = gain;
+                        gainDistribution[profit] = quote.t.UtcDateTime;
+                    if (profit < minProfit.Key)
+                        minProfit = new KeyValuePair<int, DateTime>(profit, gainDistribution[profit]);
+                    if (profit > maxProfit.Key)
+                        maxProfit = new KeyValuePair<int, DateTime>(profit, gainDistribution[profit]);
                     quote.b -= openPrice.MidPrice();
                     quote.o -= openPrice.MidPrice();
                 }
                 int nbPoints = 10;
-                int idxGain = 0;
-                int nextGain = minGain;
+                int idxProfit = 0;
+                KeyValuePair<int, DateTime> nextProfit = minProfit;
                 var selection = new SortedList<DateTime, KeyValuePair<int, CqlQuote>>();
-                while (idxGain++ < nbPoints)
+                while (idxProfit++ < nbPoints)
                 {
-                    PublisherConnection.Instance.Insert(new Value(nextGain));
-                    selection.Add(gainDistribution[nextGain], new KeyValuePair<int, CqlQuote>(nextGain, expectations[gainDistribution[nextGain]].Key));
-                    nextGain = gainDistribution.First(keyVal => keyVal.Key >= ((decimal)minGain + (decimal)idxGain * (decimal)(maxGain - minGain) / (decimal)nbPoints)).Key;
+                    PublisherConnection.Instance.Insert(nextProfit.Value, new Value(nextProfit.Key));
+                    selection.Add(nextProfit.Value, new KeyValuePair<int, CqlQuote>(nextProfit.Key, expectations[nextProfit.Value].Key));
+                    nextProfit = gainDistribution.First(keyVal => keyVal.Key >= ((decimal)minProfit.Key + (decimal)idxProfit * (decimal)(maxProfit.Key - minProfit.Key) / (decimal)nbPoints));
                 }
-                foreach (var gain in selection)
+                foreach (var profit in selection)
                 {
-                    PublisherConnection.Instance.Insert(gainDistribution[gain.Value.Key], wmaLow, wmaLow.Average(mktData, gainDistribution[gain.Value.Key]).Mid() - openPrice.MidPrice());
-                    PublisherConnection.Instance.Insert(gainDistribution[gain.Value.Key], wmaMid, wmaMid.Average(mktData, gainDistribution[gain.Value.Key]).Mid() - openPrice.MidPrice());
-                    PublisherConnection.Instance.Insert(gainDistribution[gain.Value.Key], wmaHigh, wmaHigh.Average(mktData, gainDistribution[gain.Value.Key]).Mid() - openPrice.MidPrice());
-                    PublisherConnection.Instance.Insert(gainDistribution[gain.Value.Key], wmaDailyAvg, wmaDailyAvg.Average().Mid() - openPrice.MidPrice());
+                    PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaLow, wmaLow.Average(mktData, gainDistribution[profit.Value.Key]).Mid() - openPrice.MidPrice());
+                    PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaMid, wmaMid.Average(mktData, gainDistribution[profit.Value.Key]).Mid() - openPrice.MidPrice());
+                    PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaHigh, wmaHigh.Average(mktData, gainDistribution[profit.Value.Key]).Mid() - openPrice.MidPrice());
+                    PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaDailyAvg, wmaDailyAvg.Average().Mid() - openPrice.MidPrice());
                 }
                 priceData[epic] = selection.Values.Select(keyVal => keyVal.Value).ToList();
             }

@@ -244,11 +244,20 @@ namespace MidaxLib
 
         public void Train(List<List<double>> inputValues, List<List<double>> outputValues)
         {
+            if (inputValues.Count != outputValues.Count)
+                throw new ApplicationException("Training set inputs and outputs must have the same size");
             int nbInputs = inputValues[0].Count;
             NRealMatrix inputTable = new NRealMatrix(inputValues.Count, nbInputs);
             for(int idxInputList = 0; idxInputList < inputValues.Count; idxInputList++){
+                // normalization
+                var maxValue = 0.0;
+                for (int idxInput = 0; idxInput < inputValues[idxInputList].Count; idxInput++)
+                {
+                    if (Math.Abs(inputValues[idxInputList][idxInput]) > maxValue)
+                        maxValue = Math.Abs(inputValues[idxInputList][idxInput]);
+                }
                 for(int idxInput = 0; idxInput < inputValues[idxInputList].Count; idxInput++)
-                    inputTable[idxInputList,idxInput] = inputValues[idxInputList][idxInput];
+                    inputTable[idxInputList, idxInput] = inputValues[idxInputList][idxInput] / maxValue;
             } 
 
             int nbOutputs = outputValues[0].Count;

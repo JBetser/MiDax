@@ -10,11 +10,12 @@ namespace MidaxLib
 {
     public class ModelTest : ModelMidax
     {
-        bool _replayPopup;
+        bool _replayPopup = false;
 
         public ModelTest(MarketData daxIndex, List<MarketData> daxStocks) : base(daxIndex, daxStocks, new List<MarketData>(), 1, 5, 10)
         {
-            _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
+            if (Config.Settings.ContainsKey("REPLAY_POPUP"))
+                _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
         }
 
         protected override void Buy(Signal signal, DateTime time, Price value)

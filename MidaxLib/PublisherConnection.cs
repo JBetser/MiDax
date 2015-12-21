@@ -16,6 +16,7 @@ namespace MidaxLib
         protected Dictionary<string, TimeSeries> _expectedIndicatorData = null;
         protected Dictionary<string, TimeSeries> _expectedSignalData = null;
         protected Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
+        protected Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;
 
         static protected PublisherConnection _instance = null;
         
@@ -34,13 +35,14 @@ namespace MidaxLib
         public abstract void Insert(DateTime updateTime, Indicator indicator, decimal value);
         public abstract void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code);
         public abstract void Insert(Trade trade);
-        public abstract void Insert(Value gain);
+        public abstract void Insert(DateTime updateTime, Value profit);
 
-        public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData)
+        public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData, Dictionary<KeyValuePair<string, DateTime>, double> profitData)
         {
             _expectedIndicatorData = new Dictionary<string,TimeSeries>();
             _expectedSignalData = new Dictionary<string, TimeSeries>();
             _expectedTradeData = tradeData;
+            _expectedProfitData = profitData;
             foreach (var indData in indicatorData)
             {
                 if (!_expectedIndicatorData.ContainsKey(indData.Key))

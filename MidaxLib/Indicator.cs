@@ -138,10 +138,7 @@ namespace MidaxLib
     public class IndicatorWMVol : IndicatorWMA
     {
         int _periodSeconds;
-
-        public MarketData Asset { get { return _mktData[0]; } }
-        public int Period { get { return _periodSeconds; } }
-
+        
         public IndicatorWMVol(MarketData mktData, int periodMinutes)
             : base("WMVol_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)
         {

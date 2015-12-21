@@ -204,9 +204,9 @@ namespace MidaxLib
                 DATATYPE_TRADE, trade.Reference, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic, Convert.ToInt32(trade.Direction), trade.Size));
         }
 
-        public override void Insert(Value gain)
+        public override void Insert(DateTime updateTime, Value profit)
         {
-            throw new ApplicationException("Gain insertion not implemented in Cassandra");
+            throw new ApplicationException("Profit insertion not implemented in Cassandra");
         }
 
         RowSet getRows(DateTime startTime, DateTime stopTime, string type, string id){
@@ -256,6 +256,11 @@ namespace MidaxLib
         List<Trade> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, string id)
         {
             return getTrades(startTime, stopTime, type, id);
+        }
+
+        List<KeyValuePair<DateTime, double>> IReaderConnection.GetProfits(DateTime startTime, DateTime stopTime, string type, string id)
+        {
+            return null;
         }
 
         void IReaderConnection.CloseConnection()
