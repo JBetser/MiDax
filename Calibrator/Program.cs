@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using MidaxLib;
 
 namespace Calibrator
@@ -20,6 +21,7 @@ namespace Calibrator
             dicSettings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
             dicSettings["REPLAY_MODE"] = "CSV";
             dicSettings["REPLAY_POPUP"] = "1";
+            dicSettings["TRADING_MODE"] = "CALIBRATION";
             dicSettings["TRADING_MODE"] = "CALIBRATION";
             Config.Settings = dicSettings;
 
@@ -79,35 +81,17 @@ namespace Calibrator
                 while (start.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday);
             }
 
-            // build the neural network and the training set
-            var ann = new NeuralNetwork(4, 1, new List<int>() { 2 });
-            var daxQuotes = new List<double>();
-            foreach (var quote in marketData["IX.D.DAX.DAILY.IP"])
-                daxQuotes.Add((double)quote.MidPrice());
-            var wma2 = new List<double>();
-            foreach (var quote in indicatorData["WMA_2_IX.D.DAX.DAILY.IP"])
-                wma2.Add((double)quote.MidPrice());
-            var wma10 = new List<double>();
-            foreach (var quote in indicatorData["WMA_10_IX.D.DAX.DAILY.IP"])
-                wma10.Add((double)quote.MidPrice());
-            var wma60 = new List<double>();
-            foreach (var quote in indicatorData["WMA_60_IX.D.DAX.DAILY.IP"])
-                wma60.Add((double)quote.MidPrice());
-            var annInputs = new List<List<double>>();
-            var annOutputs = new List<List<double>>();
-            for (int idxQuote = 0; idxQuote < daxQuotes.Count; idxQuote++)
+            var ann = new NeuralNetwork7N(marketData, indicatorData, profitData);
+            ann.Train(2.0);
+            
+            DialogResult dialogResult = MessageBox.Show(string.Format("The calibration error is {0}.\n Would you like to publish the weights to production DB?",
+                ann.Error), ann.GetType().ToString(), MessageBoxButtons.YesNo);
+            if (dialogResult == DialogResult.Yes)
             {
-                var newInputset = new List<double>();
-                newInputset.Add(daxQuotes[idxQuote]);
-                newInputset.Add(wma2[idxQuote]);
-                newInputset.Add(wma10[idxQuote]);
-                newInputset.Add(wma60[idxQuote]);
-                annInputs.Add(newInputset);
-                var newOutputset = new List<double>();
-                newOutputset.Add(profitData["IX.D.DAX.DAILY.IP"][idxQuote]);
-                annOutputs.Add(newOutputset);
             }
-            ann.Train(annInputs, annOutputs);
+            else if (dialogResult == DialogResult.No)
+            {
+            }
         }
 
         static void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)

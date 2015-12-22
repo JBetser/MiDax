@@ -181,6 +181,9 @@ namespace MidaxLib
         public NeuralLayer _outputs;
         public List<NeuralLayer> _innerLayers = new List<NeuralLayer>();
 
+        double _totalError = -1.0;
+        public double Error { get { return _totalError; } }
+
         public NeuralNetwork(int nbInputs, int nbOuputs, List<int> innerLayerSizes)
         {
             _inputs = new NeuralLayer(nbInputs);
@@ -242,29 +245,42 @@ namespace MidaxLib
                 _innerLayers[idxlayer].BackPropagate();
         }
 
-        public void Train(List<List<double>> inputValues, List<List<double>> outputValues)
+        public void Train(List<List<double>> inputValues, List<List<double>> outputValues, double obj_error = 1e-5, double max_error = 1e-5)
         {
             if (inputValues.Count != outputValues.Count)
                 throw new ApplicationException("Training set inputs and outputs must have the same size");
+            // input normalization
             int nbInputs = inputValues[0].Count;
             NRealMatrix inputTable = new NRealMatrix(inputValues.Count, nbInputs);
-            for(int idxInputList = 0; idxInputList < inputValues.Count; idxInputList++){
-                // normalization
-                var maxValue = 0.0;
+            var maxValue = 0.0;
+            for (int idxInputList = 0; idxInputList < inputValues.Count; idxInputList++)
+            {
                 for (int idxInput = 0; idxInput < inputValues[idxInputList].Count; idxInput++)
                 {
                     if (Math.Abs(inputValues[idxInputList][idxInput]) > maxValue)
                         maxValue = Math.Abs(inputValues[idxInputList][idxInput]);
                 }
+            }
+            for(int idxInputList = 0; idxInputList < inputValues.Count; idxInputList++){
                 for(int idxInput = 0; idxInput < inputValues[idxInputList].Count; idxInput++)
                     inputTable[idxInputList, idxInput] = inputValues[idxInputList][idxInput] / maxValue;
-            } 
+            }
 
+            // output normalization
             int nbOutputs = outputValues[0].Count;
             NRealMatrix objectiveTable = new NRealMatrix(outputValues.Count, nbOutputs);
+            maxValue = 0.0;
+            for (int idxOutputList = 0; idxOutputList < outputValues.Count; idxOutputList++)
+            {
+                for (int idxOutput = 0; idxOutput < outputValues[idxOutputList].Count; idxOutput++)
+                {
+                    if (Math.Abs(outputValues[idxOutputList][idxOutput]) > maxValue)
+                        maxValue = Math.Abs(outputValues[idxOutputList][idxOutput]);
+                }
+            }
             for(int idxOutputList = 0; idxOutputList < outputValues.Count; idxOutputList++){
                 for(int idxOutput = 0; idxOutput < outputValues[idxOutputList].Count; idxOutput++)
-                    objectiveTable[idxOutputList,idxOutput] = outputValues[idxOutputList][idxOutput];
+                    objectiveTable[idxOutputList, idxOutput] = outputValues[idxOutputList][idxOutput] / maxValue;
             }    
 
             LevenbergMarquardt.objective_func objFunc = (NRealMatrix x) => { NRealMatrix y = new NRealMatrix(x.Rows, nbOutputs);
@@ -334,8 +350,18 @@ namespace MidaxLib
                 return jac; 
             };
 
-            LevenbergMarquardt optimizer = new LevenbergMarquardt(objFunc, inputs, modelParams, modelFunc, jacFunc);
-            optimizer.Solve();
+            LevenbergMarquardt optimizer = new LevenbergMarquardt(objFunc, inputs, modelParams, modelFunc, jacFunc, 0.001, obj_error);
+            try
+            {
+                optimizer.Solve();
+                _totalError = optimizer.Error;
+            }
+            catch (StallException)
+            {
+                if (optimizer.Error > max_error)
+                    throw;
+                _totalError = optimizer.Error;
+            }
         }
     }
 }

@@ -165,7 +165,7 @@ namespace MidaxTester
             marketData.Add(new MarketData("BASF SE:ED.D.BAS.DAILY.IP"));
             marketData.Add(new MarketData("Bayer AG:ED.D.BAY.DAILY.IP"));
 
-            ModelTest model = new ModelTest(index, marketData);
+            ModelTest model = new ModelTest(index, marketData, 1, 5, 10);
             Console.WriteLine("Testing live indicators and signals...");
             model.StartSignals();
             Console.WriteLine("Testing daily indicators...");

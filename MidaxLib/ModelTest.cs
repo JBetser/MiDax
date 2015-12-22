@@ -12,7 +12,8 @@ namespace MidaxLib
     {
         bool _replayPopup = false;
 
-        public ModelTest(MarketData daxIndex, List<MarketData> daxStocks) : base(daxIndex, daxStocks, new List<MarketData>(), 1, 5, 10)
+        public ModelTest(MarketData daxIndex, List<MarketData> daxStocks, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
+            : base(daxIndex, daxStocks, new List<MarketData>(), lowPeriod, midPeriod, highPeriod)
         {
             if (Config.Settings.ContainsKey("REPLAY_POPUP"))
                 _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";

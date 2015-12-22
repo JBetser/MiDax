@@ -19,6 +19,11 @@ namespace MidaxLib
         }
     }
 
+    public class StallException : ApplicationException
+    {
+        public StallException() : base("LevenbergMarquardt is in a stall") { }
+    }
+
     public class LevenbergMarquardt
     {
         public delegate NRealMatrix objective_func(NRealMatrix input);
@@ -40,6 +45,7 @@ namespace MidaxLib
         List<Value> _modelParams;  // The results are updated here
 
         public double ObjectiveError { get { return _obj_error; } }
+        public double Error { get { return _totalError; } }
 
         public LevenbergMarquardt(objective_func obj_func, List<double> inputs, List<Value> modelParams, model_func model, model_func model_jac, double lambda = 0.001, double obj_error = 0.00001, int max_iter = 10000)
         {
@@ -154,7 +160,7 @@ namespace MidaxLib
                 }
                 else
                 {
-                    throw new ApplicationException("LevenbergMarquardt is in a stall"); 
+                    throw new StallException(); 
                 }
             }
             else

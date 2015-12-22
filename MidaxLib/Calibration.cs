@@ -28,8 +28,7 @@ namespace MidaxLib
                     wmaLow.TimeSeries.Add(quote.t.UtcDateTime, new Price(quote.ScaleValue(0, 1)));
                 foreach (var quote in ExpectedIndicatorData[wmaLow.Id])
                     wmaLow.TimeSeries.Add(quote.t.UtcDateTime, new Price(quote.ScaleValue(0, 1)));
-
-
+                
                 var expectations = new Dictionary<DateTime, KeyValuePair<CqlQuote, decimal>>();
                 var gainDistribution = new SortedList<int, DateTime>();
                 KeyValuePair<int, DateTime> minProfit = new KeyValuePair<int, DateTime>(1000000, DateTime.MinValue);
