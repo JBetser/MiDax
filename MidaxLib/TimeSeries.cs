@@ -45,7 +45,7 @@ namespace MidaxLib
             _latest = updateTime;
             if (_series.Count == 0)
                 _series.Add(new List<KeyValuePair<DateTime, Price>>());
-            else if ((updateTime - _series.Last().First().Key).Minutes > INTERVAL_MINUTES)
+            else if ((updateTime - _series.Last().First().Key).TotalMinutes > INTERVAL_MINUTES)
             {
                 deleteOldData(updateTime);
                 _series.Add(new List<KeyValuePair<DateTime, Price>>());
@@ -68,9 +68,16 @@ namespace MidaxLib
             {
                 if (timeStart <= _series[idx].Last().Key)
                 {
-                    KeyValuePair<DateTime, Price> start = _series[idx].Last(keyValue => keyValue.Key <= timeStart);
-                    curTime = start.Key;
-                    curPos = _series[idx].IndexOf(start);
+                    KeyValuePair<DateTime, Price> start = _series[idx].LastOrDefault(keyValue => keyValue.Key <= timeStart);
+                    KeyValuePair<DateTime, Price> defaultVal = default(KeyValuePair<DateTime, Price>);
+                    if (start.Key == defaultVal.Key && start.Value == defaultVal.Value)
+                    {
+                        start = _series[idx - 1].Last();
+                        curPos = 0;
+                    }
+                    else
+                        curPos = _series[idx].IndexOf(start);
+                    curTime = start.Key;                    
                     curIdx = idx;
                     break;
                 }
@@ -159,7 +166,7 @@ namespace MidaxLib
         {
             while (_series.Count > 1)
             {
-                if ((updateTime - _series.First().First().Key).Hours > MAX_RECORD_TIME_HOURS)
+                if ((updateTime - _series.First().First().Key).TotalHours > MAX_RECORD_TIME_HOURS)
                     _series.RemoveAt(0);
                 else
                     break;
