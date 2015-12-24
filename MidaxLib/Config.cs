@@ -54,7 +54,7 @@ namespace MidaxLib
             {
                 if (!Config.Settings.ContainsKey("REPLAY_MODE"))
                     return false;
-                return ReplayEnabled && (Config.Settings["REPLAY_MODE"] == "CSV" && !Config.Settings.ContainsKey("PUBLISHING_CSV"));
+                return ReplayEnabled && (!Config.Settings.ContainsKey("PUBLISHING_CSV") && !Config.Settings.ContainsKey("PUBLISHING_DB"));
             }
         }
 

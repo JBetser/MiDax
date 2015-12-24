@@ -9,24 +9,24 @@ namespace MidaxLib
     public class TimeSeries
     {
         const int DEFAULT_MAX_RECORD_TIME_HOURS = 2;
-        static int _maxRecordTime = DEFAULT_MAX_RECORD_TIME_HOURS;
-        public static int MAX_RECORD_TIME_HOURS
+        int _maxRecordTime = DEFAULT_MAX_RECORD_TIME_HOURS;
+        public int MaxTimeHours
         {
             get { return _maxRecordTime; }
             set { _maxRecordTime = value; }
         }
         const int DEFAULT_INTERVAL_MINUTES = 20;
-        static int _tsInterval = DEFAULT_INTERVAL_MINUTES;
-        public static int INTERVAL_MINUTES
+        int _tsInterval = DEFAULT_INTERVAL_MINUTES;
+        public int IntervalMinutes
         {
             get { return _tsInterval; }
             set { _tsInterval = value; }
         }
 
-        static TimeSeries()
+        public TimeSeries()
         {
             if (Config.Settings.ContainsKey("TIMESERIES_MAX_RECORD_TIME_HOURS"))
-                MAX_RECORD_TIME_HOURS = int.Parse(Config.Settings["TIMESERIES_MAX_RECORD_TIME_HOURS"]);
+                _maxRecordTime = int.Parse(Config.Settings["TIMESERIES_MAX_RECORD_TIME_HOURS"]);
         }
 
         List<List<KeyValuePair<DateTime, Price>>> _series = new List<List<KeyValuePair<DateTime, Price>>>();
@@ -45,12 +45,17 @@ namespace MidaxLib
             _latest = updateTime;
             if (_series.Count == 0)
                 _series.Add(new List<KeyValuePair<DateTime, Price>>());
-            else if ((updateTime - _series.Last().First().Key).TotalMinutes > INTERVAL_MINUTES)
+            else if (TotalMinutes(updateTime) > _tsInterval)
             {
                 deleteOldData(updateTime);
                 _series.Add(new List<KeyValuePair<DateTime, Price>>());
             }
             _series.Last().Add(new KeyValuePair<DateTime, Price>(updateTime, price));            
+        }
+
+        public double TotalMinutes(DateTime updateTime)
+        {
+            return (updateTime - _series.Last().First().Key).TotalMinutes;
         }
 
         public IEnumerable<KeyValuePair<DateTime, Price>> ValueGenerator(DateTime timeStart, DateTime timeEnd)
@@ -166,7 +171,7 @@ namespace MidaxLib
         {
             while (_series.Count > 1)
             {
-                if ((updateTime - _series.First().First().Key).TotalHours > MAX_RECORD_TIME_HOURS)
+                if ((updateTime - _series.First().First().Key).TotalHours > _maxRecordTime)
                     _series.RemoveAt(0);
                 else
                     break;

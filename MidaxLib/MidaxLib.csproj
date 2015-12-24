@@ -87,6 +87,7 @@
     <Compile Include="ReaderConnection.cs" />
     <Compile Include="ReplayConnection.cs" />
     <Compile Include="Signal.cs" />
+    <Compile Include="StaticDataConnection.cs" />
     <Compile Include="TimeSeries.cs" />
     <Compile Include="Trade.cs" />
   </ItemGroup>

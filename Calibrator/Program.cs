@@ -18,10 +18,8 @@ namespace Calibrator
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["LIMIT"] = "10";
-            dicSettings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
+            dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";
             dicSettings["REPLAY_MODE"] = "CSV";
-            dicSettings["REPLAY_POPUP"] = "1";
-            dicSettings["TRADING_MODE"] = "CALIBRATION";
             dicSettings["TRADING_MODE"] = "CALIBRATION";
             Config.Settings = dicSettings;
 
@@ -29,6 +27,8 @@ namespace Calibrator
             var marketData = new Dictionary<string, List<CqlQuote>>();
             var indicatorData = new Dictionary<string, List<CqlQuote>>();
             var profitData = new Dictionary<string, List<double>>();
+            string[] ids = new string[1];
+            ids[0] = "IX.D.DAX.DAILY.IP";
             while (start <= end)
             {
                 List<string> mktdataFiles = new List<string>();
@@ -43,15 +43,13 @@ namespace Calibrator
 
                 var client = new ReplayStreamingClient();
                 client.Connect();
-                string[] ids = new string[1];
-                ids[0] = "IX.D.DAX.DAILY.IP";
                 Dictionary<string, List<CqlQuote>> curDayMktData = client.GetReplayData(ids);
                 foreach (var keyVal in curDayMktData)
                 {
                     var processableMktData = new List<CqlQuote>();
                     foreach (var quote in keyVal.Value)
                     {
-                        if (client.ExpectedIndicatorData["WMA_60_IX.D.DAX.DAILY.IP"].Select(cqlq => cqlq.t).Contains(quote.t))
+                        if (client.ExpectedIndicatorData["WMA_60_" + ids[0]].Select(cqlq => cqlq.t).Contains(quote.t))
                             processableMktData.Add(quote);
                     }
                     if (marketData.ContainsKey(keyVal.Key))
@@ -81,17 +79,13 @@ namespace Calibrator
                 while (start.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday);
             }
 
-            var ann = new NeuralNetwork7N(marketData, indicatorData, profitData);
+            var ann = new NeuralNetworkWMA_4_2(ids[0], marketData, indicatorData, profitData);
             ann.Train(2.0);
-            
-            DialogResult dialogResult = MessageBox.Show(string.Format("The calibration error is {0}.\n Would you like to publish the weights to production DB?",
-                ann.Error), ann.GetType().ToString(), MessageBoxButtons.YesNo);
+
+            DialogResult dialogResult = MessageBox.Show(string.Format("The calibration error is {0}.\n The learning rate is {1}%.\n Would you like to publish the weights to production DB?",
+                ann.Error, ann.LearningRatePct), ann.GetType().ToString(), MessageBoxButtons.YesNo);
             if (dialogResult == DialogResult.Yes)
-            {
-            }
-            else if (dialogResult == DialogResult.No)
-            {
-            }
+                PublisherConnection.Instance.Insert(DateTime.Now, ann);
         }
 
         static void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)

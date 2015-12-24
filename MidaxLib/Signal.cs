@@ -107,6 +107,7 @@ namespace MidaxLib
 
         public void Subscribe(Signal.Tick onBuy, Signal.Tick onSell)
         {
+            Clear();
             _onBuy = onBuy;
             _onSell = onSell;
             foreach (Indicator indicator in _mktIndicator)

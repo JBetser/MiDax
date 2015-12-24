@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,14 +57,21 @@ namespace MidaxLib
 
         public void SubscribeMarketData(MarketData mktData)
         {
-            _mktDataListener.MarketData.Add(mktData);
-            Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
+            if (!_mktDataListener.MarketData.Select(mktdata => mktdata.Id).Contains(mktData.Id))
+            {
+                _mktDataListener.MarketData.Add(mktData);
+                Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
+            }
         }
 
         public void UnsubscribeMarketData(MarketData mktData)
         {
-            _mktDataListener.MarketData.Remove(mktData);
-            Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
+            var lstRemove = _mktDataListener.MarketData.Where(mktdata => mktdata.Id == mktData.Id).ToList();
+            foreach (var selmktdata in lstRemove)
+            {
+                _mktDataListener.MarketData.Remove(selmktdata);
+                Log.Instance.WriteEntry("Unsubscribed " + selmktdata.Name + " from " + selmktdata.Id);
+            }
         }
 
         public virtual void StartListening()
@@ -110,9 +119,13 @@ namespace MidaxLib
                         data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
                 }
             }
+            catch (SEHException exc)
+            {
+                Log.Instance.WriteEntry("Market data update interop error: " + exc.ToString() + ", Error code: " + exc.ErrorCode, EventLogEntryType.Error);
+            }
             catch (Exception ex)
             {
-                Log.Instance.WriteEntry(ex.Message, System.Diagnostics.EventLogEntryType.Error);
+                Log.Instance.WriteEntry("Market data update error: " + ex.Message, System.Diagnostics.EventLogEntryType.Error);
                 throw;
             }
         }

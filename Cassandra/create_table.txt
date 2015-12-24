@@ -14,6 +14,19 @@ WITH CLUSTERING ORDER BY (trading_time DESC);
 
 ALTER TABLE historicaldata.stocks WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
 
+CREATE TABLE historicaldata.dummystocks (
+  stockid text,
+  trading_time timestamp,
+  name text,
+  bid decimal,
+  offer decimal,
+  volume int,
+  PRIMARY KEY (stockid, trading_time)
+)
+WITH CLUSTERING ORDER BY (trading_time DESC);
+
+ALTER TABLE historicaldata.dummystocks WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+
 CREATE TABLE historicaldata.indicators (
   indicatorid text,
   trading_time timestamp,
@@ -23,6 +36,16 @@ CREATE TABLE historicaldata.indicators (
 WITH CLUSTERING ORDER BY (trading_time DESC);
 
 ALTER TABLE historicaldata.indicators WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+
+CREATE TABLE historicaldata.dummyindicators (
+  indicatorid text,
+  trading_time timestamp,
+  value decimal,
+  PRIMARY KEY (indicatorid, trading_time)
+)
+WITH CLUSTERING ORDER BY (trading_time DESC);
+
+ALTER TABLE historicaldata.dummyindicators WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
 
 CREATE TABLE historicaldata.signals (
   signalid text,
@@ -35,7 +58,21 @@ WITH CLUSTERING ORDER BY (trading_time DESC);
 
 ALTER TABLE historicaldata.signals WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
 
-CREATE TABLE historicaldata.trades (
+CREATE TABLE historicaldata.dummysignals (
+  signalid text,
+  trading_time timestamp,
+  tradeid text,
+  value int,
+  PRIMARY KEY (signalid, trading_time)
+)
+WITH CLUSTERING ORDER BY (trading_time DESC);
+
+ALTER TABLE historicaldata.dummysignals WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+
+CREATE KEYSPACE businessdata
+  WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
+
+CREATE TABLE businessdata.trades (
   tradeid text,  
   confirmation_time timestamp,  
   direction int,
@@ -46,4 +83,29 @@ CREATE TABLE historicaldata.trades (
   PRIMARY KEY (tradeid)
 );
 
-ALTER TABLE historicaldata.trades WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+CREATE TABLE businessdata.dummytrades (
+  tradeid text,  
+  confirmation_time timestamp,  
+  direction int,
+  price decimal,
+  size int,
+  stockid text,
+  trading_time timestamp,
+  PRIMARY KEY (tradeid)
+);
+
+ALTER TABLE businessdata.dummytrades WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+
+CREATE KEYSPACE staticdata
+  WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
+
+CREATE TABLE staticdata.anncalibration (
+  annid text,  
+  version int,
+  stockid text,
+  weights list<decimal>,
+  insert_time timestamp,
+  PRIMARY KEY (annid, stockid, version)
+)
+WITH CLUSTERING ORDER BY (stockid ASC, version ASC);
+

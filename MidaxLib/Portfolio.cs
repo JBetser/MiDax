@@ -29,7 +29,7 @@ namespace MidaxLib
             }
             catch (Exception ex)
             {
-                Log.Instance.WriteEntry(ex.Message, System.Diagnostics.EventLogEntryType.Error);
+                Log.Instance.WriteEntry("Portfolio subscription error: " + ex.Message, System.Diagnostics.EventLogEntryType.Error);
             }
         }
 

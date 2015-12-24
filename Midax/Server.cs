@@ -11,6 +11,7 @@ using System.Collections.Specialized;
 using System.Reflection;
 using System.Threading;
 using NLapack.Matrices;
+using System.Runtime.InteropServices;
 
 public class Server
 {
@@ -100,9 +101,13 @@ public class Server
 
                 communicator().waitForShutdown();
             }
+            catch (SEHException exc)
+            {
+                Log.Instance.WriteEntry("Midax server interop error: " + exc.ToString() + ", Error code: " + exc.ErrorCode, EventLogEntryType.Error);
+            }
             catch (Exception exc)
             {
-                Log.Instance.WriteEntry(exc.ToString(), EventLogEntryType.Error);
+                Log.Instance.WriteEntry("Midax server error: " + exc.ToString(), EventLogEntryType.Error);
             }
 
             return 0;

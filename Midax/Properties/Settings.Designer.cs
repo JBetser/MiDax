@@ -182,9 +182,9 @@ namespace Midax.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("192.168.1.26")]
-        public string PUBLISHING_CONTACTPOINT {
+        public string DB_CONTACTPOINT {
             get {
-                return ((string)(this["PUBLISHING_CONTACTPOINT"]));
+                return ((string)(this["DB_CONTACTPOINT"]));
             }
         }
         

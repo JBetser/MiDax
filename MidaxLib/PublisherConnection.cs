@@ -24,11 +24,17 @@ namespace MidaxLib
         {
             get
             {
-                return _instance == null ? ((Config.ReplayEnabled || Config.MarketSelectorEnabled) ? 
+                if (Config.Settings.ContainsKey("PUBLISHING_DB") && Config.Settings.ContainsKey("DB_CONTACTPOINT"))
+                {
+                    if (Config.Settings["PUBLISHING_DB"] != Config.Settings["DB_CONTACTPOINT"])
+                        throw new ApplicationException("The publishing db cannot be different from the source db");
+                }
+                bool cassandra = Config.Settings.ContainsKey("PUBLISHING_DB") || (!Config.ReplayEnabled && !Config.MarketSelectorEnabled);
+                return _instance == null ? (cassandra ? _instance = new CassandraConnection() : 
                     (Config.Settings.ContainsKey("PUBLISHING_CSV") ? _instance = new ReplayPublisher() :
-                                                                        _instance = new ReplayTester()) : 
-                                                                        _instance = new CassandraConnection()) 
-                : _instance; }
+                                                                        _instance = new ReplayTester()))
+                    : _instance; 
+            }
         }
 
         public abstract void Insert(DateTime updateTime, MarketData mktData, Price price);
@@ -36,6 +42,7 @@ namespace MidaxLib
         public abstract void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code);
         public abstract void Insert(Trade trade);
         public abstract void Insert(DateTime updateTime, Value profit);
+        public abstract void Insert(DateTime updateTime, NeuralNetworkForCalibration calibratedNeuralNetwork);
 
         public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData, Dictionary<KeyValuePair<string, DateTime>, double> profitData)
         {

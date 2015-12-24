@@ -19,7 +19,7 @@ namespace MidaxTrader
             Config.Settings["API_KEY"] = "8d341413c2eae2c35bb5b47a594ef08ae18cb3b7";
             Config.Settings["USER_NAME"] = "ksbitlsoftdemo";
             Config.Settings["PASSWORD"] = "Kotik0483";
-            Config.Settings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
+            Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
             DateTime start = DateTime.Now;
             Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 6, 45, 0);
             Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 18, 0, 0);

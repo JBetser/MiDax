@@ -243,7 +243,7 @@ namespace MidaxLib
             }
             catch (Exception ex)
             {
-                Log.Instance.WriteEntry(ex.Message, EventLogEntryType.Error);
+                Log.Instance.WriteEntry("IGConnection error: " + ex.Message, EventLogEntryType.Error);
             }
         }
     }

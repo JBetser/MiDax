@@ -251,7 +251,7 @@ namespace MidaxLib
         }
     }
 
-    public class ReplayConnection : MarketDataConnection
+    public class ReplayConnection : MarketDataConnection, IStaticDataConnection
     {
         ReplayStreamingClient _replayStreamingClient;
 
@@ -276,6 +276,11 @@ namespace MidaxLib
             {
                 Log.Instance.WriteEntry(ex.Message, EventLogEntryType.Error);
             }
+        }
+
+        int IStaticDataConnection.GetAnnLatestVersion(string annid, string stockid)
+        {
+            return -1;
         }
     }
 
@@ -348,6 +353,11 @@ namespace MidaxLib
             var newLine = string.Format("{0},{1}{2}", updateTime, profit.X,
                 Environment.NewLine);
             _csvProfitStringBuilder.Append(newLine);
+        }
+
+        public override void Insert(DateTime updateTime, NeuralNetworkForCalibration ann)
+        {
+            throw new ApplicationException("ANN insertion not implemented");
         }
 
         public override string Close()
@@ -445,6 +455,10 @@ namespace MidaxLib
         }
 
         public override void Insert(DateTime updateTime, Value profit)
+        {
+        }
+
+        public override void Insert(DateTime updateTime, NeuralNetworkForCalibration ann)
         {
         }
 

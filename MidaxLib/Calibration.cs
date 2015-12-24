@@ -7,6 +7,7 @@ using Lightstreamer.DotNet.Client;
 
 namespace MidaxLib
 {
+    // generates the set of market data and objective function for calibration
     class CalibrationStreamingClient : ReplayStreamingClient
     {
         public override void Subscribe(string[] epics, IHandyTableListener tableListener)
@@ -84,6 +85,43 @@ namespace MidaxLib
         public CalibrationConnection()
             : base(new CalibrationStreamingClient())
         {
+        }
+    }
+
+    public class NeuralNetworkForCalibration : NeuralNetwork
+    {
+        protected List<List<double>> _annInputs = new List<List<double>>();
+        protected List<List<double>> _annOutputs = new List<List<double>>();
+
+        string _annid;
+        public string AnnId
+        {
+            get { return _annid; }
+        }
+        string _stockid;
+        public string StockId
+        {
+            get { return _stockid; }
+        }
+        string _version;
+        public string Version
+        {
+            get { return _version; }
+        }
+
+        public NeuralNetworkForCalibration(string id, string stockid, int nbInputNeurons, int nbOutputNeurons, List<int> intermediaryNeuronNbs, int version = -1)
+            : base(nbInputNeurons, nbOutputNeurons, intermediaryNeuronNbs)
+        {
+            _annid = id;
+            _stockid = stockid;
+            if (version == -1)
+                version = StaticDataConnection.Instance.GetAnnLatestVersion(_annid, _stockid);
+            _version = version.ToString();
+        }
+
+        public void Train(double max_error)
+        {
+            base.Train(_annInputs, _annOutputs, (double)_annInputs.Count * 0.01, max_error);
         }
     }
 }

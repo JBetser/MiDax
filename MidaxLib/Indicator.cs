@@ -22,7 +22,8 @@ namespace MidaxLib
         }
 
         public override void Subscribe(Tick eventHandler)
-        {            
+        {
+            Clear();
             foreach (MarketData mktData in _mktData)
                 mktData.Subscribe(OnUpdate);
             this._eventHandlers.Add(eventHandler);

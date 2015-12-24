@@ -183,6 +183,10 @@ namespace MidaxLib
 
         double _totalError = -1.0;
         public double Error { get { return _totalError; } }
+        double _learningRate = -1.0;
+        public double LearningRatePct { get { return _learningRate * 100.0; } }
+        List<decimal> _weights;
+        public List<decimal> Weights { get { return _weights; } }
 
         public NeuralNetwork(int nbInputs, int nbOuputs, List<int> innerLayerSizes)
         {
@@ -353,15 +357,16 @@ namespace MidaxLib
             LevenbergMarquardt optimizer = new LevenbergMarquardt(objFunc, inputs, modelParams, modelFunc, jacFunc, 0.001, obj_error);
             try
             {
-                optimizer.Solve();
-                _totalError = optimizer.Error;
+                optimizer.Solve();               
             }
             catch (StallException)
             {
                 if (optimizer.Error > max_error)
-                    throw;
-                _totalError = optimizer.Error;
+                    throw;                
             }
+            _totalError = optimizer.Error;
+            _learningRate = (optimizer.StartError - optimizer.Error) / optimizer.StartError;
+            _weights = modelParams.Select(param => (decimal)param.X).ToList();
         }
-    }
+    }    
 }

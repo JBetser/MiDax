@@ -21,7 +21,7 @@ namespace MidaxLib
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
-            if (mktData.TimeSeries.Count > 1)
+            if (mktData.TimeSeries.TotalMinutes(updateTime) > _interval.TotalMinutes)
             {
                 decimal? coeff = linearCoeff(updateTime);
                 if (coeff != null)

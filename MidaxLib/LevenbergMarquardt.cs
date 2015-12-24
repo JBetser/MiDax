@@ -39,12 +39,14 @@ namespace MidaxLib
         NRealMatrix _error;
         double _obj_error;
         double _totalError;
+        double _startError;
         double _lambda;
         int _max_iter;
         int _retry = 0;
         List<Value> _modelParams;  // The results are updated here
 
         public double ObjectiveError { get { return _obj_error; } }
+        public double StartError { get { return _startError; } }
         public double Error { get { return _totalError; } }
 
         public LevenbergMarquardt(objective_func obj_func, List<double> inputs, List<Value> modelParams, model_func model, model_func model_jac, double lambda = 0.001, double obj_error = 0.00001, int max_iter = 10000)
@@ -92,6 +94,7 @@ namespace MidaxLib
             _obj_error = obj_error;
             _error = calcError(_weights);
             _totalError = calcTotalError(_error);
+            _startError = _totalError;
         }
         
         public void Solve()

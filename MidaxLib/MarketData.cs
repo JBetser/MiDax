@@ -26,6 +26,7 @@ namespace MidaxLib
 
         public virtual void Subscribe(Tick eventHandler)
         {
+            Clear();
             bool subscribe = (this._eventHandlers.Count == 0);
             this._eventHandlers.Add(eventHandler);
             if (subscribe)
