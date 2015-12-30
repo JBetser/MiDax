@@ -52,6 +52,7 @@ CREATE TABLE historicaldata.signals (
   trading_time timestamp,
   tradeid text,
   value int,
+  stockvalue decimal,
   PRIMARY KEY (signalid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);
@@ -63,6 +64,7 @@ CREATE TABLE historicaldata.dummysignals (
   trading_time timestamp,
   tradeid text,
   value int,
+  stockvalue decimal,
   PRIMARY KEY (signalid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);

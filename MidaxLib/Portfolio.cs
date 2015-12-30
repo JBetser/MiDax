@@ -23,7 +23,7 @@ namespace MidaxLib
             {
                 if (_igStreamApiClient != null)
                 {
-                    //_tradeSubscriptionStk = _igStreamApiClient.SubscribeToTradeSubscription(this);
+                    _tradeSubscriptionStk = _igStreamApiClient.SubscribeToTradeSubscription(this);
                     Log.Instance.WriteEntry("TradeSubscription : Subscribe");
                 }
             }

@@ -30,14 +30,12 @@ namespace MidaxTester
             dicSettings["TRADING_STOP_TIME"] = "2015-08-26 09:00:00";
             dicSettings["TRADING_CLOSING_TIME"] = "2015-08-26 08:57:00";
             dicSettings["TRADING_MODE"] = "REPLAY";
-            dicSettings["TRADING_SIGNAL"] = "MacD_10_60_IX.D.DAX.DAILY.IP";
+            dicSettings["TRADING_SIGNAL"] = "MacD_1_5_IX.D.DAX.DAILY.IP";
             dicSettings["TRADING_LIMIT_PER_BP"] = "10";
             dicSettings["TRADE_EXPIRY_DAYS"] = "1";
             dicSettings["TRADE_CURRENCY"] = "GBP";
             Config.Settings = dicSettings;
-
-            //tmp();
-
+            
             Console.WriteLine("Testing calibration...");
 
             // Test the optimization of function a * cos(b * x) + b * sin(a * x) using Levenberg Marquardt
@@ -129,19 +127,14 @@ namespace MidaxTester
             MarketDataConnection.Instance.Connect(null);
             
             MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
-
-            List<MarketData> marketData = new List<MarketData>();
-            marketData.Add(new MarketData("Adidas AG:ED.D.ADSGY.DAILY.IP"));
-            marketData.Add(new MarketData("Allianz SE:ED.D.ALVGY.DAILY.IP"));
-            marketData.Add(new MarketData("BASF SE:ED.D.BAS.DAILY.IP"));
-            marketData.Add(new MarketData("Bayer AG:ED.D.BAY.DAILY.IP"));
-
-            ModelTest model = new ModelTest(index, marketData, 1, 5, 10);
+            ModelTest model = new ModelQuickTest(index);
             Console.WriteLine("Testing live indicators and signals...");
             model.StartSignals();
             Console.WriteLine("Testing daily indicators...");
-
-            if (!dicSettings.ContainsKey("PUBLISHING_CSV"))
+                
+            if (dicSettings.ContainsKey("PUBLISHING_CSV"))
+                model.StopSignals();
+            else
             {
                 // Test exceptions. the program is expected to throw exceptions here, just press continue if you are debugging
                 // all exceptions should be handled, and the program should terminate with a success message box
@@ -152,7 +145,7 @@ namespace MidaxTester
                 dicSettings["REPLAY_CSV"] = Config.TestList(testError);
                 MarketDataConnection.Instance.Connect(null);                
                 bool success = false;
-                var modelErr = new ModelTest(index, marketData);
+                var modelErr = new ModelQuickTest(index);
                 try
                 {
                     modelErr.StartSignals();
@@ -193,12 +186,12 @@ namespace MidaxTester
                 {
                     MarketDataConnection.Instance = new ReplayConnection();
                     MarketDataConnection.Instance.Connect(null);
-                    model = new ModelTest(new MarketData(index.Id), (from data in marketData select new MarketData(data.Id)).ToList());
+                    model = new ModelQuickTest(new MarketData(index.Id));
                     model.StartSignals();
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9975.133333 != 9975.356666666666666666666746";
+                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9976.135 != 9975.736666666666666666666747";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
@@ -212,7 +205,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9982.822762679691659529031265";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9983.779772679923146369004401";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);

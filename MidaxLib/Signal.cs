@@ -153,7 +153,7 @@ namespace MidaxLib
             set { _lastTrade = value; }
         }
 
-        void _onHold(Signal signal, DateTime updateTime, Price value)
+        protected void _onHold(Signal signal, DateTime updateTime, Price value)
         {
         }
 
@@ -165,7 +165,7 @@ namespace MidaxLib
             if (signaled && _signalCode != oldSignalCode)
             {
                 tradingOrder(this, updateTime, value);
-                PublisherConnection.Instance.Insert(updateTime, this, _signalCode);
+                PublisherConnection.Instance.Insert(updateTime, this, _signalCode, mktData.TimeSeries[updateTime].Value.Value.Bid);
             }
         }
 
@@ -204,7 +204,16 @@ namespace MidaxLib
             _values.Add(updateTime, lowWMA - highWMA);
             if (_values.Count > 1)
             {
-                if (_values[updateTime].Value.Value.Offer > 0 && _signalCode != SIGNAL_CODE.BUY)
+                if (_signalCode == SIGNAL_CODE.UNKNOWN)
+                {
+                    tradingOrder = _onHold;
+                    if (_values[updateTime].Value.Value.Mid() >= 0)
+                        _signalCode = SIGNAL_CODE.BUY;
+                    else
+                        _signalCode = SIGNAL_CODE.SELL;
+                    return false;
+                }
+                else if (_values[updateTime].Value.Value.Offer > 0 && _signalCode != SIGNAL_CODE.BUY)
                 {
                     tradingOrder = _onBuy;
                     _signalCode = SIGNAL_CODE.BUY;

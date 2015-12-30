@@ -45,7 +45,7 @@ namespace MidaxLib
             _latest = updateTime;
             if (_series.Count == 0)
                 _series.Add(new List<KeyValuePair<DateTime, Price>>());
-            else if (TotalMinutes(updateTime) > _tsInterval)
+            else if (lastIntervalMinutes(updateTime) > _tsInterval)
             {
                 deleteOldData(updateTime);
                 _series.Add(new List<KeyValuePair<DateTime, Price>>());
@@ -53,11 +53,16 @@ namespace MidaxLib
             _series.Last().Add(new KeyValuePair<DateTime, Price>(updateTime, price));            
         }
 
-        public double TotalMinutes(DateTime updateTime)
+        double lastIntervalMinutes(DateTime updateTime)
         {
             return (updateTime - _series.Last().First().Key).TotalMinutes;
         }
-
+        
+        public double TotalMinutes(DateTime updateTime)
+        {
+            return (updateTime - _series.First().First().Key).TotalMinutes;
+        }
+        
         public IEnumerable<KeyValuePair<DateTime, Price>> ValueGenerator(DateTime timeStart, DateTime timeEnd)
         {
             if (_series.Count == 0)

@@ -167,8 +167,9 @@ namespace MidaxLib
             _tradingEventTable.OnUpdate(_positions[trade.Epic], trade.Epic, null);
         }
 
-        protected void replay(Dictionary<string, List<CqlQuote>> priceData, IHandyTableListener tableListener)
+        protected void replay(Dictionary<string, List<CqlQuote>> priceDataSrc, IHandyTableListener tableListener)
         {
+            Dictionary<string, List<CqlQuote>> priceData = priceDataSrc.ToDictionary(kv => kv.Key, kv => kv.Value.ToList());
             DateTime curtime = _startTime;
             while (priceData.Count > 0)
             {
@@ -329,12 +330,12 @@ namespace MidaxLib
             _csvIndicatorStringBuilder.Append(newLine);
         }
 
-        public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
+        public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue)
         {
             string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-            var newLine = string.Format("{0},{1},{2},{3},{4}{5}",
+            var newLine = string.Format("{0},{1},{2},{3},{4},{5}{6}",
                 DATATYPE_SIGNAL, signal.Id,
-                updateTime, tradeRef, (int)code, Environment.NewLine);
+                updateTime, tradeRef, (int)code, stockvalue, Environment.NewLine);
             _csvSignalStringBuilder.Append(newLine);
         }
 
@@ -410,12 +411,18 @@ namespace MidaxLib
             }
         }
 
-        public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
+        public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue)
         {
-            if (((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Bid != code))
+            if (((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Bid != code) ||
+                Math.Abs(_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Offer - stockvalue) > TOLERANCE)
             {
-                string error = "Test failed: signal " + signal.Name + " time " + updateTime.ToShortTimeString() + " expected value " +
+                string error;
+                if ((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Bid != code)
+                    error = "Test failed: signal " + signal.Name + " time " + updateTime.ToShortTimeString() + " expected value " +
                    ((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Bid).ToString() + " != " + code.ToString();
+                else
+                    error = "Test failed: signal stock value " + signal.Name + " time " + updateTime.ToShortTimeString() + " expected value " +
+                   (_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Offer).ToString() + " != " + stockvalue.ToString();
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }

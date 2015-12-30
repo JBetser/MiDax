@@ -17,6 +17,10 @@ namespace MidaxTester
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
             Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
             Config.Settings["TIMESERIES_MAX_RECORD_TIME_HOURS"] = "12";
+            List<MarketData> stocks = new List<MarketData>();
+            List<MarketData> volIndices = new List<MarketData>();
+            //volIndices.Add(new MarketData("IN.D.VIX.MONTH2.IP"));
+            //volIndices.Add(new MarketData("IN.D.VIX.MONTH3.IP"));
             foreach (var test in dates)
             {
                 List<string> mktdataFiles = new List<string>();
@@ -37,7 +41,7 @@ namespace MidaxTester
 
                 MarketDataConnection.Instance.Connect(null);
                 MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
-                ModelTest model = new ModelTest(index, new List<MarketData>(), 1, 5, 10);
+                ModelTest model = new ModelTest(index, stocks, volIndices);
                 Console.WriteLine("Running a new daily record...");
                 model.StartSignals();
                 model.StopSignals();

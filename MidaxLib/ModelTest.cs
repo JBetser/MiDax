@@ -12,8 +12,8 @@ namespace MidaxLib
     {
         bool _replayPopup = false;
 
-        public ModelTest(MarketData daxIndex, List<MarketData> daxStocks, int lowPeriod = 1, int midPeriod = 5, int highPeriod = 10)
-            : base(daxIndex, daxStocks, new List<MarketData>(), lowPeriod, midPeriod, highPeriod)
+        public ModelTest(MarketData daxIndex, List<MarketData> daxStocks, List<MarketData> volIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
+            : base(daxIndex, daxStocks, volIndices, lowPeriod, midPeriod, highPeriod)
         {
             if (Config.Settings.ContainsKey("REPLAY_POPUP"))
                 _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
@@ -41,6 +41,14 @@ namespace MidaxLib
             if (_replayPopup)
                 MessageBox.Show(info);
             throw new ApplicationException(info);
+        }
+    }
+
+    public class ModelQuickTest : ModelTest
+    {
+        public ModelQuickTest(MarketData daxIndex)
+            : base(daxIndex, new List<MarketData>(), new List<MarketData>(), 1, 5, 10)
+        {
         }
     }
 }

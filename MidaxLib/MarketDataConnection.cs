@@ -57,11 +57,10 @@ namespace MidaxLib
 
         public void SubscribeMarketData(MarketData mktData)
         {
-            if (!_mktDataListener.MarketData.Select(mktdata => mktdata.Id).Contains(mktData.Id))
-            {
-                _mktDataListener.MarketData.Add(mktData);
-                Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
-            }
+            if (_mktDataListener.MarketData.Select(mktdata => mktdata.Id).Contains(mktData.Id))
+                UnsubscribeMarketData(_mktDataListener.MarketData.Where(mktdata => mktdata.Id == mktData.Id).First());
+            _mktDataListener.MarketData.Add(mktData);
+            Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
         }
 
         public void UnsubscribeMarketData(MarketData mktData)

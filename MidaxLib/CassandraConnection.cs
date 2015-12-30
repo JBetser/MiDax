@@ -96,23 +96,23 @@ namespace MidaxLib
         {
             s = (string)row[0];
             t = (DateTimeOffset)row[1];
-            b = Convert.ToInt32(row[3]);
+            b = Convert.ToInt32(row[4]);
             n = (string)row[0];
-            o = Convert.ToInt32(row[3]);
+            o = (decimal)row[2];
             v = 0;
         }
-        public CqlSignal(string stockId, DateTimeOffset tradingTime, string stockName, SIGNAL_CODE? value)
+        public CqlSignal(string stockId, DateTimeOffset tradingTime, string stockName, SIGNAL_CODE? value, decimal stockvalue)
         {
             s = stockId;
             t = tradingTime;
             b = Convert.ToInt32(value);
             n = stockName;
-            o = Convert.ToInt32(value);
+            o = stockvalue;
             v = 0;
         }
         public override decimal ScaleValue(decimal avg, decimal scale)
         {
-            b = o = avg + (b.Value - 2) * scale;
+            b = avg + (b.Value - 2) * scale;
             return b.Value;
         } 
     }
@@ -146,8 +146,9 @@ namespace MidaxLib
         decimal _scale = 0m;
         string DB_BUSINESSDATA = "business";
         string DB_HISTORICALDATA = "historical";
-        string DB_INSERTION = "insert into {0}data." + (Config.Settings["TRADING_MODE"] != "PRODUCTION" ? "dummy" : "") + "{1} ";
-        string DB_SELECTION = "select * from {0}data.{1} ";
+        static string DB_TABLENAME = "{0}data." + (Config.Settings["TRADING_MODE"] != "PRODUCTION" ? "dummy" : "") + "{1} ";
+        static string DB_INSERTION = "insert into " + DB_TABLENAME;
+        static string DB_SELECTION = "select * from " + DB_TABLENAME;
 
         public CassandraConnection() 
         {
@@ -187,13 +188,13 @@ namespace MidaxLib
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
         }
 
-        public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code)
+        public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue)
         {
             if (_session == null)
                 return;
             string tradeRef = signal.Trade == null ? null : " " + signal.Trade.Reference;
-            _session.Execute(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value) values ('{2}', {3}, '{4}', {5})",
-                DB_HISTORICALDATA, DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), tradeRef, Convert.ToInt32(code)));
+            _session.Execute(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value, stockvalue) values ('{2}', {3}, '{4}', {5}, {6})",
+                DB_HISTORICALDATA, DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), tradeRef, Convert.ToInt32(code), stockvalue));
         }
 
         public override void Insert(Trade trade)

@@ -24,7 +24,7 @@ namespace MidaxLib
         {
             if (Config.Settings.ContainsKey("TRADING_SIGNAL"))
                 _tradingSignal = Config.Settings["TRADING_SIGNAL"];
-            _amount = (Config.MarketSelectorEnabled || Config.TestReplayGeneratorEnabled) ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);
+            _amount = Config.MarketSelectorEnabled ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);
             _ptf = new Portfolio(MarketDataConnection.Instance.StreamClient);
         }
 

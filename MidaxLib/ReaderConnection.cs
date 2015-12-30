@@ -50,6 +50,8 @@ namespace MidaxLib
                 }
                 if (empty)
                     break;
+                if (!values[1].EndsWith(id) && !values[1].EndsWith("DUMMY_TRADE###"))
+                    continue;
                 DateTime curTime = DateTime.SpecifyKind(DateTime.Parse(values[idxTime]), DateTimeKind.Local);
                 if (!values[1].StartsWith("WMA_1D")) // Do not check time for daily market data
                 {
@@ -80,7 +82,8 @@ namespace MidaxLib
         void readSignalData(List<CqlQuote> quotes, string[] values)
         {
             decimal? value = (decimal)double.Parse(values[4]);
-            quotes.Add(new CqlQuote(values[1], DateTimeOffset.Parse(values[2]), values[1], value, value, 0));
+            decimal? stockvalue = (decimal)double.Parse(values[5]);
+            quotes.Add(new CqlQuote(values[1], DateTimeOffset.Parse(values[2]), values[1], value, stockvalue, 0));
         }
 
         void readTradeData(List<Trade> trades, string[] values)
@@ -97,6 +100,8 @@ namespace MidaxLib
 
         List<CqlQuote> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
         {
+            _csvReader.Close();
+            _csvReader = new StreamReader(File.OpenRead(_csvFile));
             return getRows<CqlQuote>(startTime, stopTime, type, id, readMarketData);
         }
 

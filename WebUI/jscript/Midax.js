@@ -29,6 +29,7 @@ function processResponses(jsonData) {
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var keyValueMap = {};
+    var profit = null;
     for (var marketData in jsonData) {
         jsonData[marketData].response.forEach(function (d) {
             d.t = new Date(d.t);
@@ -38,16 +39,30 @@ function processResponses(jsonData) {
                 t: d.t,
                 b: d.b,
                 o: d.o,
-                m: (d.b + d.o) / 2,
                 v: d.v
             });
         });
+        if (marketData.lastIndexOf("GetSignalData", 0) === 0) {
+            if (profit == null)
+                profit = 0;
+            var signalProfit = 0;
+            var buy = false;
+            var skipLast = (jsonData[marketData].response.length % 2 == 1);
+            jsonData[marketData].response.forEach(function (d) {
+                if (skipLast)
+                    skipLast = false;
+                else
+                    signalProfit += d.o * (buy ? -1 : 1);
+                buy = !buy;
+            });
+            profit += signalProfit;
+        }
     }
 
     var line = d3.svg.line()
         .interpolate("linear")
         .x(function (d) { return x(d.t); })
-        .y(function (d) { return y((d.b + d.o) / 2); });
+        .y(function (d) { return y(d.b); });
     
     var stocks = Object.keys(keyValueMap);
     color.domain(stocks);
@@ -63,8 +78,8 @@ function processResponses(jsonData) {
     x.domain(d3.extent(keyValueMap[firstStock], function (d) { return d.t; }));
 
     y.domain([
-      d3.min(quotes, function (c) { return d3.min(c.values, function (v) { return v.m; }); }),
-      d3.max(quotes, function (c) { return d3.max(c.values, function (v) { return v.m; }); })
+      d3.min(quotes, function (c) { return d3.min(c.values, function (v) { return v.b; }); }),
+      d3.max(quotes, function (c) { return d3.max(c.values, function (v) { return v.b; }); })
     ]);
 
     svg.append("g")
@@ -95,7 +110,7 @@ function processResponses(jsonData) {
 
     quote.append("text")
         .datum(function (d) { return { name: d.name, value: d.values[d.values.length - 1] }; })
-        .attr("transform", function (d) { return "translate(" + x(d.value.t) + "," + y(d.value.m) + ")"; })
+        .attr("transform", function (d) { return "translate(" + x(d.value.t) + "," + y(d.value.b) + ")"; })
         .attr("x", 3)
         .attr("dy", ".35em")
         .text(function (d) { return d.n; });
@@ -105,6 +120,14 @@ function processResponses(jsonData) {
         .attr("transform", "translate(50,30)")
         .style("font-size", "12px")
         .call(d3.legend)
+
+    if (profit != null)
+        svg.append("text")
+            .attr("x", (width / 2))
+            .attr("y", 5 - (margin.top / 2))
+            .attr("text-anchor", "middle")
+            .style("font-size", "16px")
+            .text("Performance: " + Math.round(profit * 100) / 100);
 }
 
 function internalAPI(functionName, jsonData, successCallback, errorCallback) {

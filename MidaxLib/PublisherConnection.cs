@@ -39,7 +39,7 @@ namespace MidaxLib
 
         public abstract void Insert(DateTime updateTime, MarketData mktData, Price price);
         public abstract void Insert(DateTime updateTime, Indicator indicator, decimal value);
-        public abstract void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code);
+        public abstract void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue);
         public abstract void Insert(Trade trade);
         public abstract void Insert(DateTime updateTime, Value profit);
         public abstract void Insert(DateTime updateTime, NeuralNetworkForCalibration calibratedNeuralNetwork);

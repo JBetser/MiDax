@@ -58,7 +58,7 @@ namespace MidaxLib
 
     public class IndicatorWMA : Indicator
     {
-        int _periodSeconds;
+        protected int _periodSeconds;
 
         public MarketData Asset { get { return _mktData[0]; } }
         public int Period { get { return _periodSeconds; } }
@@ -91,16 +91,21 @@ namespace MidaxLib
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
-            if (mktData.TimeSeries.Count > 1)
+            if (mktData.TimeSeries.TotalMinutes(updateTime) > (double)_periodSeconds / 60.0)
             {
-                Price avgPrice = Average(mktData, updateTime);
+                Price avgPrice = IndicatorFunc(mktData, updateTime);
                 if (avgPrice != null)
                 {
                     base.OnUpdate(mktData, updateTime, avgPrice);
                     Publish(updateTime, avgPrice.MidPrice());
                 }
             }
-        }        
+        }
+
+        protected virtual Price IndicatorFunc(MarketData mktData, DateTime updateTime)
+        {
+            return Average(mktData, updateTime);
+        }
 
         public Price Average(MarketData mktData, DateTime updateTime, bool acceptMissingValues = false, bool linearInterpolation = true)
         {
@@ -137,26 +142,16 @@ namespace MidaxLib
     }
 
     public class IndicatorWMVol : IndicatorWMA
-    {
-        int _periodSeconds;
-        
+    {        
         public IndicatorWMVol(MarketData mktData, int periodMinutes)
             : base("WMVol_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)
         {
             _periodSeconds = periodMinutes * 60;
         }
         
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime)
         {
-            if (mktData.TimeSeries.Count > 1)
-            {
-                Price avgPrice = AlgebricStdDev(mktData, updateTime);
-                if (avgPrice != null)
-                {
-                    base.OnUpdate(mktData, updateTime, avgPrice);
-                    Publish(updateTime, avgPrice.MidPrice());
-                }
-            }
+            return AlgebricStdDev(mktData, updateTime);
         }
 
         public Price AlgebricStdDev(MarketData mktData, DateTime updateTime, bool acceptMissingValues = false, bool linearInterpolation = true)

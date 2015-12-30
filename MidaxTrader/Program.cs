@@ -35,7 +35,7 @@ namespace MidaxTrader
             MarketDataConnection.Instance.Connect(null);
 
             MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
-            Model model = new ModelTest(index, new List<MarketData>());
+            Model model = new ModelTest(index, new List<MarketData>(), new List<MarketData>());
             Console.WriteLine("Starting signals...");
             model.StartSignals();
             Console.WriteLine("Trading...");
