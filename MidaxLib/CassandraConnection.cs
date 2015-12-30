@@ -146,7 +146,7 @@ namespace MidaxLib
         decimal _scale = 0m;
         string DB_BUSINESSDATA = "business";
         string DB_HISTORICALDATA = "historical";
-        static string DB_TABLENAME = "{0}data." + (Config.Settings["TRADING_MODE"] != "PRODUCTION" ? "dummy" : "") + "{1} ";
+        static string DB_TABLENAME = "{0}data." + (Config.Settings["TRADING_MODE"] == "UAT" ? "dummy" : "") + "{1} ";
         static string DB_INSERTION = "insert into " + DB_TABLENAME;
         static string DB_SELECTION = "select * from " + DB_TABLENAME;
 
