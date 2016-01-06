@@ -60,7 +60,7 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.Pivot));
+            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.Value.Pivot));
         }
     }
 
@@ -71,7 +71,7 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.R1));
+            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.Value.R1));
         }
     }
 
@@ -82,7 +82,7 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.R2));
+            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.Value.R2));
         }
     }
 
@@ -93,7 +93,7 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.R3));
+            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.Value.R3));
         }
     }
 
@@ -104,7 +104,7 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.S1));
+            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.Value.S1));
         }
     }
 
@@ -115,7 +115,7 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.S2));
+            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.Value.S2));
         }
     }
 
@@ -126,7 +126,7 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.S3));
+            Publish(updateTime, new Price(((Asset)_mktData[0]).PreviousDayLevels.Value.S3));
         }
     }
 }

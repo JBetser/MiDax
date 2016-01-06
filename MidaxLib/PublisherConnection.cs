@@ -42,7 +42,7 @@ namespace MidaxLib
         public abstract void Insert(DateTime updateTime, Value profit);
         public abstract void Insert(DateTime updateTime, NeuralNetworkForCalibration calibratedNeuralNetwork);
         public abstract void Insert(Market mktDetails);
-        public abstract MarketLevels GetMarketLevels(DateTime updateTime, string epic);
+        public abstract MarketLevels? GetMarketLevels(DateTime updateTime, string epic);
         
         public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData, Dictionary<KeyValuePair<string, DateTime>, double> profitData)
         {

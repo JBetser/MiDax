@@ -84,8 +84,8 @@ namespace MidaxLib
 
     public class Asset : MarketData
     {
-        MarketLevels _marketLevels;
-        public MarketLevels PreviousDayLevels { get { return _marketLevels; } }
+        MarketLevels? _marketLevels;
+        public MarketLevels? PreviousDayLevels { get { return _marketLevels; } }
 
         public Asset(string name_id, DateTime updateTime) : base(name_id)
         {

@@ -21,6 +21,7 @@ namespace MidaxTester
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["PUBLISHING_START_TIME"] = "2015-08-26 00:00:01";
             dicSettings["PUBLISHING_STOP_TIME"] = "2015-08-26 23:59:59";
+            //dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";
             //dicSettings["PUBLISHING_CSV"] = @"..\..\expected_results\new_results.csv";   // uncomment this line to generate new test results
             dicSettings["REPLAY_MODE"] = "CSV";
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);

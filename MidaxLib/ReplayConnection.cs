@@ -170,7 +170,7 @@ namespace MidaxLib
 
         void IAbstractStreamingClient.GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent evt)
         {
-            MarketLevels mktLevels = ReplayTester.Instance.GetMarketLevels(_startTime, mktData.Id);
+            MarketLevels mktLevels = ReplayTester.Instance.GetMarketLevels(_startTime, mktData.Id).Value;
             Market mkt = new Market();
             mkt.high = mktLevels.High; mkt.low = mktLevels.Low; mkt.bid = mktLevels.CloseBid; mkt.offer = mktLevels.CloseOffer;
             evt(mkt);
@@ -382,7 +382,7 @@ namespace MidaxLib
             throw new ApplicationException("End of day data publishing not implemented");
         }
 
-        public override MarketLevels GetMarketLevels(DateTime updateTime, string epic)
+        public override MarketLevels? GetMarketLevels(DateTime updateTime, string epic)
         {
             return ReplayTester.Instance.GetMarketLevels(updateTime, epic);
         }
@@ -526,7 +526,7 @@ namespace MidaxLib
         {
         }
 
-        public override MarketLevels GetMarketLevels(DateTime updateTime, string epic)
+        public override MarketLevels? GetMarketLevels(DateTime updateTime, string epic)
         {
             _mktLevels = new MarketLevels(10200m, 12500m, 11000m, 11100m);
             return _mktLevels;

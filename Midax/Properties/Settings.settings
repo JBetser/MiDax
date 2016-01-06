@@ -99,5 +99,8 @@
     <Setting Name="TRADING_SIGNAL" Type="System.String" Scope="Application">
       <Value Profile="(Default)">MacD_10_60_IX.D.DAX.DAILY.IP</Value>
     </Setting>
+    <Setting Name="PUBLISHING_MARKET_LEVELS_TIME" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">21:00:00</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

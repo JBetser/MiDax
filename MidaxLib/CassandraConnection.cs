@@ -238,15 +238,25 @@ namespace MidaxLib
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseOffer_" + mktDetails.epic, ToUnixTimestamp(mktDetails.updateTime), mktDetails.offer));
         }
 
-        public override MarketLevels GetMarketLevels(DateTime updateTime, string epic)
+        public override MarketLevels? GetMarketLevels(DateTime updateTime, string epic)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             // process previous day
             updateTime = updateTime.AddDays(-1);
             DateTime prevDay = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 22, 0, 0);
-            RowSet value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "LVLHigh_" + epic, prevDay));
+            RowSet value = null;
+            try
+            {
+                value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                    "LVLHigh_" + epic, prevDay));
+            }
+            catch
+            {
+                value = null;
+            }
+            if (value == null)
+                return null;
             decimal high = (decimal)value.First()[0];
             value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
                 "LVLLow_" + epic, prevDay));
