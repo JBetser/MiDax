@@ -82,17 +82,17 @@ namespace MidaxWebService
 
         public string GetStockData(string begin, string end, string stockId)
         {
-            return _midaxDB.GetJSON(DateTime.Parse(begin), DateTime.Parse(end), CassandraConnection.DATATYPE_STOCK, stockId);
+            return _midaxDB.GetJSON(Config.ParseDateTimeLocal(begin), Config.ParseDateTimeLocal(end), CassandraConnection.DATATYPE_STOCK, stockId, true);
         }
 
         public string GetIndicatorData(string begin, string end, string indicatorId)
         {
-            return _midaxDB.GetJSON(DateTime.Parse(begin), DateTime.Parse(end), CassandraConnection.DATATYPE_INDICATOR, indicatorId);
+            return _midaxDB.GetJSON(Config.ParseDateTimeLocal(begin), Config.ParseDateTimeLocal(end), CassandraConnection.DATATYPE_INDICATOR, indicatorId, true);
         }
 
         public string GetSignalData(string begin, string end, string signalId)
         {
-            return _midaxDB.GetJSON(DateTime.Parse(begin), DateTime.Parse(end), CassandraConnection.DATATYPE_SIGNAL, signalId);
+            return _midaxDB.GetJSON(Config.ParseDateTimeLocal(begin), Config.ParseDateTimeLocal(end), CassandraConnection.DATATYPE_SIGNAL, signalId, false);
         }
     }    
 }

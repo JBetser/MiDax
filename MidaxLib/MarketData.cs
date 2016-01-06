@@ -21,7 +21,7 @@ namespace MidaxLib
             if (!_replay.HasValue)
                 _replay = Config.Settings["TRADING_MODE"] == "REPLAY";
         }
-
+        
         public delegate void Tick(MarketData mktData, DateTime time, Price value);
 
         public virtual void Subscribe(Tick eventHandler)
@@ -79,6 +79,49 @@ namespace MidaxLib
         {
             get { return _values; }
             set { _values = value; }
+        }
+    }
+
+    public class Asset : MarketData
+    {
+        MarketLevels _marketLevels;
+        public MarketLevels PreviousDayLevels { get { return _marketLevels; } }
+
+        public Asset(string name_id, DateTime updateTime) : base(name_id)
+        {
+            _marketLevels = PublisherConnection.Instance.GetMarketLevels(updateTime, _id);
+        }
+    }
+
+    public struct MarketLevels
+    {
+        public decimal Low;
+        public decimal High;
+        public decimal CloseBid;
+        public decimal CloseOffer;
+        public decimal CloseMid;
+        public decimal Pivot;
+        public decimal R1;
+        public decimal R2;
+        public decimal R3;
+        public decimal S1;
+        public decimal S2;
+        public decimal S3;
+
+        public MarketLevels(decimal low, decimal high, decimal closeBid, decimal closeOffer)
+        {
+            Low = low;
+            High = high;
+            CloseBid = closeBid;
+            CloseOffer = closeOffer;
+            CloseMid = (CloseBid + CloseOffer) / 2m;
+            Pivot = (High + Low + CloseMid) / 3m;
+            R1 = 2m * Pivot - Low;
+            S1 = 2m * Pivot - High;
+            R2 = Pivot + (High - Low);
+            S2 = Pivot - (High - Low);
+            R3 = R1 + (High - Low);
+            S3 = S1 - (High - Low);
         }
     }
 }

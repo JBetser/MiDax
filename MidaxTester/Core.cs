@@ -21,7 +21,6 @@ namespace MidaxTester
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["PUBLISHING_START_TIME"] = "2015-08-26 00:00:01";
             dicSettings["PUBLISHING_STOP_TIME"] = "2015-08-26 23:59:59";
-            dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";
             //dicSettings["PUBLISHING_CSV"] = @"..\..\expected_results\new_results.csv";   // uncomment this line to generate new test results
             dicSettings["REPLAY_MODE"] = "CSV";
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
@@ -32,8 +31,7 @@ namespace MidaxTester
             dicSettings["TRADING_MODE"] = "REPLAY";
             dicSettings["TRADING_SIGNAL"] = "MacD_1_5_IX.D.DAX.DAILY.IP";
             dicSettings["TRADING_LIMIT_PER_BP"] = "10";
-            dicSettings["TRADE_EXPIRY_DAYS"] = "1";
-            dicSettings["TRADE_CURRENCY"] = "GBP";
+            dicSettings["TRADING_CURRENCY"] = "GBP";
             Config.Settings = dicSettings;
             
             Console.WriteLine("Testing calibration...");
@@ -125,93 +123,100 @@ namespace MidaxTester
             ann.Train(annInputs, annOutputs);
 
             MarketDataConnection.Instance.Connect(null);
-            
-            MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
-            ModelTest model = new ModelQuickTest(index);
+
+            var index = new Asset("DAX:IX.D.DAX.DAILY.IP", Config.ParseDateTimeLocal(dicSettings["TRADING_START_TIME"]));
+            ReplayTester.Instance.ModelTest = new ModelQuickTest(index);
             Console.WriteLine("Testing live indicators and signals...");
-            model.StartSignals();
+            ReplayTester.Instance.ModelTest.StartSignals();
+            // test that the right numer of trades was placed. this is an extra sanity check to make sure the program is not idle
+            if (ReplayTester.Instance.NbProducedTrades != ReplayTester.Instance.NbExpectedTrades)
+                ReplayTester.Instance.ModelTest.ProcessError(string.Format("the model did not produced the expected number of trades. It produced {0} trades instead of {1} expected",
+                                                ReplayTester.Instance.NbProducedTrades, ReplayTester.Instance.NbExpectedTrades));
             Console.WriteLine("Testing daily indicators...");
+            ReplayTester.Instance.ModelTest.StopSignals();
+            ReplayTester.Instance.ModelTest.PublishMarketLevels();
                 
-            if (dicSettings.ContainsKey("PUBLISHING_CSV"))
-                model.StopSignals();
-            else
+            if (!dicSettings.ContainsKey("PUBLISHING_CSV"))
             {
                 // Test exceptions. the program is expected to throw exceptions here, just press continue if you are debugging
                 // all exceptions should be handled, and the program should terminate with a success message box
                 Console.WriteLine("Testing expected exceptions...");
                 string expected;
                 List<string> testError = new List<string>();
-                testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");
-                dicSettings["REPLAY_CSV"] = Config.TestList(testError);
+                testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");                
                 MarketDataConnection.Instance.Connect(null);                
                 bool success = false;
-                var modelErr = new ModelQuickTest(index);
+                ModelMacDTest modelBis = new ModelQuickTest(index);
+                dicSettings["REPLAY_CSV"] = Config.TestList(testError);
+                ReplayTester.Instance.ModelTest = new ModelQuickTest(index);
                 try
                 {
-                    modelErr.StartSignals();
+                    modelBis.StartSignals();
+                    MarketDataConnection.Instance.Connect(null);
+                    ReplayTester.Instance.ModelTest.StartSignals();
                 }
                 catch (Exception exc)
                 {
                     expected = "Time series do not accept values in the past";
                     success = (exc.Message == expected);
                     if (!success)
-                        model.ProcessError(exc.Message, expected);
+                        ReplayTester.Instance.ModelTest.ProcessError(exc.Message, expected);
                 }
                 if (!success)
-                    model.ProcessError("An expected exception has not been thrown");
+                    ReplayTester.Instance.ModelTest.ProcessError("An expected exception has not been thrown");
                 try
                 {
-                    modelErr.StopSignals();
+                    ReplayTester.Instance.ModelTest.StopSignals();
                 }
                 catch (Exception exc)
                 {
                     expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9970.69755260538438389765106";
                     success = (exc.Message == expected);
                     if (!success)
-                        model.ProcessError(exc.Message, expected);
+                        ReplayTester.Instance.ModelTest.ProcessError(exc.Message, expected);
                 }
                 try
                 {
-                    model.StopSignals();
+                    ReplayTester.Instance.ModelTest.StopSignals();
                 }
                 catch (Exception exc)
                 {
                     expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9970.69755260538438389765106";
                     success = (exc.Message == expected);
                     if (!success)
-                        model.ProcessError(exc.Message, expected);
+                        ReplayTester.Instance.ModelTest.ProcessError(exc.Message, expected);
                 }
                 success = false;
                 try
                 {
                     MarketDataConnection.Instance = new ReplayConnection();
                     MarketDataConnection.Instance.Connect(null);
-                    model = new ModelQuickTest(new MarketData(index.Id));
-                    model.StartSignals();
+                    ReplayTester.Instance.ModelTest = new ModelQuickTest(new Asset(index.Id, Config.ParseDateTimeLocal(dicSettings["TRADING_START_TIME"])));
+                    ReplayTester.Instance.ModelTest.StartSignals();
                 }
                 catch (Exception exc)
                 {
                     expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9976.135 != 9975.736666666666666666666747";
                     success = (exc.Message == expected);
                     if (!success)
-                        model.ProcessError(exc.Message, expected);
+                        ReplayTester.Instance.ModelTest.ProcessError(exc.Message, expected);
                 }
                 if (!success)
-                    model.ProcessError("An expected exception has not been thrown");
+                    ReplayTester.Instance.ModelTest.ProcessError("An expected exception has not been thrown");
                 success = false;
                 try
                 {
-                    model.StopSignals();
+                    ReplayTester.Instance.ModelTest.StopSignals();
                 }
                 catch (Exception exc)
                 {
                     expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9983.779772679923146369004401";
                     success = (exc.Message == expected);
                     if (!success)
-                        model.ProcessError(exc.Message, expected);
+                        ReplayTester.Instance.ModelTest.ProcessError(exc.Message, expected);
                 }
                 if (!success)
-                    model.ProcessError("An expected exception has not been thrown");
+                    ReplayTester.Instance.ModelTest.ProcessError("An expected exception has not been thrown");
                 success = false;
             }            
         }

@@ -12,8 +12,8 @@ namespace Calibrator
     {
         static void Main(string[] args)
         {
-            DateTime start = DateTime.Parse(args[0]);
-            DateTime end = DateTime.Parse(args[1]);
+            DateTime start = Config.ParseDateTimeLocal(args[0]);
+            DateTime end = Config.ParseDateTimeLocal(args[1]);
 
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";

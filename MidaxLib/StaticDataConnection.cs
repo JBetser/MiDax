@@ -9,6 +9,7 @@ namespace MidaxLib
     public interface IStaticDataConnection
     {
         int GetAnnLatestVersion(string annid, string stockid);
+        List<decimal> GetAnnWeights(string annid, string stockid, int version);
     }
 
     public class StaticDataConnection

@@ -23,7 +23,7 @@ namespace MidaxLib
             {
                 if (_igStreamApiClient != null)
                 {
-                    _tradeSubscriptionStk = _igStreamApiClient.SubscribeToTradeSubscription(this);
+                    _tradeSubscriptionStk = _igStreamApiClient.SubscribeToPositions(this);
                     Log.Instance.WriteEntry("TradeSubscription : Subscribe");
                 }
             }
@@ -32,14 +32,7 @@ namespace MidaxLib
                 Log.Instance.WriteEntry("Portfolio subscription error: " + ex.Message, System.Diagnostics.EventLogEntryType.Error);
             }
         }
-
-        public Position Position(string stockid)
-        {
-            if (!_positions.ContainsKey(stockid))
-                _positions.Add(stockid, new Position(stockid));
-            return _positions[stockid];
-        }
-
+        
         public void ClosePosition(Trade trade)
         {
             _igStreamApiClient.ClosePosition(trade, OnTradeBooked);
@@ -67,10 +60,12 @@ namespace MidaxLib
         {
             if (newTrade == null)
                 return;
+            if (!_positions.ContainsKey(newTrade.Epic))
+                _positions.Add(newTrade.Epic, new Position(newTrade.Epic));
             _igStreamApiClient.BookTrade(newTrade, OnTradeBooked);
         }
 
-        Position GetPosition(string itemName)
+        public Position GetPosition(string itemName)
         {
             if (!_positions.ContainsKey(itemName))
                 _positions.Add(itemName, new Position(itemName));
@@ -79,17 +74,20 @@ namespace MidaxLib
 
         void IHandyTableListener.OnRawUpdatesLost(int itemPos, string itemName, int lostUpdates)
         {
-            GetPosition(itemName).OnRawUpdatesLost(itemPos, lostUpdates);
+            foreach (var item in _positions)
+                item.Value.OnRawUpdatesLost(lostUpdates);
         }
 
         void IHandyTableListener.OnSnapshotEnd(int itemPos, string itemName)
         {
-            GetPosition(itemName).OnSnapshotEnd(itemPos);
+            foreach (var item in _positions)
+                item.Value.OnSnapshotEnd();
         }
 
         void IHandyTableListener.OnUnsubscr(int itemPos, string itemName)
         {
-            GetPosition(itemName).OnUnsubscr(itemPos);
+            foreach (var item in _positions)
+                item.Value.OnUnsubscr();
         }
 
         void IHandyTableListener.OnUnsubscrAll()
@@ -100,7 +98,8 @@ namespace MidaxLib
 
         void IHandyTableListener.OnUpdate(int itemPos, string itemName, IUpdateInfo update)
         {
-            GetPosition(itemName).OnUpdate(itemPos, update);
+            foreach (var item in _positions)
+                item.Value.OnUpdate(update);
         }
     }
 }

@@ -79,15 +79,7 @@ namespace MidaxLib
             : base(indicator.Id, new List<MarketData> { indicator.Asset })
         {
             _periodSeconds = indicator.Period;
-        }
-
-        // Whole day average
-        public IndicatorWMA(MarketData mktData)
-            : base("WMA_1D_" + mktData.Id, new List<MarketData> { mktData })
-        {
-            TimeSpan timeDiff = (DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]) - DateTime.Parse(Config.Settings["PUBLISHING_START_TIME"]));
-            _periodSeconds = (timeDiff.Hours * 60 + timeDiff.Minutes) * 60 + timeDiff.Seconds;
-        }
+        }        
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
@@ -186,43 +178,6 @@ namespace MidaxLib
             }
             var += (beginPeriodValue.Value - avg) * weight * (decimal)(updateTime - beginPeriodValue.Key).TotalSeconds;
             return var;
-        }
-    }
-
-    public abstract class IndicatorLevel : IndicatorWMA
-    {
-        public IndicatorLevel(MarketData mktData)
-            : base(mktData)
-        {
-        }
-
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
-        {
-        }
-
-        public abstract void Publish(DateTime updateTime);
-    }
-
-    public class IndicatorLevelMean : IndicatorLevel
-    {
-        public IndicatorLevelMean(MarketData mktData)
-            : base(mktData)
-        {
-        }
-
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
-        {
-        }
-
-        public override void Publish(DateTime updateTime)
-        {
-            Price avg = Average(_mktData[0], updateTime, true);
-            Publish(updateTime, avg.MidPrice());
-        }
-
-        public Price Average()
-        {
-            return Average(_mktData[0], DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]), true);
         }
     }
 }

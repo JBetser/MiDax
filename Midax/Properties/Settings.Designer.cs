@@ -145,7 +145,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("08:00:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("07:00:00")]
         public string TRADING_START_TIME {
             get {
                 return ((string)(this["TRADING_START_TIME"]));
@@ -208,19 +208,10 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        public string TRADE_EXPIRY_DAYS {
-            get {
-                return ((string)(this["TRADE_EXPIRY_DAYS"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("GBP")]
-        public string TRADE_CURRENCY {
+        public string TRADING_CURRENCY {
             get {
-                return ((string)(this["TRADE_CURRENCY"]));
+                return ((string)(this["TRADING_CURRENCY"]));
             }
         }
         

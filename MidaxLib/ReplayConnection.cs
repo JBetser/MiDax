@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Cassandra;
+using dto.endpoint.search;
 using Lightstreamer.DotNet.Client;
 
 namespace MidaxLib
@@ -81,7 +82,7 @@ namespace MidaxLib
         Dictionary<string, List<CqlQuote>> _expectedIndicatorData = null;
         Dictionary<string, List<CqlQuote>> _expectedSignalData = null;
         Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
-        Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;
+        Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;        
         
         bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
@@ -93,8 +94,8 @@ namespace MidaxLib
         
         public void Connect(string username, string password, string apiKey)
         {
-            _startTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_START_TIME"]), DateTimeKind.Utc);
-            _stopTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]), DateTimeKind.Utc);
+            _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
+            _stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
             _testReplayFiles.Clear();
             if (Config.Settings["REPLAY_MODE"] == "DB")
             {
@@ -133,9 +134,8 @@ namespace MidaxLib
         }
 
         IHandyTableListener _tradingEventTable = null;
-        Dictionary<string, int> _positions = new Dictionary<string, int>();
-        
-        SubscribedTableKey IAbstractStreamingClient.SubscribeToTradeSubscription(IHandyTableListener tableListener)
+
+        SubscribedTableKey IAbstractStreamingClient.SubscribeToPositions(IHandyTableListener tableListener)
         {
             _tradingEventTable = tableListener;
             return null;
@@ -149,22 +149,31 @@ namespace MidaxLib
         void IAbstractStreamingClient.BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
         {
             trade.Reference = "###DUMMY_TRADE###";
-            trade.ConfirmationTime = trade.TradingTime; 
-            if (!_positions.ContainsKey(trade.Epic))
-                _positions.Add(trade.Epic, trade.Size * (trade.Direction == SIGNAL_CODE.BUY ? 1 : -1));
-            else
-                _positions[trade.Epic] += trade.Size * (trade.Direction == SIGNAL_CODE.BUY ? 1 : -1);
+            trade.ConfirmationTime = trade.TradingTime;
+            // TODO: remove this hack
+            ReplayTester.Instance.ModelTest.PTF.GetPosition(trade.Epic).Value += trade.Size * (trade.Direction == SIGNAL_CODE.BUY ? 1 : -1);
             onTradeBooked(trade);
-            _tradingEventTable.OnUpdate(_positions[trade.Epic], trade.Epic, null);
+            // TODO: do the real update here instead
+            _tradingEventTable.OnUpdate(0, trade.Epic, null);
         }
 
         void IAbstractStreamingClient.ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
         {
             trade.Reference = "###CLOSE_DUMMY_TRADE###";
             trade.ConfirmationTime = trade.TradingTime;
-            _positions[trade.Epic] = 0;
+            // TODO: remove this hack
+            ReplayTester.Instance.ModelTest.PTF.GetPosition(trade.Epic).Value = 0;
             onTradeClosed(trade);
-            _tradingEventTable.OnUpdate(_positions[trade.Epic], trade.Epic, null);
+            // TODO: do the real update here instead
+            _tradingEventTable.OnUpdate(0, trade.Epic, null);
+        }
+
+        void IAbstractStreamingClient.GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent evt)
+        {
+            MarketLevels mktLevels = ReplayTester.Instance.GetMarketLevels(_startTime, mktData.Id);
+            Market mkt = new Market();
+            mkt.high = mktLevels.High; mkt.low = mktLevels.Low; mkt.bid = mktLevels.CloseBid; mkt.offer = mktLevels.CloseOffer;
+            evt(mkt);
         }
 
         protected void replay(Dictionary<string, List<CqlQuote>> priceDataSrc, IHandyTableListener tableListener)
@@ -281,7 +290,14 @@ namespace MidaxLib
 
         int IStaticDataConnection.GetAnnLatestVersion(string annid, string stockid)
         {
-            return -1;
+            return 1;
+        }
+
+        List<decimal> IStaticDataConnection.GetAnnWeights(string annid, string stockid, int version)
+        {
+            return new List<decimal> {  72.3059189398836m, 72.8785271734858m, 81.873849047948m, 71.6605471639554m, 
+                99.3678597133658m, -1.39731049606147m, -0.973839446848656m, 0.854679349838304m, 2.10407644665642m, 
+                26.6526593970665m, 0.0758744148816272m, -0.15246543443817m, 0.0886880451059489m };
         }
     }
 
@@ -361,6 +377,16 @@ namespace MidaxLib
             throw new ApplicationException("ANN insertion not implemented");
         }
 
+        public override void Insert(Market mktDetails)
+        {
+            throw new ApplicationException("End of day data publishing not implemented");
+        }
+
+        public override MarketLevels GetMarketLevels(DateTime updateTime, string epic)
+        {
+            return ReplayTester.Instance.GetMarketLevels(updateTime, epic);
+        }
+
         public override string Close()
         {
             string csvContent = _csvStockStringBuilder.ToString();
@@ -383,6 +409,23 @@ namespace MidaxLib
     public class ReplayTester : PublisherConnection
     {
         public const decimal TOLERANCE = 1e-4m;
+        MarketLevels _mktLevels;
+        int _nbTrades = 0;
+
+        public int NbExpectedTrades { get { return _expectedTradeData.Count; } }
+        public int NbProducedTrades { get { return _nbTrades; } }
+
+        Model _model = null;
+        public Model ModelTest {
+            get
+            {
+                return _model;
+            }
+            set
+            {
+                _model = value;
+            }
+        }
 
         static public new ReplayTester Instance
         {
@@ -391,7 +434,7 @@ namespace MidaxLib
                 return (ReplayTester)_instance;
             }
         }
-
+        
         public ReplayTester()
         {
         }
@@ -430,6 +473,7 @@ namespace MidaxLib
 
         public override void Insert(Trade trade)
         {
+            _nbTrades++;
             var tradeKey = new KeyValuePair<string, DateTime>(trade.Epic, trade.TradingTime);
             if (Math.Abs(_expectedTradeData[tradeKey].Price - trade.Price) > TOLERANCE)
             {
@@ -461,12 +505,31 @@ namespace MidaxLib
             }
         }
 
+        public override void Insert(Market mktDetails)
+        {
+            if (mktDetails.high != _mktLevels.High || mktDetails.low != _mktLevels.Low || 
+                mktDetails.bid != _mktLevels.CloseBid || mktDetails.offer != _mktLevels.CloseOffer)
+            {
+                string error = string.Format("Test failed: market levels " + mktDetails.epic + " time " + Config.ParseDateTimeLocal(mktDetails.updateTime).ToShortTimeString() +
+                    " expected levels (high, low, bid, offer) {0} {1} {2} {3} != {4} {5} {6} {7} ", _mktLevels.High, _mktLevels.Low, _mktLevels.CloseBid, _mktLevels.CloseOffer,
+                    mktDetails.high, mktDetails.low, mktDetails.bid, mktDetails.offer);
+                Log.Instance.WriteEntry(error, EventLogEntryType.Error);
+                throw new ApplicationException(error);
+            }
+        }
+
         public override void Insert(DateTime updateTime, Value profit)
         {
         }
 
         public override void Insert(DateTime updateTime, NeuralNetworkForCalibration ann)
         {
+        }
+
+        public override MarketLevels GetMarketLevels(DateTime updateTime, string epic)
+        {
+            _mktLevels = new MarketLevels(10200m, 12500m, 11000m, 11100m);
+            return _mktLevels;
         }
 
         public override string Close()

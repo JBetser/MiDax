@@ -46,8 +46,11 @@ function processResponses(jsonData) {
             if (profit == null)
                 profit = 0;
             var signalProfit = 0;
-            var buy = jsonData[marketData].response[0] < jsonData[marketData].response[1];
+            var buyFirst = jsonData[marketData].response[jsonData[marketData].response.length - 1].b < jsonData[marketData].response[jsonData[marketData].response.length - 2].b;
+            if (buyFirst)
+                jsonData[marketData].response.splice(jsonData[marketData].response.length - 1, 1);
             var skipLast = (jsonData[marketData].response.length % 2 == 1);
+            var buy = !skipLast;
             jsonData[marketData].response.forEach(function (d) {
                 if (skipLast)
                     skipLast = false;

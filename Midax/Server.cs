@@ -53,14 +53,14 @@ public class Server
 
                 MarketDataConnection.Instance.Connect(connectionLostCallback);
 
-                MarketData index = new MarketData(dicSettings["INDEX"]);
+                var index = new Asset(dicSettings["INDEX"], DateTime.Now);
                 List<MarketData> stocks = new List<MarketData>();
                 foreach (string stock in stockList)
-                    stocks.Add(new MarketData(stock));
+                    stocks.Add(new Asset(stock, DateTime.Now));
                 List<MarketData> volIndices = new List<MarketData>();
                 volIndices.Add(new MarketData(dicSettings["VOLATILITY_2M"]));
                 volIndices.Add(new MarketData(dicSettings["VOLATILITY_3M"]));
-                _model = new ModelMidax(index, stocks, volIndices);
+                _model = new ModelMacD(index, stocks, volIndices);
                 adapter.add(new MidaxIceI(_model, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
 
@@ -73,12 +73,14 @@ public class Server
                 var timerStart = new System.Threading.Timer(startSignalCallback);
                 var timerStop = new System.Threading.Timer(stopSignalCallback);
                 var timerClosePositions = new System.Threading.Timer(closePositionsCallback);
-
+                var timerPublishMarketLevels = new System.Threading.Timer(publishMarketLevelsCallback);
+                
                 // Figure how much time until PUBLISHING_STOP_TIME
                 DateTime now = DateTime.Now;
-                DateTime startTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_START_TIME"]), DateTimeKind.Utc);
-                DateTime stopTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]), DateTimeKind.Utc);
-                DateTime closePositionsTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["FORCE_CLOSE_POSITIONS_TIME"]), DateTimeKind.Utc);
+                DateTime startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
+                DateTime stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
+                DateTime closePositionsTime = Config.ParseDateTimeLocal(Config.Settings["FORCE_CLOSE_POSITIONS_TIME"]);
+                DateTime publishMarketLevelsTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_MARKET_LEVELS_TIME"]);
 
                 // If it's already past PUBLISHING_STOP_TIME, wait until PUBLISHING_STOP_TIME tomorrow  
                 int msUntilStartTime = 10;
@@ -94,10 +96,14 @@ public class Server
                 else
                     msUntilStartTime = (int)((startTime - now).TotalMilliseconds);
                 int msUntilStopTime = (int)((stopTime - now).TotalMilliseconds);
+                int msUntilCloseTime = (int)((closePositionsTime - now).TotalMilliseconds);
+                int msUntilPublishLevelsTime = (int)((publishMarketLevelsTime - now).TotalMilliseconds);
                 
-                // Set the timer to elapse only once, at PUBLISHING_STOP_TIME.
+                // Set the timers to elapse only once, at their respective scheduled times
                 timerStart.Change(msUntilStartTime, Timeout.Infinite);
                 timerStop.Change(msUntilStopTime, Timeout.Infinite);
+                timerClosePositions.Change(msUntilCloseTime, Timeout.Infinite);
+                timerPublishMarketLevels.Change(msUntilPublishLevelsTime, Timeout.Infinite);
 
                 communicator().waitForShutdown();
             }
@@ -143,6 +149,13 @@ public class Server
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Connected. Restarting the signals...", EventLogEntryType.Information);
             MarketDataConnection.Instance.StartListening();
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
+        }
+
+        void publishMarketLevelsCallback(object state)
+        {
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Publiching market levels...", EventLogEntryType.Information);
+            _model.PublishMarketLevels();
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Market levels published", EventLogEntryType.Information);
         }
     }
 

@@ -8,15 +8,11 @@ using System.Windows.Forms;
 
 namespace MidaxLib
 {
-    public class ModelTest : ModelMidax
-    {
-        bool _replayPopup = false;
-
-        public ModelTest(MarketData daxIndex, List<MarketData> daxStocks, List<MarketData> volIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
+    public class ModelMacDTest : ModelMacD
+    {        
+        public ModelMacDTest(MarketData daxIndex, List<MarketData> daxStocks, List<MarketData> volIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
             : base(daxIndex, daxStocks, volIndices, lowPeriod, midPeriod, highPeriod)
-        {
-            if (Config.Settings.ContainsKey("REPLAY_POPUP"))
-                _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
+        {            
         }
 
         protected override void Buy(Signal signal, DateTime time, Price value)
@@ -31,9 +27,9 @@ namespace MidaxLib
             base.Sell(signal, time, value);
             string info = time + " Signal " + signal.Id + " sell " + signal.Asset.Id + " " + value.Bid;
             Console.WriteLine(info);
-        }
-
-        public void ProcessError(string message, string expected = "")
+        }     
+   
+        public override void ProcessError(string message, string expected = "")
         {
             string info = "An exception message test failed; " + (expected == "" ? message :
                 "expected \"" + expected + "\" != \"" + message + "\"");
@@ -44,7 +40,7 @@ namespace MidaxLib
         }
     }
 
-    public class ModelQuickTest : ModelTest
+    public class ModelQuickTest : ModelMacDTest
     {
         public ModelQuickTest(MarketData daxIndex)
             : base(daxIndex, new List<MarketData>(), new List<MarketData>(), 1, 5, 10)

@@ -17,7 +17,7 @@ namespace MidaxLib
             foreach (var epic in epics)
             {
                 // for each quote, associate the observed gains in the near future
-                var mktData = new MarketData(epic);
+                var mktData = new Asset(epic, priceData[epic].First().t.UtcDateTime);
                 var wmaLow = new IndicatorWMA(mktData, 2);
                 var wmaMid = new IndicatorWMA(mktData, 10);
                 var wmaHigh = new IndicatorWMA(mktData, 60);
@@ -38,7 +38,7 @@ namespace MidaxLib
                 var openPrice = priceData[epic][0];
                 foreach (var quote in priceData[epic])
                 {
-                    if (quote.t.TimeOfDay < DateTime.Parse(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
+                    if (quote.t.TimeOfDay < Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
                         continue;
                     var futureVal = wmaLow.Average(mktData, quote.t.UtcDateTime.AddMinutes(2));
                     var profit = (int)Math.Round(futureVal.Mid() - quote.MidPrice());
@@ -103,8 +103,8 @@ namespace MidaxLib
         {
             get { return _stockid; }
         }
-        string _version;
-        public string Version
+        int _version;
+        public int Version
         {
             get { return _version; }
         }
@@ -115,8 +115,8 @@ namespace MidaxLib
             _annid = id;
             _stockid = stockid;
             if (version == -1)
-                version = StaticDataConnection.Instance.GetAnnLatestVersion(_annid, _stockid);
-            _version = version.ToString();
+                version = StaticDataConnection.Instance.GetAnnLatestVersion(_annid, _stockid) + 1;
+            _version = version;
         }
 
         public void Train(double max_error)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using dto.endpoint.search;
 
 namespace MidaxLib
 {
@@ -24,12 +25,7 @@ namespace MidaxLib
         {
             get
             {
-                if (Config.Settings.ContainsKey("PUBLISHING_DB") && Config.Settings.ContainsKey("DB_CONTACTPOINT"))
-                {
-                    if (Config.Settings["PUBLISHING_DB"] != Config.Settings["DB_CONTACTPOINT"])
-                        throw new ApplicationException("The publishing db cannot be different from the source db");
-                }
-                bool cassandra = Config.Settings.ContainsKey("PUBLISHING_DB") || (!Config.ReplayEnabled && !Config.MarketSelectorEnabled);
+                bool cassandra = Config.Settings.ContainsKey("DB_CONTACTPOINT");
                 return _instance == null ? (cassandra ? _instance = new CassandraConnection() : 
                     (Config.Settings.ContainsKey("PUBLISHING_CSV") ? _instance = new ReplayPublisher() :
                                                                         _instance = new ReplayTester()))
@@ -37,13 +33,17 @@ namespace MidaxLib
             }
         }
 
+        public delegate void PublishMarketLevelsEvent(Market mktDetails);
+
         public abstract void Insert(DateTime updateTime, MarketData mktData, Price price);
         public abstract void Insert(DateTime updateTime, Indicator indicator, decimal value);
         public abstract void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue);
         public abstract void Insert(Trade trade);
         public abstract void Insert(DateTime updateTime, Value profit);
         public abstract void Insert(DateTime updateTime, NeuralNetworkForCalibration calibratedNeuralNetwork);
-
+        public abstract void Insert(Market mktDetails);
+        public abstract MarketLevels GetMarketLevels(DateTime updateTime, string epic);
+        
         public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData, Dictionary<KeyValuePair<string, DateTime>, double> profitData)
         {
             _expectedIndicatorData = new Dictionary<string,TimeSeries>();
@@ -71,6 +71,11 @@ namespace MidaxLib
         protected static long ToUnixTimestamp(DateTime dateTime)
         {
             return Convert.ToInt64((DateTime.SpecifyKind(dateTime,DateTimeKind.Utc) - new DateTime(1970, 1, 1).ToUniversalTime()).TotalMilliseconds);
+        }
+
+        protected static long ToUnixTimestamp(string dateTime)
+        {
+            return ToUnixTimestamp(DateTime.Parse(dateTime));
         }
     }
 }

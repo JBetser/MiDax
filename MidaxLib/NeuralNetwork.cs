@@ -185,8 +185,7 @@ namespace MidaxLib
         public double Error { get { return _totalError; } }
         double _learningRate = -1.0;
         public double LearningRatePct { get { return _learningRate * 100.0; } }
-        List<decimal> _weights;
-        public List<decimal> Weights { get { return _weights; } }
+        public List<decimal> Weights { get { return getModelParams().Select(param => (decimal)param.X).ToList(); } }
 
         public NeuralNetwork(int nbInputs, int nbOuputs, List<int> innerLayerSizes)
         {
@@ -212,6 +211,16 @@ namespace MidaxLib
 
             for (int idxOutput = 0; idxOutput < nbOuputs; idxOutput++)
                 _outputs.Neurons.Add(new NeuronOutput(_innerLayers.Last()));    
+        }
+
+        public NeuralNetwork(int nbInputs, int nbOuputs, List<int> innerLayerSizes, List<decimal> weights) : this(nbInputs, nbOuputs, innerLayerSizes)
+        {
+            var modelParams = getModelParams();
+            if (modelParams.Count != weights.Count)
+                throw new ApplicationException("Model param number does not match the number of weights");
+            int idxWeight = 0;
+            foreach (var param in modelParams)
+                param.X = (double)weights[idxWeight++];
         }
 
         public void CalculateOutput(List<double> inputValues)
@@ -247,6 +256,19 @@ namespace MidaxLib
             _outputs.BackPropagate();
             for (int idxlayer = _innerLayers.Count - 1; idxlayer >= 0; idxlayer--)
                 _innerLayers[idxlayer].BackPropagate();
+        }
+
+        List<Value> getModelParams()
+        {
+            List<Value> modelParams = new List<Value>();
+            foreach (var layer in _innerLayers)
+            {
+                foreach (var neuron in layer.Neurons)
+                    modelParams.AddRange(neuron.Weights);
+            }
+            foreach (var neuron in _outputs.Neurons)
+                modelParams.AddRange(neuron.Weights);
+            return modelParams;
         }
 
         public void Train(List<List<double>> inputValues, List<List<double>> outputValues, double obj_error = 1e-5, double max_error = 1e-5)
@@ -298,14 +320,7 @@ namespace MidaxLib
             for(int idxOutputList = 0; idxOutputList < outputValues.Count; idxOutputList++)
                 inputs.Add((double)idxOutputList);
 
-            List<Value> modelParams = new List<Value>();
-            foreach (var layer in _innerLayers)
-            {
-                foreach (var neuron in layer.Neurons)
-                    modelParams.AddRange(neuron.Weights);
-            }
-            foreach (var neuron in _outputs.Neurons)
-                modelParams.AddRange(neuron.Weights);
+            List<Value> modelParams = getModelParams();
 
             List<Value> modelValues = new List<Value>();
             foreach (var layer in _innerLayers)
@@ -366,7 +381,6 @@ namespace MidaxLib
             }
             _totalError = optimizer.Error;
             _learningRate = (optimizer.StartError - optimizer.Error) / optimizer.StartError;
-            _weights = modelParams.Select(param => (decimal)param.X).ToList();
         }
     }    
 }

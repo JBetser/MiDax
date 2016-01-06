@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using dto.colibri.endpoint.auth.v2;
 using dto.endpoint.positions.close.v1;
 using dto.endpoint.positions.create.otc.v2;
+using dto.endpoint.search;
 using IGPublicPcl;
 using Lightstreamer.DotNet.Client;
 using Newtonsoft.Json;
@@ -19,10 +20,11 @@ namespace MidaxLib
         void Connect(string username, string password, string apiKey);
         void Subscribe(string[] epics, IHandyTableListener tableListener);
         void Unsubscribe();
-        SubscribedTableKey SubscribeToTradeSubscription(IHandyTableListener tableListener);
+        SubscribedTableKey SubscribeToPositions(IHandyTableListener tableListener);
         void UnsubscribeTradeSubscription(SubscribedTableKey tableListener);
         void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked);
         void ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed);
+        void GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent onPublishMarketLevels);
     }
 
     public class IGMidaxStreamingApiClient : IGStreamingApiClient
@@ -165,9 +167,9 @@ namespace MidaxLib
             _igStreamApiClient.UnsubscribeTableKey(_igSubscribedTableKey);
         }
 
-        SubscribedTableKey IAbstractStreamingClient.SubscribeToTradeSubscription(IHandyTableListener tableListener)
+        SubscribedTableKey IAbstractStreamingClient.SubscribeToPositions(IHandyTableListener tableListener)
         {
-            return _igStreamApiClient.subscribeToTradeSubscription(_currentAccount, tableListener);
+            return _igStreamApiClient.SubscribeToPositions(_currentAccount, tableListener);
         }
 
         void IAbstractStreamingClient.UnsubscribeTradeSubscription(SubscribedTableKey tableListener)
@@ -175,9 +177,8 @@ namespace MidaxLib
             _igStreamApiClient.UnsubscribeTableKey(tableListener);
         }
 
-        async void IAbstractStreamingClient.BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
+        public async void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
         {
-            DateTime expiry = DateTime.Today.AddDays(int.Parse(Config.Settings["TRADE_EXPIRY_DAYS"]));
             CreatePositionRequest cpr = new CreatePositionRequest();
             cpr.epic = trade.Epic;
             cpr.expiry = "DFB";
@@ -186,21 +187,22 @@ namespace MidaxLib
             cpr.orderType = "MARKET";
             cpr.guaranteedStop = false;
             cpr.forceOpen = false;
-            cpr.currencyCode = Config.Settings["TRADE_CURRENCY"];
+            cpr.currencyCode = Config.Settings["TRADING_CURRENCY"];
             var createPositionResponse = await _igRestApiClient.createPositionV2(cpr);
 
             if (createPositionResponse && (createPositionResponse.Response != null) && (createPositionResponse.Response.dealReference != null))
             {
                 trade.Reference = createPositionResponse.Response.dealReference;
                 trade.ConfirmationTime = DateTime.Now;
-                onTradeBooked(trade);
+                if (onTradeBooked != null)
+                    onTradeBooked(trade);
             }
             else
             {
                 Log.Instance.WriteEntry("Trade booking failed : " + createPositionResponse.StatusCode, EventLogEntryType.Error);
             }
         }
-
+        
         async void IAbstractStreamingClient.ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
         {
             ClosePositionRequest cpr = new ClosePositionRequest();
@@ -222,6 +224,19 @@ namespace MidaxLib
                 Log.Instance.WriteEntry("Trade closing failed : " + closePositionResponse.StatusCode, EventLogEntryType.Error);
             }
         }
+
+        async void IAbstractStreamingClient.GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent onPublishMarketLevels)
+        {
+            var response = await _igRestApiClient.searchMarket(mktData.Name);
+            if (response && (response.Response != null))
+            {
+                foreach (var mkt in response.Response.markets)
+                {
+                    if (mkt.epic == mktData.Id)
+                        onPublishMarketLevels(mkt);
+                }
+            }
+        }        
     }
 
     public class IGConnection : MarketDataConnection
@@ -239,12 +254,12 @@ namespace MidaxLib
             try
             {
                 ((IGTradingStreamingClient)_apiStreamingClient).ConnectionClosed = connectionClosed;
-                _apiStreamingClient.Connect(Config.Settings["USER_NAME"], Config.Settings["PASSWORD"], Config.Settings["API_KEY"]);
+                _apiStreamingClient.Connect(Config.Settings["USER_NAME"], Config.Settings["PASSWORD"], Config.Settings["API_KEY"]);                
             }
             catch (Exception ex)
             {
                 Log.Instance.WriteEntry("IGConnection error: " + ex.Message, EventLogEntryType.Error);
             }
-        }
+        }        
     }
 }

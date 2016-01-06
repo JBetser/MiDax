@@ -54,7 +54,7 @@ namespace MidaxLib
             {
                 if (!Config.Settings.ContainsKey("REPLAY_MODE"))
                     return false;
-                return ReplayEnabled && (!Config.Settings.ContainsKey("PUBLISHING_CSV") && !Config.Settings.ContainsKey("PUBLISHING_DB"));
+                return ReplayEnabled && (!Config.Settings.ContainsKey("PUBLISHING_CSV") && !Config.Settings.ContainsKey("DB_CONTACTPOINT"));
             }
         }
 
@@ -70,8 +70,8 @@ namespace MidaxLib
         {
             get
             {
-                return DateTime.Now.TimeOfDay > DateTime.Parse(_settings["TRADING_START_TIME"]).TimeOfDay &&
-                    DateTime.Now.TimeOfDay < DateTime.Parse(_settings["TRADING_STOP_TIME"]).TimeOfDay;
+                return DateTime.Now.TimeOfDay > Config.ParseDateTimeLocal(_settings["TRADING_START_TIME"]).TimeOfDay &&
+                    DateTime.Now.TimeOfDay < Config.ParseDateTimeLocal(_settings["TRADING_STOP_TIME"]).TimeOfDay;
             }
         }
         
@@ -81,14 +81,24 @@ namespace MidaxLib
             {
                 if (ReplayEnabled || MarketSelectorEnabled)
                     return true;
-                return DateTime.Now.TimeOfDay > DateTime.Parse(_settings["PUBLISHING_START_TIME"]).TimeOfDay &&
-                    DateTime.Now.TimeOfDay < DateTime.Parse(_settings["PUBLISHING_STOP_TIME"]).TimeOfDay;
+                return DateTime.Now.TimeOfDay > Config.ParseDateTimeLocal(_settings["PUBLISHING_START_TIME"]).TimeOfDay &&
+                    DateTime.Now.TimeOfDay < Config.ParseDateTimeLocal(_settings["PUBLISHING_STOP_TIME"]).TimeOfDay;
             }
         }
 
         public static string TestList(List<string> tests)
         {
             return tests.Aggregate("", (prev, next) => prev + next + ";", res => res.Substring(0, res.Length - 1));
+        }
+
+        public static DateTime ParseDateTimeUTC(string dt)
+        {
+            return DateTime.SpecifyKind(DateTime.Parse(dt), DateTimeKind.Utc);
+        }
+
+        public static DateTime ParseDateTimeLocal(string dt)
+        {
+            return DateTime.SpecifyKind(DateTime.Parse(dt), DateTimeKind.Local);
         }
     }
 }

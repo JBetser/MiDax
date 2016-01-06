@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Cassandra;
+using dto.endpoint.search;
 using Newtonsoft.Json;
 
 namespace MidaxLib
@@ -144,8 +145,9 @@ namespace MidaxLib
         ISession _session = null;
         decimal _avg = 0m;
         decimal _scale = 0m;
-        string DB_BUSINESSDATA = "business";
-        string DB_HISTORICALDATA = "historical";
+        const string DB_BUSINESSDATA = "business";
+        const string DB_HISTORICALDATA = "historical";
+        const string EXCEPTION_CONNECTION_CLOSED = "Cassandra session is closed";
         static string DB_TABLENAME = "{0}data." + (Config.Settings["TRADING_MODE"] == "UAT" ? "dummy" : "") + "{1} ";
         static string DB_INSERTION = "insert into " + DB_TABLENAME;
         static string DB_SELECTION = "select * from " + DB_TABLENAME;
@@ -175,7 +177,7 @@ namespace MidaxLib
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
         {
             if (_session == null)
-                return;
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             _session.Execute(string.Format(DB_INSERTION + "(stockid, trading_time,  name,  bid,  offer,  volume) values ('{2}', {3}, '{4}', {5}, {6}, {7})",
                 DB_HISTORICALDATA, DATATYPE_STOCK, mktData.Id, ToUnixTimestamp(updateTime), mktData.Name, price.Bid, price.Offer, price.Volume));
         }
@@ -183,7 +185,7 @@ namespace MidaxLib
         public override void Insert(DateTime updateTime, Indicator indicator, decimal value)
         {
             if (_session == null)
-                return;
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
         }
@@ -191,7 +193,7 @@ namespace MidaxLib
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue)
         {
             if (_session == null)
-                return;
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             string tradeRef = signal.Trade == null ? null : " " + signal.Trade.Reference;
             _session.Execute(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value, stockvalue) values ('{2}', {3}, '{4}', {5}, {6})",
                 DB_HISTORICALDATA, DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), tradeRef, Convert.ToInt32(code), stockvalue));
@@ -202,7 +204,7 @@ namespace MidaxLib
             if (trade.TradingTime == DateTimeOffset.MinValue || trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "")
                 throw new ApplicationException("Cannot insert a trade without booking information");
             if (_session == null)
-                return;
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             _session.Execute(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, stockid, direction, size) values ('{2}', {3}, {4}, '{5}', {6}, {7})",
                 DB_BUSINESSDATA, DATATYPE_TRADE, trade.Reference, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic, Convert.ToInt32(trade.Direction), trade.Size));
         }
@@ -215,20 +217,70 @@ namespace MidaxLib
         public override void Insert(DateTime insertTime, NeuralNetworkForCalibration ann)
         {
             if (_session == null)
-                throw new ApplicationException("Cassandra session is closed");
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             _session.Execute(string.Format("insert into staticdata.anncalibration(annid, stockid, version, insert_time, weights) values ('{0}', '{1}', {2}, {3}, {4})",
-                ann.AnnId, ann.StockId, ann.Version, insertTime, ann.Weights));
+                ann.AnnId, ann.StockId, ann.Version, ToUnixTimestamp(insertTime), JsonConvert.SerializeObject(ann.Weights)));
+        }
+
+        public override void Insert(Market mktDetails)
+        {
+            if (_session == null)
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
+            if (mktDetails.marketStatus == "TRADEABLE")
+                throw new ApplicationException("Cannot write end of day data; market is not closed");
+            _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
+                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLHigh_" + mktDetails.epic, ToUnixTimestamp(mktDetails.updateTime), mktDetails.high));
+            _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
+                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLLow_" + mktDetails.epic, ToUnixTimestamp(mktDetails.updateTime), mktDetails.low));
+            _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
+                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseBid_" + mktDetails.epic, ToUnixTimestamp(mktDetails.updateTime), mktDetails.bid));
+            _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
+                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseOffer_" + mktDetails.epic, ToUnixTimestamp(mktDetails.updateTime), mktDetails.offer));
+        }
+
+        public override MarketLevels GetMarketLevels(DateTime updateTime, string epic)
+        {
+            if (_session == null)
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
+            // process previous day
+            updateTime = updateTime.AddDays(-1);
+            DateTime prevDay = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 22, 0, 0);
+            RowSet value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                "LVLHigh_" + epic, prevDay));
+            decimal high = (decimal)value.First()[0];
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                "LVLLow_" + epic, prevDay));
+            decimal low = (decimal)value.First()[0];
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                "LVLCloseBid_" + epic, prevDay));
+            decimal closeBid = (decimal)value.First()[0];
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                "LVLCloseOffer_" + epic, prevDay));
+            decimal closeOffer = (decimal)value.First()[0];
+            return new MarketLevels(low, high, closeBid, closeOffer);
         }
 
         int IStaticDataConnection.GetAnnLatestVersion(string annid, string stockid)
         {
             if (_session == null)
-                throw new ApplicationException("Cassandra session is closed");
-            RowSet versions =  _session.Execute(string.Format("select * from staticdata.anncalibration where annid='{0}' and stockid='{1}' ALLOW FILTERING",
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
+            RowSet versions =  _session.Execute(string.Format("select version from staticdata.anncalibration where annid='{0}' and stockid='{1}' ALLOW FILTERING",
                 annid, stockid));
-            if (versions.Count() == 0)
-                return 1;
-            return (int)versions.Last()[0];
+            Row lastVersion = null;
+            foreach (var version in versions)
+                lastVersion = version;
+            return (int)lastVersion[0];
+        }
+
+        List<decimal> IStaticDataConnection.GetAnnWeights(string annid, string stockid, int version)
+        {
+            if (_session == null)
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
+            RowSet weights = _session.Execute(string.Format("select weights from staticdata.anncalibration where annid='{0}' and stockid='{1}' and version={2} ALLOW FILTERING",
+                annid, stockid, version));
+            if (weights.Count() != 1)
+                return null;
+            return (List<decimal>)weights.First()[0];
         }
 
         RowSet getRows(DateTime startTime, DateTime stopTime, string type, string id){
@@ -283,13 +335,11 @@ namespace MidaxLib
             Close();
         }
 
-        public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id)
+        public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id, bool auto_select)
         {
             if (_session == null)
                 return "[]";
             RowSet rowSet = getRows(startTime, stopTime, type, id);
-            double intervalSeconds = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 250);
-            double intervalSecondsLarge = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 100);
             List<CqlQuote> filteredQuotes = new List<CqlQuote>();
             decimal? prevQuoteValue = null;
             CqlQuote prevQuote = new CqlQuote();
@@ -310,6 +360,12 @@ namespace MidaxLib
                     max = cqlQuote.b.Value;
                 quotes.Add(cqlQuote);
             }
+            DateTime ts = new DateTime(quotes.Last().t.Ticks);
+            DateTime te = new DateTime(quotes.First().t.Ticks);
+            startTime = startTime > te ? startTime : ts;
+            stopTime = stopTime < te ? stopTime : te;
+            double intervalSeconds = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 250);
+            double intervalSecondsLarge = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 100);            
             if (type == PublisherConnection.DATATYPE_STOCK)
             {
                 _avg = (min + max) / 2m;
@@ -330,7 +386,7 @@ namespace MidaxLib
                     trendUp = quoteValue > prevQuoteValue;
                     prevQuoteValue = quoteValue;
                     prevQuote = cqlQuote;
-                    if ((prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
+                    if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
                         buffer.Add(quoteValue, cqlQuote);
                     else
                         filteredQuotes.Add(cqlQuote);
@@ -339,7 +395,7 @@ namespace MidaxLib
                 if (((quoteValue < prevQuoteValue) && trendUp.Value) ||
                     ((quoteValue > prevQuoteValue) && !trendUp.Value))
                 {
-                    if ((prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
+                    if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
                     {
                         if (!buffer.ContainsKey(quoteValue))
                             buffer.Add(quoteValue, cqlQuote);
@@ -365,7 +421,7 @@ namespace MidaxLib
                 }
                 else
                 {
-                    if ((prevQuote.t - cqlQuote.t).TotalSeconds < intervalSecondsLarge)
+                    if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSecondsLarge)
                     {
                         if (!buffer.ContainsKey(quoteValue))
                             buffer.Add(quoteValue, cqlQuote);

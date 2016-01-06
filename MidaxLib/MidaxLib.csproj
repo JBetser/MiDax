@@ -57,6 +57,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -70,6 +72,7 @@
     <Compile Include="Config.cs" />
     <Compile Include="IGConnection.cs" />
     <Compile Include="Indicator.cs" />
+    <Compile Include="IndicatorLevel.cs" />
     <Compile Include="IndicatorLinearRegression.cs" />
     <Compile Include="LapackLib.cs" />
     <Compile Include="LevenbergMarquardt.cs" />
@@ -78,6 +81,7 @@
     <Compile Include="MarketDataConnection.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="MarketSelector.cs" />
+    <Compile Include="ModelANN.cs" />
     <Compile Include="ModelTest.cs" />
     <Compile Include="NeuralNetwork.cs" />
     <Compile Include="Portfolio.cs" />
@@ -87,6 +91,8 @@
     <Compile Include="ReaderConnection.cs" />
     <Compile Include="ReplayConnection.cs" />
     <Compile Include="Signal.cs" />
+    <Compile Include="SignalANN.cs" />
+    <Compile Include="SignalANNWMA.cs" />
     <Compile Include="StaticDataConnection.cs" />
     <Compile Include="TimeSeries.cs" />
     <Compile Include="Trade.cs" />

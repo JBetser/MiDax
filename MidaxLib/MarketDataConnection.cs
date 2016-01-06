@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using dto.endpoint.search;
 using IGPublicPcl;
 using Lightstreamer.DotNet.Client;
 
@@ -81,7 +82,13 @@ namespace MidaxLib
         public virtual void StopListening()
         {
             _mktDataListener.StopListening();
-        }        
+        }
+
+        public void PublishMarketLevels(List<MarketData> mktData)
+        {
+            foreach (var mkt in mktData)
+                _apiStreamingClient.GetMarketDetails(mkt, PublisherConnection.Instance.Insert);
+        }
     }
 
     public class MarketDataSubscription : HandyTableListenerAdapter
@@ -115,7 +122,7 @@ namespace MidaxLib
                     //if (priceData.MarketState == "TRADEABLE" || priceData.MarketState == "REPLAY")
                     //{
                     foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
-                        data.FireTick(DateTime.Parse(priceData.UpdateTime), priceData);
+                        data.FireTick(Config.ParseDateTimeUTC(priceData.UpdateTime), priceData); // Timestamps from IG are GMT (i.e. equivalent to UTC)
                 }
             }
             catch (SEHException exc)

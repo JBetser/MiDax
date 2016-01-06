@@ -27,7 +27,7 @@ namespace MidaxLib
 
             foreach(var epic in epics){
                 // for each quote, associate the observed gains in the near future
-                var mktData = new MarketData(epic);
+                var mktData = new Asset(epic, priceData[epic].First().t.UtcDateTime);
                 var wmaLow = new IndicatorWMA(mktData, 2);
                 var wmaMid = new IndicatorWMA(mktData, 10);
                 var wmaHigh = new IndicatorWMA(mktData, 60);
@@ -46,7 +46,7 @@ namespace MidaxLib
                 var openPrice = priceData[epic][0];
                 foreach (var quote in priceData[epic])
                 {
-                    if (quote.t.TimeOfDay < DateTime.Parse(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
+                    if (quote.t.TimeOfDay < Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
                         continue;
                     var futureVal = wmaLow.Average(mktData, quote.t.UtcDateTime.AddMinutes(2));
                     var profit = (int)Math.Round(futureVal.Mid() - quote.MidPrice());
@@ -90,10 +90,10 @@ namespace MidaxLib
                         continue;
                     PublisherConnection.Instance.Insert(dt, wmaLow, wmaLowAvg.Mid() - openPrice.MidPrice());
                     PublisherConnection.Instance.Insert(dt, wmaMid, wmaMidAvg.Mid() - openPrice.MidPrice());
-                    PublisherConnection.Instance.Insert(dt, wmaHigh, wmaHighAvg.Mid() - openPrice.MidPrice());
-                    PublisherConnection.Instance.Insert(dt, wmaDailyAvg, wmaDailyAvg.Average().Mid() - openPrice.MidPrice());
+                    PublisherConnection.Instance.Insert(dt, wmaHigh, wmaHighAvg.Mid() - openPrice.MidPrice());                    
                     PublisherConnection.Instance.Insert(dt, new Value(selection[dt].Key));                    
                 }
+                PublisherConnection.Instance.Insert(Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]), wmaDailyAvg, wmaDailyAvg.Average().Mid() - openPrice.MidPrice());
                 priceData[epic] = selection.Values.Select(kv => kv.Value).ToList();
             }
             replay(priceData, tableListener);

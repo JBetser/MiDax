@@ -18,12 +18,17 @@ namespace MidaxLib
         protected List<Signal> _mktSignals = new List<Signal>();
         protected List<MarketData> _mktIndices = new List<MarketData>();
         protected List<Indicator> _mktIndicators = new List<Indicator>();
-        protected List<IndicatorLevel> _mktUnsubscribedIndicators = new List<IndicatorLevel>();
+        protected List<ILevelPublisher> _mktEODIndicators = new List<ILevelPublisher>();
+        protected bool _replayPopup = false;
+
+        public Portfolio PTF { get { return _ptf; } }
         
         public Model()
         {
             if (Config.Settings.ContainsKey("TRADING_SIGNAL"))
                 _tradingSignal = Config.Settings["TRADING_SIGNAL"];
+            if (Config.Settings.ContainsKey("REPLAY_POPUP"))
+                _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
             _amount = Config.MarketSelectorEnabled ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);
             _ptf = new Portfolio(MarketDataConnection.Instance.StreamClient);
         }
@@ -69,8 +74,8 @@ namespace MidaxLib
         {
             MarketDataConnection.Instance.StopListening();
             Log.Instance.WriteEntry("Publishing indicator levels...", EventLogEntryType.Information);
-            foreach (var indicator in _mktUnsubscribedIndicators)
-                indicator.Publish(DateTime.SpecifyKind(DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]), DateTimeKind.Utc));
+            foreach (var indicator in _mktEODIndicators)
+                indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
             string status = PublisherConnection.Instance.Close();
             foreach (Signal sig in _mktSignals)
             {
@@ -100,9 +105,23 @@ namespace MidaxLib
                     _ptf.ClosePosition(position.Value.Trade);
             }
         }
+
+        public void PublishMarketLevels()
+        {
+            MarketDataConnection.Instance.PublishMarketLevels(_mktData);
+        }
+
+        public void BookTrade(Trade trade)
+        {
+            _ptf.BookTrade(trade);
+        }
+
+        public virtual void ProcessError(string message, string expected = "")
+        {            
+        }
     }
 
-    public class ModelMidax : Model
+    public class ModelMacD : Model
     {
         protected DateTime _closingTime = DateTime.MinValue;
         protected MarketData _daxIndex = null;
@@ -111,12 +130,12 @@ namespace MidaxLib
         protected SignalMacD _macD_low = null;
         protected SignalMacD _macD_high = null;
 
-        public ModelMidax(MarketData daxIndex, List<MarketData> daxStocks, List<MarketData> volatilityIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
+        public ModelMacD(MarketData daxIndex, List<MarketData> daxStocks, List<MarketData> volatilityIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
         {
             List<MarketData> mktData = new List<MarketData>();
             mktData.Add(daxIndex);
             mktData.AddRange(daxStocks);
-            this._closingTime = DateTime.SpecifyKind(DateTime.Parse(Config.Settings["TRADING_CLOSING_TIME"]), DateTimeKind.Utc);            
+            this._closingTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);            
             this._mktData = mktData;
             this._daxIndex = daxIndex;
             this._daxStocks = daxStocks;
@@ -129,12 +148,12 @@ namespace MidaxLib
             this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, lowPeriod * 30)));
             this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, midPeriod * 30)));
             this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, highPeriod * 30)));
-            this._mktUnsubscribedIndicators.Add(new IndicatorLevelMean(_daxIndex));
+            this._mktEODIndicators.Add(new IndicatorLevelMean(_daxIndex));
         }
 
         protected override void Buy(Signal signal, DateTime time, Price value)
         {
-            if (_ptf.Position(_daxIndex.Id).Value < 0)
+            if (_ptf.GetPosition(_daxIndex.Id).Value < 0)
             {
                 if (time >= _closingTime)
                 {
@@ -151,11 +170,11 @@ namespace MidaxLib
          
         protected override void Sell(Signal signal, DateTime time, Price value)
         {
-            if (_ptf.Position(_daxIndex.Id).Value >= 0)
+            if (_ptf.GetPosition(_daxIndex.Id).Value >= 0)
             {
                 if (time >= _closingTime)
                 {
-                    if (_ptf.Position(_daxIndex.Id).Value > 0)
+                    if (_ptf.GetPosition(_daxIndex.Id).Value > 0)
                         _ptf.ClosePosition(signal.Trade);
                 }
                 else

@@ -172,6 +172,11 @@ namespace MidaxLib
             get { return (from List<KeyValuePair<DateTime, Price>> dic in _series select dic.Count).Sum(); }
         }
 
+        public Price First()
+        {
+            return _series.First().First().Value;
+        }
+
         void deleteOldData(DateTime updateTime)
         {
             while (_series.Count > 1)

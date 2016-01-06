@@ -50,9 +50,11 @@ namespace MidaxLib
                 }
                 if (empty)
                     break;
-                if (!values[1].EndsWith(id) && !values[1].EndsWith("DUMMY_TRADE###"))
+                if ((type == PublisherConnection.DATATYPE_STOCK || 
+                    type == PublisherConnection.DATATYPE_INDICATOR || 
+                    type == PublisherConnection.DATATYPE_SIGNAL) && !values[1].EndsWith(id))
                     continue;
-                DateTime curTime = DateTime.SpecifyKind(DateTime.Parse(values[idxTime]), DateTimeKind.Local);
+                DateTime curTime = Config.ParseDateTimeLocal(values[idxTime]);
                 if (!values[1].StartsWith("WMA_1D")) // Do not check time for daily market data
                 {
                     if (curTime < startTime)
@@ -88,14 +90,14 @@ namespace MidaxLib
 
         void readTradeData(List<Trade> trades, string[] values)
         {
-            Trade trade = new Trade(DateTime.Parse(values[7]), values[6], (SIGNAL_CODE)Enum.Parse(typeof(SIGNAL_CODE), values[3]), int.Parse(values[5]), (decimal)double.Parse(values[4]));
+            Trade trade = new Trade(Config.ParseDateTimeLocal(values[7]), values[6], (SIGNAL_CODE)Enum.Parse(typeof(SIGNAL_CODE), values[3]), int.Parse(values[5]), (decimal)double.Parse(values[4]));
             trade.Reference = values[1];
             trades.Add(trade);
         }
 
         void readProfitData(List<KeyValuePair<DateTime,double>> profits, string[] values)
         {
-            profits.Add(new KeyValuePair<DateTime,double>(DateTime.Parse(values[0]), double.Parse(values[1])));
+            profits.Add(new KeyValuePair<DateTime,double>(Config.ParseDateTimeLocal(values[0]), double.Parse(values[1])));
         }
 
         List<CqlQuote> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
