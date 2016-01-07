@@ -90,6 +90,10 @@ public class Server
                     {
                         startTime = startTime.AddDays(1.0);
                         stopTime = stopTime.AddDays(1.0);
+                        if (now > closePositionsTime)
+                            closePositionsTime = closePositionsTime.AddDays(1.0);
+                        if (now > publishMarketLevelsTime)
+                            publishMarketLevelsTime = publishMarketLevelsTime.AddDays(1.0);
                         msUntilStartTime = (int)((startTime - now).TotalMilliseconds);
                     }
                 }

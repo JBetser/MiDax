@@ -155,16 +155,9 @@ namespace MidaxLib
         {
             if (_ptf.GetPosition(_daxIndex.Id).Value < 0)
             {
-                if (time >= _closingTime)
-                {
-                    _ptf.ClosePosition(signal.Trade);
-                }
-                else
-                {
-                    _ptf.BookTrade(signal.Trade);
-                    string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.Asset.Id + " " + value.Offer, EventLogEntryType.Information);
-                }
+                _ptf.ClosePosition(signal.Trade);
+                string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.Asset.Id + " " + value.Offer, EventLogEntryType.Information);
             }
         }
          
@@ -172,16 +165,24 @@ namespace MidaxLib
         {
             if (_ptf.GetPosition(_daxIndex.Id).Value >= 0)
             {
-                if (time >= _closingTime)
+                if (_ptf.GetPosition(_daxIndex.Id).Value > 0)
                 {
-                    if (_ptf.GetPosition(_daxIndex.Id).Value > 0)
-                        _ptf.ClosePosition(signal.Trade);
+                    Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + value.Offer, EventLogEntryType.Error);
+                    _ptf.ClosePosition(signal.Trade);
                 }
-                else
+                else if (time <= _closingTime)
                 {
-                    _ptf.BookTrade(signal.Trade);
-                    string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.Asset.Id + " " + value.Bid, EventLogEntryType.Information);
+                    if (_ptf.GetPosition(_daxIndex.Id).NbPositionsOpen != 0)
+                    {
+                        Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. SELL " + signal.Trade.Id + " " + value.Bid, EventLogEntryType.Error);
+                        _ptf.ClosePosition(signal.Trade);
+                    }
+                    else
+                    {
+                        _ptf.BookTrade(signal.Trade);
+                        string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+                        Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.Asset.Id + " " + value.Bid, EventLogEntryType.Information);
+                    }
                 }
             }
         }

@@ -13,6 +13,7 @@ namespace MidaxLib
         SIGNAL_CODE _direction = SIGNAL_CODE.UNKNOWN;
         int _size = 0;
         string _reference;
+        string _id;
         DateTime _tradingTime = DateTime.MinValue;
         DateTime _confirmationTime = DateTime.MinValue;
         decimal _price;
@@ -20,6 +21,7 @@ namespace MidaxLib
         public string Epic { get { return _epic; } }
         public SIGNAL_CODE Direction { get { return _direction; } }
         public int Size { get { return _size; } }
+        public string Id { get { return _id; } set { _id = value; } }
         public string Reference { get { return _reference; } set { _reference = value; } }
         public DateTime TradingTime { get { return _tradingTime; } }
         public DateTime ConfirmationTime { get { return _confirmationTime; } set { _confirmationTime = value; } }
@@ -34,9 +36,24 @@ namespace MidaxLib
             _price = price;
         }
 
+        public Trade(Trade cpy, bool opposite = false)
+        {
+            this._epic = cpy._epic;
+            if (opposite)
+                this._direction = (cpy._direction == SIGNAL_CODE.BUY ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY);
+            else
+                this._direction = cpy._direction;
+            this._size = cpy._size;
+            this._reference = cpy._reference;
+            this._id = cpy._id;
+            this._tradingTime = cpy._tradingTime;
+            this._confirmationTime = cpy._confirmationTime;
+            this._price = cpy._price;
+        }
+
         public Trade(Row row)
         {
-            _reference = (string)row[0];
+            _id = (string)row[0];
             _confirmationTime = (DateTime)row[1];
             _direction = (SIGNAL_CODE)(int)row[2];
             _price = (decimal)row[3];

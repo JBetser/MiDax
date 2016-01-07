@@ -21,6 +21,7 @@ namespace MidaxLib
         }
         public string Epic { get { return _name; } }
         public Trade Trade { get { return _lastTrade; } set { _lastTrade = value; } }
+        public int NbPositionsOpen { get { return _tradePositions.Count; } }
 
         public Position(string name)
         {
@@ -55,6 +56,7 @@ namespace MidaxLib
                 JavaScriptSerializer json_serializer = new JavaScriptSerializer();
                 if (update.ToString() != "[ (null) ]")
                 {
+                    Log.Instance.WriteEntry("Incoming position update: " + update.ToString());
                     var json = json_serializer.DeserializeObject(update.ToString());
                     if (json.GetType().ToString() == "System.Object[]")
                     {
@@ -73,13 +75,16 @@ namespace MidaxLib
                                             if (trade_notification["status"].ToString() == "OPEN")
                                             {
                                                 var tradeSize = int.Parse(trade_notification["size"].ToString());
-                                                _tradePositions[trade_notification["dealId"].ToString()] = tradeSize;
+                                                _lastTrade.Id = trade_notification["dealId"].ToString();
+                                                _tradePositions[_lastTrade.Id] = tradeSize;
                                                 _pos += tradeSize;
+                                                Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);                                                
                                             }
                                             else if (trade_notification["status"].ToString() == "DELETED")
                                             {
                                                 _pos -= _tradePositions[trade_notification["dealId"].ToString()];
                                                 _tradePositions.Remove(trade_notification["dealId"].ToString());
+                                                Log.Instance.WriteEntry("Closed a trade: " + trade_notification["dealId"].ToString());  
                                             }
                                         }
                                     }

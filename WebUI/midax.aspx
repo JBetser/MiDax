@@ -220,7 +220,7 @@
                <option value="615">17:00</option>
              </select>
              <select class="combobox input-medium" id="timestop">
-               <!--option value="790">23:45</option!-->
+               <option value="790">23:00</option>
                <option value="690">18:15</option>
                <option value="675">18:00</option>
                <option value="645">17:30</option>
@@ -240,7 +240,9 @@
              <select class="combobox input-large" id="equity">
                <option value="">Choose a market data</option>
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
+               <option value="IX.D.SPTRD.DAILY.IP">SNP</option>
                <option value="IN.D.VIX.MONTH2.IP">VIX 2M</option>
+               <option value="IN.D.VIX.MONTH3.IP">VIX 3M</option>
                <!--option value="ED.D.ADSGY.DAILY.IP">Adidas AG</!--option>
                <option value="ED.D.ALVGY.DAILY.IP">Allianz SE</option>
                <option value="ED.D.BAS.DAILY.IP">BASF SE</option>

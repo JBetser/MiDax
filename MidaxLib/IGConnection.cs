@@ -203,26 +203,11 @@ namespace MidaxLib
             }
         }
         
-        async void IAbstractStreamingClient.ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
+        public async void ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
         {
-            ClosePositionRequest cpr = new ClosePositionRequest();
-            cpr.epic = trade.Epic;
-            cpr.dealId = trade.Reference;
-            cpr.size = trade.Size;
-            cpr.orderType = "MARKET";
-            var closePositionResponse = await _igRestApiClient.closePosition(cpr);
-
-            if (closePositionResponse && (closePositionResponse.Response != null) && (closePositionResponse.Response.dealReference != null))
-            {
-                // tag the trade with '#' to represent a position closure
-                trade.Reference = "#" + closePositionResponse.Response.dealReference;
-                trade.ConfirmationTime = DateTime.Now;
-                onTradeClosed(trade);
-            }
-            else
-            {
-                Log.Instance.WriteEntry("Trade closing failed : " + closePositionResponse.StatusCode, EventLogEntryType.Error);
-            }
+            Log.Instance.WriteEntry("Closing trade " + trade.Id + "...");
+            var oppositeTrade = new Trade(trade, true);
+            BookTrade(oppositeTrade, onTradeClosed);
         }
 
         async void IAbstractStreamingClient.GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent onPublishMarketLevels)

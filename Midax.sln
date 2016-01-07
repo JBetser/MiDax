@@ -59,6 +59,9 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebDebug", "WebDebug", "{FB
 		VWDPort = "8080"
 		VWDDynamicPort = "false"
 	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{146728EF-B80D-46EC-950D-64EF04BCFB0F} = {146728EF-B80D-46EC-950D-64EF04BCFB0F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MidaxTrader", "MidaxTrader\MidaxTrader.csproj", "{ACCA827D-D9F9-401F-9663-3052FD89BC87}"
 EndProject
