@@ -139,7 +139,7 @@ namespace MidaxLib
         {
         }
 
-        IHandyTableListener _tradingEventTable = null;
+        protected IHandyTableListener _tradingEventTable = null;
 
         SubscribedTableKey IAbstractStreamingClient.SubscribeToPositions(IHandyTableListener tableListener)
         {
@@ -152,7 +152,7 @@ namespace MidaxLib
             _tradingEventTable = null;
         }
 
-        void IAbstractStreamingClient.BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
+        public virtual void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
         {
             if (trade != null)
             {
@@ -273,6 +273,20 @@ namespace MidaxLib
         }
     }
 
+    // this crazy client never updates the positions
+    public class ReplayStreamingCrazyClient : ReplayStreamingClient
+    {
+        public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
+        {
+            if (trade != null)
+            {
+                trade.Reference = "###DUMMY_TRADE###";
+                trade.ConfirmationTime = trade.TradingTime;
+                onTradeBooked(trade);
+            }
+        }
+    }
+
     public class ReplayConnection : MarketDataConnection, IStaticDataConnection
     {
         ReplayStreamingClient _replayStreamingClient;
@@ -310,6 +324,14 @@ namespace MidaxLib
             return new List<decimal> {  72.3059189398836m, 72.8785271734858m, 81.873849047948m, 71.6605471639554m, 
                 99.3678597133658m, -1.39731049606147m, -0.973839446848656m, 0.854679349838304m, 2.10407644665642m, 
                 26.6526593970665m, 0.0758744148816272m, -0.15246543443817m, 0.0886880451059489m };
+        }
+    }
+
+    public class ReplayCrazyConnection : ReplayConnection
+    {
+        public ReplayCrazyConnection()
+            : base(new ReplayStreamingCrazyClient())
+        {
         }
     }
 

@@ -141,16 +141,29 @@ namespace MidaxTester
                 if (ReplayTester.Instance.NbProducedTrades != ReplayTester.Instance.NbExpectedTrades)
                     model.ProcessError(string.Format("the model did not produced the expected number of trades. It produced {0} trades instead of {1} expected",
                                                     ReplayTester.Instance.NbProducedTrades, ReplayTester.Instance.NbExpectedTrades));
+                // test for synchronization issues with the broker
+                List<string> testsSync = new List<string>();
+                testsSync.Add(@"..\..\expected_results\mktdata_26_8_2015_sync.csv");
+                dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
+                MarketDataConnection.Instance = new ReplayCrazyConnection();
+                model = new ModelQuickTest(index);
+                ReplayStreamingClient.PTF = model.PTF;
+                MarketDataConnection.Instance.Connect(null);
+                Console.WriteLine("Testing synchronization...");
+                model.StartSignals();
+                model.StopSignals();
                 // Test exceptions. the program is expected to throw exceptions here, just press continue if you are debugging
                 // all exceptions should be handled, and the program should terminate with a success message box
                 Console.WriteLine("Testing expected exceptions...");
                 string expected;
-                List<string> testError = new List<string>();
-                testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");                
+                dicSettings["REPLAY_CSV"] = Config.TestList(tests);
+                MarketDataConnection.Instance = new ReplayConnection();
                 MarketDataConnection.Instance.Connect(null);                
                 bool success = false;
                 ModelMacDTest modelBis = new ModelQuickTest(index);
                 ReplayStreamingClient.PTF = modelBis.PTF;
+                List<string> testError = new List<string>();
+                testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testError);
                 var modelErr = new ModelQuickTest(index);
                 try
