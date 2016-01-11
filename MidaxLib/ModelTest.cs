@@ -17,16 +17,24 @@ namespace MidaxLib
 
         protected override void Buy(Signal signal, DateTime time, Price value)
         {
+            if (signal.Id == _tradingSignal)
+            {
+                if (_ptf.GetPosition(_daxIndex.Id).Value < 0)
+                    Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.Asset.Id + " " + value.Bid);
+            }
             base.Buy(signal, time, value);
-            string info = time + " Signal " + signal.Id + " buy " + signal.Asset.Id + " " + value.Bid;
-            Console.WriteLine(info);
+            
         }
 
         protected override void Sell(Signal signal, DateTime time, Price value)
         {
+            if (signal.Id == _tradingSignal)
+            {
+                if (_ptf.GetPosition(_daxIndex.Id).Value == 0)
+                    Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.Asset.Id + " " + value.Bid);
+            }
             base.Sell(signal, time, value);
-            string info = time + " Signal " + signal.Id + " sell " + signal.Asset.Id + " " + value.Bid;
-            Console.WriteLine(info);
+            
         }     
    
         public override void ProcessError(string message, string expected = "")

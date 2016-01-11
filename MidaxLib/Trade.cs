@@ -36,19 +36,25 @@ namespace MidaxLib
             _price = price;
         }
 
-        public Trade(Trade cpy, bool opposite = false)
+        public Trade(Trade cpy, bool opposite = false, DateTime? trading_time = null, decimal? price = null)
         {
             this._epic = cpy._epic;
             if (opposite)
+            {
                 this._direction = (cpy._direction == SIGNAL_CODE.BUY ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY);
+                this._tradingTime = trading_time.Value;
+                this._price = price.Value;
+            }
             else
+            {
                 this._direction = cpy._direction;
+                this._tradingTime = cpy._tradingTime;
+                this._confirmationTime = cpy._confirmationTime;
+                this._price = cpy._price;
+            }
             this._size = cpy._size;
             this._reference = cpy._reference;
-            this._id = cpy._id;
-            this._tradingTime = cpy._tradingTime;
-            this._confirmationTime = cpy._confirmationTime;
-            this._price = cpy._price;
+            this._id = cpy._id; 
         }
 
         public Trade(Row row)

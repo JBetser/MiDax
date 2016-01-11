@@ -84,7 +84,7 @@ namespace MidaxLib
 
     public abstract class Signal
     {
-        public delegate void Tick(Signal signal, DateTime time, Price value);
+        public delegate bool Tick(Signal signal, DateTime time, Price value, bool check);
 
         protected string _id = null;
         protected string _name = null;
@@ -153,18 +153,24 @@ namespace MidaxLib
             set { _lastTrade = value; }
         }
 
-        protected void _onHold(Signal signal, DateTime updateTime, Price value)
+        protected bool _onHold(Signal signal, DateTime updateTime, Price value, bool check)
         {
+            // hold your position; do nothing
+            return true;
         }
 
         protected void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
-        {
+        {            
             SIGNAL_CODE oldSignalCode = _signalCode;
             Signal.Tick tradingOrder = _onHold;
             bool signaled = Process(mktData, updateTime, value, ref tradingOrder);
+            // perform a preliminary check
+            if (!tradingOrder(this, updateTime, value, true))
+                return;
             if (signaled && _signalCode != oldSignalCode)
             {
-                tradingOrder(this, updateTime, value);
+                // send a signal
+                tradingOrder(this, updateTime, value, false);
                 PublisherConnection.Instance.Insert(updateTime, this, _signalCode, mktData.TimeSeries[updateTime].Value.Value.Bid);
             }
         }
@@ -207,19 +213,16 @@ namespace MidaxLib
                 if (_signalCode == SIGNAL_CODE.UNKNOWN)
                 {
                     tradingOrder = _onHold;
-                    if (_values[updateTime].Value.Value.Mid() >= 0)
-                        _signalCode = SIGNAL_CODE.BUY;
-                    else
-                        _signalCode = SIGNAL_CODE.SELL;
+                    _signalCode = SIGNAL_CODE.HOLD;
                     return false;
                 }
-                else if (_values[updateTime].Value.Value.Offer > 0 && _signalCode != SIGNAL_CODE.BUY)
+                else if (_values[updateTime].Value.Value.Offer > 0)
                 {
                     tradingOrder = _onBuy;
                     _signalCode = SIGNAL_CODE.BUY;
                     return true;
                 }
-                else if (_values[updateTime].Value.Value.Bid < 0 && _signalCode != SIGNAL_CODE.SELL)
+                else if (_values[updateTime].Value.Value.Bid < 0)
                 {
                     tradingOrder = _onSell;
                     _signalCode = SIGNAL_CODE.SELL;

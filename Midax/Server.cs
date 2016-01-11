@@ -56,7 +56,7 @@ public class Server
                 var index = new Asset(dicSettings["INDEX"], DateTime.Now);
                 List<MarketData> stocks = new List<MarketData>();
                 foreach (string stock in stockList)
-                    stocks.Add(new Asset(stock, DateTime.Now));
+                    stocks.Add(new MarketData(stock));
                 List<MarketData> volIndices = new List<MarketData>();
                 volIndices.Add(new MarketData(dicSettings["VOLATILITY_2M"]));
                 volIndices.Add(new MarketData(dicSettings["VOLATILITY_3M"]));
@@ -157,7 +157,7 @@ public class Server
 
         void publishMarketLevelsCallback(object state)
         {
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Publiching market levels...", EventLogEntryType.Information);
+            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Publishing market levels...", EventLogEntryType.Information);
             _model.PublishMarketLevels();
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Market levels published", EventLogEntryType.Information);
         }

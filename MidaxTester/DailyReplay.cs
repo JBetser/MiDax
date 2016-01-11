@@ -16,6 +16,7 @@ namespace MidaxTester
             Config.Settings["REPLAY_MODE"] = "CSV";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
             Config.Settings["TIMESERIES_MAX_RECORD_TIME_HOURS"] = "12";
+            Config.Settings["TRADING_SIGNAL"] = "MacD_10_60_IX.D.DAX.DAILY.IP";
             List<MarketData> stocks = new List<MarketData>();
             List<MarketData> volIndices = new List<MarketData>();
             //volIndices.Add(new MarketData("IN.D.VIX.MONTH2.IP"));
@@ -37,8 +38,9 @@ namespace MidaxTester
                 }
 
                 MarketDataConnection.Instance.Connect(null);
-                MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
+                var index = new Asset("DAX:IX.D.DAX.DAILY.IP", Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]));
                 ModelMacDTest model = new ModelMacDTest(index, stocks, volIndices);
+                ReplayStreamingClient.PTF = model.PTF;
                 /*
                 var indicators = new List<Indicator>();
                 indicators.Add(new IndicatorWMA(index, 2));

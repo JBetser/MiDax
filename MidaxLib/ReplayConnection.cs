@@ -17,7 +17,7 @@ namespace MidaxLib
         Dictionary<string, string> _itemData = new Dictionary<string, string>();
         string _name;
         string _id;
-
+        
         public ReplayUpdateInfo(CqlQuote quote)
         {
             _name = quote.n;
@@ -37,7 +37,7 @@ namespace MidaxLib
 
         public string Name { get { return _name; } }
         public string Id { get { return _id; } }
-
+                
         string IUpdateInfo.ItemName { get { return _name; }}
         int IUpdateInfo.ItemPos { get { return 0; } }
         int IUpdateInfo.NumFields { get { return _itemData.Count; } }
@@ -86,12 +86,18 @@ namespace MidaxLib
         
         bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
-
+        static Portfolio _ptf = null;
+        
         public Dictionary<string, List<CqlQuote>> ExpectedIndicatorData { get { return _expectedIndicatorData; } }
         public Dictionary<string, List<CqlQuote>> ExpectedSignalData { get { return _expectedSignalData; } }
         public Dictionary<KeyValuePair<string, DateTime>, Trade> ExpectedTradeData { get { return _expectedTradeData; } }
         public Dictionary<KeyValuePair<string, DateTime>, double> ExpectedProfitData { get { return _expectedProfitData; } }
-        
+        public static Portfolio PTF
+        {
+            get { return _ptf; }
+            set { _ptf = value; }
+        }
+
         public void Connect(string username, string password, string apiKey)
         {
             _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
@@ -148,24 +154,30 @@ namespace MidaxLib
 
         void IAbstractStreamingClient.BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
         {
-            trade.Reference = "###DUMMY_TRADE###";
-            trade.ConfirmationTime = trade.TradingTime;
-            // TODO: remove this hack
-            ReplayTester.Instance.ModelTest.PTF.GetPosition(trade.Epic).Value += trade.Size * (trade.Direction == SIGNAL_CODE.BUY ? 1 : -1);
-            onTradeBooked(trade);
-            // TODO: do the real update here instead
-            _tradingEventTable.OnUpdate(0, trade.Epic, null);
+            if (trade != null)
+            {
+                trade.Reference = "###DUMMY_TRADE###";
+                trade.ConfirmationTime = trade.TradingTime;
+                // TODO: remove this hack
+                PTF.GetPosition(trade.Epic).Value += trade.Size * (trade.Direction == SIGNAL_CODE.BUY ? 1 : -1);
+                onTradeBooked(trade);
+                // TODO: do the real update here instead
+                _tradingEventTable.OnUpdate(0, trade.Epic, null);
+            }
         }
 
         void IAbstractStreamingClient.ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
         {
-            trade.Reference = "###CLOSE_DUMMY_TRADE###";
-            trade.ConfirmationTime = trade.TradingTime;
-            // TODO: remove this hack
-            ReplayTester.Instance.ModelTest.PTF.GetPosition(trade.Epic).Value = 0;
-            onTradeClosed(trade);
-            // TODO: do the real update here instead
-            _tradingEventTable.OnUpdate(0, trade.Epic, null);
+            if (trade != null)
+            {
+                trade.Reference = "###CLOSE_DUMMY_TRADE###";
+                trade.ConfirmationTime = trade.TradingTime;
+                // TODO: remove this hack
+                PTF.GetPosition(trade.Epic).Value = 0;
+                onTradeClosed(trade);
+                // TODO: do the real update here instead
+                _tradingEventTable.OnUpdate(0, trade.Epic, null);
+            }
         }
 
         void IAbstractStreamingClient.GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent evt)
@@ -384,7 +396,7 @@ namespace MidaxLib
 
         public override MarketLevels? GetMarketLevels(DateTime updateTime, string epic)
         {
-            return ReplayTester.Instance.GetMarketLevels(updateTime, epic);
+            return new MarketLevels(10200m, 12500m, 11000m, 11100m);
         }
 
         public override string Close()

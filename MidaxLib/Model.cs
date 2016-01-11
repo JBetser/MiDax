@@ -33,22 +33,37 @@ namespace MidaxLib
             _ptf = new Portfolio(MarketDataConnection.Instance.StreamClient);
         }
 
-        protected void OnBuy(Signal signal, DateTime time, Price value)
+        protected bool OnBuy(Signal signal, DateTime time, Price value, bool check)
         {
+            if (check)
+                return true;
             if (_tradingSignal != null)
                 if (signal.Id == _tradingSignal)
-                    signal.Trade = new Trade(time, signal.Asset.Id, SIGNAL_CODE.BUY, _amount, value.Offer);
+                    signal.Trade = new Trade(_ptf.GetPosition(signal.Asset.Id).Trade, true, time, value.Offer); 
             Buy(signal, time, value);
+            return true;
         }
 
-        protected void OnSell(Signal signal, DateTime time, Price value)
+        protected bool OnSell(Signal signal, DateTime time, Price value, bool check)
         {
             if (_tradingSignal != null)
+            {
                 if (signal.Id == _tradingSignal)
+                {
+                    if (_ptf.GetPosition(signal.Asset.Id).NbPositionsOpen != 0)
+                    {
+                        CloseAllPositions(signal.Asset.Id);
+                        Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. SELL " + signal.Trade.Id + " " + value.Bid, EventLogEntryType.Error);
+                        return false;
+                    }
                     signal.Trade = new Trade(time, signal.Asset.Id, SIGNAL_CODE.SELL, _amount, value.Bid);
-            Sell(signal, time, value);
+                }
+            }
+            if (!check)
+                Sell(signal, time, value);
+            return true;
         }
-
+        
         protected abstract void Buy(Signal signal, DateTime time, Price value);
         protected abstract void Sell(Signal signal, DateTime time, Price value);
 
@@ -97,12 +112,15 @@ namespace MidaxLib
             return status;
         }
 
-        public void CloseAllPositions()
+        public void CloseAllPositions(string stockid = "")
         {
             foreach (var position in _ptf.Positions)
             {
                 if (position.Value.Value != 0)
-                    _ptf.ClosePosition(position.Value.Trade);
+                {
+                    if (stockid == "" || stockid == position.Value.Trade.Epic)
+                        _ptf.ClosePosition(position.Value.Trade);
+                }
             }
         }
 
@@ -155,34 +173,26 @@ namespace MidaxLib
         {
             if (_ptf.GetPosition(_daxIndex.Id).Value < 0)
             {
-                _ptf.ClosePosition(signal.Trade);
+                _ptf.BookTrade(signal.Trade);
                 string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
                 Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.Asset.Id + " " + value.Offer, EventLogEntryType.Information);
             }
         }
-         
+
         protected override void Sell(Signal signal, DateTime time, Price value)
         {
-            if (_ptf.GetPosition(_daxIndex.Id).Value >= 0)
+            if (_ptf.GetPosition(_daxIndex.Id).Value > 0)
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Value > 0)
+                _ptf.BookTrade(signal.Trade);
+                Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + value.Offer, EventLogEntryType.Error);
+            }
+            else if (_ptf.GetPosition(_daxIndex.Id).Value == 0)
+            {
+                if (time <= _closingTime)
                 {
-                    Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + value.Offer, EventLogEntryType.Error);
-                    _ptf.ClosePosition(signal.Trade);
-                }
-                else if (time <= _closingTime)
-                {
-                    if (_ptf.GetPosition(_daxIndex.Id).NbPositionsOpen != 0)
-                    {
-                        Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. SELL " + signal.Trade.Id + " " + value.Bid, EventLogEntryType.Error);
-                        _ptf.ClosePosition(signal.Trade);
-                    }
-                    else
-                    {
-                        _ptf.BookTrade(signal.Trade);
-                        string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                        Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.Asset.Id + " " + value.Bid, EventLogEntryType.Information);
-                    }
+                    _ptf.BookTrade(signal.Trade);
+                    string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.Asset.Id + " " + value.Bid, EventLogEntryType.Information);
                 }
             }
         }

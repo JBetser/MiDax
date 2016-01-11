@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DotNetClient_N2, Version=2.0.4168.21411, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\IGApi\3rdPartyDlls\DotNetClient_N2.dll</HintPath>
+    </Reference>
     <Reference Include="NLapack, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\MidaxLib\NLapack.dll</HintPath>

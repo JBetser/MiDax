@@ -65,11 +65,11 @@ namespace MidaxLib
             _igStreamApiClient.BookTrade(newTrade, OnTradeBooked);
         }
 
-        public Position GetPosition(string itemName)
+        public Position GetPosition(string epic)
         {
-            if (!_positions.ContainsKey(itemName))
-                _positions.Add(itemName, new Position(itemName));
-            return _positions[itemName];
+            if (!_positions.ContainsKey(epic))
+                _positions.Add(epic, new Position(epic));
+            return _positions[epic];
         }
 
         void IHandyTableListener.OnRawUpdatesLost(int itemPos, string itemName, int lostUpdates)

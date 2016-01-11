@@ -126,19 +126,21 @@ namespace MidaxTester
             MarketDataConnection.Instance.Connect(null);
 
             var index = new Asset("DAX:IX.D.DAX.DAILY.IP", Config.ParseDateTimeLocal(dicSettings["TRADING_START_TIME"]));
-            ReplayTester.Instance.ModelTest = new ModelQuickTest(index);
+            var model = new ModelQuickTest(index);
+            ReplayStreamingClient.PTF = model.PTF;
             Console.WriteLine("Testing live indicators and signals...");
-            ReplayTester.Instance.ModelTest.StartSignals();
-            // test that the right numer of trades was placed. this is an extra sanity check to make sure the program is not idle
-            if (ReplayTester.Instance.NbProducedTrades != ReplayTester.Instance.NbExpectedTrades)
-                ReplayTester.Instance.ModelTest.ProcessError(string.Format("the model did not produced the expected number of trades. It produced {0} trades instead of {1} expected",
-                                                ReplayTester.Instance.NbProducedTrades, ReplayTester.Instance.NbExpectedTrades));
-            Console.WriteLine("Testing daily indicators...");
-            ReplayTester.Instance.ModelTest.StopSignals();
-            ReplayTester.Instance.ModelTest.PublishMarketLevels();
+            model.StartSignals();
+            
+            Console.WriteLine("Testing daily indicators...");            
+            model.StopSignals();
+            model.PublishMarketLevels();
                 
             if (!dicSettings.ContainsKey("PUBLISHING_CSV"))
             {
+                // test that the right numer of trades was placed. this is an extra sanity check to make sure the program is not idle
+                if (ReplayTester.Instance.NbProducedTrades != ReplayTester.Instance.NbExpectedTrades)
+                    model.ProcessError(string.Format("the model did not produced the expected number of trades. It produced {0} trades instead of {1} expected",
+                                                    ReplayTester.Instance.NbProducedTrades, ReplayTester.Instance.NbExpectedTrades));
                 // Test exceptions. the program is expected to throw exceptions here, just press continue if you are debugging
                 // all exceptions should be handled, and the program should terminate with a success message box
                 Console.WriteLine("Testing expected exceptions...");
@@ -148,76 +150,79 @@ namespace MidaxTester
                 MarketDataConnection.Instance.Connect(null);                
                 bool success = false;
                 ModelMacDTest modelBis = new ModelQuickTest(index);
+                ReplayStreamingClient.PTF = modelBis.PTF;
                 dicSettings["REPLAY_CSV"] = Config.TestList(testError);
-                ReplayTester.Instance.ModelTest = new ModelQuickTest(index);
+                var modelErr = new ModelQuickTest(index);
                 try
                 {
                     modelBis.StartSignals();
                     MarketDataConnection.Instance.Connect(null);
-                    ReplayTester.Instance.ModelTest.StartSignals();
+                    ReplayStreamingClient.PTF = modelErr.PTF;
+                    modelErr.StartSignals();
                 }
                 catch (Exception exc)
                 {
                     expected = "Time series do not accept values in the past";
                     success = (exc.Message == expected);
                     if (!success)
-                        ReplayTester.Instance.ModelTest.ProcessError(exc.Message, expected);
+                        model.ProcessError(exc.Message, expected);
                 }
                 if (!success)
-                    ReplayTester.Instance.ModelTest.ProcessError("An expected exception has not been thrown");
+                    model.ProcessError("An expected exception has not been thrown");
                 try
                 {
-                    ReplayTester.Instance.ModelTest.StopSignals();
+                    modelErr.StopSignals();
                 }
                 catch (Exception exc)
                 {
                     expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9970.69755260538438389765106";
                     success = (exc.Message == expected);
                     if (!success)
-                        ReplayTester.Instance.ModelTest.ProcessError(exc.Message, expected);
+                        model.ProcessError(exc.Message, expected);
                 }
                 try
                 {
-                    ReplayTester.Instance.ModelTest.StopSignals();
+                    model.StopSignals();
                 }
                 catch (Exception exc)
                 {
                     expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9970.69755260538438389765106";
                     success = (exc.Message == expected);
                     if (!success)
-                        ReplayTester.Instance.ModelTest.ProcessError(exc.Message, expected);
+                        model.ProcessError(exc.Message, expected);
                 }
                 success = false;
                 try
                 {
                     MarketDataConnection.Instance = new ReplayConnection();
                     MarketDataConnection.Instance.Connect(null);
-                    ReplayTester.Instance.ModelTest = new ModelQuickTest(new Asset(index.Id, Config.ParseDateTimeLocal(dicSettings["TRADING_START_TIME"])));
-                    ReplayTester.Instance.ModelTest.StartSignals();
+                    model = new ModelQuickTest(new Asset(index.Id, Config.ParseDateTimeLocal(dicSettings["TRADING_START_TIME"])));
+                    ReplayStreamingClient.PTF = model.PTF;
+                    model.StartSignals();
                 }
                 catch (Exception exc)
                 {
                     expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9976.135 != 9975.736666666666666666666747";
                     success = (exc.Message == expected);
                     if (!success)
-                        ReplayTester.Instance.ModelTest.ProcessError(exc.Message, expected);
+                        model.ProcessError(exc.Message, expected);
                 }
                 if (!success)
-                    ReplayTester.Instance.ModelTest.ProcessError("An expected exception has not been thrown");
+                    model.ProcessError("An expected exception has not been thrown");
                 success = false;
                 try
                 {
-                    ReplayTester.Instance.ModelTest.StopSignals();
+                    model.StopSignals();
                 }
                 catch (Exception exc)
                 {
                     expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9983.779772679923146369004401";
                     success = (exc.Message == expected);
                     if (!success)
-                        ReplayTester.Instance.ModelTest.ProcessError(exc.Message, expected);
+                        model.ProcessError(exc.Message, expected);
                 }
                 if (!success)
-                    ReplayTester.Instance.ModelTest.ProcessError("An expected exception has not been thrown");
+                    model.ProcessError("An expected exception has not been thrown");
                 success = false;
             }            
         }

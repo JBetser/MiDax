@@ -205,7 +205,13 @@ namespace MidaxLib
         
         public async void ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
         {
-            Log.Instance.WriteEntry("Closing trade " + trade.Id + "...");
+            if (trade == null)
+            {
+                Log.Instance.WriteEntry("Cannot close trade", EventLogEntryType.Error);
+                return;
+            }
+            else
+                Log.Instance.WriteEntry("Closing trade id " + (trade.Id == null ? "null" : trade.Id) + " ref " + (trade.Reference == null ? "null" : trade.Reference) + "...");
             var oppositeTrade = new Trade(trade, true);
             BookTrade(oppositeTrade, onTradeClosed);
         }

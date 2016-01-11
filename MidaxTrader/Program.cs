@@ -20,8 +20,8 @@ namespace MidaxTrader
             Config.Settings["USER_NAME"] = "ksbitlsoftdemo";
             Config.Settings["PASSWORD"] = "Kotik0483";
             DateTime start = DateTime.Now;
-            //Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
-            Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\TradingActivity\\trading_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year);
+            Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
+            //Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\TradingActivity\\trading_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year);
             Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 11, 45, 0);
             Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 21, 0, 0);
             Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 13, 0, 0);
@@ -33,10 +33,11 @@ namespace MidaxTrader
             Config.Settings["TRADING_CURRENCY"] = "GBP";
             
             MarketDataConnection.Instance.Connect(null);
-            
-            MarketData snp = new MarketData("SNP:IX.D.SPTRD.DAILY.IP");
+
+            var snp = new Asset("SNP:IX.D.SPTRD.DAILY.IP", Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]));
             Model modelSnp = new ModelMacDTest(snp, new List<MarketData>(), new List<MarketData>());
             Console.WriteLine("Starting signals...");
+
             modelSnp.StartSignals();
             
             Console.WriteLine("Trading...");

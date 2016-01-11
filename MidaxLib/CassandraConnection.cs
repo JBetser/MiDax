@@ -244,28 +244,32 @@ namespace MidaxLib
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             // process previous day
             updateTime = updateTime.AddDays(-1);
-            DateTime prevDay = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 22, 0, 0);
+            DateTime prevDay = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 21, 0, 0);
             RowSet value = null;
+            decimal high = 0m;
+            string indicator = "";
             try
             {
-                value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                    "LVLHigh_" + epic, prevDay));
+                indicator = "LVLHigh_" + epic;
+                value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time>{1} ALLOW FILTERING",
+                    indicator, ToUnixTimestamp(prevDay)));
+                high = (decimal)value.First()[0];
             }
             catch
             {
                 value = null;
+                Log.Instance.WriteEntry("Could not retrieve level indicators for previous COB date. Indicator: " + indicator, EventLogEntryType.Warning);
             }
             if (value == null)
-                return null;
-            decimal high = (decimal)value.First()[0];
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "LVLLow_" + epic, prevDay));
+                return null;             
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time>{1} ALLOW FILTERING",
+                "LVLLow_" + epic, ToUnixTimestamp(prevDay)));
             decimal low = (decimal)value.First()[0];
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "LVLCloseBid_" + epic, prevDay));
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time>{1} ALLOW FILTERING",
+                "LVLCloseBid_" + epic, ToUnixTimestamp(prevDay)));
             decimal closeBid = (decimal)value.First()[0];
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "LVLCloseOffer_" + epic, prevDay));
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time>{1} ALLOW FILTERING",
+                "LVLCloseOffer_" + epic, ToUnixTimestamp(prevDay)));
             decimal closeOffer = (decimal)value.First()[0];
             return new MarketLevels(low, high, closeBid, closeOffer);
         }
