@@ -241,14 +241,5 @@ namespace Midax.Properties {
                 return ((string)(this["TRADING_SIGNAL"]));
             }
         }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("21:00:00")]
-        public string PUBLISHING_MARKET_LEVELS_TIME {
-            get {
-                return ((string)(this["PUBLISHING_MARKET_LEVELS_TIME"]));
-            }
-        }
     }
 }

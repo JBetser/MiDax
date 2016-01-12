@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using dto.endpoint.search;
 using IGPublicPcl;
 using Lightstreamer.DotNet.Client;
 
@@ -89,12 +90,18 @@ namespace MidaxLib
 
         public Asset(string name_id, DateTime updateTime) : base(name_id)
         {
-            _marketLevels = PublisherConnection.Instance.GetMarketLevels(updateTime, _id);
+            MarketDataConnection.Instance.StreamClient.GetMarketDetails(this, onMarketLevelsEvent);
+        }
+
+        protected void onMarketLevelsEvent(Market mktDetails)
+        {
+            _marketLevels = new MarketLevels(mktDetails.epic, mktDetails.low.Value, mktDetails.high.Value, mktDetails.bid.Value, mktDetails.offer.Value);
         }
     }
 
     public struct MarketLevels
     {
+        public string AssetId;
         public decimal Low;
         public decimal High;
         public decimal CloseBid;
@@ -108,8 +115,9 @@ namespace MidaxLib
         public decimal S2;
         public decimal S3;
 
-        public MarketLevels(decimal low, decimal high, decimal closeBid, decimal closeOffer)
+        public MarketLevels(string assetId, decimal low, decimal high, decimal closeBid, decimal closeOffer)
         {
+            AssetId = assetId;
             Low = low;
             High = high;
             CloseBid = closeBid;

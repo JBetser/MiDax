@@ -18,6 +18,7 @@ namespace MidaxLib
         protected Dictionary<string, TimeSeries> _expectedSignalData = null;
         protected Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
         protected Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;
+        protected Dictionary<string, MarketLevels> _expectedMktLvlData = null;
 
         static protected PublisherConnection _instance = null;
         
@@ -26,9 +27,9 @@ namespace MidaxLib
             get
             {
                 bool cassandra = Config.Settings.ContainsKey("DB_CONTACTPOINT");
-                return _instance == null ? (cassandra ? _instance = new CassandraConnection() : 
+                return _instance == null ? 
                     (Config.Settings.ContainsKey("PUBLISHING_CSV") ? _instance = new ReplayPublisher() :
-                                                                        _instance = new ReplayTester()))
+                                                                        (cassandra ? _instance = new CassandraConnection() : _instance = new ReplayTester()))
                     : _instance; 
             }
         }
@@ -42,14 +43,15 @@ namespace MidaxLib
         public abstract void Insert(DateTime updateTime, Value profit);
         public abstract void Insert(DateTime updateTime, NeuralNetworkForCalibration calibratedNeuralNetwork);
         public abstract void Insert(Market mktDetails);
-        public abstract MarketLevels? GetMarketLevels(DateTime updateTime, string epic);
         
-        public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData, Dictionary<KeyValuePair<string, DateTime>, double> profitData)
+        public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, 
+            Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData, Dictionary<KeyValuePair<string, DateTime>, double> profitData, Dictionary<string, MarketLevels> mktLvlData)
         {
             _expectedIndicatorData = new Dictionary<string,TimeSeries>();
             _expectedSignalData = new Dictionary<string, TimeSeries>();
             _expectedTradeData = tradeData;
             _expectedProfitData = profitData;
+            _expectedMktLvlData = mktLvlData;
             foreach (var indData in indicatorData)
             {
                 if (!_expectedIndicatorData.ContainsKey(indData.Key))

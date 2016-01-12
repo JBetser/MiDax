@@ -280,6 +280,8 @@
                <option value="LR_0_1_0">Linear regression 1mn</option>
                <option value="LR_0_5_0">Linear regression 5mn</option>
                <option value="LR_0_30_0">Linear regression 30mn</option>
+               <option value="WMVol_2#WMVol_10">WM Vol 2mn/10mn</option>
+               <option value="WMVol_10#WMVol_60">WM Vol 10mn/1h</option>
              </select>   
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>

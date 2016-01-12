@@ -15,6 +15,7 @@ namespace MidaxLib
         List<Trade> GetTrades(DateTime startTime, DateTime stopTime, string type, string id);
         List<KeyValuePair<DateTime, double>> GetProfits(DateTime startTime, DateTime stopTime, string type, string id);
         void CloseConnection();
+        MarketLevels? GetMarketLevels(DateTime updateTime, string epic);        
     }
 
     public class CsvReader : IReaderConnection
@@ -55,7 +56,7 @@ namespace MidaxLib
                     type == PublisherConnection.DATATYPE_SIGNAL) && !values[1].EndsWith(id))
                     continue;
                 DateTime curTime = Config.ParseDateTimeLocal(values[idxTime]);
-                if (!values[1].StartsWith("WMA_1D")) // Do not check time for daily market data
+                if (!values[1].StartsWith("WMA_1D") && !values[1].StartsWith("LVL")) // Do not check time for daily market data
                 {
                     if (curTime < startTime)
                         continue;
@@ -130,6 +131,11 @@ namespace MidaxLib
         void IReaderConnection.CloseConnection()
         {
             _csvReader.Close();
+        }
+
+        MarketLevels? IReaderConnection.GetMarketLevels(DateTime updateTime, string epic)
+        {
+            return new MarketLevels(epic, 10200m, 12500m, 11000m, 11100m);
         }
     }
 }

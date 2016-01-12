@@ -82,7 +82,8 @@ namespace MidaxLib
         Dictionary<string, List<CqlQuote>> _expectedIndicatorData = null;
         Dictionary<string, List<CqlQuote>> _expectedSignalData = null;
         Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
-        Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;        
+        Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;
+        Dictionary<string, MarketLevels> _expectedMktLevelsData = null;
         
         bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
@@ -182,8 +183,9 @@ namespace MidaxLib
 
         void IAbstractStreamingClient.GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent evt)
         {
-            MarketLevels mktLevels = ReplayTester.Instance.GetMarketLevels(_startTime, mktData.Id).Value;
+            MarketLevels mktLevels = _instance.GetMarketLevels(_startTime, mktData.Id).Value;
             Market mkt = new Market();
+            mkt.epic = mktData.Id;
             mkt.high = mktLevels.High; mkt.low = mktLevels.Low; mkt.bid = mktLevels.CloseBid; mkt.offer = mktLevels.CloseOffer;
             evt(mkt);
         }
@@ -267,7 +269,11 @@ namespace MidaxLib
                     foreach (var profit in profits)
                         _expectedProfitData.Add(new KeyValuePair<string, DateTime>(epic, profit.Key), profit.Value);
                 }
-                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData, _expectedTradeData, _expectedProfitData);
+                _expectedMktLevelsData = new Dictionary<string, MarketLevels>();
+                foreach (string epic in epics)
+                    _expectedMktLevelsData[epic] = _instance.GetMarketLevels(_stopTime, epic).Value;
+                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData, 
+                    _expectedTradeData, _expectedProfitData, _expectedMktLevelsData);
             }
             return priceData;
         }
@@ -343,6 +349,7 @@ namespace MidaxLib
         StringBuilder _csvSignalStringBuilder;
         StringBuilder _csvTradeStringBuilder;
         StringBuilder _csvProfitStringBuilder;
+        StringBuilder _csvMktDetailsStringBuilder;
 
         static public new ReplayPublisher Instance
         {
@@ -360,6 +367,7 @@ namespace MidaxLib
             _csvSignalStringBuilder = new StringBuilder();
             _csvTradeStringBuilder = new StringBuilder();
             _csvProfitStringBuilder = new StringBuilder();
+            _csvMktDetailsStringBuilder = new StringBuilder();
         }
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
@@ -413,13 +421,10 @@ namespace MidaxLib
 
         public override void Insert(Market mktDetails)
         {
-            throw new ApplicationException("End of day data publishing not implemented");
-        }
-
-        public override MarketLevels? GetMarketLevels(DateTime updateTime, string epic)
-        {
-            return new MarketLevels(10200m, 12500m, 11000m, 11100m);
-        }
+            var newLine = string.Format("marketlevels,{0},{1},{2},{3},{4}{5}", mktDetails.epic, mktDetails.low, mktDetails.high, mktDetails.bid, mktDetails.offer,
+                Environment.NewLine);
+            _csvMktDetailsStringBuilder.Append(newLine);
+        }        
 
         public override string Close()
         {
@@ -432,6 +437,8 @@ namespace MidaxLib
             csvContent += _csvTradeStringBuilder.ToString();
             csvContent += Environment.NewLine;
             csvContent += _csvProfitStringBuilder.ToString();
+            csvContent += Environment.NewLine;
+            csvContent += _csvMktDetailsStringBuilder.ToString();
             File.WriteAllText(_csvFile, csvContent);
             string info = "Generated results in " + _csvFile;
             Log.Instance.WriteEntry(info, EventLogEntryType.Information);
@@ -443,7 +450,6 @@ namespace MidaxLib
     public class ReplayTester : PublisherConnection
     {
         public const decimal TOLERANCE = 1e-4m;
-        MarketLevels _mktLevels;
         int _nbTrades = 0;
 
         public int NbExpectedTrades { get { return _expectedTradeData.Count; } }
@@ -541,11 +547,12 @@ namespace MidaxLib
 
         public override void Insert(Market mktDetails)
         {
-            if (mktDetails.high != _mktLevels.High || mktDetails.low != _mktLevels.Low || 
-                mktDetails.bid != _mktLevels.CloseBid || mktDetails.offer != _mktLevels.CloseOffer)
+            if (mktDetails.high != _expectedMktLvlData[mktDetails.epic].High || mktDetails.low != _expectedMktLvlData[mktDetails.epic].Low ||
+                mktDetails.bid != _expectedMktLvlData[mktDetails.epic].CloseBid || mktDetails.offer != _expectedMktLvlData[mktDetails.epic].CloseOffer)
             {
                 string error = string.Format("Test failed: market levels " + mktDetails.epic + " time " + Config.ParseDateTimeLocal(mktDetails.updateTime).ToShortTimeString() +
-                    " expected levels (high, low, bid, offer) {0} {1} {2} {3} != {4} {5} {6} {7} ", _mktLevels.High, _mktLevels.Low, _mktLevels.CloseBid, _mktLevels.CloseOffer,
+                    " expected levels (high, low, bid, offer) {0} {1} {2} {3} != {4} {5} {6} {7} ", 
+                    _expectedMktLvlData[mktDetails.epic].High, _expectedMktLvlData[mktDetails.epic].Low, _expectedMktLvlData[mktDetails.epic].CloseBid, _expectedMktLvlData[mktDetails.epic].CloseOffer,
                     mktDetails.high, mktDetails.low, mktDetails.bid, mktDetails.offer);
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
@@ -559,13 +566,7 @@ namespace MidaxLib
         public override void Insert(DateTime updateTime, NeuralNetworkForCalibration ann)
         {
         }
-
-        public override MarketLevels? GetMarketLevels(DateTime updateTime, string epic)
-        {
-            _mktLevels = new MarketLevels(10200m, 12500m, 11000m, 11100m);
-            return _mktLevels;
-        }
-
+        
         public override string Close()
         {
             string info = "Tests passed successfully";

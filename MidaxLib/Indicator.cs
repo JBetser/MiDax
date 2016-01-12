@@ -170,13 +170,13 @@ namespace MidaxLib
                     continue;
                 }
                 if (linearInterpolation)
-                    var += ((beginPeriodValue.Value + endPeriodValue.Value) / 2m - avg) * weight * (decimal)(endPeriodValue.Key - beginPeriodValue.Key).TotalSeconds;
+                    var += ((beginPeriodValue.Value + endPeriodValue.Value) / 2m - avg).Abs() * weight * (decimal)(endPeriodValue.Key - beginPeriodValue.Key).TotalSeconds;
                 else
-                    var += (beginPeriodValue.Value - avg) * weight * (decimal)(endPeriodValue.Key - beginPeriodValue.Key).TotalSeconds;
+                    var += (beginPeriodValue.Value - avg).Abs() * weight * (decimal)(endPeriodValue.Key - beginPeriodValue.Key).TotalSeconds;
                 idxSecond += (int)(endPeriodValue.Key - beginPeriodValue.Key).TotalSeconds;
                 beginPeriodValue = endPeriodValue;
             }
-            var += (beginPeriodValue.Value - avg) * weight * (decimal)(updateTime - beginPeriodValue.Key).TotalSeconds;
+            var += (beginPeriodValue.Value - avg).Abs() * weight * (decimal)(updateTime - beginPeriodValue.Key).TotalSeconds;
             return var;
         }
     }

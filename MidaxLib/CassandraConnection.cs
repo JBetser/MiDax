@@ -228,30 +228,32 @@ namespace MidaxLib
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             if (mktDetails.marketStatus == "TRADEABLE")
                 throw new ApplicationException("Cannot write end of day data; market is not closed");
+            var publishTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, 22, 0, 0);
+            var ts = ToUnixTimestamp(publishTime);
             _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
-                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLHigh_" + mktDetails.epic, ToUnixTimestamp(mktDetails.updateTime), mktDetails.high));
+                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLHigh_" + mktDetails.epic, ts, mktDetails.high));
             _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
-                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLLow_" + mktDetails.epic, ToUnixTimestamp(mktDetails.updateTime), mktDetails.low));
+                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLLow_" + mktDetails.epic, ts, mktDetails.low));
             _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
-                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseBid_" + mktDetails.epic, ToUnixTimestamp(mktDetails.updateTime), mktDetails.bid));
+                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseBid_" + mktDetails.epic, ts, mktDetails.bid));
             _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
-                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseOffer_" + mktDetails.epic, ToUnixTimestamp(mktDetails.updateTime), mktDetails.offer));
+                DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseOffer_" + mktDetails.epic, ts, mktDetails.offer));
         }
 
-        public override MarketLevels? GetMarketLevels(DateTime updateTime, string epic)
+        MarketLevels? IReaderConnection.GetMarketLevels(DateTime updateTime, string epic)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             // process previous day
             updateTime = updateTime.AddDays(-1);
-            DateTime prevDay = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 21, 0, 0);
+            DateTime prevDay = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 22, 0, 0, DateTimeKind.Utc);
             RowSet value = null;
             decimal high = 0m;
             string indicator = "";
             try
             {
                 indicator = "LVLHigh_" + epic;
-                value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time>{1} ALLOW FILTERING",
+                value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
                     indicator, ToUnixTimestamp(prevDay)));
                 high = (decimal)value.First()[0];
             }
@@ -262,16 +264,16 @@ namespace MidaxLib
             }
             if (value == null)
                 return null;             
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time>{1} ALLOW FILTERING",
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
                 "LVLLow_" + epic, ToUnixTimestamp(prevDay)));
             decimal low = (decimal)value.First()[0];
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time>{1} ALLOW FILTERING",
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
                 "LVLCloseBid_" + epic, ToUnixTimestamp(prevDay)));
             decimal closeBid = (decimal)value.First()[0];
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time>{1} ALLOW FILTERING",
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
                 "LVLCloseOffer_" + epic, ToUnixTimestamp(prevDay)));
             decimal closeOffer = (decimal)value.First()[0];
-            return new MarketLevels(low, high, closeBid, closeOffer);
+            return new MarketLevels(epic, low, high, closeBid, closeOffer);
         }
 
         int IStaticDataConnection.GetAnnLatestVersion(string annid, string stockid)

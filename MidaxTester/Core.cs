@@ -12,7 +12,7 @@ namespace MidaxTester
 {
     public class Core
     {
-        public static void Run()
+        public static void Run(bool generate = false)
         {
             List<string> tests = new List<string>();
             tests.Add(@"..\..\expected_results\mktdata_26_8_2015.csv");
@@ -21,8 +21,9 @@ namespace MidaxTester
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["PUBLISHING_START_TIME"] = "2015-08-26 00:00:01";
             dicSettings["PUBLISHING_STOP_TIME"] = "2015-08-26 23:59:59";
-            //dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";
-            //dicSettings["PUBLISHING_CSV"] = @"..\..\expected_results\new_results.csv";   // uncomment this line to generate new test results
+            //dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";      // uncomment this line to replay from the DB instead of the csv files
+            if (generate)
+                dicSettings["PUBLISHING_CSV"] = @"..\..\expected_results\mktdatagen_26_8_2015.csv"; 
             dicSettings["REPLAY_MODE"] = "CSV";
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             dicSettings["REPLAY_POPUP"] = "1";
@@ -34,8 +35,9 @@ namespace MidaxTester
             dicSettings["TRADING_LIMIT_PER_BP"] = "10";
             dicSettings["TRADING_CURRENCY"] = "GBP";
             Config.Settings = dicSettings;
-            
-            Console.WriteLine("Testing calibration...");
+
+            string action = generate ? "Generating" : "Testing";
+            Console.WriteLine(action + " calibration...");
 
             // Test the optimization of function a * cos(b * x) + b * sin(a * x) using Levenberg Marquardt
             LevenbergMarquardt.objective_func objFunc = (NRealMatrix x) => { NRealMatrix y = new NRealMatrix(x.Rows, 1);
@@ -125,15 +127,14 @@ namespace MidaxTester
 
             MarketDataConnection.Instance.Connect(null);
 
-            var index = new Asset("DAX:IX.D.DAX.DAILY.IP", Config.ParseDateTimeLocal(dicSettings["TRADING_START_TIME"]));
+            var index = new Asset("DAX:IX.D.DAX.DAILY.IP", Config.ParseDateTimeLocal(dicSettings["PUBLISHING_STOP_TIME"]));
             var model = new ModelQuickTest(index);
             ReplayStreamingClient.PTF = model.PTF;
-            Console.WriteLine("Testing live indicators and signals...");
+            Console.WriteLine(action + " live indicators and signals...");
             model.StartSignals();
             
-            Console.WriteLine("Testing daily indicators...");            
+            Console.WriteLine(action + " daily indicators...");            
             model.StopSignals();
-            model.PublishMarketLevels();
                 
             if (!dicSettings.ContainsKey("PUBLISHING_CSV"))
             {
@@ -149,12 +150,12 @@ namespace MidaxTester
                 model = new ModelQuickTest(index);
                 ReplayStreamingClient.PTF = model.PTF;
                 MarketDataConnection.Instance.Connect(null);
-                Console.WriteLine("Testing synchronization...");
+                Console.WriteLine(action + " synchronization...");
                 model.StartSignals();
                 model.StopSignals();
                 // Test exceptions. the program is expected to throw exceptions here, just press continue if you are debugging
                 // all exceptions should be handled, and the program should terminate with a success message box
-                Console.WriteLine("Testing expected exceptions...");
+                Console.WriteLine(action + " expected exceptions...");
                 string expected;
                 dicSettings["REPLAY_CSV"] = Config.TestList(tests);
                 MarketDataConnection.Instance = new ReplayConnection();
@@ -215,7 +216,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:41 expected value 9976.135 != 9975.736666666666666666666747";
+                    expected = "The given key was not present in the dictionary.";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);

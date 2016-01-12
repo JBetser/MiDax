@@ -17,6 +17,9 @@ namespace MidaxTester
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
             Config.Settings["TIMESERIES_MAX_RECORD_TIME_HOURS"] = "12";
             Config.Settings["TRADING_SIGNAL"] = "MacD_10_60_IX.D.DAX.DAILY.IP";
+
+            string action = generate ? "Generating" : "Testing";
+            
             List<MarketData> stocks = new List<MarketData>();
             List<MarketData> volIndices = new List<MarketData>();
             //volIndices.Add(new MarketData("IN.D.VIX.MONTH2.IP"));
@@ -47,7 +50,7 @@ namespace MidaxTester
                 indicators.Add(new IndicatorWMA(index, 10));
                 indicators.Add(new IndicatorWMA(index, 60));
                 ModelANN model = new ModelANN("WMA_4_2", index, stocks, volIndices, indicators);*/
-                Console.WriteLine("Running a new daily record...");
+                Console.WriteLine(action + string.Format(" the daily record {0}-{1}-{2}...", test.Year, test.Month, test.Day));
                 model.StartSignals();
                 model.StopSignals();
             }

@@ -53,7 +53,7 @@ public class Server
 
                 MarketDataConnection.Instance.Connect(connectionLostCallback);
 
-                var index = new Asset(dicSettings["INDEX"], DateTime.Now);
+                var index = new Asset(dicSettings["INDEX"], Config.ParseDateTimeLocal(dicSettings["PUBLISHING_STOP_TIME"]));
                 List<MarketData> stocks = new List<MarketData>();
                 foreach (string stock in stockList)
                     stocks.Add(new MarketData(stock));
@@ -73,14 +73,12 @@ public class Server
                 var timerStart = new System.Threading.Timer(startSignalCallback);
                 var timerStop = new System.Threading.Timer(stopSignalCallback);
                 var timerClosePositions = new System.Threading.Timer(closePositionsCallback);
-                var timerPublishMarketLevels = new System.Threading.Timer(publishMarketLevelsCallback);
                 
                 // Figure how much time until PUBLISHING_STOP_TIME
                 DateTime now = DateTime.Now;
                 DateTime startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
                 DateTime stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
                 DateTime closePositionsTime = Config.ParseDateTimeLocal(Config.Settings["FORCE_CLOSE_POSITIONS_TIME"]);
-                DateTime publishMarketLevelsTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_MARKET_LEVELS_TIME"]);
 
                 // If it's already past PUBLISHING_STOP_TIME, wait until PUBLISHING_STOP_TIME tomorrow  
                 int msUntilStartTime = 10;
@@ -92,8 +90,6 @@ public class Server
                         stopTime = stopTime.AddDays(1.0);
                         if (now > closePositionsTime)
                             closePositionsTime = closePositionsTime.AddDays(1.0);
-                        if (now > publishMarketLevelsTime)
-                            publishMarketLevelsTime = publishMarketLevelsTime.AddDays(1.0);
                         msUntilStartTime = (int)((startTime - now).TotalMilliseconds);
                     }
                 }
@@ -101,13 +97,11 @@ public class Server
                     msUntilStartTime = (int)((startTime - now).TotalMilliseconds);
                 int msUntilStopTime = (int)((stopTime - now).TotalMilliseconds);
                 int msUntilCloseTime = (int)((closePositionsTime - now).TotalMilliseconds);
-                int msUntilPublishLevelsTime = (int)((publishMarketLevelsTime - now).TotalMilliseconds);
                 
                 // Set the timers to elapse only once, at their respective scheduled times
                 timerStart.Change(msUntilStartTime, Timeout.Infinite);
                 timerStop.Change(msUntilStopTime, Timeout.Infinite);
                 timerClosePositions.Change(msUntilCloseTime, Timeout.Infinite);
-                timerPublishMarketLevels.Change(msUntilPublishLevelsTime, Timeout.Infinite);
 
                 communicator().waitForShutdown();
             }
@@ -153,13 +147,6 @@ public class Server
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Connected. Restarting the signals...", EventLogEntryType.Information);
             MarketDataConnection.Instance.StartListening();
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
-        }
-
-        void publishMarketLevelsCallback(object state)
-        {
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Publishing market levels...", EventLogEntryType.Information);
-            _model.PublishMarketLevels();
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Market levels published", EventLogEntryType.Information);
         }
     }
 

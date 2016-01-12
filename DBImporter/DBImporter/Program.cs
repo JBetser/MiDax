@@ -16,7 +16,7 @@ namespace DBImporter
 
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
-            dicSettings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
+            dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";
             dicSettings["REPLAY_MODE"] = "DB";
             dicSettings["REPLAY_POPUP"] = "1";
             dicSettings["TRADING_MODE"] = "REPLAY";
@@ -33,11 +33,21 @@ namespace DBImporter
 
                 MarketDataConnection.Instance.Connect(null);
 
-                var index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
+                var index = new Asset("DAX:IX.D.DAX.DAILY.IP", Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
                 var indicator = new IndicatorWMA(index, 2);
-                indicator.Subscribe(OnUpdateIndicatora);
+                indicator.Subscribe(OnUpdateIndicatora);  
                 MarketDataConnection.Instance.StartListening();
                 MarketDataConnection.Instance.StopListening();
+                var indicatorLevels = new List<ILevelPublisher>();
+                indicatorLevels.Add(new IndicatorLevelPivot(index));
+                indicatorLevels.Add(new IndicatorLevelR1(index));
+                indicatorLevels.Add(new IndicatorLevelR2(index));
+                indicatorLevels.Add(new IndicatorLevelR3(index));
+                indicatorLevels.Add(new IndicatorLevelS1(index));
+                indicatorLevels.Add(new IndicatorLevelS2(index));
+                indicatorLevels.Add(new IndicatorLevelS3(index));
+                foreach (var ind in indicatorLevels)
+                    ind.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
                 PublisherConnection.Instance.Close();
                 indicator.Unsubscribe(OnUpdateIndicatora);
                 indicator.Clear();

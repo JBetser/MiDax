@@ -203,7 +203,7 @@ namespace MidaxLib
             }
         }
         
-        public async void ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
+        public void ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
         {
             if (trade == null)
             {

@@ -18,7 +18,6 @@ namespace MarketSelector
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["TIMESERIES_MAX_RECORD_TIME_HOURS"] = "12";
             dicSettings["LIMIT"] = "10";
-            dicSettings["PUBLISHING_CONTACTPOINT"] = "192.168.1.26";
             dicSettings["REPLAY_MODE"] = "CSV";
             dicSettings["REPLAY_POPUP"] = "1";
             dicSettings["TRADING_MODE"] = "SELECT";

@@ -50,6 +50,10 @@ namespace MidaxLib
         {
             return new Price(Mid());
         }
+        public Price Abs()
+        {
+            return new Price(this.Bid >= 0m ? this.Bid : -this.Bid);
+        }
         public static Price operator +(Price p1, Price p2)
         {
             Price sum = new Price();

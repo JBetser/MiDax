@@ -91,6 +91,7 @@ namespace MidaxLib
             Log.Instance.WriteEntry("Publishing indicator levels...", EventLogEntryType.Information);
             foreach (var indicator in _mktEODIndicators)
                 indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
+            publishMarketLevels();
             string status = PublisherConnection.Instance.Close();
             foreach (Signal sig in _mktSignals)
             {
@@ -124,7 +125,7 @@ namespace MidaxLib
             }
         }
 
-        public void PublishMarketLevels()
+        void publishMarketLevels()
         {
             MarketDataConnection.Instance.PublishMarketLevels(_mktData);
         }
@@ -166,7 +167,17 @@ namespace MidaxLib
             this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, lowPeriod * 30)));
             this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, midPeriod * 30)));
             this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, highPeriod * 30)));
+            this._mktIndicators.Add(new IndicatorWMVol(_daxIndex, lowPeriod));
+            this._mktIndicators.Add(new IndicatorWMVol(_daxIndex, midPeriod));
+            this._mktIndicators.Add(new IndicatorWMVol(_daxIndex, highPeriod));
             this._mktEODIndicators.Add(new IndicatorLevelMean(_daxIndex));
+            this._mktEODIndicators.Add(new IndicatorLevelPivot(_daxIndex));
+            this._mktEODIndicators.Add(new IndicatorLevelR1(_daxIndex));
+            this._mktEODIndicators.Add(new IndicatorLevelR2(_daxIndex));
+            this._mktEODIndicators.Add(new IndicatorLevelR3(_daxIndex));
+            this._mktEODIndicators.Add(new IndicatorLevelS1(_daxIndex));
+            this._mktEODIndicators.Add(new IndicatorLevelS2(_daxIndex));
+            this._mktEODIndicators.Add(new IndicatorLevelS3(_daxIndex));
         }
 
         protected override void Buy(Signal signal, DateTime time, Price value)
