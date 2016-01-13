@@ -189,6 +189,7 @@ namespace MidaxLib
                 var closingTrade = new Trade(trade, true, time);
                 closingTrade.Id = "###CLOSE_DUMMY_TRADE_ID###";
                 closingTrade.Reference = "###CLOSE_DUMMY_TRADE###";
+                closingTrade.ConfirmationTime = time;
                 onTradeBooked(closingTrade);
                 _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, "DELETED", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
             }
