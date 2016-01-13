@@ -38,9 +38,10 @@ namespace MidaxLib
             if (check)
                 return true;
             if (_tradingSignal != null)
+            {
                 if (signal.Id == _tradingSignal)
-                    signal.Trade = new Trade(_ptf.GetPosition(signal.Asset.Id).Trade, true, time, value.Offer); 
-            Buy(signal, time, value);
+                    Buy(signal, time, value);
+            }
             return true;
         }
 
@@ -50,17 +51,20 @@ namespace MidaxLib
             {
                 if (signal.Id == _tradingSignal)
                 {
-                    if (_ptf.GetPosition(signal.Asset.Id).NbPositionsOpen != 0)
+                    if (!_ptf.GetPosition(signal.Asset.Id).Closed)
                     {
-                        CloseAllPositions(signal.Asset.Id);
-                        Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. SELL " + signal.Trade.Id + " " + value.Bid, EventLogEntryType.Error);
+                        if (_ptf.GetPosition(signal.Asset.Id).Value >= 0)
+                        {
+                            Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + value.Bid + ". Closing all positions...", EventLogEntryType.Error);
+                            CloseAllPositions(time, signal.Asset.Id);
+                        }
                         return false;
                     }
                     signal.Trade = new Trade(time, signal.Asset.Id, SIGNAL_CODE.SELL, _amount, value.Bid);
+                    if (!check)
+                        Sell(signal, time, value);
                 }
-            }
-            if (!check)
-                Sell(signal, time, value);
+            }            
             return true;
         }
         
@@ -113,14 +117,14 @@ namespace MidaxLib
             return status;
         }
 
-        public void CloseAllPositions(string stockid = "")
+        public void CloseAllPositions(DateTime time, string stockid = "")
         {
             foreach (var position in _ptf.Positions)
             {
                 if (position.Value.Value != 0)
                 {
                     if (stockid == "" || stockid == position.Value.Trade.Epic)
-                        _ptf.ClosePosition(position.Value.Trade);
+                        _ptf.ClosePosition(position.Value.Trade, time);
                 }
             }
         }
@@ -184,7 +188,8 @@ namespace MidaxLib
         {
             if (_ptf.GetPosition(_daxIndex.Id).Value < 0)
             {
-                _ptf.BookTrade(signal.Trade);
+                signal.Trade.Price = value.Offer;
+                _ptf.ClosePosition(signal.Trade, time);
                 string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
                 Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.Asset.Id + " " + value.Offer, EventLogEntryType.Information);
             }

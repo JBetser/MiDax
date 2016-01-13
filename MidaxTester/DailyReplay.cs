@@ -43,7 +43,6 @@ namespace MidaxTester
                 MarketDataConnection.Instance.Connect(null);
                 var index = new Asset("DAX:IX.D.DAX.DAILY.IP", Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]));
                 ModelMacDTest model = new ModelMacDTest(index, stocks, volIndices);
-                ReplayStreamingClient.PTF = model.PTF;
                 /*
                 var indicators = new List<Indicator>();
                 indicators.Add(new IndicatorWMA(index, 2));

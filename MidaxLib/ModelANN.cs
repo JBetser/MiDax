@@ -44,7 +44,7 @@ namespace MidaxLib
             {
                 if (time >= _closingTime)
                 {
-                    _ptf.ClosePosition(signal.Trade);
+                    _ptf.ClosePosition(signal.Trade, time);
                 }
                 else
                 {
@@ -62,7 +62,7 @@ namespace MidaxLib
                 if (time >= _closingTime)
                 {
                     if (_ptf.GetPosition(_daxIndex.Id).Value > 0)
-                        _ptf.ClosePosition(signal.Trade);
+                        _ptf.ClosePosition(signal.Trade, time);
                 }
                 else
                 {

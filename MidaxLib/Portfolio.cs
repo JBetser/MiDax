@@ -33,9 +33,9 @@ namespace MidaxLib
             }
         }
         
-        public void ClosePosition(Trade trade)
+        public void ClosePosition(Trade trade, DateTime time)
         {
-            _igStreamApiClient.ClosePosition(trade, OnTradeBooked);
+            _igStreamApiClient.ClosePosition(trade, time, OnTradeBooked);
         }
 
         public void Unsubscribe()

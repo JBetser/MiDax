@@ -129,7 +129,7 @@ namespace MidaxTester
 
             var index = new Asset("DAX:IX.D.DAX.DAILY.IP", Config.ParseDateTimeLocal(dicSettings["PUBLISHING_STOP_TIME"]));
             var model = new ModelQuickTest(index);
-            ReplayStreamingClient.PTF = model.PTF;
+            
             Console.WriteLine(action + " live indicators and signals...");
             model.StartSignals();
             
@@ -142,27 +142,73 @@ namespace MidaxTester
                 if (ReplayTester.Instance.NbProducedTrades != ReplayTester.Instance.NbExpectedTrades)
                     model.ProcessError(string.Format("the model did not produced the expected number of trades. It produced {0} trades instead of {1} expected",
                                                     ReplayTester.Instance.NbProducedTrades, ReplayTester.Instance.NbExpectedTrades));
-                // test for synchronization issues with the broker
+
+                // test trade booking
+                MarketDataConnection.Instance = new ReplayConnection();
+                model = new ModelQuickTest(index);
+                MarketDataConnection.Instance.Connect(null);
+                Console.WriteLine(action + " trade booking...");
+                var tradeTime = DateTime.Now;
+                var tradeTest = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 10000m);
+                var expectedTrades = new Dictionary<KeyValuePair<string, DateTime>, Trade>();
+                expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = tradeTest;
+                ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null, null); 
+                model.BookTrade(tradeTest);
+                if (model.PTF.GetPosition(tradeTest.Epic).Value != -10)
+                    throw new ApplicationException("SELL Trade booking error");
+                var expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.BUY, 10, 10000m);
+                expectedTrade.Reference = "###DUMMY_TRADE###";
+                expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
+                tradeTest = new Trade(tradeTest, true, tradeTime);
+                model.BookTrade(tradeTest);
+                if (model.PTF.GetPosition(tradeTest.Epic).Value != 0)
+                    throw new ApplicationException("Trade position closing error");
+                model.BookTrade(tradeTest);
+                if (model.PTF.GetPosition(tradeTest.Epic).Value != 10)
+                    throw new ApplicationException("BUY Trade booking error");
+                string expected;
+                bool success = false;
+                expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 10000m);
+                expectedTrade.Reference = "###CLOSE_DUMMY_TRADE###";
+                expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
+                try
+                {
+                    model.CloseAllPositions(tradeTest.TradingTime);
+                }
+                catch (Exception exc)
+                {
+                    expected = "Test failed: trade IX.D.DAX.DAILY.IP expected Price 10000 != 0";
+                    success = (exc.Message == expected);
+                    if (!success)
+                        model.ProcessError(exc.Message, expected);
+                }
+
+                // test synchronization issues with the broker
                 List<string> testsSync = new List<string>();
                 testsSync.Add(@"..\..\expected_results\mktdata_26_8_2015_sync.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
-                MarketDataConnection.Instance = new ReplayCrazyConnection();
+                MarketDataConnection.Instance = new ReplayCrazySeller();
                 model = new ModelQuickTest(index);
-                ReplayStreamingClient.PTF = model.PTF;
-                MarketDataConnection.Instance.Connect(null);
                 Console.WriteLine(action + " synchronization...");
+                MarketDataConnection.Instance.Connect(null);
                 model.StartSignals();
                 model.StopSignals();
+                testsSync = new List<string>();
+                testsSync.Add(@"..\..\expected_results\mktdata_26_8_2015_sync2.csv");
+                dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
+                MarketDataConnection.Instance = new ReplayCrazyBuyer();
+                model = new ModelQuickTest(index);
+                MarketDataConnection.Instance.Connect(null);
+                model.StartSignals();
+                model.StopSignals();
+
                 // Test exceptions. the program is expected to throw exceptions here, just press continue if you are debugging
                 // all exceptions should be handled, and the program should terminate with a success message box
                 Console.WriteLine(action + " expected exceptions...");
-                string expected;
                 dicSettings["REPLAY_CSV"] = Config.TestList(tests);
                 MarketDataConnection.Instance = new ReplayConnection();
                 MarketDataConnection.Instance.Connect(null);                
-                bool success = false;
                 ModelMacDTest modelBis = new ModelQuickTest(index);
-                ReplayStreamingClient.PTF = modelBis.PTF;
                 List<string> testError = new List<string>();
                 testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testError);
@@ -171,7 +217,6 @@ namespace MidaxTester
                 {
                     modelBis.StartSignals();
                     MarketDataConnection.Instance.Connect(null);
-                    ReplayStreamingClient.PTF = modelErr.PTF;
                     modelErr.StartSignals();
                 }
                 catch (Exception exc)
@@ -211,7 +256,6 @@ namespace MidaxTester
                     MarketDataConnection.Instance = new ReplayConnection();
                     MarketDataConnection.Instance.Connect(null);
                     model = new ModelQuickTest(new Asset(index.Id, Config.ParseDateTimeLocal(dicSettings["TRADING_START_TIME"])));
-                    ReplayStreamingClient.PTF = model.PTF;
                     model.StartSignals();
                 }
                 catch (Exception exc)

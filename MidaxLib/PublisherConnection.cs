@@ -52,19 +52,25 @@ namespace MidaxLib
             _expectedTradeData = tradeData;
             _expectedProfitData = profitData;
             _expectedMktLvlData = mktLvlData;
-            foreach (var indData in indicatorData)
+            if (indicatorData != null)
             {
-                if (!_expectedIndicatorData.ContainsKey(indData.Key))
-                    _expectedIndicatorData.Add(indData.Key, new TimeSeries());
-                foreach (var value in indData.Value)
-                    _expectedIndicatorData[indData.Key].Add(value.t.DateTime, new Price(value.b.Value, value.o.Value, value.v.Value));
-            }   
-            foreach (var sigData in signalData)
+                foreach (var indData in indicatorData)
+                {
+                    if (!_expectedIndicatorData.ContainsKey(indData.Key))
+                        _expectedIndicatorData.Add(indData.Key, new TimeSeries());
+                    foreach (var value in indData.Value)
+                        _expectedIndicatorData[indData.Key].Add(value.t.DateTime, new Price(value.b.Value, value.o.Value, value.v.Value));
+                }
+            }
+            if (signalData != null)
             {
-                if (!_expectedSignalData.ContainsKey(sigData.Key))
-                    _expectedSignalData.Add(sigData.Key, new TimeSeries());
-                foreach (var value in sigData.Value)
-                    _expectedSignalData[sigData.Key].Add(value.t.DateTime, new Price(value.b.Value, value.o.Value, value.v.Value));
+                foreach (var sigData in signalData)
+                {
+                    if (!_expectedSignalData.ContainsKey(sigData.Key))
+                        _expectedSignalData.Add(sigData.Key, new TimeSeries());
+                    foreach (var value in sigData.Value)
+                        _expectedSignalData[sigData.Key].Add(value.t.DateTime, new Price(value.b.Value, value.o.Value, value.v.Value));
+                }
             }
         }
 

@@ -136,7 +136,7 @@ public class Server
         void closePositionsCallback(object state)
         {
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Closing positions", EventLogEntryType.Information);
-            _model.CloseAllPositions();
+            _model.CloseAllPositions(DateTime.Now);
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": All positions closed", EventLogEntryType.Information);
         }
 

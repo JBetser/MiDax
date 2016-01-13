@@ -38,6 +38,9 @@ namespace MidaxTrader
             Model modelSnp = new ModelMacDTest(snp, new List<MarketData>(), new List<MarketData>());
             Console.WriteLine("Starting signals...");
 
+            modelSnp.BookTrade(new Trade(DateTime.Now,"IX.D.SPTRD.DAILY.IP", SIGNAL_CODE.SELL, 10,10000));
+            modelSnp.CloseAllPositions(DateTime.Now);
+
             modelSnp.StartSignals();
             
             Console.WriteLine("Trading...");

@@ -25,7 +25,7 @@ namespace MidaxLib
         public string Reference { get { return _reference; } set { _reference = value; } }
         public DateTime TradingTime { get { return _tradingTime; } }
         public DateTime ConfirmationTime { get { return _confirmationTime; } set { _confirmationTime = value; } }
-        public decimal Price { get { return _price; } }
+        public decimal Price { get { return _price; } set { _price = value; } }
 
         public Trade(DateTime tradingTime, string epic, SIGNAL_CODE direction, int size, decimal price)
         {
@@ -36,25 +36,24 @@ namespace MidaxLib
             _price = price;
         }
 
-        public Trade(Trade cpy, bool opposite = false, DateTime? trading_time = null, decimal? price = null)
+        public Trade(Trade cpy, bool opposite = false, DateTime? trading_time = null)
         {
             this._epic = cpy._epic;
             if (opposite)
             {
                 this._direction = (cpy._direction == SIGNAL_CODE.BUY ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY);
                 this._tradingTime = trading_time.Value;
-                this._price = price.Value;
             }
             else
             {
                 this._direction = cpy._direction;
                 this._tradingTime = cpy._tradingTime;
                 this._confirmationTime = cpy._confirmationTime;
-                this._price = cpy._price;
             }
             this._size = cpy._size;
             this._reference = cpy._reference;
-            this._id = cpy._id; 
+            this._id = cpy._id;
+            this._price = cpy._price;
         }
 
         public Trade(Row row)

@@ -23,7 +23,7 @@ namespace MidaxLib
         SubscribedTableKey SubscribeToPositions(IHandyTableListener tableListener);
         void UnsubscribeTradeSubscription(SubscribedTableKey tableListener);
         void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked);
-        void ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed);
+        void ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeClosed);
         void GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent onPublishMarketLevels);
     }
 
@@ -203,7 +203,7 @@ namespace MidaxLib
             }
         }
         
-        public void ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
+        public void ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeClosed)
         {
             if (trade == null)
             {
@@ -212,7 +212,7 @@ namespace MidaxLib
             }
             else
                 Log.Instance.WriteEntry("Closing trade id " + (trade.Id == null ? "null" : trade.Id) + " ref " + (trade.Reference == null ? "null" : trade.Reference) + "...");
-            var oppositeTrade = new Trade(trade, true);
+            var oppositeTrade = new Trade(trade, true, time);
             BookTrade(oppositeTrade, onTradeClosed);
         }
 

@@ -14,25 +14,28 @@ namespace MidaxLib
 {
     public class ReplayUpdateInfo : IUpdateInfo
     {
-        Dictionary<string, string> _itemData = new Dictionary<string, string>();
-        string _name;
-        string _id;
+        protected Dictionary<string, string> _itemData = new Dictionary<string, string>();
+        protected string _name;
+        protected string _id;
         
         public ReplayUpdateInfo(CqlQuote quote)
         {
-            _name = quote.n;
-            _id = quote.s;
-            _itemData["MID_OPEN"] = "0";
-            _itemData["HIGH"] = "0";
-            _itemData["LOW"] = "0";
-            _itemData["CHANGE"] = "0";
-            _itemData["CHANGE_PCT"] = "0";
-            _itemData["UPDATE_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", quote.t.Year, quote.t.Month,
-                                                quote.t.Day, quote.t.Hour, quote.t.Minute, quote.t.Second);
-            _itemData["MARKET_DELAY"] = "0";
-            _itemData["MARKET_STATE"] = "REPLAY";
-            _itemData["BID"] = quote.b.ToString();
-            _itemData["OFFER"] = quote.o.ToString();
+            if (quote != null)
+            {
+                _name = quote.n;
+                _id = quote.s;
+                _itemData["MID_OPEN"] = "0";
+                _itemData["HIGH"] = "0";
+                _itemData["LOW"] = "0";
+                _itemData["CHANGE"] = "0";
+                _itemData["CHANGE_PCT"] = "0";
+                _itemData["UPDATE_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", quote.t.Year, quote.t.Month,
+                                                    quote.t.Day, quote.t.Hour, quote.t.Minute, quote.t.Second);
+                _itemData["MARKET_DELAY"] = "0";
+                _itemData["MARKET_STATE"] = "REPLAY";
+                _itemData["BID"] = quote.b.ToString();
+                _itemData["OFFER"] = quote.o.ToString();
+            }
         }
 
         public string Name { get { return _name; } }
@@ -74,6 +77,26 @@ namespace MidaxLib
         }
     }
 
+    public class ReplayPositionUpdateInfo : ReplayUpdateInfo
+    {
+        public ReplayPositionUpdateInfo(string epic, string dealId, string status, string dealStatus, int size, decimal level, SIGNAL_CODE direction) : base(null)
+        {
+            _name = epic;
+            _id = dealId;
+            _itemData["status"] = status;
+            _itemData["dealStatus"] = dealStatus;
+            _itemData["size"] = size.ToString();
+            _itemData["level"] = level.ToString();
+            _itemData["direction"] = direction == SIGNAL_CODE.BUY ? "BUY" : (direction == SIGNAL_CODE.SELL ? "SELL" : "UNKNOWN");
+        }
+
+        public override string ToString()
+        {
+            return string.Format("[ {{ \"epic\" : \"{0}\", \"dealId\" : \"{1}\", \"status\" : \"{2}\", \"dealStatus\" : \"{3}\", \"size\" : \"{4}\", \"level\" : \"{5}\", \"direction\" : \"{6}\" }} ]",
+                _name, _id, _itemData["status"], _itemData["dealStatus"], _itemData["size"], _itemData["level"], _itemData["direction"]);
+        }
+    }
+
     public class ReplayStreamingClient : IAbstractStreamingClient
     {
         IReaderConnection _instance = null;
@@ -87,17 +110,11 @@ namespace MidaxLib
         
         bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
-        static Portfolio _ptf = null;
         
         public Dictionary<string, List<CqlQuote>> ExpectedIndicatorData { get { return _expectedIndicatorData; } }
         public Dictionary<string, List<CqlQuote>> ExpectedSignalData { get { return _expectedSignalData; } }
         public Dictionary<KeyValuePair<string, DateTime>, Trade> ExpectedTradeData { get { return _expectedTradeData; } }
         public Dictionary<KeyValuePair<string, DateTime>, double> ExpectedProfitData { get { return _expectedProfitData; } }
-        public static Portfolio PTF
-        {
-            get { return _ptf; }
-            set { _ptf = value; }
-        }
 
         public void Connect(string username, string password, string apiKey)
         {
@@ -157,27 +174,23 @@ namespace MidaxLib
         {
             if (trade != null)
             {
+                trade.Id = "###DUMMY_TRADE_ID###";
                 trade.Reference = "###DUMMY_TRADE###";
                 trade.ConfirmationTime = trade.TradingTime;
-                // TODO: remove this hack
-                PTF.GetPosition(trade.Epic).Value += trade.Size * (trade.Direction == SIGNAL_CODE.BUY ? 1 : -1);
                 onTradeBooked(trade);
-                // TODO: do the real update here instead
-                _tradingEventTable.OnUpdate(0, trade.Epic, null);
+                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
             }
         }
 
-        void IAbstractStreamingClient.ClosePosition(Trade trade, Portfolio.TradeBookedEvent onTradeClosed)
+        void IAbstractStreamingClient.ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeBooked)
         {
             if (trade != null)
             {
-                trade.Reference = "###CLOSE_DUMMY_TRADE###";
-                trade.ConfirmationTime = trade.TradingTime;
-                // TODO: remove this hack
-                PTF.GetPosition(trade.Epic).Value = 0;
-                onTradeClosed(trade);
-                // TODO: do the real update here instead
-                _tradingEventTable.OnUpdate(0, trade.Epic, null);
+                var closingTrade = new Trade(trade, true, time);
+                closingTrade.Id = "###CLOSE_DUMMY_TRADE_ID###";
+                closingTrade.Reference = "###CLOSE_DUMMY_TRADE###";
+                onTradeBooked(closingTrade);
+                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, "DELETED", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
             }
         }
 
@@ -280,16 +293,33 @@ namespace MidaxLib
     }
 
     // this crazy client never updates the positions
-    public class ReplayStreamingCrazyClient : ReplayStreamingClient
+    public class ReplayStreamingCrazySeller : ReplayStreamingClient
     {
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
         {
-            if (trade != null)
+            if (trade.Direction == SIGNAL_CODE.SELL)
             {
                 trade.Reference = "###DUMMY_TRADE###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onTradeBooked(trade);
             }
+            else
+                base.BookTrade(trade, onTradeBooked);
+        }
+    }
+
+    public class ReplayStreamingCrazyBuyer : ReplayStreamingClient
+    {
+        public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
+        {
+            if (trade.Direction == SIGNAL_CODE.BUY)
+            {
+                trade.Reference = "###DUMMY_TRADE###";
+                trade.ConfirmationTime = trade.TradingTime;
+                onTradeBooked(trade);
+            }
+            else
+                base.BookTrade(trade, onTradeBooked);
         }
     }
 
@@ -333,10 +363,18 @@ namespace MidaxLib
         }
     }
 
-    public class ReplayCrazyConnection : ReplayConnection
+    public class ReplayCrazySeller : ReplayConnection
     {
-        public ReplayCrazyConnection()
-            : base(new ReplayStreamingCrazyClient())
+        public ReplayCrazySeller()
+            : base(new ReplayStreamingCrazySeller())
+        {
+        }
+    }
+
+    public class ReplayCrazyBuyer : ReplayConnection
+    {
+        public ReplayCrazyBuyer()
+            : base(new ReplayStreamingCrazyBuyer())
         {
         }
     }
@@ -517,28 +555,28 @@ namespace MidaxLib
             var tradeKey = new KeyValuePair<string, DateTime>(trade.Epic, trade.TradingTime);
             if (Math.Abs(_expectedTradeData[tradeKey].Price - trade.Price) > TOLERANCE)
             {
-                string error = "Test failed: trade " + trade.Epic + " time " + trade.TradingTime.ToShortTimeString() + " expected Price " +
+                string error = "Test failed: trade " + trade.Epic + " expected Price " +
                    _expectedTradeData[tradeKey].Price.ToString() + " != " + trade.Price.ToString();
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }
             if (_expectedTradeData[tradeKey].Direction != trade.Direction)
             {
-                string error = "Test failed: trade " + trade.Epic + " time " + trade.TradingTime.ToShortTimeString() + " expected Direction " +
+                string error = "Test failed: trade " + trade.Epic + " expected Direction " +
                    _expectedTradeData[tradeKey].Direction.ToString() + " != " + trade.Direction.ToString();
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }
             if (_expectedTradeData[tradeKey].Size != trade.Size)
             {
-                string error = "Test failed: trade " + trade.Epic + " time " + trade.TradingTime.ToShortTimeString() + " expected Size " +
+                string error = "Test failed: trade " + trade.Epic + " expected Size " +
                    _expectedTradeData[tradeKey].Size.ToString() + " != " + trade.Size.ToString();
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }
             if (_expectedTradeData[tradeKey].Reference != trade.Reference)
             {
-                string error = "Test failed: trade " + trade.Epic + " time " + trade.TradingTime.ToShortTimeString() + " expected Reference " +
+                string error = "Test failed: trade " + trade.Epic + " expected Reference " +
                    _expectedTradeData[tradeKey].Reference + " != " + trade.Reference;
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);

@@ -168,14 +168,14 @@ namespace MidaxLib
             SIGNAL_CODE oldSignalCode = _signalCode;
             Signal.Tick tradingOrder = _onHold;
             bool signaled = Process(mktData, updateTime, value, ref tradingOrder);
-            // perform a preliminary check
+            // preliminary check
             if (!tradingOrder(this, updateTime, value, true))
                 return;
             if (signaled && _signalCode != oldSignalCode)
             {
                 // send a signal
-                tradingOrder(this, updateTime, value, false);
-                PublisherConnection.Instance.Insert(updateTime, this, _signalCode, mktData.TimeSeries[updateTime].Value.Value.Bid);
+                if (tradingOrder(this, updateTime, value, false))
+                    PublisherConnection.Instance.Insert(updateTime, this, _signalCode, mktData.TimeSeries[updateTime].Value.Value.Bid);
             }
         }
 
