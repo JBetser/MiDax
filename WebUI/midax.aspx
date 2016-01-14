@@ -205,9 +205,9 @@
            <div class="controls">
              <input class="form-control input-medium" placeholder="Today" id="datepicker">
              <select class="combobox input-medium" id="timestart">
-               <option value="0">06:45</option>
-               <option value="15">07:00</option>
-               <option value="45">07:30</option>
+               <option value="0">05:45</option>
+               <option value="15">06:15</option>
+               <option value="45">07:00</option>
                <option value="75">08:00</option>
                <option value="135">09:00</option>
                <option value="195">10:00</option>

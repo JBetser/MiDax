@@ -86,7 +86,9 @@ namespace MidaxLib
         public override decimal ScaleValue(decimal avg, decimal scale)
         {
             if (s.StartsWith("LR"))
-                b = o = avg + b.Value * scale;
+                b = o = avg + b.Value * scale * 2m;
+            else if (s.StartsWith("WMVol"))
+                b = o = avg - scale / 2m + b.Value * scale / 20m;
             return b.Value;
         }  
     }
