@@ -39,6 +39,22 @@ namespace MidaxTester
             string action = generate ? "Generating" : "Testing";
             Console.WriteLine(action + " calibration...");
 
+            // Test a 1mn linear regression
+            var mktData = new MarketData("testLRMktData");
+            var updateTime = Config.ParseDateTimeLocal(dicSettings["TRADING_START_TIME"]);
+            mktData.TimeSeries.Add(updateTime, new Price(100));
+            mktData.TimeSeries.Add(updateTime.AddSeconds(20), new Price(120));
+            mktData.TimeSeries.Add(updateTime.AddSeconds(40), new Price(140));
+            mktData.TimeSeries.Add(updateTime.AddSeconds(60), new Price(130));
+            mktData.TimeSeries.Add(updateTime.AddSeconds(80), new Price(145));
+            mktData.TimeSeries.Add(updateTime.AddSeconds(100), new Price(165));
+            mktData.TimeSeries.Add(updateTime.AddSeconds(120), new Price(145));
+            var linReg = new IndicatorLinearRegression(mktData, new TimeSpan(0, 2, 0));
+            var linRegCoeff = linReg.linearCoeff(updateTime.AddSeconds(120));
+            if (Math.Abs(linRegCoeff.Value - 0.821428571428573m) > 1e-8m)
+                throw new ApplicationException("Linear regression error");
+            
+
             // Test the optimization of function a * cos(b * x) + b * sin(a * x) using Levenberg Marquardt
             LevenbergMarquardt.objective_func objFunc = (NRealMatrix x) => { NRealMatrix y = new NRealMatrix(x.Rows, 1);
                                                  for (int idxRow = 0; idxRow < y.Rows; idxRow++)
@@ -127,7 +143,7 @@ namespace MidaxTester
 
             MarketDataConnection.Instance.Connect(null);
 
-            var index = new Asset("DAX:IX.D.DAX.DAILY.IP", Config.ParseDateTimeLocal(dicSettings["PUBLISHING_STOP_TIME"]));
+            var index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
             var model = new ModelQuickTest(index);
             
             Console.WriteLine(action + " live indicators and signals...");
@@ -148,7 +164,7 @@ namespace MidaxTester
                 model = new ModelQuickTest(index);
                 MarketDataConnection.Instance.Connect(null);
                 Console.WriteLine(action + " trade booking...");
-                var tradeTime = DateTime.Now;
+                var tradeTime = Config.ParseDateTimeLocal(dicSettings["TRADING_CLOSING_TIME"]);
                 var tradeTest = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 10000m);
                 var expectedTrades = new Dictionary<KeyValuePair<string, DateTime>, Trade>();
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = tradeTest;
@@ -234,7 +250,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9970.69755260538438389765106";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9969.548526007546470983000277";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
@@ -245,7 +261,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9970.69755260538438389765106";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9969.548526007546470983000277";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
@@ -255,12 +271,12 @@ namespace MidaxTester
                 {
                     MarketDataConnection.Instance = new ReplayConnection();
                     MarketDataConnection.Instance.Connect(null);
-                    model = new ModelQuickTest(new Asset(index.Id, Config.ParseDateTimeLocal(dicSettings["TRADING_START_TIME"])));
+                    model = new ModelQuickTest(new MarketData(index.Id));
                     model.StartSignals();
                 }
                 catch (Exception exc)
                 {
-                    expected = "The given key was not present in the dictionary.";
+                    expected = "Nullable object must have a value.";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
@@ -274,7 +290,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9983.779772679923146369004401";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9969.548526007546470983000277";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);

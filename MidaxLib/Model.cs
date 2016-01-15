@@ -51,16 +51,16 @@ namespace MidaxLib
             {
                 if (signal.Id == _tradingSignal)
                 {
-                    if (!_ptf.GetPosition(signal.Asset.Id).Closed)
+                    if (!_ptf.GetPosition(signal.MarketData.Id).Closed)
                     {
-                        if (_ptf.GetPosition(signal.Asset.Id).Value >= 0)
+                        if (_ptf.GetPosition(signal.MarketData.Id).Value >= 0)
                         {
                             Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + value.Bid + ". Closing all positions...", EventLogEntryType.Error);
-                            CloseAllPositions(time, signal.Asset.Id);
+                            CloseAllPositions(time, signal.MarketData.Id);
                         }
                         return false;
                     }
-                    signal.Trade = new Trade(time, signal.Asset.Id, SIGNAL_CODE.SELL, _amount, value.Bid);
+                    signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.SELL, _amount, value.Bid);
                     if (!check)
                         Sell(signal, time, value);
                 }
@@ -80,6 +80,10 @@ namespace MidaxLib
         
         public void StartSignals()
         {
+            // get the level indicators for the previous day (low, high, close)
+            foreach (MarketData mktData in _mktData)
+                mktData.GetMarketLevels();  
+            // subscribe indicators and signals to market data feed
             foreach (MarketData idx in _mktIndices)
                 idx.Subscribe(OnUpdateMktData);
             foreach (Indicator ind in _mktIndicators)
@@ -191,7 +195,7 @@ namespace MidaxLib
                 signal.Trade.Price = value.Offer;
                 _ptf.ClosePosition(signal.Trade, time);
                 string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.Asset.Id + " " + value.Offer, EventLogEntryType.Information);
+                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.MarketData.Id + " " + value.Offer, EventLogEntryType.Information);
             }
         }
 
@@ -208,7 +212,7 @@ namespace MidaxLib
                 {
                     _ptf.BookTrade(signal.Trade);
                     string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.Asset.Id + " " + value.Bid, EventLogEntryType.Information);
+                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.MarketData.Id + " " + value.Bid, EventLogEntryType.Information);
                 }
             }
         }

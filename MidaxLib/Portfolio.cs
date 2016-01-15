@@ -60,9 +60,12 @@ namespace MidaxLib
         {
             if (newTrade == null)
                 return;
-            if (!_positions.ContainsKey(newTrade.Epic))
-                _positions.Add(newTrade.Epic, new Position(newTrade.Epic));
-            _igStreamApiClient.BookTrade(newTrade, OnTradeBooked);
+            if (Config.TradingOpen(newTrade.TradingTime))
+            {
+                if (!_positions.ContainsKey(newTrade.Epic))
+                    _positions.Add(newTrade.Epic, new Position(newTrade.Epic));
+                _igStreamApiClient.BookTrade(newTrade, OnTradeBooked);
+            }
         }
 
         public Position GetPosition(string epic)

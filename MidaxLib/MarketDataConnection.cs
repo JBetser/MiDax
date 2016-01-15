@@ -87,7 +87,10 @@ namespace MidaxLib
         public void PublishMarketLevels(List<MarketData> mktData)
         {
             foreach (var mkt in mktData)
-                _apiStreamingClient.GetMarketDetails(mkt, PublisherConnection.Instance.Insert);
+            {
+                _apiStreamingClient.GetMarketDetails(mkt);
+                PublisherConnection.Instance.Insert(mkt.Levels.Value);
+            }
         }
     }
 
@@ -116,13 +119,14 @@ namespace MidaxLib
         {
             try
             {
-                if (Config.PublishingOpen)
+                L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
+                //if (priceData.MarketState == "TRADEABLE" || priceData.MarketState == "REPLAY")
+                //{
+                foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
                 {
-                    L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
-                    //if (priceData.MarketState == "TRADEABLE" || priceData.MarketState == "REPLAY")
-                    //{
-                    foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
-                        data.FireTick(Config.ParseDateTimeUTC(priceData.UpdateTime), priceData); // Timestamps from IG are GMT (i.e. equivalent to UTC)
+                    var curTime = Config.ParseDateTimeUTC(priceData.UpdateTime);
+                    if (Config.PublishingOpen(curTime))
+                        data.FireTick(curTime, priceData); // Timestamps from IG are GMT (i.e. equivalent to UTC)
                 }
             }
             catch (SEHException exc)

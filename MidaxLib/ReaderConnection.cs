@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MidaxLib
 {
-    interface IReaderConnection
+    public interface IReaderConnection
     {
         List<CqlQuote> GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, string id);
         List<CqlQuote> GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, string id);

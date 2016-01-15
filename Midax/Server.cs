@@ -17,7 +17,8 @@ public class Server
 {
     public class App : Ice.Application
     {
-        Model _model = null;        
+        Model _model = null;
+        DateTime _startTime;
 
         public override int run(string[] args)
         {           
@@ -53,7 +54,7 @@ public class Server
 
                 MarketDataConnection.Instance.Connect(connectionLostCallback);
 
-                var index = new Asset(dicSettings["INDEX"], Config.ParseDateTimeLocal(dicSettings["PUBLISHING_STOP_TIME"]));
+                var index = new MarketData(dicSettings["INDEX"]);
                 List<MarketData> stocks = new List<MarketData>();
                 foreach (string stock in stockList)
                     stocks.Add(new MarketData(stock));
@@ -75,26 +76,26 @@ public class Server
                 var timerClosePositions = new System.Threading.Timer(closePositionsCallback);
                 
                 // Figure how much time until PUBLISHING_STOP_TIME
-                DateTime now = DateTime.Now;
-                DateTime startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
+                DateTime now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
+                _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
                 DateTime stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
-                DateTime closePositionsTime = Config.ParseDateTimeLocal(Config.Settings["FORCE_CLOSE_POSITIONS_TIME"]);
+                DateTime closePositionsTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
 
                 // If it's already past PUBLISHING_STOP_TIME, wait until PUBLISHING_STOP_TIME tomorrow  
                 int msUntilStartTime = 10;
-                if (now > startTime)
+                if (now > _startTime)
                 {
                     if (now > stopTime)
                     {
-                        startTime = startTime.AddDays(1.0);
+                        _startTime = _startTime.AddDays(1.0);
                         stopTime = stopTime.AddDays(1.0);
                         if (now > closePositionsTime)
                             closePositionsTime = closePositionsTime.AddDays(1.0);
-                        msUntilStartTime = (int)((startTime - now).TotalMilliseconds);
+                        msUntilStartTime = (int)((_startTime - now).TotalMilliseconds);
                     }
                 }
                 else
-                    msUntilStartTime = (int)((startTime - now).TotalMilliseconds);
+                    msUntilStartTime = (int)((_startTime - now).TotalMilliseconds);
                 int msUntilStopTime = (int)((stopTime - now).TotalMilliseconds);
                 int msUntilCloseTime = (int)((closePositionsTime - now).TotalMilliseconds);
                 
@@ -119,6 +120,12 @@ public class Server
 
         void startSignalCallback(object state)
         {
+            DateTime now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
+            if (now.Date != _startTime.Date)
+            {
+                Log.Instance.WriteEntry(_model.GetType().ToString() + ": Restarting the service", EventLogEntryType.Information);
+                communicator().shutdown();
+            }
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Starting signals", EventLogEntryType.Information);
             _model.StartSignals();
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
@@ -136,7 +143,7 @@ public class Server
         void closePositionsCallback(object state)
         {
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": Closing positions", EventLogEntryType.Information);
-            _model.CloseAllPositions(DateTime.Now);
+            _model.CloseAllPositions(DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local));
             Log.Instance.WriteEntry(_model.GetType().ToString() + ": All positions closed", EventLogEntryType.Information);
         }
 

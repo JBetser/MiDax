@@ -65,26 +65,28 @@ namespace MidaxLib
                 return ReplayEnabled && Config.Settings.ContainsKey("PUBLISHING_CSV");
             }
         }
-        
-        public static bool TradingOpen
+
+        public static bool UATSourceDB
         {
             get
             {
-                return DateTime.Now.TimeOfDay > Config.ParseDateTimeLocal(_settings["TRADING_START_TIME"]).TimeOfDay &&
-                    DateTime.Now.TimeOfDay < Config.ParseDateTimeLocal(_settings["TRADING_STOP_TIME"]).TimeOfDay;
+                return Config.Settings["TRADING_MODE"] == "UAT";
             }
         }
-        
-        public static bool PublishingOpen
+                
+        public static bool TradingOpen(DateTime time)
         {
-            get
-            {
-                if (ReplayEnabled || MarketSelectorEnabled)
-                    return true;
-                return DateTime.Now.TimeOfDay > Config.ParseDateTimeLocal(_settings["PUBLISHING_START_TIME"]).TimeOfDay &&
-                    DateTime.Now.TimeOfDay < Config.ParseDateTimeLocal(_settings["PUBLISHING_STOP_TIME"]).TimeOfDay;
-            }
+            return time.TimeOfDay > Config.ParseDateTimeLocal(_settings["TRADING_START_TIME"]).TimeOfDay &&
+                    time.TimeOfDay < Config.ParseDateTimeLocal(_settings["TRADING_STOP_TIME"]).TimeOfDay;
         }
+
+        public static bool PublishingOpen(DateTime time)
+        {
+            if (ReplayEnabled || MarketSelectorEnabled)
+                return true;
+            return time.TimeOfDay > Config.ParseDateTimeLocal(_settings["PUBLISHING_START_TIME"]).TimeOfDay &&
+                time.TimeOfDay < Config.ParseDateTimeLocal(_settings["PUBLISHING_STOP_TIME"]).TimeOfDay;
+        }        
 
         public static string TestList(List<string> tests)
         {

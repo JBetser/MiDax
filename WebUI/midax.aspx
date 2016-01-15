@@ -204,37 +204,37 @@
         <div class="control-group">             
            <div class="controls">
              <input class="form-control input-medium" placeholder="Today" id="datepicker">
-             <select class="combobox input-medium" id="timestart">
-               <option value="0">05:45</option>
-               <option value="15">06:15</option>
-               <option value="45">07:00</option>
-               <option value="75">08:00</option>
-               <option value="135">09:00</option>
-               <option value="195">10:00</option>
-               <option value="255">11:00</option>
-               <option value="315">12:00</option>
-               <option value="375">13:00</option>
-               <option value="435">14:00</option>
-               <option value="495">15:00</option>
-               <option value="555">16:00</option>
-               <option value="615">17:00</option>
+             <select class="combobox input-medium" id="timestart" >
+               <option value="">07:00</option>
+               <option value="1">07:30</option>
+               <option value="2">08:00</option>
+               <option value="2">08:30</option>
+               <option value="3">09:00</option>
+               <option value="4">10:00</option>
+               <option value="5">11:00</option>
+               <option value="6">12:00</option>
+               <option value="7">13:00</option>
+               <option value="8">14:00</option>
+               <option value="9">15:00</option>
+               <option value="10">16:00</option>
+               <option value="11">17:00</option>
              </select>
              <select class="combobox input-medium" id="timestop">
-               <option value="790">23:00</option>
-               <option value="690">18:15</option>
-               <option value="675">18:00</option>
-               <option value="645">17:30</option>
-               <option value="615">17:00</option>
-               <option value="555">16:00</option>
-               <option value="495">15:00</option>
-               <option value="435">14:00</option>
-               <option value="375">13:00</option>
-               <option value="315">12:00</option>
-               <option value="255">11:00</option>
-               <option value="195">10:00</option>
-               <option value="135">09:00</option>
-               <option value="75">08:00</option>
-               <option value="45">07:30</option>
+               <option value="">21:00</option>
+               <option value="1">29:00</option>
+               <option value="2">18:00</option>
+               <option value="4">17:00</option>
+               <option value="5">16:00</option>
+               <option value="6">15:00</option>
+               <option value="7">14:00</option>
+               <option value="8">13:00</option>
+               <option value="9">12:00</option>
+               <option value="10">11:00</option>
+               <option value="11">10:00</option>
+               <option value="12">09:00</option>
+               <option value="13">08:30</option>
+               <option value="13">08:00</option>
+               <option value="14">07:30</option>
              </select>
                <br />
              <select class="combobox input-large" id="equity">

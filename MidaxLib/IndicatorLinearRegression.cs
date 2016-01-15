@@ -48,10 +48,10 @@ namespace MidaxLib
             foreach (var keyVal in values)
             {
                 V[idxRow, 0] = 1;
-                V[idxRow, 1] = keyVal.Key.TimeOfDay.TotalSeconds - startTime.TimeOfDay.TotalSeconds;
+                V[idxRow, 1] = (double)(keyVal.Key - startTime).TotalMilliseconds / 1000.0;
                 Vt[idxRow, 0] = V[idxRow, 0];
                 Vt[idxRow, 1] = V[idxRow, 1];
-                Y[idxRow, 0] = Convert.ToDouble(keyVal.Value.Mid());
+                Y[idxRow, 0] = Convert.ToDouble(keyVal.Value.Mid() - values[0].Value.Mid()) * _interval.TotalMinutes;
                 idxRow += 1;
             }
             Vt.Transpose();

@@ -146,7 +146,7 @@ namespace MidaxLib
             get { return _values; }
         }
 
-        public MarketData Asset
+        public MarketData MarketData
         {
             get { return _asset; }
         }
@@ -175,7 +175,12 @@ namespace MidaxLib
             {
                 // send a signal
                 if (tradingOrder(this, updateTime, value, false))
-                    PublisherConnection.Instance.Insert(updateTime, this, _signalCode, mktData.TimeSeries[updateTime].Value.Value.Bid);
+                {
+                    if (_signalCode == SIGNAL_CODE.BUY)
+                        PublisherConnection.Instance.Insert(updateTime, this, _signalCode, ((Indicator)mktData).SignalStock.TimeSeries[updateTime].Value.Value.Offer);
+                    else
+                        PublisherConnection.Instance.Insert(updateTime, this, _signalCode, ((Indicator)mktData).SignalStock.TimeSeries[updateTime].Value.Value.Bid);
+                }
             }
         }
 

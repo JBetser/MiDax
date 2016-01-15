@@ -21,6 +21,9 @@ namespace MidaxLib
         protected Dictionary<string, MarketLevels> _expectedMktLvlData = null;
 
         static protected PublisherConnection _instance = null;
+        protected IReaderConnection _database = null;
+
+        public IReaderConnection Database { get { return _database; } }
         
         static public PublisherConnection Instance
         {
@@ -33,16 +36,14 @@ namespace MidaxLib
                     : _instance; 
             }
         }
-
-        public delegate void PublishMarketLevelsEvent(Market mktDetails);
-
+        
         public abstract void Insert(DateTime updateTime, MarketData mktData, Price price);
         public abstract void Insert(DateTime updateTime, Indicator indicator, decimal value);
         public abstract void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue);
         public abstract void Insert(Trade trade);
         public abstract void Insert(DateTime updateTime, Value profit);
         public abstract void Insert(DateTime updateTime, NeuralNetworkForCalibration calibratedNeuralNetwork);
-        public abstract void Insert(Market mktDetails);
+        public abstract void Insert(MarketLevels mktDetails);
         
         public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, 
             Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData, Dictionary<KeyValuePair<string, DateTime>, double> profitData, Dictionary<string, MarketLevels> mktLvlData)

@@ -19,14 +19,13 @@ namespace MidaxTrader
             Config.Settings["API_KEY"] = "8d341413c2eae2c35bb5b47a594ef08ae18cb3b7";
             Config.Settings["USER_NAME"] = "ksbitlsoftdemo";
             Config.Settings["PASSWORD"] = "Kotik0483";
-            DateTime start = DateTime.Now;
             Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
             //Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\TradingActivity\\trading_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year);
-            Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 11, 45, 0);
-            Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 21, 0, 0);
-            Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 13, 0, 0);
-            Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 21, 0, 0);
-            Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 20, 55, 0);
+            Config.Settings["PUBLISHING_START_TIME"] = string.Format("{3}:{4}:{5}", 11, 45, 0);
+            Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{3}:{4}:{5}", 23, 45, 0);
+            Config.Settings["TRADING_START_TIME"] = string.Format("{3}:{4}:{5}", 13, 0, 0);
+            Config.Settings["TRADING_STOP_TIME"] = string.Format("{3}:{4}:{5}", 23, 30, 0);
+            Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{3}:{4}:{5}", 23, 15, 0);
             Config.Settings["TRADING_MODE"] = "PRODUCTION";
             Config.Settings["TRADING_SIGNAL"] = "MacD_2_10_IX.D.SPTRD.DAILY.IP";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
@@ -34,12 +33,9 @@ namespace MidaxTrader
             
             MarketDataConnection.Instance.Connect(null);
 
-            var snp = new Asset("SNP:IX.D.SPTRD.DAILY.IP", Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]));
+            var snp = new MarketData("SNP:IX.D.SPTRD.DAILY.IP");
             Model modelSnp = new ModelMacDTest(snp, new List<MarketData>(), new List<MarketData>());
             Console.WriteLine("Starting signals...");
-
-            modelSnp.BookTrade(new Trade(DateTime.Now,"IX.D.SPTRD.DAILY.IP", SIGNAL_CODE.SELL, 10,10000));
-            modelSnp.CloseAllPositions(DateTime.Now);
 
             modelSnp.StartSignals();
             

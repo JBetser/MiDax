@@ -24,7 +24,7 @@ namespace MidaxLib
         void UnsubscribeTradeSubscription(SubscribedTableKey tableListener);
         void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked);
         void ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeClosed);
-        void GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent onPublishMarketLevels);
+        void GetMarketDetails(MarketData mktData);
     }
 
     public class IGMidaxStreamingApiClient : IGStreamingApiClient
@@ -193,7 +193,7 @@ namespace MidaxLib
             if (createPositionResponse && (createPositionResponse.Response != null) && (createPositionResponse.Response.dealReference != null))
             {
                 trade.Reference = createPositionResponse.Response.dealReference;
-                trade.ConfirmationTime = DateTime.Now;
+                trade.ConfirmationTime = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
                 if (onTradeBooked != null)
                     onTradeBooked(trade);
             }
@@ -216,7 +216,7 @@ namespace MidaxLib
             BookTrade(oppositeTrade, onTradeClosed);
         }
 
-        async void IAbstractStreamingClient.GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent onPublishMarketLevels)
+        async void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
         {
             var response = await _igRestApiClient.searchMarket(mktData.Name);
             if (response && (response.Response != null))
@@ -224,7 +224,7 @@ namespace MidaxLib
                 foreach (var mkt in response.Response.markets)
                 {
                     if (mkt.epic == mktData.Id)
-                        onPublishMarketLevels(mkt);
+                        mktData.Levels = new MarketLevels(mkt.epic, mkt.low.Value, mkt.high.Value, mkt.bid.Value, mkt.offer.Value);
                 }
             }
         }        

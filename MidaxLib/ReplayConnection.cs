@@ -99,7 +99,7 @@ namespace MidaxLib
 
     public class ReplayStreamingClient : IAbstractStreamingClient
     {
-        IReaderConnection _instance = null;
+        IReaderConnection _reader = null;
         DateTime _startTime;
         DateTime _stopTime;
         Dictionary<string, List<CqlQuote>> _expectedIndicatorData = null;
@@ -110,6 +110,8 @@ namespace MidaxLib
         
         bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
+
+        public IReaderConnection Reader { get { return _reader; } }
         
         public Dictionary<string, List<CqlQuote>> ExpectedIndicatorData { get { return _expectedIndicatorData; } }
         public Dictionary<string, List<CqlQuote>> ExpectedSignalData { get { return _expectedSignalData; } }
@@ -124,17 +126,17 @@ namespace MidaxLib
             if (Config.Settings["REPLAY_MODE"] == "DB")
             {
                 _testReplayFiles.Add(null); // Add a fake element to trigger the replay from db
-                _instance = new CassandraConnection();
+                _reader = new CassandraConnection();
             }
             else if (Config.Settings["REPLAY_MODE"] == "CSV")
             {
                 _testReplayFiles = Config.Settings["REPLAY_CSV"].Split(';').ToList();
-                if (_instance != null)
-                    _instance.CloseConnection();
-                _instance = new CsvReader(_testReplayFiles[0]);
+                if (_reader != null)
+                    _reader.CloseConnection();
+                _reader = new CsvReader(_testReplayFiles[0]);
             }
             else
-                _instance = null;
+                _reader = null;
             _hasExpectedResults = Config.TestReplayEnabled || Config.MarketSelectorEnabled || Config.CalibratorEnabled;
         }
 
@@ -195,13 +197,13 @@ namespace MidaxLib
             }
         }
 
-        void IAbstractStreamingClient.GetMarketDetails(MarketData mktData, PublisherConnection.PublishMarketLevelsEvent evt)
+        void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
         {
-            MarketLevels mktLevels = _instance.GetMarketLevels(_startTime, mktData.Id).Value;
+            MarketLevels mktLevels = _reader.GetMarketLevels(_startTime, mktData.Id).Value;
             Market mkt = new Market();
             mkt.epic = mktData.Id;
             mkt.high = mktLevels.High; mkt.low = mktLevels.Low; mkt.bid = mktLevels.CloseBid; mkt.offer = mktLevels.CloseOffer;
-            evt(mkt);
+            mktData.Levels = new MarketLevels(mkt.epic, mkt.low.Value, mkt.high.Value, mkt.bid.Value, mkt.offer.Value);
         }
 
         protected void replay(Dictionary<string, List<CqlQuote>> priceDataSrc, IHandyTableListener tableListener)
@@ -243,14 +245,14 @@ namespace MidaxLib
         {
             Dictionary<string, List<CqlQuote>> priceData = new Dictionary<string, List<CqlQuote>>();
             foreach (string epic in epics)
-                priceData[epic] = _instance.GetMarketDataQuotes(_startTime, _stopTime,
+                priceData[epic] = _reader.GetMarketDataQuotes(_startTime, _stopTime,
                     CassandraConnection.DATATYPE_STOCK, epic);
             if (_hasExpectedResults)
             {
                 _expectedIndicatorData = new Dictionary<string, List<CqlQuote>>();
                 foreach (string epic in epics)
                 {
-                    List<CqlQuote> quotes = _instance.GetIndicatorDataQuotes(_startTime, _stopTime,
+                    List<CqlQuote> quotes = _reader.GetIndicatorDataQuotes(_startTime, _stopTime,
                         CassandraConnection.DATATYPE_INDICATOR, epic);
                     Dictionary<string, List<CqlQuote>> indicatorData = (from quote in quotes
                                                                         group quote by quote.s into g
@@ -260,7 +262,7 @@ namespace MidaxLib
                 _expectedSignalData = new Dictionary<string, List<CqlQuote>>();
                 foreach (string epic in epics)
                 {
-                    List<CqlQuote> quotes = _instance.GetSignalDataQuotes(_startTime, _stopTime,
+                    List<CqlQuote> quotes = _reader.GetSignalDataQuotes(_startTime, _stopTime,
                         CassandraConnection.DATATYPE_SIGNAL, epic);
                     Dictionary<string, List<CqlQuote>> signalData = (from quote in quotes
                                                                      group quote by quote.s into g
@@ -270,7 +272,7 @@ namespace MidaxLib
                 _expectedTradeData = new Dictionary<KeyValuePair<string,DateTime>, Trade>();
                 foreach (string epic in epics)
                 {
-                    List<Trade> trades = _instance.GetTrades(_startTime, _stopTime,
+                    List<Trade> trades = _reader.GetTrades(_startTime, _stopTime,
                                                                     CassandraConnection.DATATYPE_TRADE, epic);
                     foreach (Trade trade in trades)
                         _expectedTradeData.Add(new KeyValuePair<string, DateTime>(epic, trade.TradingTime), trade);
@@ -278,14 +280,14 @@ namespace MidaxLib
                 _expectedProfitData = new Dictionary<KeyValuePair<string, DateTime>, double>();
                 foreach (string epic in epics)
                 {
-                    List<KeyValuePair<DateTime, double>> profits = _instance.GetProfits(_startTime, _stopTime,
+                    List<KeyValuePair<DateTime, double>> profits = _reader.GetProfits(_startTime, _stopTime,
                                                                     CassandraConnection.DATATYPE_TRADE, epic);
                     foreach (var profit in profits)
                         _expectedProfitData.Add(new KeyValuePair<string, DateTime>(epic, profit.Key), profit.Value);
                 }
                 _expectedMktLevelsData = new Dictionary<string, MarketLevels>();
                 foreach (string epic in epics)
-                    _expectedMktLevelsData[epic] = _instance.GetMarketLevels(_stopTime, epic).Value;
+                    _expectedMktLevelsData[epic] = _reader.GetMarketLevels(_stopTime, epic).Value;
                 PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData, 
                     _expectedTradeData, _expectedProfitData, _expectedMktLevelsData);
             }
@@ -400,6 +402,8 @@ namespace MidaxLib
 
         public ReplayPublisher()
         {
+            // this attaches the database handle from the publisher to our current reader (csvreader / cassandra)
+            _database = ((ReplayStreamingClient)MarketDataConnection.Instance.StreamClient).Reader;
             _csvFile = Config.Settings["PUBLISHING_CSV"];
             _csvStockStringBuilder = new StringBuilder();
             _csvIndicatorStringBuilder = new StringBuilder();
@@ -458,9 +462,9 @@ namespace MidaxLib
             throw new ApplicationException("ANN insertion not implemented");
         }
 
-        public override void Insert(Market mktDetails)
+        public override void Insert(MarketLevels mktDetails)
         {
-            var newLine = string.Format("marketlevels,{0},{1},{2},{3},{4}{5}", mktDetails.epic, mktDetails.low, mktDetails.high, mktDetails.bid, mktDetails.offer,
+            var newLine = string.Format("marketlevels,{0},{1},{2},{3},{4}{5}", mktDetails.AssetId, mktDetails.Low, mktDetails.High, mktDetails.CloseBid, mktDetails.CloseOffer,
                 Environment.NewLine);
             _csvMktDetailsStringBuilder.Append(newLine);
         }        
@@ -516,6 +520,7 @@ namespace MidaxLib
         
         public ReplayTester()
         {
+            _database = ((ReplayStreamingClient)MarketDataConnection.Instance.StreamClient).Reader;            
         }
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
@@ -584,15 +589,15 @@ namespace MidaxLib
             }
         }
 
-        public override void Insert(Market mktDetails)
+        public override void Insert(MarketLevels mktDetails)
         {
-            if (mktDetails.high != _expectedMktLvlData[mktDetails.epic].High || mktDetails.low != _expectedMktLvlData[mktDetails.epic].Low ||
-                mktDetails.bid != _expectedMktLvlData[mktDetails.epic].CloseBid || mktDetails.offer != _expectedMktLvlData[mktDetails.epic].CloseOffer)
+            if (mktDetails.High != _expectedMktLvlData[mktDetails.AssetId].High || mktDetails.Low != _expectedMktLvlData[mktDetails.AssetId].Low ||
+                mktDetails.CloseBid != _expectedMktLvlData[mktDetails.AssetId].CloseBid || mktDetails.CloseOffer != _expectedMktLvlData[mktDetails.AssetId].CloseOffer)
             {
-                string error = string.Format("Test failed: market levels " + mktDetails.epic + " time " + Config.ParseDateTimeLocal(mktDetails.updateTime).ToShortTimeString() +
-                    " expected levels (high, low, bid, offer) {0} {1} {2} {3} != {4} {5} {6} {7} ", 
-                    _expectedMktLvlData[mktDetails.epic].High, _expectedMktLvlData[mktDetails.epic].Low, _expectedMktLvlData[mktDetails.epic].CloseBid, _expectedMktLvlData[mktDetails.epic].CloseOffer,
-                    mktDetails.high, mktDetails.low, mktDetails.bid, mktDetails.offer);
+                string error = string.Format("Test failed: market levels " + mktDetails.AssetId + " time " + Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]).ToShortTimeString() +
+                    " expected levels (high, low, bid, offer) {0} {1} {2} {3} != {4} {5} {6} {7} ",
+                    _expectedMktLvlData[mktDetails.AssetId].High, _expectedMktLvlData[mktDetails.AssetId].Low, _expectedMktLvlData[mktDetails.AssetId].CloseBid, _expectedMktLvlData[mktDetails.AssetId].CloseOffer,
+                    mktDetails.High, mktDetails.Low, mktDetails.CloseBid, mktDetails.CloseOffer);
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }

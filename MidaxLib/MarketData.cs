@@ -13,6 +13,9 @@ namespace MidaxLib
     {
         static bool? _replay = null;
 
+        MarketLevels? _marketLevels = null;
+        public MarketLevels? Levels { get { return _marketLevels; } set { _marketLevels = value; } }
+
         public MarketData(string name_id)
         {
             this._id = name_id.Split(':').Count() > 1 ? name_id.Split(':')[1] : name_id;
@@ -22,7 +25,7 @@ namespace MidaxLib
             if (!_replay.HasValue)
                 _replay = Config.Settings["TRADING_MODE"] == "REPLAY";
         }
-        
+
         public delegate void Tick(MarketData mktData, DateTime time, Price value);
 
         public virtual void Subscribe(Tick eventHandler)
@@ -31,7 +34,7 @@ namespace MidaxLib
             bool subscribe = (this._eventHandlers.Count == 0);
             this._eventHandlers.Add(eventHandler);
             if (subscribe)
-                MarketDataConnection.Instance.SubscribeMarketData(this); 
+                MarketDataConnection.Instance.SubscribeMarketData(this);
         }
 
         public virtual void Unsubscribe(Tick eventHandler)
@@ -50,7 +53,7 @@ namespace MidaxLib
         {
             Price livePrice = new Price(value);
             if (!_replay.Value || value.MarketState == "REPLAY")
-                _values.Add(updateTime, livePrice);            
+                _values.Add(updateTime, livePrice);
             foreach (Tick ticker in this._eventHandlers)
                 ticker(this, updateTime, livePrice);
             Publish(updateTime, livePrice);
@@ -59,6 +62,12 @@ namespace MidaxLib
         public virtual void Publish(DateTime updateTime, Price price)
         {
             PublisherConnection.Instance.Insert(updateTime, this, price);
+        }
+
+        public void GetMarketLevels()
+        {
+            if (PublisherConnection.Instance.Database != null)
+                _marketLevels = PublisherConnection.Instance.Database.GetMarketLevels(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]), _id);
         }
 
         protected TimeSeries _values;
@@ -80,22 +89,6 @@ namespace MidaxLib
         {
             get { return _values; }
             set { _values = value; }
-        }
-    }
-
-    public class Asset : MarketData
-    {
-        MarketLevels? _marketLevels;
-        public MarketLevels? PreviousDayLevels { get { return _marketLevels; } }
-
-        public Asset(string name_id, DateTime updateTime) : base(name_id)
-        {
-            MarketDataConnection.Instance.StreamClient.GetMarketDetails(this, onMarketLevelsEvent);
-        }
-
-        protected void onMarketLevelsEvent(Market mktDetails)
-        {
-            _marketLevels = new MarketLevels(mktDetails.epic, mktDetails.low.Value, mktDetails.high.Value, mktDetails.bid.Value, mktDetails.offer.Value);
         }
     }
 

@@ -14,6 +14,7 @@ namespace MidaxLib
         bool _publishingEnabled = true;
 
         public bool PublishingEnabled { get { return _publishingEnabled; } set { _publishingEnabled = value; } }
+        public MarketData SignalStock { get { return _mktData[0]; } }
 
         public Indicator(string id, List<MarketData> mktData)
             : base(id)
@@ -60,7 +61,7 @@ namespace MidaxLib
     {
         protected int _periodSeconds;
 
-        public MarketData Asset { get { return _mktData[0]; } }
+        public MarketData MarketData { get { return _mktData[0]; } }
         public int Period { get { return _periodSeconds; } }
         
         public IndicatorWMA(MarketData mktData, int periodMinutes)
@@ -76,7 +77,7 @@ namespace MidaxLib
         }
 
         public IndicatorWMA(IndicatorWMA indicator)
-            : base(indicator.Id, new List<MarketData> { indicator.Asset })
+            : base(indicator.Id, new List<MarketData> { indicator.MarketData })
         {
             _periodSeconds = indicator.Period;
         }        

@@ -17,7 +17,7 @@ namespace MidaxLib
             foreach (var epic in epics)
             {
                 // for each quote, associate the observed gains in the near future
-                var mktData = new Asset(epic, priceData[epic].First().t.UtcDateTime);
+                var mktData = new MarketData(epic);
                 var wmaLow = new IndicatorWMA(mktData, 2);
                 var wmaMid = new IndicatorWMA(mktData, 10);
                 var wmaHigh = new IndicatorWMA(mktData, 60);
