@@ -216,12 +216,12 @@ namespace MidaxLib
             BookTrade(oppositeTrade, onTradeClosed);
         }
 
-        async void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
+        void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
         {
-            var response = await _igRestApiClient.searchMarket(mktData.Name);
-            if (response && (response.Response != null))
+            var response = _igRestApiClient.searchMarket(mktData.Name);
+            if (response.Result && (response.Result.Response != null))
             {
-                foreach (var mkt in response.Response.markets)
+                foreach (var mkt in response.Result.Response.markets)
                 {
                     if (mkt.epic == mktData.Id)
                         mktData.Levels = new MarketLevels(mkt.epic, mkt.low.Value, mkt.high.Value, mkt.bid.Value, mkt.offer.Value);

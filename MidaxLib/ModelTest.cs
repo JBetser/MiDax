@@ -9,9 +9,9 @@ using System.Windows.Forms;
 namespace MidaxLib
 {
     public class ModelMacDTest : ModelMacD
-    {        
-        public ModelMacDTest(MarketData daxIndex, List<MarketData> daxStocks, List<MarketData> volIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
-            : base(daxIndex, daxStocks, volIndices, lowPeriod, midPeriod, highPeriod)
+    {
+        public ModelMacDTest(MarketData daxIndex, List<MarketData> daxStocks, MarketData vix, List<MarketData> otherIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
+            : base(daxIndex, daxStocks, vix, otherIndices, lowPeriod, midPeriod, highPeriod)
         {            
         }
 
@@ -51,7 +51,7 @@ namespace MidaxLib
     public class ModelQuickTest : ModelMacDTest
     {
         public ModelQuickTest(MarketData daxIndex)
-            : base(daxIndex, new List<MarketData>(), new List<MarketData>(), 1, 5, 10)
+            : base(daxIndex, new List<MarketData>(), null, new List<MarketData>(), 1, 5, 10)
         {
         }
     }

@@ -199,11 +199,14 @@ namespace MidaxLib
 
         void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
         {
-            MarketLevels mktLevels = _reader.GetMarketLevels(_startTime, mktData.Id).Value;
-            Market mkt = new Market();
-            mkt.epic = mktData.Id;
-            mkt.high = mktLevels.High; mkt.low = mktLevels.Low; mkt.bid = mktLevels.CloseBid; mkt.offer = mktLevels.CloseOffer;
-            mktData.Levels = new MarketLevels(mkt.epic, mkt.low.Value, mkt.high.Value, mkt.bid.Value, mkt.offer.Value);
+            var mktLevels = _reader.GetMarketLevels(_startTime, mktData.Id);
+            if (mktLevels.HasValue)
+            {
+                Market mkt = new Market();
+                mkt.epic = mktData.Id;
+                mkt.high = mktLevels.Value.High; mkt.low = mktLevels.Value.Low; mkt.bid = mktLevels.Value.CloseBid; mkt.offer = mktLevels.Value.CloseOffer;
+                mktData.Levels = new MarketLevels(mkt.epic, mkt.low.Value, mkt.high.Value, mkt.bid.Value, mkt.offer.Value);
+            }
         }
 
         protected void replay(Dictionary<string, List<CqlQuote>> priceDataSrc, IHandyTableListener tableListener)

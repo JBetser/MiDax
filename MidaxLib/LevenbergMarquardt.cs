@@ -49,7 +49,7 @@ namespace MidaxLib
         public double StartError { get { return _startError; } }
         public double Error { get { return _totalError; } }
 
-        public LevenbergMarquardt(objective_func obj_func, List<double> inputs, List<Value> modelParams, model_func model, model_func model_jac, double lambda = 0.001, double obj_error = 0.00001, int max_iter = 10000)
+        public LevenbergMarquardt(objective_func obj_func, List<double> inputs, List<Value> modelParams, model_func model, model_func model_jac, double lambda = 0.001, double obj_error = 0.00001, int max_iter = 10000, int rnd_seed = 0)
         {
             if (inputs.Count == 0)
                 throw new ApplicationException("Number of input data must be > 0");
@@ -67,10 +67,11 @@ namespace MidaxLib
 
             // initalize the weights with normal random distibution
             var seed = new MLapack.MCJIMatrix(4,1);
-            seed.setAt(0, 0, 321);
-            seed.setAt(1, 0, 321);
-            seed.setAt(2, 0, 321);
-            seed.setAt(3, 0, 321);
+            var rndSeed = rnd_seed == 0 ? 321 : rnd_seed;
+            seed.setAt(0, 0, rndSeed);
+            seed.setAt(1, 0, rndSeed);
+            seed.setAt(2, 0, rndSeed);
+            seed.setAt(3, 0, rndSeed);
 
             // check if a guess has been provided
             bool modelParamInitialized = false;
@@ -103,11 +104,18 @@ namespace MidaxLib
             while (_totalError > _obj_error)
             {
                 if (nbIter++ > _max_iter)
-                    throw new ApplicationException("LevenbergMarquardt cannot converge within maximum number of iterations"); 
+                {
+                    updateWeights();
+                    throw new StallException();
+                }
                 
                 nextStep();
             }
-            // update the weights
+            updateWeights();
+        }
+
+        void updateWeights()
+        {
             for (int idxWeight = 0; idxWeight < _weights.Columns; idxWeight++)
                 _modelParams[idxWeight].X = _weights[0, idxWeight];
         }
@@ -163,6 +171,7 @@ namespace MidaxLib
                 }
                 else
                 {
+                    updateWeights();
                     throw new StallException(); 
                 }
             }

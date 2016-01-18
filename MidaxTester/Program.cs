@@ -23,6 +23,17 @@ namespace MidaxTester
             // test whole daily trading batches
             List<DateTime> tests = new List<DateTime>();
             tests.Add(new DateTime(2015, 12, 23));
+            /*
+            tests.Add(new DateTime(2016, 1, 4));
+            tests.Add(new DateTime(2016, 1, 5));
+            tests.Add(new DateTime(2016, 1, 6));
+            tests.Add(new DateTime(2016, 1, 7));
+            tests.Add(new DateTime(2016, 1, 8));
+            tests.Add(new DateTime(2016, 1, 11));
+            tests.Add(new DateTime(2016, 1, 12));
+            tests.Add(new DateTime(2016, 1, 13));
+            tests.Add(new DateTime(2016, 1, 14));
+            tests.Add(new DateTime(2016, 1, 15));*/
             DailyReplay.Run(tests, generate, generate_to_db);
 
             string statusSuccess = generate ? "Tests generated successfully" : "Tests passed successfully";

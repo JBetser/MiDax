@@ -89,7 +89,10 @@ namespace MidaxLib
             foreach (var mkt in mktData)
             {
                 _apiStreamingClient.GetMarketDetails(mkt);
-                PublisherConnection.Instance.Insert(mkt.Levels.Value);
+                if (mkt.Levels.HasValue)
+                    PublisherConnection.Instance.Insert(mkt.Levels.Value);
+                else
+                    Log.Instance.WriteEntry("Cannot publish market levels", EventLogEntryType.Error);
             }
         }
     }

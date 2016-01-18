@@ -79,8 +79,20 @@ namespace Calibrator
                 while (start.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday);
             }
 
-            var ann = new NeuralNetworkWMA_4_2(ids[0], marketData, indicatorData, profitData);
-            ann.Train(2.0);
+            var error = 100.0;
+            int trials = 10;
+            NeuralNetworkWMA_4_2 ann = null;
+            var rndSeed = new Random();
+            while (trials-- > 0)
+            {
+                var annTest = new NeuralNetworkWMA_4_2(ids[0], marketData, indicatorData, profitData);
+                annTest.Train(5.0, rndSeed.Next(1000));
+                if (annTest.Error < error)
+                {
+                    error = annTest.Error;
+                    ann = annTest;
+                }
+            }
 
             DialogResult dialogResult = MessageBox.Show(string.Format("The calibration error is {0}.\n The learning rate is {1}%.\n Would you like to publish the weights to production DB?",
                 ann.Error, ann.LearningRatePct), ann.GetType().ToString(), MessageBoxButtons.YesNo);

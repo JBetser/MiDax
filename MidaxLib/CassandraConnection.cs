@@ -145,8 +145,8 @@ namespace MidaxLib
     { 
         Cluster _cluster = null;
         ISession _session = null;
-        decimal _avg = 0m;
-        decimal _scale = 0m;
+        Dictionary<string, decimal> _avg = new Dictionary<string, decimal>();
+        Dictionary<string, decimal> _scale = new Dictionary<string, decimal>();
         const string DB_BUSINESSDATA = "business";
         const string DB_HISTORICALDATA = "historical";
         const string EXCEPTION_CONNECTION_CLOSED = "Cassandra session is closed";
@@ -381,14 +381,15 @@ namespace MidaxLib
             stopTime = stopTime < te ? stopTime : te;
             double intervalSeconds = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 250);
             double intervalSecondsLarge = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 100);            
+            string keyAvg = id.Split('_').Last() + "_" +startTime.ToShortDateString();
             if (type == PublisherConnection.DATATYPE_STOCK)
             {
-                _avg = (min + max) / 2m;
-                _scale = (max - min) / 2m;
+                _avg[keyAvg] = (min + max) / 2m;
+                _scale[keyAvg] = (max - min) / 2m;
             }
             foreach (CqlQuote cqlQuote in quotes)
             {
-                decimal quoteValue = cqlQuote.ScaleValue(_avg, _scale);
+                decimal quoteValue = cqlQuote.ScaleValue(_avg[keyAvg], _scale[keyAvg]);
                 if (!prevQuoteValue.HasValue)
                 {
                     filteredQuotes.Add(cqlQuote);

@@ -136,7 +136,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("06:45:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("05:45:00")]
         public string PUBLISHING_START_TIME {
             get {
                 return ((string)(this["PUBLISHING_START_TIME"]));
@@ -190,19 +190,10 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("IN.D.VIX.MONTH2.IP")]
+        [global::System.Configuration.DefaultSettingValueAttribute("VIX2:IN.D.VIX.MONTH2.IP")]
         public string VOLATILITY_2M {
             get {
                 return ((string)(this["VOLATILITY_2M"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("IN.D.VIX.MONTH3.IP")]
-        public string VOLATILITY_3M {
-            get {
-                return ((string)(this["VOLATILITY_3M"]));
             }
         }
         
@@ -230,6 +221,24 @@ namespace Midax.Properties {
         public string TRADING_SIGNAL {
             get {
                 return ((string)(this["TRADING_SIGNAL"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("CAC:IX.D.CAC.DAILY.IP")]
+        public string INDEX_CAC {
+            get {
+                return ((string)(this["INDEX_CAC"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("SNP:IX.D.SPTRD.DAILY.IP")]
+        public string INDEX_SNP {
+            get {
+                return ((string)(this["INDEX_SNP"]));
             }
         }
     }

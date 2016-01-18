@@ -99,7 +99,7 @@ namespace MidaxLib
             Log.Instance.WriteEntry("Publishing indicator levels...", EventLogEntryType.Information);
             foreach (var indicator in _mktEODIndicators)
                 indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
-            publishMarketLevels();
+            MarketDataConnection.Instance.PublishMarketLevels(_mktData);
             string status = PublisherConnection.Instance.Close();
             foreach (Signal sig in _mktSignals)
             {
@@ -132,12 +132,7 @@ namespace MidaxLib
                 }
             }
         }
-
-        void publishMarketLevels()
-        {
-            MarketDataConnection.Instance.PublishMarketLevels(_mktData);
-        }
-
+        
         public void BookTrade(Trade trade)
         {
             _ptf.BookTrade(trade);
@@ -153,11 +148,18 @@ namespace MidaxLib
         protected DateTime _closingTime = DateTime.MinValue;
         protected MarketData _daxIndex = null;
         protected List<MarketData> _daxStocks = null;
-        protected List<MarketData> _volatilityIndices = null;
+        protected MarketData _vix = null;
         protected SignalMacD _macD_low = null;
         protected SignalMacD _macD_high = null;
+        protected SignalMacD _macD_mid = null;
+        protected SignalMacD _macD_mid2 = null;
+        protected SignalMacDCascade _macDCas_high = null;
+        protected SignalMacDCascade _macDCas_mid = null;
+        protected SignalMacDCascade _macDCas_mid2 = null;
+        protected SignalANN _ann = null;
+        protected List<decimal> _annWeights = null;
 
-        public ModelMacD(MarketData daxIndex, List<MarketData> daxStocks, List<MarketData> volatilityIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
+        public ModelMacD(MarketData daxIndex, List<MarketData> daxStocks, MarketData vix, List<MarketData> otherIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
         {
             List<MarketData> mktData = new List<MarketData>();
             mktData.Add(daxIndex);
@@ -166,17 +168,24 @@ namespace MidaxLib
             this._mktData = mktData;
             this._daxIndex = daxIndex;
             this._daxStocks = daxStocks;
-            this._volatilityIndices = volatilityIndices;
-            this._mktIndices.AddRange(volatilityIndices);
+            this._vix = vix;
+            if (this._vix != null)
+                this._mktIndices.Add(this._vix);
+            this._mktIndices.AddRange(otherIndices);
             this._macD_low = new SignalMacD(_daxIndex, lowPeriod, midPeriod);
-            this._macD_high = new SignalMacD(_daxIndex, midPeriod, highPeriod, this._macD_low.IndicatorHigh);
+            this._macD_high = new SignalMacD(_daxIndex, midPeriod, highPeriod);
+            this._macD_mid = new SignalMacD(_daxIndex, midPeriod, 30, this._macD_high.IndicatorLow);
+            this._macD_mid2 = new SignalMacD(_daxIndex, midPeriod, 45, this._macD_high.IndicatorLow);
+            this._macDCas_high = new SignalMacDCascade(_daxIndex, midPeriod, highPeriod, this._macD_high.IndicatorLow);
+            this._macDCas_mid = new SignalMacDCascade(_daxIndex, midPeriod, 30, this._macD_high.IndicatorLow);
+            this._macDCas_mid2 = new SignalMacDCascade(_daxIndex, midPeriod, 45, this._macD_high.IndicatorLow);
             this._mktSignals.Add(this._macD_low);
             this._mktSignals.Add(this._macD_high);
-            this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, lowPeriod * 30)));
-            this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, midPeriod * 30)));
-            this._mktIndicators.Add(new IndicatorLinearRegression(_daxIndex, new TimeSpan(0, 0, highPeriod * 30)));
-            this._mktIndicators.Add(new IndicatorWMVol(_daxIndex, lowPeriod));
-            this._mktIndicators.Add(new IndicatorWMVol(_daxIndex, midPeriod));
+            /*this._mktSignals.Add(this._macD_mid);
+            this._mktSignals.Add(this._macD_mid2);
+            this._mktSignals.Add(this._macDCas_high);
+            this._mktSignals.Add(this._macDCas_mid);
+            this._mktSignals.Add(this._macDCas_mid2);*/
             this._mktIndicators.Add(new IndicatorWMVol(_daxIndex, highPeriod));
             this._mktEODIndicators.Add(new IndicatorLevelMean(_daxIndex));
             this._mktEODIndicators.Add(new IndicatorLevelPivot(_daxIndex));
@@ -186,6 +195,21 @@ namespace MidaxLib
             this._mktEODIndicators.Add(new IndicatorLevelS1(_daxIndex));
             this._mktEODIndicators.Add(new IndicatorLevelS2(_daxIndex));
             this._mktEODIndicators.Add(new IndicatorLevelS3(_daxIndex));
+
+            var annId = "WMA_4_2";
+            int lastversion = StaticDataConnection.Instance.GetAnnLatestVersion(annId, daxIndex.Id);
+            this._annWeights = StaticDataConnection.Instance.GetAnnWeights(annId, daxIndex.Id, lastversion);
+            var signalType = Type.GetType("MidaxLib.SignalANN" + annId);
+            List<Indicator> annIndicators = new List<Indicator>();
+            annIndicators.Add(this._macD_low.IndicatorLow);
+            annIndicators.Add(this._macD_high.IndicatorHigh);
+            annIndicators.Add(this._macD_high.IndicatorLow);
+            List<object> signalParams = new List<object>();
+            signalParams.Add(daxIndex);
+            signalParams.Add(annIndicators);
+            signalParams.Add(this._annWeights);
+            //this._ann = (SignalANN)Activator.CreateInstance(signalType, signalParams.ToArray());
+            //this._mktSignals.Add(this._ann);
         }
 
         protected override void Buy(Signal signal, DateTime time, Price value)
@@ -215,6 +239,6 @@ namespace MidaxLib
                     Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.MarketData.Id + " " + value.Bid, EventLogEntryType.Information);
                 }
             }
-        }
+        }        
     }
 }

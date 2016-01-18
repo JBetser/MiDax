@@ -48,12 +48,12 @@ namespace MidaxLib
             var output = _ann.GetOutput()[0];
 
             _values.Add(updateTime, new Price((decimal)output));
-            if (output > 0.8 && _signalCode != SIGNAL_CODE.BUY)
+            if (output > 0.5 && _signalCode != SIGNAL_CODE.BUY)
             {
                 tradingOrder = _onBuy;
                 _signalCode = SIGNAL_CODE.BUY;
             }
-            else if (output < -0.8 && _signalCode != SIGNAL_CODE.SELL)
+            else if (output < -0.5 && _signalCode != SIGNAL_CODE.SELL)
             {
                 tradingOrder = _onSell;
                 _signalCode = SIGNAL_CODE.SELL;

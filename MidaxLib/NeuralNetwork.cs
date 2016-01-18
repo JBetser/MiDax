@@ -271,7 +271,7 @@ namespace MidaxLib
             return modelParams;
         }
 
-        public void Train(List<List<double>> inputValues, List<List<double>> outputValues, double obj_error = 1e-5, double max_error = 1e-5)
+        public void Train(List<List<double>> inputValues, List<List<double>> outputValues, double obj_error = 1e-5, double max_error = 1e-5, int rnd_seed = 0)
         {
             if (inputValues.Count != outputValues.Count)
                 throw new ApplicationException("Training set inputs and outputs must have the same size");
@@ -369,18 +369,29 @@ namespace MidaxLib
                 return jac; 
             };
 
-            LevenbergMarquardt optimizer = new LevenbergMarquardt(objFunc, inputs, modelParams, modelFunc, jacFunc, 0.001, obj_error);
-            try
+            var error = 100.0;
+            int trials = 10;
+            LevenbergMarquardt optimizerOpt = null;
+            while (trials-- > 0)
             {
-                optimizer.Solve();               
+                LevenbergMarquardt optimizer = new LevenbergMarquardt(objFunc, inputs, modelParams, modelFunc, jacFunc, 0.001, obj_error, 200, rnd_seed);
+                try
+                {
+                    optimizer.Solve();                    
+                }
+                catch (StallException)
+                {                    
+                }
+                if (optimizer.Error < error)
+                {
+                    error = optimizer.Error;
+                    optimizerOpt = optimizer;
+                }
             }
-            catch (StallException)
-            {
-                if (optimizer.Error > max_error)
-                    throw;                
-            }
-            _totalError = optimizer.Error;
-            _learningRate = (optimizer.StartError - optimizer.Error) / optimizer.StartError;
+            if (optimizerOpt.Error > max_error)
+                throw new StallException();
+            _totalError = optimizerOpt.Error;
+            _learningRate = (optimizerOpt.StartError - optimizerOpt.Error) / optimizerOpt.Error;
         }
     }    
 }

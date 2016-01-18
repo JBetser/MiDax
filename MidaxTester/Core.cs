@@ -244,28 +244,34 @@ namespace MidaxTester
                 }
                 if (!success)
                     model.ProcessError("An expected exception has not been thrown");
+                success = false;
                 try
                 {
                     modelErr.StopSignals();
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9969.548526007546470983000277";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9982.822762679691659529031265";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
                 }
+                if (!success)
+                    model.ProcessError("An expected exception has not been thrown");
+                success = false;
                 try
                 {
                     model.StopSignals();
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9969.548526007546470983000277";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9982.822762679691659529031265";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
                 }
+                if (!success)
+                    model.ProcessError("An expected exception has not been thrown");
                 success = false;
                 try
                 {
@@ -290,7 +296,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9969.548526007546470983000277";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9982.822762679691659529031265";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);

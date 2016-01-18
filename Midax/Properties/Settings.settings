@@ -64,7 +64,7 @@
       <Value Profile="(Default)">10</Value>
     </Setting>
     <Setting Name="PUBLISHING_START_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">06:45:00</Value>
+      <Value Profile="(Default)">05:45:00</Value>
     </Setting>
     <Setting Name="TRADING_START_TIME" Type="System.String" Scope="Application">
       <Value Profile="(Default)">07:00:00</Value>
@@ -82,10 +82,7 @@
       <Value Profile="(Default)">192.168.1.26</Value>
     </Setting>
     <Setting Name="VOLATILITY_2M" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">IN.D.VIX.MONTH2.IP</Value>
-    </Setting>
-    <Setting Name="VOLATILITY_3M" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">IN.D.VIX.MONTH3.IP</Value>
+      <Value Profile="(Default)">VIX2:IN.D.VIX.MONTH2.IP</Value>
     </Setting>
     <Setting Name="TRADING_CURRENCY" Type="System.String" Scope="Application">
       <Value Profile="(Default)">GBP</Value>
@@ -95,6 +92,12 @@
     </Setting>
     <Setting Name="TRADING_SIGNAL" Type="System.String" Scope="Application">
       <Value Profile="(Default)">MacD_10_60_IX.D.DAX.DAILY.IP</Value>
+    </Setting>
+    <Setting Name="INDEX_CAC" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">CAC:IX.D.CAC.DAILY.IP</Value>
+    </Setting>
+    <Setting Name="INDEX_SNP" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">SNP:IX.D.SPTRD.DAILY.IP</Value>
     </Setting>
   </Settings>
 </SettingsFile>

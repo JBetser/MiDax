@@ -149,6 +149,7 @@
 
       $(function () {
           $("#datepicker").datepicker();
+          $("#datepickerend").datepicker();
       });
     </script>
     <script type="text/javascript">
@@ -157,16 +158,32 @@
                 var currentDate = $("#datepicker").datepicker("getDate");
                 if (currentDate == null)
                     currentDate = new Date();
-                currentDate = formatDate(currentDate);
-                var genericParams = { "begin": currentDate + " " + $('#timestart option:selected').text(), "end": currentDate + " " + $('#timestop option:selected').text() };
-                var equityParams = $.extend({"stockid" : $("#equity").val()}, genericParams);
-                
-                if (window.document.getElementById("equity").selectedIndex > 0) {
+                var endDate = $("#datepickerend").datepicker("getDate");
+                if (endDate == null)
+                    endDate = new Date(currentDate);
+
+                var profits = null;
+                var sync = {};
+                sync['nbDays'] = 0;
+                sync['processedDays'] = 0;
+                sync['profits'] = null;
+                var cd = new Date(currentDate);
+                while (cd <= endDate) {
+                    sync['nbDays'] = sync['nbDays'] + 1;
+                    do {
+                        var newDate = cd.setDate(cd.getDate() + 1);
+                        cd = new Date(newDate);
+                    } while (cd.getDay() == 6 || cd.getDay() == 0);
+                }
+                while (currentDate <= endDate) {
+                    var genericParams = { "begin": formatDate(currentDate) + " " + $('#timestart option:selected').text(), "end": formatDate(currentDate) + " " + $('#timestop option:selected').text() };
+                    var equityParams = $.extend({ "stockid": $("#equity").val() }, genericParams);
+
                     var requests = { "GetStockData0": equityParams };
                     if (window.document.getElementById("indicator").selectedIndex > 0) {
                         var indicatorIds = $("#indicator").val().split('#');
                         var idx = 0;
-                        for(var id in indicatorIds){
+                        for (var id in indicatorIds) {
                             var indicatorParams = $.extend({ "indicatorid": indicatorIds[id] + "_" + $("#equity").val() }, genericParams);
                             var key = "GetIndicatorData";
                             key = key.concat(idx.toString());
@@ -180,10 +197,14 @@
                         var signalParams = $.extend({ "signalid": $("#signal").val() + "_" + $("#equity").val() }, genericParams);
                         $.extend(requests, { "GetSignalData0": signalParams });
                     }
-                    MidaxAPI(requests);
-                }
-                else
-                    IG_internalAlertClient("Please select at least one filter", false);
+
+                    MidaxAPI(requests, sync);
+
+                    do {
+                        var newDate = currentDate.setDate(currentDate.getDate() + 1);
+                        currentDate = new Date(newDate);
+                    } while (currentDate.getDay() == 6 || currentDate.getDay() == 0);
+                }                    
             });
         });
     </script>
@@ -203,7 +224,10 @@
       <div class="jumbotron" style="margin-top: 5px">   
         <div class="control-group">             
            <div class="controls">
-             <input class="form-control input-medium" placeholder="Today" id="datepicker">
+             <table><tr><th><a>From date:</a>
+             <input class="form-control input-medium" placeholder="Today" id="datepicker"></th></tr>
+             <tr><th><a>To date:</a>
+             <input class="form-control input-medium" placeholder="" id="datepickerend"></th></tr></table>
              <select class="combobox input-medium" id="timestart" >
                <option value="">07:00</option>
                <option value="1">07:30</option>
@@ -238,11 +262,10 @@
              </select>
                <br />
              <select class="combobox input-large" id="equity">
-               <option value="">Choose a market data</option>
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
                <option value="IX.D.SPTRD.DAILY.IP">SNP</option>
-               <option value="IN.D.VIX.MONTH2.IP">VIX 2M</option>
-               <option value="IN.D.VIX.MONTH3.IP">VIX 3M</option>
+               <option value="IX.D.CAC.DAILY.IP">CAC</option>
+               <option value="IN.D.VIX.MONTH2.IP">VIX</option>
                <!--option value="ED.D.ADSGY.DAILY.IP">Adidas AG</!--option>
                <option value="ED.D.ALVGY.DAILY.IP">Allianz SE</option>
                <option value="ED.D.BAS.DAILY.IP">BASF SE</option>
@@ -275,18 +298,24 @@
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>
-               <option value="WMA_2#WMA_10">WMA 2mn/10mn</option>
+               <option value="WMA_10#WMA_30">WMA 10mn/30mn</option>
+               <option value="WMA_10#WMA_45">WMA 10mn/45mn</option>
                <option value="WMA_10#WMA_60">WMA 10mn/1h</option>
-               <option value="LR_0_1_0">Linear regression 1mn</option>
+               <!--option value="LR_0_1_0">Linear regression 1mn</!--option>
                <option value="LR_0_5_0">Linear regression 5mn</option>
-               <option value="LR_0_30_0">Linear regression 30mn</option>
-               <option value="WMVol_2#WMVol_10">WM Vol 2mn/10mn</option>
-               <option value="WMVol_10#WMVol_60">WM Vol 10mn/1h</option>
+               <option value="LR_0_30_0">Linear regression 30mn</option-->
+               <option value="WMVol_10">WM Vol 10mn</option>
+               <option value="WMVol_60">WM Vol 1h</option>
              </select>   
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
-               <option value="MacD_2_10">MacD 2mn/10mn</option>
-               <option value="MacD_10_60">MacD 10mn/60mn</option>
+               <option value="MacD_10_30">MacD 10mn/30mn</option>
+               <option value="MacD_10_45">MacD 10mn/45mn</option>
+               <option value="MacD_10_60">MacD 10mn/1h</option>
+               <option value="MacDCas_10_30">MacD Cascade 10mn/30mn</option>
+               <option value="MacDCas_10_45">MacD Cascade 10mn/45mn</option>
+               <option value="MacDCas_10_60">MacD Cascade 10mn/1h</option>
+               <option value="ANNWMA_4_2">ANN WMA</option>
              </select>          
              <button type="button" id="GO" class="btn btn-primary">
                     <span class="glyphicon glyphicon-ok"></span> </button>

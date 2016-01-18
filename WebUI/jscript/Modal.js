@@ -99,6 +99,7 @@ function IG_Modal() {
                 case IGMODALTYPE_MESSAGE:
                 case IGMODALTYPE_ERROR:
                     nextField = document.createElement("a");
+                    nextField.setAttribute("style", "font-size: large");
                     var nextFieldText = document.createTextNode(tParams[curIdx++]);
                     nextField.appendChild(nextFieldText);
                     this.dialogType = curType;
@@ -147,7 +148,7 @@ function IG_Modal() {
             var modal = this.parentNode.parentNode.parentNode.parentNode.Code;
             modal.popIn();
             if (modal.callback)
-                modal.callback(this.dialogType == IGMODALTYPE_MESSAGE ? IGMODALRETURN_OK : IGMODALRETURN_RECONNECT, modal.tOptions, this.successCallback, this.errorCallback);
+                modal.callback(modal.dialogType == IGMODALTYPE_MESSAGE ? IGMODALRETURN_OK : IGMODALRETURN_RECONNECT, modal.tOptions, this.successCallback, this.errorCallback);
         }
         okBtn.innerHTML = (this.tOptions['OK'] != null ? this.tOptions['OK'] : (this.dialogType == IGMODALTYPE_IFRAME ? "Close" : (this.dialogType == IGMODALTYPE_ERROR ? "Reconnect" : "OK")));
         lastRowCurCol.appendChild(okBtn);

@@ -4,6 +4,6 @@
     <StartArguments>2015-12-03 2015-12-04</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <StartArguments>2015-12-03 2015-12-04</StartArguments>
+    <StartArguments>2016-01-04 2016-01-08</StartArguments>
   </PropertyGroup>
 </Project>

@@ -119,9 +119,9 @@ namespace MidaxLib
             _version = version;
         }
 
-        public void Train(double max_error)
+        public void Train(double max_error, int rnd_seed)
         {
-            base.Train(_annInputs, _annOutputs, (double)_annInputs.Count * 0.01, max_error);
+            base.Train(_annInputs, _annOutputs, (double)_annInputs.Count * 0.01, max_error, rnd_seed);
         }
     }
 }

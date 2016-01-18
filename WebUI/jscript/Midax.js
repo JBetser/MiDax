@@ -1,3 +1,9 @@
+var monthNames = [
+  "Jan", "Feb", "Mar",
+  "Apr", "May", "Jun", "Jul",
+  "Augt", "Sep", "Oct",
+  "Nov", "Dec"
+];
 
 function processResponses(jsonData) {
     var margin = { top: 20, right: 80, bottom: 30, left: 50 },
@@ -125,12 +131,15 @@ function processResponses(jsonData) {
         .call(d3.legend)
 
     if (profit != null)
-        svg.append("text")
-            .attr("x", (width / 2))
-            .attr("y", 5 - (margin.top / 2))
-            .attr("text-anchor", "middle")
-            .style("font-size", "16px")
-            .text("Performance: " + Math.round(profit * 100) / 100);
+        profit = Math.round(profit * 100) / 100;
+    var perfSuffix = (profit != null ? " Performance: " + profit : "");
+    svg.append("text")
+        .attr("x", (width / 2))
+        .attr("y", 5 - (margin.top / 2))
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .text(keyValueMap[firstStock][0].t.getDate() + " " + monthNames[keyValueMap[firstStock][0].t.getMonth()] + " " + keyValueMap[firstStock][0].t.getFullYear() + perfSuffix);
+    return profit;
 }
 
 function internalAPI(functionName, jsonData, successCallback, errorCallback) {
@@ -155,6 +164,7 @@ function internalAPI(functionName, jsonData, successCallback, errorCallback) {
         type: 'POST',
         contentType: 'application/json; charset=utf-8',
         crossDomain: true,
+        async: false,
         success: function (data) {
             if (successCallback)
                 successCallback(jQuery.parseJSON(data.d));
@@ -169,18 +179,27 @@ function internalAPI(functionName, jsonData, successCallback, errorCallback) {
     });
 }
 
-function recursiveAPICalls(requests, idx)
+function recursiveAPICalls(requests, idx, sync)
 {
     var key = Object.keys(requests)[idx];
     internalAPI(key.substring(0, key.length - 1), requests[key], function (jsonResponse) {
         $.extend(requests[key], { "response": jsonResponse });
         if (idx < Object.keys(requests).length - 1)
-            recursiveAPICalls(requests, idx + 1);
-        else
-            processResponses(requests)
-    });
+            recursiveAPICalls(requests, idx + 1, sync);
+        else {
+            var profit = processResponses(requests);
+            if (profit != null) {
+                if (sync['profits'] == null)
+                    sync['profits'] = 0;
+                sync['profits'] += profit;
+                sync['processedDays'] += 1;
+                if (sync['processedDays'] == sync['nbDays'] && sync['nbDays'] > 1)
+                    IG_internalAlertClient("Total profits: " + sync['profits'], false, "Model results");
+            }
+        }
+    });    
 }
 
-function MidaxAPI(requests) {
-    recursiveAPICalls(requests, 0);
+function MidaxAPI(requests, sync) {
+    recursiveAPICalls(requests, 0, sync);
 }

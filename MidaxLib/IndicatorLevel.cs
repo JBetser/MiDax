@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,9 +14,12 @@ namespace MidaxLib
 
     public abstract class IndicatorLevel : Indicator, ILevelPublisher
     {
+        protected MarketData _levelMktData = null;
+
         public IndicatorLevel(MarketData mktData, string indicatorid)
             : base(indicatorid + "_" + mktData.Id, new List<MarketData> { mktData })
         {
+            _levelMktData = mktData;
         }
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
@@ -24,6 +28,14 @@ namespace MidaxLib
 
         public virtual void Publish(DateTime updateTime)
         {
+            if (_levelMktData.Levels.HasValue)
+                publish(updateTime);
+            else
+                Log.Instance.WriteEntry("Cannot publish level indicator " + _id + ": value is unvavailable", EventLogEntryType.Error);
+        }
+
+        public virtual void publish(DateTime updateTime)
+        { 
         }
     }
 
@@ -43,8 +55,13 @@ namespace MidaxLib
 
         void ILevelPublisher.Publish(DateTime updateTime)
         {
+            if (_mktData[0].TimeSeries.Count == 0 || _mktData[0].TimeSeries.TotalMinutes(updateTime) < 240)
+            {
+                Log.Instance.WriteEntry("Cannot publish level mean indicator: no market data available", EventLogEntryType.Warning);
+                return;
+            }
             Price avg = Average(_mktData[0], updateTime, true);
-            Publish(updateTime, avg.MidPrice());
+            Publish(updateTime, avg.MidPrice());            
         }
 
         public Price Average()
@@ -58,9 +75,9 @@ namespace MidaxLib
         public IndicatorLevelPivot(MarketData mktData)
             : base(mktData, "LVLPivot"){}
 
-        public override void Publish(DateTime updateTime)
+        public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((MarketData)_mktData[0]).Levels.Value.Pivot));
+            Publish(updateTime, new Price(_levelMktData.Levels.Value.Pivot));
         }
     }
 
@@ -69,9 +86,9 @@ namespace MidaxLib
         public IndicatorLevelR1(MarketData mktData)
             : base(mktData, "LVLR1") { }
 
-        public override void Publish(DateTime updateTime)
+        public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((MarketData)_mktData[0]).Levels.Value.R1));
+            Publish(updateTime, new Price(_levelMktData.Levels.Value.R1));
         }
     }
 
@@ -80,9 +97,9 @@ namespace MidaxLib
         public IndicatorLevelR2(MarketData mktData)
             : base(mktData, "LVLR2") { }
 
-        public override void Publish(DateTime updateTime)
+        public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((MarketData)_mktData[0]).Levels.Value.R2));
+            Publish(updateTime, new Price(_levelMktData.Levels.Value.R2));
         }
     }
 
@@ -91,9 +108,9 @@ namespace MidaxLib
         public IndicatorLevelR3(MarketData mktData)
             : base(mktData, "LVLR3") { }
 
-        public override void Publish(DateTime updateTime)
+        public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((MarketData)_mktData[0]).Levels.Value.R3));
+            Publish(updateTime, new Price(_levelMktData.Levels.Value.R3));
         }
     }
 
@@ -102,9 +119,9 @@ namespace MidaxLib
         public IndicatorLevelS1(MarketData mktData)
             : base(mktData, "LVLS1") { }
 
-        public override void Publish(DateTime updateTime)
+        public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((MarketData)_mktData[0]).Levels.Value.S1));
+            Publish(updateTime, new Price(_levelMktData.Levels.Value.S1));
         }
     }
 
@@ -113,9 +130,9 @@ namespace MidaxLib
         public IndicatorLevelS2(MarketData mktData)
             : base(mktData, "LVLS2") { }
 
-        public override void Publish(DateTime updateTime)
+        public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((MarketData)_mktData[0]).Levels.Value.S2));
+            Publish(updateTime, new Price(_levelMktData.Levels.Value.S2));
         }
     }
 
@@ -124,9 +141,9 @@ namespace MidaxLib
         public IndicatorLevelS3(MarketData mktData)
             : base(mktData, "LVLS3") { }
 
-        public override void Publish(DateTime updateTime)
+        public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(((MarketData)_mktData[0]).Levels.Value.S3));
+            Publish(updateTime, new Price(_levelMktData.Levels.Value.S3));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -73,19 +74,33 @@ namespace MidaxLib
                 return Config.Settings["TRADING_MODE"] == "UAT";
             }
         }
+
+        static bool _tradingOpen = false;
+        static bool _publishingOpen = false;
                 
         public static bool TradingOpen(DateTime time)
         {
-            return time.TimeOfDay > Config.ParseDateTimeLocal(_settings["TRADING_START_TIME"]).TimeOfDay &&
-                    time.TimeOfDay < Config.ParseDateTimeLocal(_settings["TRADING_STOP_TIME"]).TimeOfDay;
+            bool open = (time.TimeOfDay >= Config.ParseDateTimeLocal(_settings["TRADING_START_TIME"]).TimeOfDay &&
+                    time.TimeOfDay < Config.ParseDateTimeLocal(_settings["TRADING_STOP_TIME"]).TimeOfDay);
+            if (open != _tradingOpen){
+                _tradingOpen = open;
+                Log.Instance.WriteEntry("Trading " + (_tradingOpen ? "started" : "stopped"), EventLogEntryType.Information);
+            }
+            return open;
         }
 
         public static bool PublishingOpen(DateTime time)
         {
             if (ReplayEnabled || MarketSelectorEnabled)
                 return true;
-            return time.TimeOfDay > Config.ParseDateTimeLocal(_settings["PUBLISHING_START_TIME"]).TimeOfDay &&
-                time.TimeOfDay < Config.ParseDateTimeLocal(_settings["PUBLISHING_STOP_TIME"]).TimeOfDay;
+            bool open = (time.TimeOfDay >= Config.ParseDateTimeLocal(_settings["PUBLISHING_START_TIME"]).TimeOfDay &&
+                time.TimeOfDay < Config.ParseDateTimeLocal(_settings["PUBLISHING_STOP_TIME"]).TimeOfDay);
+            if (open != _publishingOpen)
+            {
+                _publishingOpen = open;
+                Log.Instance.WriteEntry("Publishing " + (_publishingOpen ? "started" : "stopped"), EventLogEntryType.Information);
+            }
+            return open;
         }        
 
         public static string TestList(List<string> tests)

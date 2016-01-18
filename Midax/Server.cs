@@ -58,10 +58,10 @@ public class Server
                 List<MarketData> stocks = new List<MarketData>();
                 foreach (string stock in stockList)
                     stocks.Add(new MarketData(stock));
-                List<MarketData> volIndices = new List<MarketData>();
-                volIndices.Add(new MarketData(dicSettings["VOLATILITY_2M"]));
-                volIndices.Add(new MarketData(dicSettings["VOLATILITY_3M"]));
-                _model = new ModelMacD(index, stocks, volIndices);
+                List<MarketData> otherIndices = new List<MarketData>();
+                otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
+                otherIndices.Add(new MarketData(dicSettings["INDEX_SNP"]));
+                _model = new ModelMacD(index, stocks, new MarketData(dicSettings["VOLATILITY_2M"]), otherIndices);
                 adapter.add(new MidaxIceI(_model, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
 

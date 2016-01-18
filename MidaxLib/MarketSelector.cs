@@ -43,7 +43,19 @@ namespace MidaxLib
                 KeyValuePair<int, DateTime> minProfit = new KeyValuePair<int, DateTime>(1000000, DateTime.MinValue);
                 KeyValuePair<int, DateTime> maxProfit = new KeyValuePair<int, DateTime>(-1000000, DateTime.MinValue);
                 var rnd = new Random(155);
-                var openPrice = priceData[epic][0];
+                var lowPrice = new Price(1000000.0m);
+                var highPrice = new Price(-1000000.0m);
+                foreach (var quote in priceData[epic])
+                {
+                    if (quote.t.TimeOfDay < Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
+                        continue;
+                    if (lowPrice.Mid() > quote.MidPrice())
+                        lowPrice = new Price(quote);
+                    if (highPrice.Mid() < quote.MidPrice())
+                        highPrice = new Price(quote);
+                }
+                var midLevel = (lowPrice + highPrice) / 2.0m;
+                var amplitude = 100.0m;
                 foreach (var quote in priceData[epic])
                 {
                     if (quote.t.TimeOfDay < Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
@@ -62,8 +74,8 @@ namespace MidaxLib
                         minProfit = new KeyValuePair<int, DateTime>(profit, gainDistribution[profit]);
                     if (profit > maxProfit.Key)
                         maxProfit = new KeyValuePair<int, DateTime>(profit, gainDistribution[profit]);
-                    quote.b -= openPrice.MidPrice();
-                    quote.o -= openPrice.MidPrice();
+                    quote.b = (quote.b - midLevel.Bid) / amplitude;
+                    quote.o = (quote.o - midLevel.Offer) / amplitude;
                 }
                 gainDistribution = new SortedList<int,DateTime>((from elt in gainDistribution
                                                                  where !isTooClose(elt, gainDistribution)
@@ -88,12 +100,12 @@ namespace MidaxLib
                     var wmaHighAvg = wmaHigh.Average(mktData, dt);
                     if (wmaLowAvg == null || wmaMidAvg == null || wmaHighAvg == null)
                         continue;
-                    PublisherConnection.Instance.Insert(dt, wmaLow, wmaLowAvg.Mid() - openPrice.MidPrice());
-                    PublisherConnection.Instance.Insert(dt, wmaMid, wmaMidAvg.Mid() - openPrice.MidPrice());
-                    PublisherConnection.Instance.Insert(dt, wmaHigh, wmaHighAvg.Mid() - openPrice.MidPrice());                    
-                    PublisherConnection.Instance.Insert(dt, new Value(selection[dt].Key));                    
+                    PublisherConnection.Instance.Insert(dt, wmaLow, (wmaLowAvg.Mid() - midLevel.Mid()) / amplitude);
+                    PublisherConnection.Instance.Insert(dt, wmaMid, (wmaMidAvg.Mid() - midLevel.Mid()) / amplitude);
+                    PublisherConnection.Instance.Insert(dt, wmaHigh, (wmaHighAvg.Mid() - midLevel.Mid()) / amplitude);                    
+                    PublisherConnection.Instance.Insert(dt, new Value((double)selection[dt].Key / ((double)amplitude / 2.0)));                    
                 }
-                PublisherConnection.Instance.Insert(Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]), wmaDailyAvg, wmaDailyAvg.Average().Mid() - openPrice.MidPrice());
+                PublisherConnection.Instance.Insert(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]), wmaDailyAvg, (wmaDailyAvg.Average().Mid() - midLevel.Mid()) / amplitude);
                 priceData[epic] = selection.Values.Select(kv => kv.Value).ToList();
             }
             replay(priceData, tableListener);

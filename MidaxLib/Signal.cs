@@ -37,6 +37,11 @@ namespace MidaxLib
             this.Offer = cpy.Offer;
             this.Volume = cpy.Volume;
         }
+        public Price(CqlQuote cql)
+        {
+            this.Bid = cql.b.Value;
+            this.Offer = cql.o.Value;
+        }
         public Price(L1LsPriceData priceData)
         {
             this.Bid = priceData.Bid.Value;
@@ -189,8 +194,8 @@ namespace MidaxLib
        
     public class SignalMacD : Signal
     {
-        IndicatorWMA _low = null;
-        IndicatorWMA _high = null;
+        protected IndicatorWMA _low = null;
+        protected IndicatorWMA _high = null;
 
         public IndicatorWMA IndicatorLow { get { return _low; } }
         public IndicatorWMA IndicatorHigh { get { return _high; } }
@@ -206,6 +211,12 @@ namespace MidaxLib
                 _high.PublishingEnabled = false;
             _mktIndicator.Add(_low);
             _mktIndicator.Add(_high);
+        }
+
+        public SignalMacD(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null)
+            : this(asset, lowPeriod, highPeriod, low, high)
+        {
+            _id = id;
         }
 
         protected override bool Process(MarketData indicator, DateTime updateTime, Price value, ref Signal.Tick tradingOrder)
@@ -237,6 +248,84 @@ namespace MidaxLib
                     _signalCode = SIGNAL_CODE.SELL;
                     return true;
                 }
+            }
+            return false;
+        }
+    }
+
+    public class SignalMacDCascade : SignalMacD
+    {
+        const decimal THRESHOLD = 1.0m;
+        decimal _pivot = 0.0m;
+        decimal _localMinimum = 0.0m;
+        decimal _localMaximum = 0.0m;
+        bool _cascading = false;
+        bool _buying = false;
+        public SignalMacDCascade(MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null)
+            : base("MacDCas_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high)
+        {
+        }
+
+        protected override bool Process(MarketData indicator, DateTime updateTime, Price value, ref Signal.Tick tradingOrder)
+        {
+            if (base.Process(indicator, updateTime, value, ref tradingOrder))
+            {
+                if (tradingOrder == _onSell)
+                {
+                    if (_low.TimeSeries.Count >= 2)
+                    {
+                        var lowVal = _low.TimeSeries[updateTime].Value.Value;
+                        var prevValues = _low.TimeSeries.Values(updateTime, new TimeSpan(0, 1, 0));
+                        if (prevValues.Count >= 2)
+                        {
+                            var prevVal = prevValues[prevValues.Count - 2].Value;
+                            if (_cascading)
+                            {                                
+                                if (_localMinimum > lowVal.Bid)
+                                    _localMinimum = lowVal.Bid;
+                                if (_localMaximum < lowVal.Bid)
+                                    _localMaximum = lowVal.Bid;
+                                if (_buying)
+                                {
+                                    if (lowVal.Bid < _localMaximum - THRESHOLD)
+                                    {
+                                        _pivot = _localMaximum;
+                                        _localMinimum = _localMaximum;
+                                        _buying = false;
+                                    }
+                                    else if (lowVal.Bid > _pivot - THRESHOLD)
+                                    {
+                                        _signalCode = SIGNAL_CODE.BUY;
+                                        tradingOrder = _onBuy;
+                                    }                                     
+                                }   
+                                else 
+                                {
+                                    if (lowVal.Bid > _localMinimum + THRESHOLD)
+                                    {
+                                        _pivot = _localMinimum;
+                                        _localMaximum = _localMinimum;
+                                        _signalCode = SIGNAL_CODE.BUY;
+                                        tradingOrder = _onBuy;
+                                        _buying = true;
+                                    }
+                                }                                                            
+                            }
+                            else
+                            {
+                                _cascading = true;
+                                _localMinimum = lowVal.Bid;
+                                _localMaximum = lowVal.Bid;
+                                _pivot = _localMaximum;
+                                _buying = false;
+                            }
+                            return true;                            
+                        }
+                    }
+                }
+                _cascading = false;
+                _buying = false;
+                return true;
             }
             return false;
         }
