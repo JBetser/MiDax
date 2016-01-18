@@ -173,12 +173,12 @@ namespace MidaxLib
                 this._mktIndices.Add(this._vix);
             this._mktIndices.AddRange(otherIndices);
             this._macD_low = new SignalMacD(_daxIndex, lowPeriod, midPeriod);
-            this._macD_high = new SignalMacD(_daxIndex, midPeriod, highPeriod);
-            this._macD_mid = new SignalMacD(_daxIndex, midPeriod, 30, this._macD_high.IndicatorLow);
-            this._macD_mid2 = new SignalMacD(_daxIndex, midPeriod, 45, this._macD_high.IndicatorLow);
-            this._macDCas_high = new SignalMacDCascade(_daxIndex, midPeriod, highPeriod, this._macD_high.IndicatorLow);
-            this._macDCas_mid = new SignalMacDCascade(_daxIndex, midPeriod, 30, this._macD_high.IndicatorLow);
-            this._macDCas_mid2 = new SignalMacDCascade(_daxIndex, midPeriod, 45, this._macD_high.IndicatorLow);
+            this._macD_high = new SignalMacD(_daxIndex, midPeriod, highPeriod, this._macD_low.IndicatorHigh);
+            this._macD_mid = new SignalMacD(_daxIndex, midPeriod, 30, this._macD_low.IndicatorHigh);
+            this._macD_mid2 = new SignalMacD(_daxIndex, midPeriod, 45, this._macD_low.IndicatorHigh);
+            this._macDCas_high = new SignalMacDCascade(_daxIndex, midPeriod, highPeriod, this._macD_low.IndicatorHigh);
+            this._macDCas_mid = new SignalMacDCascade(_daxIndex, midPeriod, 30, this._macD_low.IndicatorHigh);
+            this._macDCas_mid2 = new SignalMacDCascade(_daxIndex, midPeriod, 45, this._macD_low.IndicatorHigh);
             this._mktSignals.Add(this._macD_low);
             this._mktSignals.Add(this._macD_high);
             /*this._mktSignals.Add(this._macD_mid);
