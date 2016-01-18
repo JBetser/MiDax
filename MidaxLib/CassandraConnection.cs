@@ -293,9 +293,11 @@ namespace MidaxLib
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             RowSet weights = _session.Execute(string.Format("select weights from staticdata.anncalibration where annid='{0}' and stockid='{1}' and version={2} ALLOW FILTERING",
                 annid, stockid, version));
-            if (weights.Count() != 1)
-                return null;
-            return (List<decimal>)weights.First()[0];
+            var weightLst = new List<decimal>();
+            foreach (var row in weights)
+                foreach (var weight in row)
+                    weightLst.AddRange((IEnumerable<decimal>)weight);
+            return weightLst;
         }
 
         RowSet getRows(DateTime startTime, DateTime stopTime, string type, string id){
