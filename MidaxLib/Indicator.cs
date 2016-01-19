@@ -97,10 +97,10 @@ namespace MidaxLib
 
         protected virtual Price IndicatorFunc(MarketData mktData, DateTime updateTime)
         {
-            return Average(mktData, updateTime);
+            return Average(updateTime);
         }
 
-        public Price Average(MarketData mktData, DateTime updateTime, bool acceptMissingValues = false, bool linearInterpolation = true)
+        public Price Average(DateTime updateTime, bool acceptMissingValues = false, bool linearInterpolation = true)
         {
             Price avg = new Price();
             bool started = false;
@@ -108,7 +108,7 @@ namespace MidaxLib
             int idxSecondStart = 0;
             DateTime startTime = updateTime.AddSeconds(-_periodSeconds);
             decimal weight = (1m / (decimal)_periodSeconds) / 2m;
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = mktData.TimeSeries.ValueGenerator(startTime, updateTime);
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
             foreach (var endPeriodValue in generator)
             {
@@ -155,7 +155,7 @@ namespace MidaxLib
             int idxSecondStart = 0;
             DateTime startTime = updateTime.AddSeconds(-_periodSeconds);
             decimal weight = (1m / (decimal)_periodSeconds);
-            Price avg = Average( mktData, updateTime, acceptMissingValues, linearInterpolation);
+            Price avg = Average(updateTime, acceptMissingValues, linearInterpolation);
             IEnumerable<KeyValuePair<DateTime, Price>> generator = mktData.TimeSeries.ValueGenerator(startTime, updateTime);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
             foreach (var endPeriodValue in generator)

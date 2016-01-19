@@ -60,7 +60,7 @@ namespace MidaxLib
                 {
                     if (quote.t.TimeOfDay < Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
                         continue;
-                    var futureVal = wmaLow.Average(mktData, quote.t.UtcDateTime.AddMinutes(2));
+                    var futureVal = wmaLow.Average(quote.t.UtcDateTime.AddMinutes(2));
                     var profit = (int)Math.Round(futureVal.Mid() - quote.MidPrice());
                     expectations.Add(quote.t.UtcDateTime, new KeyValuePair<CqlQuote, decimal>(quote, profit));
                     if (gainDistribution.ContainsKey(profit))
@@ -95,9 +95,9 @@ namespace MidaxLib
                 }
                 foreach (var dt in selection.Keys)
                 {
-                    var wmaLowAvg = wmaLow.Average(mktData, dt);
-                    var wmaMidAvg = wmaMid.Average(mktData, dt);
-                    var wmaHighAvg = wmaHigh.Average(mktData, dt);
+                    var wmaLowAvg = wmaLow.Average(dt);
+                    var wmaMidAvg = wmaMid.Average(dt);
+                    var wmaHighAvg = wmaHigh.Average(dt);
                     if (wmaLowAvg == null || wmaMidAvg == null || wmaHighAvg == null)
                         continue;
                     PublisherConnection.Instance.Insert(dt, wmaLow, (wmaLowAvg.Mid() - midLevel.Mid()) / amplitude);

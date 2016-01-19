@@ -33,7 +33,8 @@ namespace MidaxTester
             tests.Add(new DateTime(2016, 1, 12));
             tests.Add(new DateTime(2016, 1, 13));
             tests.Add(new DateTime(2016, 1, 14));
-            tests.Add(new DateTime(2016, 1, 15));*/
+            tests.Add(new DateTime(2016, 1, 15));
+            tests.Add(new DateTime(2016, 1, 18));*/
             DailyReplay.Run(tests, generate, generate_to_db);
 
             string statusSuccess = generate ? "Tests generated successfully" : "Tests passed successfully";

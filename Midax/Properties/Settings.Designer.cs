@@ -154,7 +154,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("21:00:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("21:30:00")]
         public string TRADING_STOP_TIME {
             get {
                 return ((string)(this["TRADING_STOP_TIME"]));
@@ -172,7 +172,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("22:00:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("22:45:00")]
         public string PUBLISHING_STOP_TIME {
             get {
                 return ((string)(this["PUBLISHING_STOP_TIME"]));

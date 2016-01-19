@@ -298,10 +298,9 @@
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>
-               <option value="WMA_10#WMA_30">WMA 10mn/30mn</option>
-               <option value="WMA_10#WMA_45">WMA 10mn/45mn</option>
+               <option value="WMA_2#WMA_10">WMA 2mn/10mn</option>
                <option value="WMA_10#WMA_60">WMA 10mn/1h</option>
-               <!--option value="LR_0_1_0">Linear regression 1mn</!--option>
+               <!--option value="LR_0_1_0">Linear regression 1mn</option>
                <option value="LR_0_5_0">Linear regression 5mn</option>
                <option value="LR_0_30_0">Linear regression 30mn</option-->
                <option value="WMVol_10">WM Vol 10mn</option>
@@ -309,11 +308,7 @@
              </select>   
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
-               <option value="MacD_10_30">MacD 10mn/30mn</option>
-               <option value="MacD_10_45">MacD 10mn/45mn</option>
                <option value="MacD_10_60">MacD 10mn/1h</option>
-               <option value="MacDCas_10_30">MacD Cascade 10mn/30mn</option>
-               <option value="MacDCas_10_45">MacD Cascade 10mn/45mn</option>
                <option value="MacDCas_10_60">MacD Cascade 10mn/1h</option>
                <option value="ANNWMA_4_2">ANN WMA</option>
              </select>          

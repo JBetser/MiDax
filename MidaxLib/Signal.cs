@@ -73,6 +73,13 @@ namespace MidaxLib
             diff.Offer = p1.Offer - p2.Offer;
             return diff;
         }
+        public static Price operator *(Price p1, Price p2)
+        {
+            Price mult = new Price(p1);
+            mult.Bid *= p2.Bid;
+            mult.Offer *= p2.Offer;
+            return mult;
+        }
         public static Price operator *(Price p, decimal factor)
         {
             Price mult = new Price(p);

@@ -40,7 +40,7 @@ namespace MidaxLib
                 {
                     if (quote.t.TimeOfDay < Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
                         continue;
-                    var futureVal = wmaLow.Average(mktData, quote.t.UtcDateTime.AddMinutes(2));
+                    var futureVal = wmaLow.Average(quote.t.UtcDateTime.AddMinutes(2));
                     var profit = (int)Math.Round(futureVal.Mid() - quote.MidPrice());
                     expectations.Add(quote.t.UtcDateTime, new KeyValuePair<CqlQuote, decimal>(quote, profit));
                     if (gainDistribution.ContainsKey(profit))
@@ -69,9 +69,9 @@ namespace MidaxLib
                 }
                 foreach (var profit in selection)
                 {
-                    PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaLow, wmaLow.Average(mktData, gainDistribution[profit.Value.Key]).Mid() - openPrice.MidPrice());
-                    PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaMid, wmaMid.Average(mktData, gainDistribution[profit.Value.Key]).Mid() - openPrice.MidPrice());
-                    PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaHigh, wmaHigh.Average(mktData, gainDistribution[profit.Value.Key]).Mid() - openPrice.MidPrice());
+                    PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaLow, wmaLow.Average(gainDistribution[profit.Value.Key]).Mid() - openPrice.MidPrice());
+                    PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaMid, wmaMid.Average(gainDistribution[profit.Value.Key]).Mid() - openPrice.MidPrice());
+                    PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaHigh, wmaHigh.Average(gainDistribution[profit.Value.Key]).Mid() - openPrice.MidPrice());
                     PublisherConnection.Instance.Insert(gainDistribution[profit.Value.Key], wmaDailyAvg, wmaDailyAvg.Average().Mid() - openPrice.MidPrice());
                 }
                 priceData[epic] = selection.Values.Select(keyVal => keyVal.Value).ToList();
