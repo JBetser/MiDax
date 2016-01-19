@@ -173,11 +173,10 @@ namespace MidaxLib
             this._mktIndices.AddRange(otherIndices);
             this._macD_low = new SignalMacD(_daxIndex, lowPeriod, midPeriod);
             this._macD_high = new SignalMacD(_daxIndex, midPeriod, highPeriod, this._macD_low.IndicatorHigh);
-            this._macDCas = new SignalMacDCascade(_daxIndex, midPeriod, highPeriod, this._macD_low.IndicatorHigh);
+            this._macDCas = new SignalMacDCascade(_daxIndex, midPeriod, highPeriod, this._macD_high.IndicatorLow, this._macD_high.IndicatorHigh);
             this._mktSignals.Add(this._macD_low);
             this._mktSignals.Add(this._macD_high);
             this._mktSignals.Add(this._macDCas);
-            this._mktIndicators.Add(new IndicatorWMVol(_daxIndex, highPeriod));
             this._mktEODIndicators.Add(new IndicatorLevelMean(_daxIndex));
             this._mktEODIndicators.Add(new IndicatorLevelPivot(_daxIndex));
             this._mktEODIndicators.Add(new IndicatorLevelR1(_daxIndex));

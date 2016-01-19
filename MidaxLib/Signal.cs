@@ -262,7 +262,7 @@ namespace MidaxLib
 
     public class SignalMacDCascade : SignalMacD
     {
-        const decimal THRESHOLD = 1.0m;
+        const decimal THRESHOLD = 0.5m;
         decimal _pivot = 0.0m;
         decimal _localMinimum = 0.0m;
         decimal _localMaximum = 0.0m;
