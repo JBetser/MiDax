@@ -16,6 +16,7 @@ namespace MidaxLib
     {
         protected MarketDataSubscription _mktDataListener = null;
         static MarketDataConnection _instance = null;
+        static int _refCount = 0;
         protected IAbstractStreamingClient _apiStreamingClient = null;
         protected TimerCallback _callbackConnectionClosed = null;
 
@@ -76,12 +77,16 @@ namespace MidaxLib
 
         public virtual void StartListening()
         {
-            _mktDataListener.StartListening();
+            if (_refCount++ == 0)
+                _mktDataListener.StartListening();
         }
 
         public virtual void StopListening()
         {
-            _mktDataListener.StopListening();
+            if (--_refCount == 0)
+                _mktDataListener.StopListening();
+            if (_refCount < 0)
+                _refCount = 0;
         }
 
         public void PublishMarketLevels(List<MarketData> mktData)

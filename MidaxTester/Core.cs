@@ -144,7 +144,7 @@ namespace MidaxTester
             MarketDataConnection.Instance.Connect(null);
 
             var index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
-            var model = new ModelQuickTest(index);
+            var model = new ModelMacDTest(index);
             
             Console.WriteLine(action + " live indicators and signals...");
             model.StartSignals();
@@ -161,7 +161,7 @@ namespace MidaxTester
 
                 // test trade booking
                 MarketDataConnection.Instance = new ReplayConnection();
-                model = new ModelQuickTest(index);
+                model = new ModelMacDTest(index);
                 MarketDataConnection.Instance.Connect(null);
                 Console.WriteLine(action + " trade booking...");
                 var tradeTime = Config.ParseDateTimeLocal(dicSettings["TRADING_CLOSING_TIME"]);
@@ -204,7 +204,7 @@ namespace MidaxTester
                 testsSync.Add(@"..\..\expected_results\mktdata_26_8_2015_sync.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
                 MarketDataConnection.Instance = new ReplayCrazySeller();
-                model = new ModelQuickTest(index);
+                model = new ModelMacDTest(index);
                 Console.WriteLine(action + " synchronization...");
                 MarketDataConnection.Instance.Connect(null);
                 model.StartSignals();
@@ -213,7 +213,7 @@ namespace MidaxTester
                 testsSync.Add(@"..\..\expected_results\mktdata_26_8_2015_sync2.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
                 MarketDataConnection.Instance = new ReplayCrazyBuyer();
-                model = new ModelQuickTest(index);
+                model = new ModelMacDTest(index);
                 MarketDataConnection.Instance.Connect(null);
                 model.StartSignals();
                 model.StopSignals();
@@ -223,15 +223,13 @@ namespace MidaxTester
                 Console.WriteLine(action + " expected exceptions...");
                 dicSettings["REPLAY_CSV"] = Config.TestList(tests);
                 MarketDataConnection.Instance = new ReplayConnection();
-                MarketDataConnection.Instance.Connect(null);                
-                ModelMacDTest modelBis = new ModelQuickTest(index);
+                MarketDataConnection.Instance.Connect(null);
                 List<string> testError = new List<string>();
                 testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testError);
-                var modelErr = new ModelQuickTest(index);
+                var modelErr = new ModelMacDTest(index);
                 try
                 {
-                    modelBis.StartSignals();
                     MarketDataConnection.Instance.Connect(null);
                     modelErr.StartSignals();
                 }
@@ -251,7 +249,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9982.822762679691659529031265";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9967.999999999999999999875687";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
@@ -265,7 +263,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9982.822762679691659529031265";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9967.999999999999999999875687";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
@@ -277,12 +275,12 @@ namespace MidaxTester
                 {
                     MarketDataConnection.Instance = new ReplayConnection();
                     MarketDataConnection.Instance.Connect(null);
-                    model = new ModelQuickTest(new MarketData(index.Id));
+                    model = new ModelMacDTest(new MarketData(index.Id));
                     model.StartSignals();
                 }
                 catch (Exception exc)
                 {
-                    expected = "Nullable object must have a value.";
+                    expected = "Time series do not accept values in the past";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
@@ -296,7 +294,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9982.822762679691659529031265";
+                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9967.999999999999999999875687";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);

@@ -11,6 +11,7 @@ namespace MidaxLib
 {
     public abstract class Model
     {
+        protected DateTime _closingTime = DateTime.MinValue;
         protected string _tradingSignal = null;
         protected int _amount = 0;
         protected Portfolio _ptf = null;
@@ -25,12 +26,13 @@ namespace MidaxLib
         
         public Model()
         {
+            _closingTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
             if (Config.Settings.ContainsKey("TRADING_SIGNAL"))
                 _tradingSignal = Config.Settings["TRADING_SIGNAL"];
             if (Config.Settings.ContainsKey("REPLAY_POPUP"))
                 _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
             _amount = Config.MarketSelectorEnabled ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);
-            _ptf = new Portfolio(MarketDataConnection.Instance.StreamClient);
+            _ptf = Portfolio.Instance;
         }
 
         protected bool OnBuy(Signal signal, DateTime time, Price value, bool check)
@@ -78,7 +80,7 @@ namespace MidaxLib
         {
         }
         
-        public void StartSignals()
+        public void StartSignals(bool startListening = true)
         {
             // get the level indicators for the day (low, high, close)
             foreach (MarketData mktData in _mktData)
@@ -92,18 +94,21 @@ namespace MidaxLib
                 ind.Subscribe(OnUpdateIndicator);
             foreach (Signal sig in _mktSignals)
                 sig.Subscribe(OnBuy, OnSell);  
-            MarketDataConnection.Instance.StartListening();
+            if (startListening)
+                MarketDataConnection.Instance.StartListening();
         }
 
-        public string StopSignals()
+        public void StopSignals(bool stopListening = true)
         {
-            MarketDataConnection.Instance.StopListening();
+            if (stopListening)
+                MarketDataConnection.Instance.StopListening();
             Log.Instance.WriteEntry("Publishing indicator levels...", EventLogEntryType.Information);
             foreach (var indicator in _mktEODIndicators)
                 indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
             MarketDataConnection.Instance.PublishMarketLevels(_mktData);
             MarketDataConnection.Instance.PublishMarketLevels(_mktIndices);
-            string status = PublisherConnection.Instance.Close();
+            if (stopListening)
+                PublisherConnection.Instance.Close();
             foreach (Signal sig in _mktSignals)
             {
                 sig.Unsubscribe();
@@ -121,7 +126,6 @@ namespace MidaxLib
             }
             foreach (MarketData stock in _mktData)
                 stock.Clear();
-            return status;
         }
 
         public void CloseAllPositions(DateTime time, string stockid = "")
@@ -148,43 +152,25 @@ namespace MidaxLib
 
     public class ModelMacD : Model
     {
-        protected DateTime _closingTime = DateTime.MinValue;
         protected MarketData _daxIndex = null;
-        protected List<MarketData> _daxStocks = null;
-        protected MarketData _vix = null;
         protected SignalMacD _macD_low = null;
         protected SignalMacD _macD_high = null;
-        protected SignalMacDCascade _macDCas = null;
-        protected SignalANN _ann = null;
-        protected List<decimal> _annWeights = null;
 
-        public ModelMacD(MarketData daxIndex, List<MarketData> daxStocks, MarketData vix, List<MarketData> otherIndices, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
+        public MarketData Index { get { return _daxIndex; } }
+        public SignalMacD SignalLow { get { return _macD_low; } }
+        public SignalMacD SignalHigh { get { return _macD_high; } }
+
+        public ModelMacD(MarketData daxIndex, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
         {
             List<MarketData> mktData = new List<MarketData>();
-            mktData.Add(daxIndex);
-            mktData.AddRange(daxStocks);
-            this._closingTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);            
-            this._mktData = mktData;
-            this._daxIndex = daxIndex;
-            this._daxStocks = daxStocks;
-            this._vix = vix;
-            if (this._vix != null)
-                this._mktIndices.Add(this._vix);
-            this._mktIndices.AddRange(otherIndices);
-            this._macD_low = new SignalMacD(_daxIndex, lowPeriod, midPeriod);
-            this._macD_high = new SignalMacD(_daxIndex, midPeriod, highPeriod, this._macD_low.IndicatorHigh);
-            this._macDCas = new SignalMacDCascade(_daxIndex, midPeriod, highPeriod, this._macD_high.IndicatorLow, this._macD_high.IndicatorHigh);
-            this._mktSignals.Add(this._macD_low);
-            this._mktSignals.Add(this._macD_high);
-            this._mktSignals.Add(this._macDCas);
-            this._mktEODIndicators.Add(new IndicatorLevelMean(_daxIndex));
-            this._mktEODIndicators.Add(new IndicatorLevelPivot(_daxIndex));
-            this._mktEODIndicators.Add(new IndicatorLevelR1(_daxIndex));
-            this._mktEODIndicators.Add(new IndicatorLevelR2(_daxIndex));
-            this._mktEODIndicators.Add(new IndicatorLevelR3(_daxIndex));
-            this._mktEODIndicators.Add(new IndicatorLevelS1(_daxIndex));
-            this._mktEODIndicators.Add(new IndicatorLevelS2(_daxIndex));
-            this._mktEODIndicators.Add(new IndicatorLevelS3(_daxIndex));
+            mktData.Add(daxIndex);         
+            _mktData = mktData;
+            _daxIndex = daxIndex;
+            _macD_low = new SignalMacD(_daxIndex, lowPeriod, midPeriod);
+            _macD_high = new SignalMacD(_daxIndex, midPeriod, highPeriod, _macD_low.IndicatorHigh);
+            _mktSignals.Add(_macD_low);
+            _mktSignals.Add(_macD_high);
+            _mktEODIndicators.Add(new IndicatorLevelMean(_daxIndex));
         }
 
         protected override void Buy(Signal signal, DateTime time, Price value)

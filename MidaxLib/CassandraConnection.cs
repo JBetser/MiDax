@@ -229,6 +229,7 @@ namespace MidaxLib
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             var publishTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
+            publishTime = new DateTime(publishTime.Year, publishTime.Month, publishTime.Day, 22, 0, 0, DateTimeKind.Local);
             var ts = ToUnixTimestamp(publishTime);
             _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLHigh_" + mktDetails.AssetId, ts, mktDetails.High));
@@ -246,6 +247,7 @@ namespace MidaxLib
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             // process previous day
             updateTime = updateTime.AddDays(-1);
+            updateTime = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 22, 0, 0, DateTimeKind.Local);
             RowSet value = null;
             decimal high = 0m;
             string indicator = "";

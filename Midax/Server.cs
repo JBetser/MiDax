@@ -17,7 +17,7 @@ public class Server
 {
     public class App : Ice.Application
     {
-        Model _model = null;
+        List<Model> _models = new List<Model>();
         DateTime _startTime;
 
         public override int run(string[] args)
@@ -61,8 +61,12 @@ public class Server
                 List<MarketData> otherIndices = new List<MarketData>();
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
                 otherIndices.Add(new MarketData(dicSettings["INDEX_SNP"]));
-                _model = new ModelMacD(index, stocks, new MarketData(dicSettings["VOLATILITY_2M"]), otherIndices);
-                adapter.add(new MidaxIceI(_model, properties.getProperty("Ice.ProgramName")), id);                
+                var macD = new ModelMacD(index);
+                _models.Add(macD);
+                _models.Add(new ModelANN(macD, stocks, new MarketData(dicSettings["VOLATILITY_2M"]), otherIndices));
+                _models.Add(new ModelMacDCascade(macD));
+                _models.Add(new ModelMole(macD));
+                adapter.add(new MidaxIceI(_models, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
 
                 Assembly thisAssem = typeof(Server).Assembly;
@@ -123,37 +127,49 @@ public class Server
             DateTime now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
             if (now.Date != _startTime.Date)
             {
-                Log.Instance.WriteEntry(_model.GetType().ToString() + ": Restarting the service", EventLogEntryType.Information);
+                Log.Instance.WriteEntry("Restarting the service", EventLogEntryType.Information);
                 communicator().shutdown();
             }
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Starting signals", EventLogEntryType.Information);
-            _model.StartSignals();
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
+            foreach (var model in _models)
+            {
+                Log.Instance.WriteEntry(model.GetType().ToString() + ": Starting signals", EventLogEntryType.Information);
+                model.StartSignals();
+                Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
+            }
         }
 
         void stopSignalCallback(object state)
         {
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Stopping signals", EventLogEntryType.Information);
-            _model.StopSignals();
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);
+            foreach (var model in _models)
+            {
+                Log.Instance.WriteEntry(model.GetType().ToString() + ": Stopping signals", EventLogEntryType.Information);
+                model.StopSignals();
+                Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);
+            }
             communicator().shutdown();
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Disconnected", EventLogEntryType.Information);
+            Log.Instance.WriteEntry("Disconnection failed", EventLogEntryType.Information);
         }
 
         void closePositionsCallback(object state)
         {
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Closing positions", EventLogEntryType.Information);
-            _model.CloseAllPositions(DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local));
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": All positions closed", EventLogEntryType.Information);
+            foreach (var model in _models)
+            {
+                Log.Instance.WriteEntry(model.GetType().ToString() + ": Closing positions", EventLogEntryType.Information);
+                model.CloseAllPositions(DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local));
+                Log.Instance.WriteEntry(model.GetType().ToString() + ": All positions closed", EventLogEntryType.Information);
+            }
         }
 
         void connectionLostCallback(object state)
         {
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Connection lost. Reconnecting...", EventLogEntryType.Warning);
-            MarketDataConnection.Instance.Connect(connectionLostCallback);
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Connected. Restarting the signals...", EventLogEntryType.Information);
-            MarketDataConnection.Instance.StartListening();
-            Log.Instance.WriteEntry(_model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
+            foreach (var model in _models)
+            {
+                Log.Instance.WriteEntry(model.GetType().ToString() + ": Connection lost. Reconnecting...", EventLogEntryType.Warning);
+                MarketDataConnection.Instance.Connect(connectionLostCallback);
+                Log.Instance.WriteEntry(model.GetType().ToString() + ": Connected. Restarting the signals...", EventLogEntryType.Information);
+                MarketDataConnection.Instance.StartListening();
+                Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
+            }
         }
     }
 

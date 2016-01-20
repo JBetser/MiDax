@@ -13,10 +13,11 @@ namespace MidaxLib
         List<Trade> _trades = new List<Trade>();
         IAbstractStreamingClient _igStreamApiClient = null;
         SubscribedTableKey _tradeSubscriptionStk = null;
+        static Dictionary<IAbstractStreamingClient, Portfolio> _instance = null;
 
         public Dictionary<string, Position> Positions { get { return _positions; } }
         
-        public Portfolio(IAbstractStreamingClient client)
+        Portfolio(IAbstractStreamingClient client)
         {
             _igStreamApiClient = client;
             try
@@ -30,6 +31,18 @@ namespace MidaxLib
             catch (Exception ex)
             {
                 Log.Instance.WriteEntry("Portfolio subscription error: " + ex.Message, System.Diagnostics.EventLogEntryType.Error);
+            }
+        }
+
+        public static Portfolio Instance
+        {
+            get
+            {
+                if (_instance == null)
+                    _instance = new Dictionary<IAbstractStreamingClient, Portfolio>();
+                if (!_instance.ContainsKey(MarketDataConnection.Instance.StreamClient))
+                    _instance[MarketDataConnection.Instance.StreamClient] = new Portfolio(MarketDataConnection.Instance.StreamClient);
+                return _instance[MarketDataConnection.Instance.StreamClient];
             }
         }
         

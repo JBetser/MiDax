@@ -218,15 +218,24 @@ namespace MidaxLib
 
         void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
         {
+            Log.Instance.WriteEntry("Get Market Details for " + mktData.Name, EventLogEntryType.Information);
             var response = _igRestApiClient.searchMarket(mktData.Name);
-            if (response.Result && (response.Result.Response != null))
+            if (response.Result)
             {
-                foreach (var mkt in response.Result.Response.markets)
+                Log.Instance.WriteEntry("Get Market Details status code: " + response.Result.StatusCode, EventLogEntryType.Information);
+                if (response.Result.Response != null)
                 {
-                    if (mkt.epic == mktData.Id)
-                        mktData.Levels = new MarketLevels(mkt.epic, mkt.low.Value, mkt.high.Value, mkt.bid.Value, mkt.offer.Value);
+                    foreach (var mkt in response.Result.Response.markets)
+                    {
+                        if (mkt.epic == mktData.Id)
+                            mktData.Levels = new MarketLevels(mkt.epic, mkt.low.Value, mkt.high.Value, mkt.bid.Value, mkt.offer.Value);
+                    }
                 }
+                else
+                    Log.Instance.WriteEntry("GetMarketDetails received a null response", EventLogEntryType.Error);
             }
+            else
+                Log.Instance.WriteEntry("GetMarketDetails received a null result", EventLogEntryType.Error);
         }        
     }
 

@@ -83,6 +83,7 @@
     <Compile Include="Model.cs" />
     <Compile Include="MarketSelector.cs" />
     <Compile Include="ModelANN.cs" />
+    <Compile Include="ModelHeuristic.cs" />
     <Compile Include="ModelTest.cs" />
     <Compile Include="NeuralNetwork.cs" />
     <Compile Include="Portfolio.cs" />
@@ -94,6 +95,7 @@
     <Compile Include="Signal.cs" />
     <Compile Include="SignalANN.cs" />
     <Compile Include="SignalANNWMA.cs" />
+    <Compile Include="SignalHeuristic.cs" />
     <Compile Include="StaticDataConnection.cs" />
     <Compile Include="TimeSeries.cs" />
     <Compile Include="Trade.cs" />

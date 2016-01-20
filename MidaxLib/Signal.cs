@@ -262,15 +262,16 @@ namespace MidaxLib
 
     public class SignalMacDCascade : SignalMacD
     {
-        const decimal THRESHOLD = 0.5m;
+        decimal _threshold = 0.0m;
         decimal _pivot = 0.0m;
         decimal _localMinimum = 0.0m;
         decimal _localMaximum = 0.0m;
         bool _cascading = false;
         bool _buying = false;
-        public SignalMacDCascade(MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null)
-            : base("MacDCas_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high)
+        public SignalMacDCascade(MarketData asset, int lowPeriod, int highPeriod, decimal threshold, IndicatorWMA low = null, IndicatorWMA high = null)
+            : base("MacDCas_" + lowPeriod + "_" + highPeriod + "_" + (int)decimal.Round(threshold * 100.0m) + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high)
         {
+            _threshold = threshold;
         }
 
         protected override bool Process(MarketData indicator, DateTime updateTime, Price value, ref Signal.Tick tradingOrder)
@@ -294,13 +295,13 @@ namespace MidaxLib
                                     _localMaximum = lowVal.Bid;
                                 if (_buying)
                                 {
-                                    if (lowVal.Bid < _localMaximum - THRESHOLD)
+                                    if (lowVal.Bid < _localMaximum - _threshold)
                                     {
                                         _pivot = _localMaximum;
                                         _localMinimum = _localMaximum;
                                         _buying = false;
                                     }
-                                    else if (lowVal.Bid > _pivot - THRESHOLD)
+                                    else if (lowVal.Bid > _pivot - _threshold)
                                     {
                                         _signalCode = SIGNAL_CODE.BUY;
                                         tradingOrder = _onBuy;
@@ -308,7 +309,7 @@ namespace MidaxLib
                                 }   
                                 else 
                                 {
-                                    if (lowVal.Bid > _localMinimum + THRESHOLD)
+                                    if (lowVal.Bid > _localMinimum + _threshold)
                                     {
                                         _pivot = _localMinimum;
                                         _localMaximum = _localMinimum;

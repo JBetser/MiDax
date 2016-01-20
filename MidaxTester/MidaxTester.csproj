@@ -55,8 +55,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ANN.cs" />
     <Compile Include="Core.cs" />
-    <Compile Include="DailyReplay.cs" />
+    <Compile Include="MacD.cs" />
+    <Compile Include="Heuristic.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
