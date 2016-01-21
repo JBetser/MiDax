@@ -17,6 +17,7 @@ namespace MidaxLib
         DateTime _tradingTime = DateTime.MinValue;
         DateTime _confirmationTime = DateTime.MinValue;
         decimal _price;
+        int _placeHolder = 0;
         
         public string Epic { get { return _epic; } }
         public SIGNAL_CODE Direction { get { return _direction; } }
@@ -26,6 +27,7 @@ namespace MidaxLib
         public DateTime TradingTime { get { return _tradingTime; } }
         public DateTime ConfirmationTime { get { return _confirmationTime; } set { _confirmationTime = value; } }
         public decimal Price { get { return _price; } set { _price = value; } }
+        public int PlaceHolder { get { return _placeHolder; } set { _placeHolder = value; } }
 
         public Trade(DateTime tradingTime, string epic, SIGNAL_CODE direction, int size, decimal price)
         {

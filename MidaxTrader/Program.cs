@@ -21,11 +21,11 @@ namespace MidaxTrader
             Config.Settings["PASSWORD"] = "Kotik0483";
             Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
             //Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\TradingActivity\\trading_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year);
-            Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}:{1}:{2}", 12, 45, 0);
-            Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 23, 45, 0);
-            Config.Settings["TRADING_START_TIME"] = string.Format("{0}:{1}:{2}", 13, 0, 0);
-            Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 23, 30, 0);
-            Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}:{1}:{2}", 23, 15, 0);
+            Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}:{1}:{2}", 6, 45, 0);
+            Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 22, 0, 0);
+            Config.Settings["TRADING_START_TIME"] = string.Format("{0}:{1}:{2}", 8, 0, 0);
+            Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 17, 0, 0);
+            Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}:{1}:{2}", 16, 30, 0);
             Config.Settings["TRADING_MODE"] = "PRODUCTION";
             Config.Settings["TRADING_SIGNAL"] = "MacD_2_10_IX.D.SPTRD.DAILY.IP";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
@@ -35,16 +35,21 @@ namespace MidaxTrader
             var otherIndices = new List<MarketData>();
             otherIndices.Add(new MarketData("SNP:IX.D.SPTRD.DAILY.IP"));
             otherIndices.Add(new MarketData("CAC:IX.D.CAC.DAILY.IP"));
+            var models = new List<Model>();
             var macD = new ModelMacD(new MarketData("DAX:IX.D.DAX.DAILY.IP"));
-            Model modelAnn = new ModelANN(macD, new List<MarketData>(), null, otherIndices);
+            models.Add(macD);
+            models.Add(new ModelANN(macD, new List<MarketData>(), new MarketData("VIX2:IN.D.VIX.MONTH2.IP"), otherIndices));
+            models.Add(new ModelMacDCascade(macD));
+            models.Add(new ModelMole(macD));
             Console.WriteLine("Starting signals...");
-
-            modelAnn.StartSignals();
-            modelAnn.StopSignals();
-            
+            foreach (var model in models)
+                model.StartSignals();
             Console.WriteLine("Trading...");
-            
-            _pauseEvent.WaitOne(Timeout.Infinite);
+            //_pauseEvent.WaitOne(Timeout.Infinite);
+            System.Threading.Thread.Sleep(10000);
+            foreach (var model in models)
+                model.StopSignals();
+            Console.WriteLine("Trading stopped");
         }
     }
 }

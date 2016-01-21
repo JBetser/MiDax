@@ -19,7 +19,7 @@ namespace MidaxLib
         {
             if (signal.Id == _tradingSignal)
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Value < 0)
+                if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
                     Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + value.Bid);
             }
             base.Buy(signal, time, value);
@@ -30,7 +30,7 @@ namespace MidaxLib
         {
             if (signal.Id == _tradingSignal)
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Value == 0)
+                if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
                     Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + value.Bid);
             }
             base.Sell(signal, time, value);
@@ -59,7 +59,7 @@ namespace MidaxLib
         {
             if (signal.Id == _tradingSignal)
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Value < 0)
+                if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
                     Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + value.Bid);
             }
             base.Buy(signal, time, value);
@@ -70,7 +70,7 @@ namespace MidaxLib
         {
             if (signal.Id == _tradingSignal)
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Value == 0)
+                if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
                     Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + value.Bid);
             }
             base.Sell(signal, time, value);
@@ -99,7 +99,7 @@ namespace MidaxLib
         {
             if (signal.Id == _tradingSignal)
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Value < 0)
+                if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
                     Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + value.Bid);
             }
             base.Buy(signal, time, value);
@@ -110,7 +110,7 @@ namespace MidaxLib
         {
             if (signal.Id == _tradingSignal)
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Value == 0)
+                if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
                     Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + value.Bid);
             }
             base.Sell(signal, time, value);

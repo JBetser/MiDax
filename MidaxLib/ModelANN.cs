@@ -20,33 +20,33 @@ namespace MidaxLib
 
         public ModelANN(ModelMacD macD, List<MarketData> daxStocks, MarketData vix, List<MarketData> otherIndices)
         {
-            this._daxIndex = macD.Index;
-            this._daxStocks = daxStocks;
-            this._vix = vix;
-            if (this._vix != null)
-                this._mktIndices.Add(this._vix);
+            _daxIndex = macD.Index;
+            _daxStocks = daxStocks;
+            _vix = vix;
+            if (_vix != null)
+                _mktIndices.Add(_vix);
             _wma_low = macD.SignalLow.IndicatorLow;
             _wma_mid = macD.SignalLow.IndicatorHigh;
             _wma_high = macD.SignalHigh.IndicatorHigh;
-            this._mktIndices.AddRange(otherIndices);
-            this._mktIndicators.Add(_wma_low);
-            this._mktIndicators.Add(_wma_mid);
-            this._mktIndicators.Add(_wma_high);
-            this._mktIndicators.Add(new IndicatorWMVol(_daxIndex, 10));
-            this._mktIndicators.Add(new IndicatorWMVol(_daxIndex, 60));
+            _mktIndices.AddRange(otherIndices);
+            _mktIndicators.Add(_wma_low);
+            _mktIndicators.Add(_wma_mid);
+            _mktIndicators.Add(_wma_high);
+            _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 10));
+            _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 60));
 
             var annId = "WMA_4_2";
             int lastversion = StaticDataConnection.Instance.GetAnnLatestVersion(annId, _daxIndex.Id);
-            this._annWeights = StaticDataConnection.Instance.GetAnnWeights(annId, _daxIndex.Id, lastversion);
+            _annWeights = StaticDataConnection.Instance.GetAnnWeights(annId, _daxIndex.Id, lastversion);
             var signalType = Type.GetType("MidaxLib.SignalANN" + annId);
             List<Indicator> annIndicators = new List<Indicator>();
-            annIndicators.Add(this._wma_low);
-            annIndicators.Add(this._wma_mid);
-            annIndicators.Add(this._wma_high);
+            annIndicators.Add(_wma_low);
+            annIndicators.Add(_wma_mid);
+            annIndicators.Add(_wma_high);
             List<object> signalParams = new List<object>();
             signalParams.Add(_daxIndex);
             signalParams.Add(annIndicators);
-            signalParams.Add(this._annWeights);
+            signalParams.Add(_annWeights);
             //this._ann = (SignalANN)Activator.CreateInstance(signalType, signalParams.ToArray());
             //this._mktSignals.Add(this._ann);
 
@@ -67,7 +67,7 @@ namespace MidaxLib
 
         protected override void Buy(Signal signal, DateTime time, Price value)
         {
-            if (_ptf.GetPosition(_daxIndex.Id).Value < 0)
+            if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
             {
                 signal.Trade.Price = value.Offer;
                 _ptf.ClosePosition(signal.Trade, time);
@@ -78,12 +78,12 @@ namespace MidaxLib
 
         protected override void Sell(Signal signal, DateTime time, Price value)
         {
-            if (_ptf.GetPosition(_daxIndex.Id).Value > 0)
+            if (_ptf.GetPosition(_daxIndex.Id).Quantity > 0)
             {
                 _ptf.BookTrade(signal.Trade);
                 Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + value.Offer, EventLogEntryType.Error);
             }
-            else if (_ptf.GetPosition(_daxIndex.Id).Value == 0)
+            else if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
             {
                 if (time <= _closingTime)
                 {

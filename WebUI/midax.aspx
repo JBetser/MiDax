@@ -309,9 +309,10 @@
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
                <option value="MacD_10_60">MacD 10mn/1h</option>
-               <option value="MacDCas_10_60_5">MacD Cascade 10mn/1h</option>
-               <option value="MacDCas_10_60_10">MacD Cascade 10mn/1h</option>
-               <option value="MacDCas_10_60_20">MacD Cascade 10mn/1h</option>
+               <option value="MacDCas_10_60_50">MacD Cascade 10mn/1h 0.5pts</option>
+               <option value="MacDCas_10_60_100">MacD Cascade 10mn/1h 1pt</option>
+               <option value="MacDCas_10_60_200">MacD Cascade 10mn/1h 2pts</option>
+               <option value="Mole_2_10">Mole 2mn/10mn</option>
                <option value="ANNWMA_4_2">ANN WMA</option>
              </select>          
              <button type="button" id="GO" class="btn btn-primary">

@@ -15,6 +15,9 @@ namespace MidaxLib
 
         MarketLevels? _marketLevels = null;
         public MarketLevels? Levels { get { return _marketLevels; } set { _marketLevels = value; } }
+        public bool _hasEodLevels = true;
+
+        public bool HasEODLevels { get { return _hasEodLevels; } }
 
         public MarketData(string name_id)
         {
@@ -22,6 +25,8 @@ namespace MidaxLib
             this._name = name_id.Split(':')[0];
             this._values = new TimeSeries();
             this._eventHandlers = new List<Tick>();
+            if (name_id.Contains("VIX"))
+                _hasEodLevels = false;
             if (!_replay.HasValue)
                 _replay = Config.Settings["TRADING_MODE"] == "REPLAY";
         }

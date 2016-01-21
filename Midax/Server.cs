@@ -65,7 +65,7 @@ public class Server
                 _models.Add(macD);
                 _models.Add(new ModelANN(macD, stocks, new MarketData(dicSettings["VOLATILITY_2M"]), otherIndices));
                 _models.Add(new ModelMacDCascade(macD));
-                _models.Add(new ModelMole(macD));
+                //_models.Add(new ModelMole(macD));
                 adapter.add(new MidaxIceI(_models, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
 
@@ -147,7 +147,6 @@ public class Server
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);
             }
             communicator().shutdown();
-            Log.Instance.WriteEntry("Disconnection failed", EventLogEntryType.Information);
         }
 
         void closePositionsCallback(object state)

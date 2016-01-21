@@ -25,7 +25,7 @@ namespace MidaxTester
             foreach (var test in dates)
             {
                 List<string> mktdataFiles = new List<string>();
-                mktdataFiles.Add(string.Format("..\\..\\expected_results\\mktdata_{0}_{1}_{2}.csv", test.Day, test.Month, test.Year));
+                mktdataFiles.Add(string.Format("..\\..\\expected_results\\heuristic_{0}_{1}_{2}.csv", test.Day, test.Month, test.Year));
                 Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
                 Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 6, 45, 0);
                 Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 10, 30, 0);
@@ -42,7 +42,7 @@ namespace MidaxTester
                 var models = new List<Model>();
                 models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 2, 10, 60));
                 models.Add(new ModelMacDCascadeTest((ModelMacD)models[0]));
-                models.Add(new ModelMoleTest((ModelMacD)models[0]));
+                //models.Add(new ModelMoleTest((ModelMacD)models[0]));
                 Console.WriteLine(action + string.Format(" the Heuristic daily record {0}-{1}-{2}...", test.Year, test.Month, test.Day));
                 foreach(var model in models)
                     model.StartSignals(false);

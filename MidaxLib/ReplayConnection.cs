@@ -79,10 +79,12 @@ namespace MidaxLib
 
     public class ReplayPositionUpdateInfo : ReplayUpdateInfo
     {
-        public ReplayPositionUpdateInfo(string epic, string dealId, string status, string dealStatus, int size, decimal level, SIGNAL_CODE direction) : base(null)
+        public ReplayPositionUpdateInfo(string epic, string dealId, string dealRef, string status, string dealStatus, int size, decimal level, SIGNAL_CODE direction)
+            : base(null)
         {
             _name = epic;
             _id = dealId;
+            _itemData["dealRef"] = dealRef;
             _itemData["status"] = status;
             _itemData["dealStatus"] = dealStatus;
             _itemData["size"] = size.ToString();
@@ -92,8 +94,8 @@ namespace MidaxLib
 
         public override string ToString()
         {
-            return string.Format("[ {{ \"epic\" : \"{0}\", \"dealId\" : \"{1}\", \"status\" : \"{2}\", \"dealStatus\" : \"{3}\", \"size\" : \"{4}\", \"level\" : \"{5}\", \"direction\" : \"{6}\" }} ]",
-                _name, _id, _itemData["status"], _itemData["dealStatus"], _itemData["size"], _itemData["level"], _itemData["direction"]);
+            return string.Format("[ {{ \"epic\" : \"{0}\", \"dealId\" : \"{1}\", \"dealRef\" : \"{2}\", \"status\" : \"{3}\", \"dealStatus\" : \"{4}\", \"size\" : \"{5}\", \"level\" : \"{6}\", \"direction\" : \"{7}\" }} ]",
+                _name, _id, _itemData["dealRef"], _itemData["status"], _itemData["dealStatus"], _itemData["size"], _itemData["level"], _itemData["direction"]);
         }
     }
 
@@ -177,10 +179,10 @@ namespace MidaxLib
             if (trade != null)
             {
                 trade.Id = "###DUMMY_TRADE_ID###";
-                trade.Reference = "###DUMMY_TRADE###";
+                trade.Reference = "###DUMMY_TRADE_REF###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onTradeBooked(trade);
-                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
+                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
             }
         }
 
@@ -190,10 +192,10 @@ namespace MidaxLib
             {
                 var closingTrade = new Trade(trade, true, time);
                 closingTrade.Id = "###CLOSE_DUMMY_TRADE_ID###";
-                closingTrade.Reference = "###CLOSE_DUMMY_TRADE###";
+                closingTrade.Reference = "###CLOSE_DUMMY_TRADE_REF###";
                 closingTrade.ConfirmationTime = time;
                 onTradeBooked(closingTrade);
-                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, "DELETED", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
+                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "DELETED", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
             }
         }
 
@@ -305,7 +307,7 @@ namespace MidaxLib
         {
             if (trade.Direction == SIGNAL_CODE.SELL)
             {
-                trade.Reference = "###DUMMY_TRADE###";
+                trade.Reference = "###DUMMY_TRADE_REF###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onTradeBooked(trade);
             }
@@ -320,7 +322,7 @@ namespace MidaxLib
         {
             if (trade.Direction == SIGNAL_CODE.BUY)
             {
-                trade.Reference = "###DUMMY_TRADE###";
+                trade.Reference = "###DUMMY_TRADE_REF###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onTradeBooked(trade);
             }

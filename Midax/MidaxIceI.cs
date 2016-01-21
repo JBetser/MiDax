@@ -56,7 +56,6 @@ namespace Midax
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);                
             }
             current.adapter.getCommunicator().shutdown();
-            Log.Instance.WriteEntry("Disconnection failed", EventLogEntryType.Error);
         }
         
         public override string getStatus(Ice.Current current)

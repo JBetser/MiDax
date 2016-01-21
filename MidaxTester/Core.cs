@@ -170,22 +170,22 @@ namespace MidaxTester
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = tradeTest;
                 ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null, null); 
                 model.BookTrade(tradeTest);
-                if (model.PTF.GetPosition(tradeTest.Epic).Value != -10)
+                if (model.PTF.GetPosition(tradeTest.Epic).Quantity != -10)
                     throw new ApplicationException("SELL Trade booking error");
                 var expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.BUY, 10, 10000m);
-                expectedTrade.Reference = "###DUMMY_TRADE###";
+                expectedTrade.Reference = "###DUMMY_TRADE_REF###";
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
                 tradeTest = new Trade(tradeTest, true, tradeTime);
                 model.BookTrade(tradeTest);
-                if (model.PTF.GetPosition(tradeTest.Epic).Value != 0)
+                if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 0)
                     throw new ApplicationException("Trade position closing error");
                 model.BookTrade(tradeTest);
-                if (model.PTF.GetPosition(tradeTest.Epic).Value != 10)
+                if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 10)
                     throw new ApplicationException("BUY Trade booking error");
                 string expected;
                 bool success = false;
                 expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 10000m);
-                expectedTrade.Reference = "###CLOSE_DUMMY_TRADE###";
+                expectedTrade.Reference = "###CLOSE_DUMMY_TRADE_REF###";
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
                 try
                 {
@@ -263,14 +263,8 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9967.999999999999999999875687";
-                    success = (exc.Message == expected);
-                    if (!success)
-                        model.ProcessError(exc.Message, expected);
+                    model.ProcessError(exc.Message + " - Double EOD publishing exception removed");
                 }
-                if (!success)
-                    model.ProcessError("An expected exception has not been thrown");
-                success = false;
                 try
                 {
                     MarketDataConnection.Instance = new ReplayConnection();

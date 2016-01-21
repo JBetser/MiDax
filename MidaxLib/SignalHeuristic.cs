@@ -9,7 +9,7 @@ namespace MidaxLib
     public class SignalMole : SignalMacD
     {
         public SignalMole(MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null)
-            : base("Mole_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset, lowPeriod, highPeriod)
+            : base("Mole_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high)
         {
         }
 

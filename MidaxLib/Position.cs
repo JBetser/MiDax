@@ -11,13 +11,18 @@ namespace MidaxLib
     public class Position
     {
         string _name;
-        int _pos = 0;
+        int _quantity = 0;
+        decimal _assetValue = 0.0m;
         Trade _lastTrade = null;
         Dictionary<string, int> _tradePositions = new Dictionary<string, int>();
-        public int Value
+        public int Quantity
         {
-            get { return _pos; }
-            set { _pos = value; }
+            get { return _quantity; }
+            set { _quantity = value; }
+        }
+        public decimal AssetValue
+        {
+            get { return _assetValue; }
         }
         public string Epic { get { return _name; } }
         public Trade Trade { get { return _lastTrade; } set { _lastTrade = value; } }
@@ -46,12 +51,12 @@ namespace MidaxLib
 
         public void OnUnsubscr()
         {
-            Log.Instance.WriteEntry(string.Format("Unsubscribed {0}, last position was: {1}", _name, _pos), System.Diagnostics.EventLogEntryType.Warning);
+            Log.Instance.WriteEntry(string.Format("Unsubscribed {0}, last position was: {1}", _name, _quantity), System.Diagnostics.EventLogEntryType.Warning);
         }
 
         public void OnUnsubscrAll()
         {
-            Log.Instance.WriteEntry(string.Format("Unsubscribed {0}, last position was: {1}", _name, _pos), System.Diagnostics.EventLogEntryType.Warning);
+            Log.Instance.WriteEntry(string.Format("Unsubscribed {0}, last position was: {1}", _name, _quantity), System.Diagnostics.EventLogEntryType.Warning);
         }
 
         public void OnUpdate(IUpdateInfo update)
@@ -81,23 +86,27 @@ namespace MidaxLib
                                         {
                                             if (trade_notification["status"].ToString() == "OPEN")
                                             {
-                                                var tradeSize = int.Parse(trade_notification["size"].ToString());
-                                                _lastTrade.Id = trade_notification["dealId"].ToString();
-                                                _lastTrade.Price = decimal.Parse(trade_notification["level"].ToString());                                                
-                                                if (trade_notification["direction"].ToString() == "SELL")
-                                                    tradeSize *= -1;
-                                                else if (trade_notification["direction"].ToString() != "BUY")
-                                                    tradeSize = 0;
-                                                _tradePositions[_lastTrade.Id] = tradeSize;
-                                                _pos += tradeSize;
-                                                Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);                                                
+                                                if (_lastTrade.Reference == trade_notification["dealRef"].ToString())
+                                                {
+                                                    var tradeSize = int.Parse(trade_notification["size"].ToString());
+                                                    _lastTrade.Id = trade_notification["dealId"].ToString();
+                                                    _lastTrade.Price = decimal.Parse(trade_notification["level"].ToString());
+                                                    _assetValue = _lastTrade.Price;
+                                                    if (trade_notification["direction"].ToString() == "SELL")
+                                                        tradeSize *= -1;
+                                                    else if (trade_notification["direction"].ToString() != "BUY")
+                                                        tradeSize = 0;
+                                                    _tradePositions[_lastTrade.Id] = tradeSize;
+                                                    _quantity += tradeSize;
+                                                    Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);
+                                                }
                                             }
                                             else if (trade_notification["status"].ToString() == "DELETED")
                                             {
                                                 string dealId = trade_notification["dealId"].ToString();
                                                 if (_tradePositions.ContainsKey(dealId))
                                                 {
-                                                    _pos -= _tradePositions[dealId];
+                                                    _quantity -= _tradePositions[dealId];
                                                     _tradePositions.Remove(trade_notification["dealId"].ToString());
                                                     Log.Instance.WriteEntry("Closed a trade: " + trade_notification["dealId"].ToString());
                                                 }

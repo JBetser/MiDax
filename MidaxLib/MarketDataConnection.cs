@@ -83,10 +83,11 @@ namespace MidaxLib
 
         public virtual void StopListening()
         {
-            if (--_refCount == 0)
-                _mktDataListener.StopListening();
-            if (_refCount < 0)
+            if (--_refCount <= 0)
+            {
                 _refCount = 0;
+                _mktDataListener.StopListening();
+            }
         }
 
         public void PublishMarketLevels(List<MarketData> mktData)

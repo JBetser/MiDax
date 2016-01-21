@@ -55,7 +55,7 @@ namespace MidaxLib
                 {
                     if (!_ptf.GetPosition(signal.MarketData.Id).Closed)
                     {
-                        if (_ptf.GetPosition(signal.MarketData.Id).Value >= 0)
+                        if (_ptf.GetPosition(signal.MarketData.Id).Quantity >= 0)
                         {
                             Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + value.Bid + ". Closing all positions...", EventLogEntryType.Error);
                             CloseAllPositions(time, signal.MarketData.Id);
@@ -85,7 +85,8 @@ namespace MidaxLib
             // get the level indicators for the day (low, high, close)
             foreach (MarketData mktData in _mktData)
                 mktData.GetMarketLevels();
-            foreach (MarketData mktData in _mktIndices)
+            List<MarketData> eodLevelMktData = (from mktdata in _mktIndices where mktdata.HasEODLevels select mktdata).ToList();
+            foreach (MarketData mktData in eodLevelMktData)
                 mktData.GetMarketLevels();  
             // subscribe indicators and signals to market data feed
             foreach (MarketData idx in _mktIndices)
@@ -100,39 +101,47 @@ namespace MidaxLib
 
         public void StopSignals(bool stopListening = true)
         {
-            if (stopListening)
-                MarketDataConnection.Instance.StopListening();
-            Log.Instance.WriteEntry("Publishing indicator levels...", EventLogEntryType.Information);
-            foreach (var indicator in _mktEODIndicators)
-                indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
-            MarketDataConnection.Instance.PublishMarketLevels(_mktData);
-            MarketDataConnection.Instance.PublishMarketLevels(_mktIndices);
-            if (stopListening)
-                PublisherConnection.Instance.Close();
-            foreach (Signal sig in _mktSignals)
+            try
             {
-                sig.Unsubscribe();
-                sig.Clear();
+                Log.Instance.WriteEntry("Publishing indicator levels...", EventLogEntryType.Information);
+                foreach (var indicator in _mktEODIndicators)
+                    indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
+                MarketDataConnection.Instance.PublishMarketLevels(_mktData);
+                List<MarketData> eodLevelMktData = (from mktdata in _mktIndices where mktdata.HasEODLevels select mktdata).ToList();
+                MarketDataConnection.Instance.PublishMarketLevels(eodLevelMktData);
             }
-            foreach (Indicator ind in _mktIndicators)
+            finally
             {
-                ind.Unsubscribe(OnUpdateIndicator);
-                ind.Clear();
+                if (stopListening)
+                {
+                    MarketDataConnection.Instance.StopListening();
+                    PublisherConnection.Instance.Close();
+                }
+                foreach (Signal sig in _mktSignals)
+                {
+                    sig.Unsubscribe();
+                    sig.Clear();
+                }
+                foreach (Indicator ind in _mktIndicators)
+                {
+                    ind.Unsubscribe(OnUpdateIndicator);
+                    ind.Clear();
+                }
+                foreach (MarketData idx in _mktIndices)
+                {
+                    idx.Unsubscribe(OnUpdateMktData);
+                    idx.Clear();
+                }
+                foreach (MarketData stock in _mktData)
+                    stock.Clear();
             }
-            foreach (MarketData idx in _mktIndices)
-            {
-                idx.Unsubscribe(OnUpdateMktData);
-                idx.Clear();
-            }
-            foreach (MarketData stock in _mktData)
-                stock.Clear();
         }
 
         public void CloseAllPositions(DateTime time, string stockid = "")
         {
             foreach (var position in _ptf.Positions)
             {
-                if (position.Value.Value != 0)
+                if (position.Value.Quantity != 0)
                 {
                     if (stockid == "" || stockid == position.Value.Trade.Epic)
                         _ptf.ClosePosition(position.Value.Trade, time);
@@ -147,6 +156,11 @@ namespace MidaxLib
 
         public virtual void ProcessError(string message, string expected = "")
         {            
+        }
+
+        public virtual TradingSet CreateTradingSet(IAbstractStreamingClient client)
+        {
+            return null;
         }
     }
 
@@ -175,7 +189,7 @@ namespace MidaxLib
 
         protected override void Buy(Signal signal, DateTime time, Price value)
         {
-            if (_ptf.GetPosition(_daxIndex.Id).Value < 0)
+            if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
             {
                 signal.Trade.Price = value.Offer;
                 _ptf.ClosePosition(signal.Trade, time);
@@ -186,12 +200,12 @@ namespace MidaxLib
 
         protected override void Sell(Signal signal, DateTime time, Price value)
         {
-            if (_ptf.GetPosition(_daxIndex.Id).Value > 0)
+            if (_ptf.GetPosition(_daxIndex.Id).Quantity > 0)
             {
                 _ptf.BookTrade(signal.Trade);
                 Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + value.Offer, EventLogEntryType.Error);
             }
-            else if (_ptf.GetPosition(_daxIndex.Id).Value == 0)
+            else if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
             {
                 if (time <= _closingTime)
                 {
