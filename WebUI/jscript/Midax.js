@@ -142,7 +142,7 @@ function processResponses(jsonData) {
     return profit;
 }
 
-function internalAPI(functionName, jsonData, successCallback, errorCallback) {
+function internalAPI(functionName, jsonData, sync, successCallback, errorCallback) {
     if (jsonData == null)
         jsonData = {};
     var asmxName = null;
@@ -164,7 +164,7 @@ function internalAPI(functionName, jsonData, successCallback, errorCallback) {
         type: 'POST',
         contentType: 'application/json; charset=utf-8',
         crossDomain: true,
-        async: false,
+        async: sync['nbDays'] == 1,
         success: function (data) {
             if (successCallback)
                 successCallback(jQuery.parseJSON(data.d));
@@ -182,7 +182,7 @@ function internalAPI(functionName, jsonData, successCallback, errorCallback) {
 function recursiveAPICalls(requests, idx, sync)
 {
     var key = Object.keys(requests)[idx];
-    internalAPI(key.substring(0, key.length - 1), requests[key], function (jsonResponse) {
+    internalAPI(key.substring(0, key.length - 1), requests[key], sync, function (jsonResponse) {
         $.extend(requests[key], { "response": jsonResponse });
         if (idx < Object.keys(requests).length - 1)
             recursiveAPICalls(requests, idx + 1, sync);

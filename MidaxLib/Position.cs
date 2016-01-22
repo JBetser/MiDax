@@ -86,20 +86,17 @@ namespace MidaxLib
                                         {
                                             if (trade_notification["status"].ToString() == "OPEN")
                                             {
-                                                if (_lastTrade.Reference == trade_notification["dealRef"].ToString())
-                                                {
-                                                    var tradeSize = int.Parse(trade_notification["size"].ToString());
-                                                    _lastTrade.Id = trade_notification["dealId"].ToString();
-                                                    _lastTrade.Price = decimal.Parse(trade_notification["level"].ToString());
-                                                    _assetValue = _lastTrade.Price;
-                                                    if (trade_notification["direction"].ToString() == "SELL")
-                                                        tradeSize *= -1;
-                                                    else if (trade_notification["direction"].ToString() != "BUY")
-                                                        tradeSize = 0;
-                                                    _tradePositions[_lastTrade.Id] = tradeSize;
-                                                    _quantity += tradeSize;
-                                                    Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);
-                                                }
+                                                var tradeSize = int.Parse(trade_notification["size"].ToString());
+                                                _lastTrade.Id = trade_notification["dealId"].ToString();
+                                                _lastTrade.Price = decimal.Parse(trade_notification["level"].ToString());
+                                                _assetValue = _lastTrade.Price;
+                                                if (trade_notification["direction"].ToString() == "SELL")
+                                                    tradeSize *= -1;
+                                                else if (trade_notification["direction"].ToString() != "BUY")
+                                                    tradeSize = 0;
+                                                _tradePositions[_lastTrade.Id] = tradeSize;
+                                                _quantity += tradeSize;
+                                                Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);
                                             }
                                             else if (trade_notification["status"].ToString() == "DELETED")
                                             {

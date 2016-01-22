@@ -133,9 +133,10 @@ public class Server
             foreach (var model in _models)
             {
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Starting signals", EventLogEntryType.Information);
-                model.StartSignals();
+                model.StartSignals(false);
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
             }
+            MarketDataConnection.Instance.StartListening();
         }
 
         void stopSignalCallback(object state)
@@ -143,9 +144,10 @@ public class Server
             foreach (var model in _models)
             {
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Stopping signals", EventLogEntryType.Information);
-                model.StopSignals();
+                model.StopSignals(false);
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);
             }
+            MarketDataConnection.Instance.StopListening();
             communicator().shutdown();
         }
 

@@ -163,6 +163,7 @@ namespace MidaxLib
                     if (placeHolder.Key.Free)
                     {
                         placeHolder.Key.Free = false;
+                        _positions[idxPlaceHolder].Trade = trade;
                         BookTrade(trade, idxPlaceHolder);
                         return true;
                     }

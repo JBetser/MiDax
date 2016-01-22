@@ -42,8 +42,8 @@ namespace MidaxTester
                 var models = new List<Model>();
                 models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 2, 10, 60));
                 List<MarketData> otherIndices = new List<MarketData>();
-                otherIndices.Add(new MarketData("CAC:IX.D.CAC.DAILY.IP"));
                 otherIndices.Add(new MarketData("SNP:IX.D.SPTRD.DAILY.IP"));
+                otherIndices.Add(new MarketData("CAC:IX.D.CAC.DAILY.IP"));
                 models.Add(new ModelANN((ModelMacD)models[0], new List<MarketData>(), new MarketData("VIX2:IN.D.VIX.MONTH2.IP"), otherIndices));
                 Console.WriteLine(action + string.Format(" the ANN daily record {0}-{1}-{2}...", test.Year, test.Month, test.Day));
                 foreach (var model in models)

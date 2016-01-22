@@ -37,7 +37,10 @@ namespace MidaxTester
             tests.Add(new DateTime(2016, 1, 18));*/
             MacD.Run(tests, generate, generate_to_db);
             Heuristic.Run(tests, generate, generate_to_db);
-            ANN.Run(tests, generate, generate_to_db);
+
+            //tests = new List<DateTime>();
+            //tests.Add(new DateTime(2016, 01, 19));
+            //ANN.Run(tests, generate, generate_to_db);
 
             string statusSuccess = generate ? "Tests generated successfully" : "Tests passed successfully";
             Console.WriteLine(statusSuccess);

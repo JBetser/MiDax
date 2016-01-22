@@ -25,9 +25,12 @@ namespace MidaxLib
             _vix = vix;
             if (_vix != null)
                 _mktIndices.Add(_vix);
-            _wma_low = macD.SignalLow.IndicatorLow;
-            _wma_mid = macD.SignalLow.IndicatorHigh;
-            _wma_high = macD.SignalHigh.IndicatorHigh;
+            _wma_low = new IndicatorWMA(macD.SignalLow.IndicatorLow);
+            _wma_low.PublishingEnabled = false;
+            _wma_mid = new IndicatorWMA(macD.SignalLow.IndicatorHigh);
+            _wma_mid.PublishingEnabled = false;
+            _wma_high = new IndicatorWMA(macD.SignalHigh.IndicatorHigh);
+            _wma_high.PublishingEnabled = false;
             _mktIndices.AddRange(otherIndices);
             _mktIndicators.Add(_wma_low);
             _mktIndicators.Add(_wma_mid);
