@@ -31,7 +31,6 @@ namespace MidaxTrader
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
             Config.Settings["TRADING_CURRENCY"] = "GBP";
             
-            MarketDataConnection.Instance.Connect(null);
             var otherIndices = new List<MarketData>();
             otherIndices.Add(new MarketData("SNP:IX.D.SPTRD.DAILY.IP"));
             otherIndices.Add(new MarketData("CAC:IX.D.CAC.DAILY.IP"));
@@ -42,13 +41,12 @@ namespace MidaxTrader
             models.Add(new ModelMacDCascade(macD));
             models.Add(new ModelMole(macD));
             Console.WriteLine("Starting signals...");
-            foreach (var model in models)
-                model.StartSignals();
+            var trader = new Trader(models);
+            trader.Start();            
             Console.WriteLine("Trading...");
             //_pauseEvent.WaitOne(Timeout.Infinite);
             System.Threading.Thread.Sleep(10000);
-            foreach (var model in models)
-                model.StopSignals();
+            trader.Stop();
             Console.WriteLine("Trading stopped");
         }
     }
