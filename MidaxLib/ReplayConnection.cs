@@ -534,7 +534,7 @@ namespace MidaxLib
                 _model = value;
             }
         }
-
+  
         static public new ReplayTester Instance
         {
             get

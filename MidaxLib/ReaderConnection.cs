@@ -63,7 +63,8 @@ namespace MidaxLib
                 if ((type == PublisherConnection.DATATYPE_STOCK || 
                     type == PublisherConnection.DATATYPE_INDICATOR ||
                     type == PublisherConnection.DATATYPE_SIGNAL ||
-                    type == PublisherConnection.DATATYPE_TRADE) && curid == "")
+                    type == PublisherConnection.DATATYPE_TRADE ||
+                    type == PublisherConnection.DATATYPE_MARKETLEVELS) && curid == "")
                     continue;
                 if (type != PublisherConnection.DATATYPE_MARKETLEVELS)
                 {
