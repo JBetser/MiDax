@@ -58,7 +58,7 @@ namespace MidaxLib
                         if (_ptf.GetPosition(signal.MarketData.Id).Quantity >= 0)
                         {
                             Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + value.Bid + ". Closing all positions...", EventLogEntryType.Error);
-                            CloseAllPositions(time, signal.MarketData.Id);
+                            Portfolio.Instance.CloseAllPositions(time, signal.MarketData.Id);
                         }
                         return false;
                     }
@@ -135,19 +135,7 @@ namespace MidaxLib
                 foreach (MarketData stock in _mktData)
                     stock.Clear();
             }
-        }
-
-        public void CloseAllPositions(DateTime time, string stockid = "")
-        {
-            foreach (var position in _ptf.Positions)
-            {
-                if (position.Value.Quantity != 0)
-                {
-                    if (stockid == "" || stockid == position.Value.Trade.Epic)
-                        _ptf.ClosePosition(position.Value.Trade, time);
-                }
-            }
-        }
+        }        
         
         public void BookTrade(Trade trade)
         {

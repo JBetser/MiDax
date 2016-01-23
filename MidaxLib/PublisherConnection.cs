@@ -13,12 +13,12 @@ namespace MidaxLib
         public const string DATATYPE_INDICATOR = "indicators";
         public const string DATATYPE_SIGNAL = "signals";
         public const string DATATYPE_TRADE = "trades";
+        public const string DATATYPE_MARKETLEVELS = "marketlevels";
 
         protected Dictionary<string, TimeSeries> _expectedIndicatorData = null;
         protected Dictionary<string, TimeSeries> _expectedSignalData = null;
         protected Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
         protected Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;
-        protected Dictionary<string, MarketLevels> _expectedMktLvlData = null;
 
         static protected PublisherConnection _instance = null;
         protected IReaderConnection _database = null;
@@ -46,13 +46,12 @@ namespace MidaxLib
         public abstract void Insert(MarketLevels mktDetails);
         
         public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, 
-            Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData, Dictionary<KeyValuePair<string, DateTime>, double> profitData, Dictionary<string, MarketLevels> mktLvlData)
+            Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData, Dictionary<KeyValuePair<string, DateTime>, double> profitData)
         {
             _expectedIndicatorData = new Dictionary<string,TimeSeries>();
             _expectedSignalData = new Dictionary<string, TimeSeries>();
             _expectedTradeData = tradeData;
             _expectedProfitData = profitData;
-            _expectedMktLvlData = mktLvlData;
             if (indicatorData != null)
             {
                 foreach (var indData in indicatorData)

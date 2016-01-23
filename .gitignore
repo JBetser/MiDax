@@ -94,3 +94,4 @@ MidaxTrader/obj/Release/*.*
 Calibrator/bin/Release/*.*
 Calibrator/obj/Release/*.*
 WebDebug/*
+*.bak

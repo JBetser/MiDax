@@ -108,10 +108,12 @@ namespace MidaxLib
         Dictionary<string, List<CqlQuote>> _expectedSignalData = null;
         Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
         Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;
-        Dictionary<string, MarketLevels> _expectedMktLevelsData = null;
+        int _numId = 1;
+        int _numRef = 1;
         
         bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
+        Dictionary<string, List<CqlQuote>> _priceData;
 
         public IReaderConnection Reader { get { return _reader; } }
         
@@ -140,6 +142,8 @@ namespace MidaxLib
             else
                 _reader = null;
             _hasExpectedResults = Config.TestReplayEnabled || Config.MarketSelectorEnabled || Config.CalibratorEnabled;
+            _numId = 1;
+            _numRef = 1;
         }
 
         public void Connect()
@@ -151,8 +155,17 @@ namespace MidaxLib
         {
             while (_testReplayFiles.Count > 0)
             {
-                Dictionary<string, List<CqlQuote>> priceData = GetReplayData(epics);
-                replay(priceData, tableListener);
+                _priceData = GetReplayData(epics);
+                replay(_priceData, tableListener);
+                _testReplayFiles.RemoveAt(0);
+            }
+        }
+
+        public void Resume(IHandyTableListener tableListener)
+        {
+            while (_testReplayFiles.Count > 0)
+            {
+                replay(_priceData, tableListener);
                 _testReplayFiles.RemoveAt(0);
             }
         }
@@ -172,14 +185,14 @@ namespace MidaxLib
         void IAbstractStreamingClient.UnsubscribeTradeSubscription(SubscribedTableKey tableListener)
         {
             _tradingEventTable = null;
-        }
+        }        
 
         public virtual void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
         {
             if (trade != null)
             {
-                trade.Id = "###DUMMY_TRADE_ID###";
-                trade.Reference = "###DUMMY_TRADE_REF###";
+                trade.Id = "###DUMMY_TRADE_ID" + _numId++ + "###";
+                trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onTradeBooked(trade);
                 _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
@@ -191,8 +204,8 @@ namespace MidaxLib
             if (trade != null)
             {
                 var closingTrade = new Trade(trade, true, time);
-                closingTrade.Id = "###CLOSE_DUMMY_TRADE_ID###";
-                closingTrade.Reference = "###CLOSE_DUMMY_TRADE_REF###";
+                closingTrade.Id = "###CLOSE_DUMMY_TRADE_ID" + _numId++ + "###";
+                closingTrade.Reference = "###CLOSE_DUMMY_TRADE_REF" + _numRef++ + "###";
                 closingTrade.ConfirmationTime = time;
                 onTradeBooked(closingTrade);
                 _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "DELETED", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
@@ -201,19 +214,15 @@ namespace MidaxLib
 
         void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
         {
-            var mktLevels = _reader.GetMarketLevels(_startTime, mktData.Id);
-            if (mktLevels.HasValue)
-            {
-                Market mkt = new Market();
-                mkt.epic = mktData.Id;
-                mkt.high = mktLevels.Value.High; mkt.low = mktLevels.Value.Low; mkt.bid = mktLevels.Value.CloseBid; mkt.offer = mktLevels.Value.CloseOffer;
-                mktData.Levels = new MarketLevels(mkt.epic, mkt.low.Value, mkt.high.Value, mkt.bid.Value, mkt.offer.Value);
-            }
+            var mktLevels = _reader.GetMarketLevels(_startTime, new List<string> { mktData.Id }).Values.First();
+            Market mkt = new Market();
+            mkt.epic = mktData.Id;
+            mkt.high = mktLevels.High; mkt.low = mktLevels.Low; mkt.bid = mktLevels.CloseBid; mkt.offer = mktLevels.CloseOffer;
+            mktData.Levels = new MarketLevels(mkt.epic, mkt.low.Value, mkt.high.Value, mkt.bid.Value, mkt.offer.Value);
         }
 
-        protected void replay(Dictionary<string, List<CqlQuote>> priceDataSrc, IHandyTableListener tableListener)
+        protected void replay(Dictionary<string, List<CqlQuote>> priceData, IHandyTableListener tableListener)
         {
-            Dictionary<string, List<CqlQuote>> priceData = priceDataSrc.ToDictionary(kv => kv.Key, kv => kv.Value.ToList());
             DateTime curtime = _startTime;
             while (priceData.Count > 0)
             {
@@ -248,53 +257,55 @@ namespace MidaxLib
 
         public Dictionary<string, List<CqlQuote>> GetReplayData(string[] epics)
         {
-            Dictionary<string, List<CqlQuote>> priceData = new Dictionary<string, List<CqlQuote>>();
-            foreach (string epic in epics)
-                priceData[epic] = _reader.GetMarketDataQuotes(_startTime, _stopTime,
-                    CassandraConnection.DATATYPE_STOCK, epic);
+            var epicLst = epics.ToList();
+            List<string> stockEpics;
+            if (Config.Settings.ContainsKey("VOLATILITY"))
+                stockEpics = (from epic in epics where epic != Config.Settings["VOLATILITY"].Split(':')[1] select epic).ToList();
+            else
+                stockEpics = epicLst;
+            var mktLevelsData = _reader.GetMarketLevels(_stopTime, stockEpics);
+            var priceData = _reader.GetMarketDataQuotes(_startTime, _stopTime,
+                                        CassandraConnection.DATATYPE_STOCK, epicLst);
             if (_hasExpectedResults)
             {
                 _expectedIndicatorData = new Dictionary<string, List<CqlQuote>>();
-                foreach (string epic in epics)
+                var quotes = _reader.GetIndicatorDataQuotes(_startTime, _stopTime,
+                        CassandraConnection.DATATYPE_INDICATOR, epicLst);
+                foreach (var epicQuotes in quotes)
                 {
-                    List<CqlQuote> quotes = _reader.GetIndicatorDataQuotes(_startTime, _stopTime,
-                        CassandraConnection.DATATYPE_INDICATOR, epic);
-                    Dictionary<string, List<CqlQuote>> indicatorData = (from quote in quotes
+                    Dictionary<string, List<CqlQuote>> indicatorData = (from quote in epicQuotes.Value
                                                                         group quote by quote.s into g
                                                                         select new { Key = g.Key, Quotes = g.ToList() }).ToDictionary(keyVal => keyVal.Key, keyVal => keyVal.Quotes);
                     indicatorData.Aggregate(_expectedIndicatorData, (agg, keyVal) => { agg.Add(keyVal.Key, keyVal.Value); return agg; });
                 }
                 _expectedSignalData = new Dictionary<string, List<CqlQuote>>();
-                foreach (string epic in epics)
+                quotes = _reader.GetSignalDataQuotes(_startTime, _stopTime,
+                        CassandraConnection.DATATYPE_SIGNAL, epicLst);
+                foreach (var epicQuotes in quotes)
                 {
-                    List<CqlQuote> quotes = _reader.GetSignalDataQuotes(_startTime, _stopTime,
-                        CassandraConnection.DATATYPE_SIGNAL, epic);
-                    Dictionary<string, List<CqlQuote>> signalData = (from quote in quotes
+                    Dictionary<string, List<CqlQuote>> signalData = (from quote in epicQuotes.Value
                                                                      group quote by quote.s into g
                                                                      select new { Key = g.Key, Quotes = g.ToList() }).ToDictionary(keyVal => keyVal.Key, keyVal => keyVal.Quotes);
                     signalData.Aggregate(_expectedSignalData, (agg, keyVal) => { agg.Add(keyVal.Key, keyVal.Value); return agg; });
                 }
                 _expectedTradeData = new Dictionary<KeyValuePair<string,DateTime>, Trade>();
-                foreach (string epic in epics)
+                var trades = _reader.GetTrades(_startTime, _stopTime,
+                                                                    CassandraConnection.DATATYPE_TRADE, epicLst);
+                foreach (var epicTrades in trades)
                 {
-                    List<Trade> trades = _reader.GetTrades(_startTime, _stopTime,
-                                                                    CassandraConnection.DATATYPE_TRADE, epic);
-                    foreach (Trade trade in trades)
-                        _expectedTradeData.Add(new KeyValuePair<string, DateTime>(epic, trade.TradingTime), trade);
+                    foreach (Trade trade in epicTrades.Value)
+                        _expectedTradeData.Add(new KeyValuePair<string, DateTime>(epicTrades.Key, trade.TradingTime), trade);
                 }
                 _expectedProfitData = new Dictionary<KeyValuePair<string, DateTime>, double>();
-                foreach (string epic in epics)
+                var profits = _reader.GetProfits(_startTime, _stopTime,
+                                                                    CassandraConnection.DATATYPE_TRADE, epicLst);
+                foreach (var epicProfit in profits)
                 {
-                    List<KeyValuePair<DateTime, double>> profits = _reader.GetProfits(_startTime, _stopTime,
-                                                                    CassandraConnection.DATATYPE_TRADE, epic);
-                    foreach (var profit in profits)
-                        _expectedProfitData.Add(new KeyValuePair<string, DateTime>(epic, profit.Key), profit.Value);
+                    foreach (var profit in epicProfit.Value)
+                        _expectedProfitData.Add(new KeyValuePair<string, DateTime>(epicProfit.Key, profit.Key), profit.Value);
                 }
-                _expectedMktLevelsData = new Dictionary<string, MarketLevels>();
-                foreach (string epic in epics)
-                    _expectedMktLevelsData[epic] = _reader.GetMarketLevels(_stopTime, epic).Value;
-                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData, 
-                    _expectedTradeData, _expectedProfitData, _expectedMktLevelsData);
+                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData,
+                    _expectedTradeData, _expectedProfitData);
             }
             return priceData;
         }
@@ -303,11 +314,13 @@ namespace MidaxLib
     // this crazy client never updates the positions
     public class ReplayStreamingCrazySeller : ReplayStreamingClient
     {
+        static int _numRef = 1;
+
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
         {
             if (trade.Direction == SIGNAL_CODE.SELL)
             {
-                trade.Reference = "###DUMMY_TRADE_REF###";
+                trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onTradeBooked(trade);
             }
@@ -318,11 +331,13 @@ namespace MidaxLib
 
     public class ReplayStreamingCrazyBuyer : ReplayStreamingClient
     {
+        static int _numRef = 1;
+
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
         {
             if (trade.Direction == SIGNAL_CODE.BUY)
             {
-                trade.Reference = "###DUMMY_TRADE_REF###";
+                trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onTradeBooked(trade);
             }
@@ -450,7 +465,7 @@ namespace MidaxLib
             if (trade.TradingTime == DateTimeOffset.MinValue || trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "")
                 throw new ApplicationException("Cannot insert a trade without booking information");
             var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6},{7}{8}",
-                DATATYPE_TRADE, trade.Reference, trade.ConfirmationTime, trade.Direction, trade.Price, trade.Size, trade.Epic, trade.TradingTime,
+                DATATYPE_TRADE, trade.Epic, trade.ConfirmationTime, trade.Reference, trade.Direction, trade.Price, trade.Size, trade.TradingTime,
                 Environment.NewLine);
             _csvTradeStringBuilder.Append(newLine);
         }
@@ -469,14 +484,21 @@ namespace MidaxLib
 
         public override void Insert(MarketLevels mktDetails)
         {
-            var newLine = string.Format("marketlevels,{0},{1},{2},{3},{4}{5}", mktDetails.AssetId, mktDetails.Low, mktDetails.High, mktDetails.CloseBid, mktDetails.CloseOffer,
-                Environment.NewLine);
+            var newLine = string.Format("marketlevels,{0},{1}{2}", "LVLLow_" + mktDetails.AssetId, mktDetails.Low, Environment.NewLine);
+            _csvMktDetailsStringBuilder.Append(newLine);
+            newLine = string.Format("marketlevels,{0},{1}{2}", "LVLHigh_" + mktDetails.AssetId, mktDetails.High, Environment.NewLine);
+            _csvMktDetailsStringBuilder.Append(newLine);
+            newLine = string.Format("marketlevels,{0},{1}{2}", "LVLCloseBid_" + mktDetails.AssetId, mktDetails.CloseBid, Environment.NewLine);
+            _csvMktDetailsStringBuilder.Append(newLine);
+            newLine = string.Format("marketlevels,{0},{1}{2}", "LVLCloseOffer_" + mktDetails.AssetId, mktDetails.CloseOffer, Environment.NewLine);
             _csvMktDetailsStringBuilder.Append(newLine);
         }        
 
         public override string Close()
-        {
-            string csvContent = _csvStockStringBuilder.ToString();
+        {            
+            var csvContent = _csvMktDetailsStringBuilder.ToString();
+            csvContent += Environment.NewLine;
+            csvContent += _csvStockStringBuilder.ToString();            
             csvContent += Environment.NewLine;
             csvContent += _csvIndicatorStringBuilder.ToString();
             csvContent += Environment.NewLine;
@@ -484,9 +506,7 @@ namespace MidaxLib
             csvContent += Environment.NewLine;
             csvContent += _csvTradeStringBuilder.ToString();
             csvContent += Environment.NewLine;
-            csvContent += _csvProfitStringBuilder.ToString();
-            csvContent += Environment.NewLine;
-            csvContent += _csvMktDetailsStringBuilder.ToString();
+            csvContent += _csvProfitStringBuilder.ToString();            
             File.WriteAllText(_csvFile, csvContent);
             string info = "Generated results in " + _csvFile;
             Log.Instance.WriteEntry(info, EventLogEntryType.Information);
@@ -528,8 +548,14 @@ namespace MidaxLib
             _database = ((ReplayStreamingClient)MarketDataConnection.Instance.StreamClient).Reader;            
         }
 
+        public override void Insert(MarketLevels mktDetails)
+        {
+            // this a source market data, no need to compare
+        }
+
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
-        {            
+        {
+            // this a source market data, no need to compare
         }
 
         public override void Insert(DateTime updateTime, Indicator indicator, decimal value)
@@ -593,21 +619,7 @@ namespace MidaxLib
                 throw new ApplicationException(error);
             }
         }
-
-        public override void Insert(MarketLevels mktDetails)
-        {
-            if (mktDetails.High != _expectedMktLvlData[mktDetails.AssetId].High || mktDetails.Low != _expectedMktLvlData[mktDetails.AssetId].Low ||
-                mktDetails.CloseBid != _expectedMktLvlData[mktDetails.AssetId].CloseBid || mktDetails.CloseOffer != _expectedMktLvlData[mktDetails.AssetId].CloseOffer)
-            {
-                string error = string.Format("Test failed: market levels " + mktDetails.AssetId + " time " + Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]).ToShortTimeString() +
-                    " expected levels (high, low, bid, offer) {0} {1} {2} {3} != {4} {5} {6} {7} ",
-                    _expectedMktLvlData[mktDetails.AssetId].High, _expectedMktLvlData[mktDetails.AssetId].Low, _expectedMktLvlData[mktDetails.AssetId].CloseBid, _expectedMktLvlData[mktDetails.AssetId].CloseOffer,
-                    mktDetails.High, mktDetails.Low, mktDetails.CloseBid, mktDetails.CloseOffer);
-                Log.Instance.WriteEntry(error, EventLogEntryType.Error);
-                throw new ApplicationException(error);
-            }
-        }
-
+        
         public override void Insert(DateTime updateTime, Value profit)
         {
         }

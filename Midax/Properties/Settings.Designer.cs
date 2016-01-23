@@ -191,9 +191,9 @@ namespace Midax.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("VIX2:IN.D.VIX.MONTH2.IP")]
-        public string VOLATILITY_2M {
+        public string VOLATILITY {
             get {
-                return ((string)(this["VOLATILITY_2M"]));
+                return ((string)(this["VOLATILITY"]));
             }
         }
         

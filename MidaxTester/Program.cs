@@ -14,15 +14,19 @@ namespace MidaxTester
         static void Main(string[] args)
         {
             // if there is a first argument "-G" then generate new results, otherwise test against the existing ones
+            bool quick_test = (args.Length == 1 && args[0] == "-Q");
             bool generate = (args.Length >= 1 && args[0] == "-G");
-            bool generate_to_db = (args.Length >= 2 && generate && args[1] == "-DB");
+            bool generate_to_db = ((args.Length == 2 && generate && args[1] == "-TODB") ||
+                                    (args.Length == 3 && generate && args[2] == "-TODB"));
+            bool generate_from_db = ((args.Length == 2 && generate && args[1] == "-FROMDB") ||
+                                    (args.Length == 3 && generate && args[2] == "-FROMDB"));
             // test core functionalities
             if (!generate_to_db)
-                Core.Run(generate);
+                Core.Run(generate, generate_from_db);
 
             // test whole daily trading batches
             List<DateTime> tests = new List<DateTime>();
-            tests.Add(new DateTime(2015, 12, 23));
+            tests.Add(new DateTime(2016, 1, 22));
             /*
             tests.Add(new DateTime(2016, 1, 4));
             tests.Add(new DateTime(2016, 1, 5));
@@ -35,12 +39,12 @@ namespace MidaxTester
             tests.Add(new DateTime(2016, 1, 14));
             tests.Add(new DateTime(2016, 1, 15));
             tests.Add(new DateTime(2016, 1, 18));*/
-            MacD.Run(tests, generate, generate_to_db);
-            Heuristic.Run(tests, generate, generate_to_db);
-
-            //tests = new List<DateTime>();
-            //tests.Add(new DateTime(2016, 01, 19));
-            //ANN.Run(tests, generate, generate_to_db);
+            if (!quick_test)
+            {
+                MacD.Run(tests, generate, generate_from_db, generate_to_db);
+                Heuristic.Run(tests, generate, generate_from_db, generate_to_db);
+                ANN.Run(tests, generate, generate_from_db, generate_to_db);
+            }
 
             string statusSuccess = generate ? "Tests generated successfully" : "Tests passed successfully";
             Console.WriteLine(statusSuccess);

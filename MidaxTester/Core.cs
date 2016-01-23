@@ -12,24 +12,25 @@ namespace MidaxTester
 {
     public class Core
     {
-        public static void Run(bool generate = false)
+        public static void Run(bool generate = false, bool generate_from_db = false)
         {
             List<string> tests = new List<string>();
-            tests.Add(@"..\..\expected_results\mktdata_26_8_2015.csv");
+            tests.Add(@"..\..\expected_results\core_22_1_2016.csv");
 
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
-            dicSettings["PUBLISHING_START_TIME"] = "2015-08-26 00:00:01";
-            dicSettings["PUBLISHING_STOP_TIME"] = "2015-08-26 23:59:59";
-            //dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";      // uncomment this line to replay from the DB instead of the csv files
+            dicSettings["PUBLISHING_START_TIME"] = "2016-01-22 08:30:00";
+            dicSettings["PUBLISHING_STOP_TIME"] = "2016-01-22 09:00:00";
+            if (generate_from_db)
+                dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";
             if (generate)
-                dicSettings["PUBLISHING_CSV"] = @"..\..\expected_results\mktdatagen_26_8_2015.csv"; 
-            dicSettings["REPLAY_MODE"] = "CSV";
+                dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\coregen_22_1_2016.csv");
+            dicSettings["REPLAY_MODE"] = generate_from_db ? "DB" : "CSV";
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             dicSettings["REPLAY_POPUP"] = "1";
-            dicSettings["TRADING_START_TIME"] = "2015-08-26 08:00:00";
-            dicSettings["TRADING_STOP_TIME"] = "2015-08-26 09:00:00";
-            dicSettings["TRADING_CLOSING_TIME"] = "2015-08-26 08:57:00";
+            dicSettings["TRADING_START_TIME"] = "2016-01-22 08:45:00";
+            dicSettings["TRADING_STOP_TIME"] = "2016-01-22 08:59:00";
+            dicSettings["TRADING_CLOSING_TIME"] = "2016-01-22 08:57:00";
             dicSettings["TRADING_MODE"] = "REPLAY";
             dicSettings["TRADING_SIGNAL"] = "MacD_1_5_IX.D.DAX.DAILY.IP";
             dicSettings["TRADING_LIMIT_PER_BP"] = "10";
@@ -154,6 +155,9 @@ namespace MidaxTester
                 
             if (!dicSettings.ContainsKey("PUBLISHING_CSV"))
             {
+                // the program is expected to throw exceptions in this scope, just press continue if you are debugging
+                // all exceptions should be handled, and the program should terminate with a success message box
+
                 // test that the right numer of trades was placed. this is an extra sanity check to make sure the program is not idle
                 if (ReplayTester.Instance.NbProducedTrades != ReplayTester.Instance.NbExpectedTrades)
                     model.ProcessError(string.Format("the model did not produced the expected number of trades. It produced {0} trades instead of {1} expected",
@@ -168,40 +172,43 @@ namespace MidaxTester
                 var tradeTest = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 10000m);
                 var expectedTrades = new Dictionary<KeyValuePair<string, DateTime>, Trade>();
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = tradeTest;
-                ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null, null); 
+                ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null); 
                 model.BookTrade(tradeTest);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != -10)
                     throw new ApplicationException("SELL Trade booking error");
                 var expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.BUY, 10, 10000m);
-                expectedTrade.Reference = "###DUMMY_TRADE_REF###";
+                expectedTrade.Reference = "###DUMMY_TRADE_REF2###";
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
                 tradeTest = new Trade(tradeTest, true, tradeTime);
                 model.BookTrade(tradeTest);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 0)
                     throw new ApplicationException("Trade position closing error");
+                expectedTrade.Reference = "###DUMMY_TRADE_REF3###";                
                 model.BookTrade(tradeTest);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 10)
                     throw new ApplicationException("BUY Trade booking error");
                 string expected;
                 bool success = false;
-                expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 10000m);
-                expectedTrade.Reference = "###CLOSE_DUMMY_TRADE_REF###";
+                expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 20000m);
+                expectedTrade.Reference = "###CLOSE_DUMMY_TRADE_REF4###";
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
                 try
                 {
-                    model.CloseAllPositions(tradeTest.TradingTime);
+                    Portfolio.Instance.CloseAllPositions(tradeTest.TradingTime);
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: trade IX.D.DAX.DAILY.IP expected Price 10000 != 0";
+                    expected = "Test failed: trade IX.D.DAX.DAILY.IP expected Price 20000 != 10000";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
                 }
+                if (!success)
+                    model.ProcessError("An expected exception has not been thrown");
 
                 // test synchronization issues with the broker
                 List<string> testsSync = new List<string>();
-                testsSync.Add(@"..\..\expected_results\mktdata_26_8_2015_sync.csv");
+                testsSync.Add(@"..\..\expected_results\sync.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
                 MarketDataConnection.Instance = new ReplayCrazySeller();
                 model = new ModelMacDTest(index);
@@ -210,22 +217,20 @@ namespace MidaxTester
                 model.StartSignals();
                 model.StopSignals();
                 testsSync = new List<string>();
-                testsSync.Add(@"..\..\expected_results\mktdata_26_8_2015_sync2.csv");
+                testsSync.Add(@"..\..\expected_results\sync2.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
                 MarketDataConnection.Instance = new ReplayCrazyBuyer();
                 model = new ModelMacDTest(index);
                 MarketDataConnection.Instance.Connect(null);
                 model.StartSignals();
                 model.StopSignals();
-
-                // Test exceptions. the program is expected to throw exceptions here, just press continue if you are debugging
-                // all exceptions should be handled, and the program should terminate with a success message box
+                                
                 Console.WriteLine(action + " expected exceptions...");
                 dicSettings["REPLAY_CSV"] = Config.TestList(tests);
                 MarketDataConnection.Instance = new ReplayConnection();
                 MarketDataConnection.Instance.Connect(null);
                 List<string> testError = new List<string>();
-                testError.Add(@"..\..\expected_results\mktdata_26_8_2015_error.csv");
+                testError.Add(@"..\..\expected_results\error.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testError);
                 var modelErr = new ModelMacDTest(index);
                 try
@@ -249,13 +254,8 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9967.999999999999999999875687";
-                    success = (exc.Message == expected);
-                    if (!success)
-                        model.ProcessError(exc.Message, expected);
+                    model.ProcessError(exc.Message + " - Wrong daily mean exception removed");
                 }
-                if (!success)
-                    model.ProcessError("An expected exception has not been thrown");
                 success = false;
                 try
                 {
@@ -265,6 +265,7 @@ namespace MidaxTester
                 {
                     model.ProcessError(exc.Message + " - Double EOD publishing exception removed");
                 }
+                success = false;
                 try
                 {
                     MarketDataConnection.Instance = new ReplayConnection();
@@ -284,17 +285,18 @@ namespace MidaxTester
                 success = false;
                 try
                 {
-                    model.StopSignals();
+                    MarketDataConnection.Instance.Resume();
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1D_IX.D.DAX.DAILY.IP time 23:59 expected value 9964.360169 != 9967.999999999999999999875687";
+                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:35 expected value 9725.60333333333 != 9725.595000000000000000000078";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
                 }
                 if (!success)
                     model.ProcessError("An expected exception has not been thrown");
+                model.StopSignals();
                 success = false;
             }            
         }

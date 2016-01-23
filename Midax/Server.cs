@@ -17,7 +17,7 @@ public class Server
 {
     public class App : Ice.Application
     {
-        List<Model> _models = new List<Model>();
+        Trader _trader;
         DateTime _startTime;
 
         public override int run(string[] args)
@@ -51,9 +51,7 @@ public class Server
                 Ice.ObjectAdapter adapter = communicator().createObjectAdapter("MidaxIce");
                 Ice.Properties properties = communicator().getProperties();
                 Ice.Identity id = communicator().stringToIdentity(properties.getProperty("Identity"));
-
-                MarketDataConnection.Instance.Connect(connectionLostCallback);
-
+                               
                 var index = new MarketData(dicSettings["INDEX"]);
                 List<MarketData> stocks = new List<MarketData>();
                 foreach (string stock in stockList)
@@ -61,12 +59,14 @@ public class Server
                 List<MarketData> otherIndices = new List<MarketData>();
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
                 otherIndices.Add(new MarketData(dicSettings["INDEX_SNP"]));
+                var models = new List<Model>();
                 var macD = new ModelMacD(index);
-                _models.Add(macD);
-                _models.Add(new ModelANN(macD, stocks, new MarketData(dicSettings["VOLATILITY_2M"]), otherIndices));
-                _models.Add(new ModelMacDCascade(macD));
+                models.Add(macD);
+                models.Add(new ModelANN(macD, stocks, new MarketData(dicSettings["VOLATILITY"]), otherIndices));
+                models.Add(new ModelMacDCascade(macD));
                 //_models.Add(new ModelMole(macD));
-                adapter.add(new MidaxIceI(_models, properties.getProperty("Ice.ProgramName")), id);                
+                _trader = new Trader(models);
+                adapter.add(new MidaxIceI(_trader, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
 
                 Assembly thisAssem = typeof(Server).Assembly;
@@ -130,48 +130,20 @@ public class Server
                 Log.Instance.WriteEntry("Restarting the service", EventLogEntryType.Information);
                 communicator().shutdown();
             }
-            foreach (var model in _models)
-            {
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Starting signals", EventLogEntryType.Information);
-                model.StartSignals(false);
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
-            }
-            MarketDataConnection.Instance.StartListening();
+            _trader.Start();
         }
 
         void stopSignalCallback(object state)
         {
-            foreach (var model in _models)
-            {
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Stopping signals", EventLogEntryType.Information);
-                model.StopSignals(false);
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);
-            }
-            MarketDataConnection.Instance.StopListening();
+            _trader.Stop();
             communicator().shutdown();
         }
 
         void closePositionsCallback(object state)
         {
-            foreach (var model in _models)
-            {
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Closing positions", EventLogEntryType.Information);
-                model.CloseAllPositions(DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local));
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": All positions closed", EventLogEntryType.Information);
-            }
-        }
-
-        void connectionLostCallback(object state)
-        {
-            foreach (var model in _models)
-            {
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Connection lost. Reconnecting...", EventLogEntryType.Warning);
-                MarketDataConnection.Instance.Connect(connectionLostCallback);
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Connected. Restarting the signals...", EventLogEntryType.Information);
-                MarketDataConnection.Instance.StartListening();
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
-            }
-        }
+            DateTime now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
+            _trader.CloseAllPositions(now);
+        }        
     }
 
     static public int Main(string[] args)

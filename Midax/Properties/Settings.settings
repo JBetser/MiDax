@@ -81,7 +81,7 @@
     <Setting Name="DB_CONTACTPOINT" Type="System.String" Scope="Application">
       <Value Profile="(Default)">192.168.1.26</Value>
     </Setting>
-    <Setting Name="VOLATILITY_2M" Type="System.String" Scope="Application">
+    <Setting Name="VOLATILITY" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VIX2:IN.D.VIX.MONTH2.IP</Value>
     </Setting>
     <Setting Name="TRADING_CURRENCY" Type="System.String" Scope="Application">

@@ -72,7 +72,8 @@ namespace MidaxLib
         public void GetMarketLevels()
         {
             if (PublisherConnection.Instance.Database != null)
-                _marketLevels = PublisherConnection.Instance.Database.GetMarketLevels(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]), _id);
+                _marketLevels = PublisherConnection.Instance.Database.GetMarketLevels(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]), 
+                    new List<string> { _id }).Values.First();
         }
 
         protected TimeSeries _values;

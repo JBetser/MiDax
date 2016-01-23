@@ -240,43 +240,7 @@ namespace MidaxLib
             _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseOffer_" + mktDetails.AssetId, ts, mktDetails.CloseOffer));
         }
-
-        MarketLevels? IReaderConnection.GetMarketLevels(DateTime updateTime, string epic)
-        {
-            if (_session == null)
-                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            // process previous day
-            updateTime = updateTime.AddDays(-1);
-            updateTime = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 22, 0, 0, DateTimeKind.Local);
-            RowSet value = null;
-            decimal high = 0m;
-            string indicator = "";
-            try
-            {
-                indicator = "LVLHigh_" + epic;
-                value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                    indicator, ToUnixTimestamp(updateTime)));
-                high = (decimal)value.First()[0];
-            }
-            catch
-            {
-                value = null;
-                Log.Instance.WriteEntry("Could not retrieve level indicators for previous COB date. Indicator: " + indicator, EventLogEntryType.Warning);
-            }
-            if (value == null)
-                return null;             
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "LVLLow_" + epic, ToUnixTimestamp(updateTime)));
-            decimal low = (decimal)value.First()[0];
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "LVLCloseBid_" + epic, ToUnixTimestamp(updateTime)));
-            decimal closeBid = (decimal)value.First()[0];
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "LVLCloseOffer_" + epic, ToUnixTimestamp(updateTime)));
-            decimal closeOffer = (decimal)value.First()[0];
-            return new MarketLevels(epic, low, high, closeBid, closeOffer);
-        }
-
+                
         int IStaticDataConnection.GetAnnLatestVersion(string annid, string stockid)
         {
             if (_session == null)
@@ -302,51 +266,103 @@ namespace MidaxLib
             return weightLst;
         }
 
-        RowSet getRows(DateTime startTime, DateTime stopTime, string type, string id){
+        Dictionary<string, RowSet> getRows(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        {
             if (_session == null)
                 return null;
-            return _session.Execute(string.Format(DB_SELECTION + "where {2}id='{3}' and trading_time >= {4} and trading_time <= {5}",
+            var sets = new Dictionary<string, RowSet>();
+            foreach(var id in ids)
+                sets[id] = _session.Execute(string.Format(DB_SELECTION + "where {2}id='{3}' and trading_time >= {4} and trading_time <= {5}",
                                 DB_HISTORICALDATA, type, type.Substring(0, type.Length - 1), id, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
+            return sets;
         }
 
-        List<Trade> getTrades(DateTime startTime, DateTime stopTime, string type, string stockid)
+        Dictionary<string, List<Trade>> getTrades(DateTime startTime, DateTime stopTime, string type, List<string> stockids)
         {
             throw new ApplicationException("Trade reading not implemented");
         }
 
-        List<CqlQuote> getQuotes(DateTime startTime, DateTime stopTime, string type, string id)
+        Dictionary<string, List<CqlQuote>> getQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            RowSet rowSet = getRows(startTime, stopTime, type, id);
-            List<CqlQuote> quotes = new List<CqlQuote>();
-            foreach (Row row in rowSet.GetRows())
-                quotes.Add(new CqlQuote(row));
-            quotes.Reverse();
-            return quotes;
+            var epicQuotes = new Dictionary<string, List<CqlQuote>>();
+            var rowSets = getRows(startTime, stopTime, type, ids);
+            foreach (var rowSet in rowSets)
+            {
+                if (!epicQuotes.ContainsKey(rowSet.Key))
+                    epicQuotes[rowSet.Key] = new List<CqlQuote>();
+                foreach (Row row in rowSet.Value.GetRows())
+                    epicQuotes[rowSet.Key].Add(new CqlQuote(row));
+                epicQuotes[rowSet.Key].Reverse();
+            }
+            return epicQuotes;
         }
 
-        List<CqlQuote> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
+        Dictionary<string, List<CqlQuote>> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            return getQuotes(startTime, stopTime, type, id);            
+            return getQuotes(startTime, stopTime, type, ids);            
         }
 
-        List<CqlQuote> IReaderConnection.GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
+        Dictionary<string, List<CqlQuote>> IReaderConnection.GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            return getQuotes(startTime, stopTime, type, id);
+            return getQuotes(startTime, stopTime, type, ids);
         }
 
-        List<CqlQuote> IReaderConnection.GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, string id)
+        Dictionary<string, List<CqlQuote>> IReaderConnection.GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            return getQuotes(startTime, stopTime, type, id);
+            return getQuotes(startTime, stopTime, type, ids);
         }
 
-        List<Trade> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, string id)
+        Dictionary<string, List<Trade>> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            return getTrades(startTime, stopTime, type, id);
+            return getTrades(startTime, stopTime, type, ids);
         }
 
-        List<KeyValuePair<DateTime, double>> IReaderConnection.GetProfits(DateTime startTime, DateTime stopTime, string type, string id)
+        Dictionary<string, List<KeyValuePair<DateTime, double>>> IReaderConnection.GetProfits(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            return null;
+            throw new ApplicationException("Profit reading not implemented");
+        }
+
+        MarketLevels GetMarketLevels(DateTime updateTime, string epic)
+        {
+            if (_session == null)
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
+            // process previous day
+            updateTime = updateTime.AddDays(-1);
+            updateTime = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 22, 0, 0, DateTimeKind.Local);
+            RowSet value = null;
+            decimal high = 0m;
+            string indicator = "";
+            try
+            {
+                indicator = "LVLHigh_" + epic;
+                value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                    indicator, ToUnixTimestamp(updateTime)));
+                high = (decimal)value.First()[0];
+            }
+            catch
+            {
+                var errorMsg = "Could not retrieve level indicators for previous COB date. Indicator: " + indicator;
+                Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Error);
+                throw new ApplicationException(errorMsg);
+            }
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                "LVLLow_" + epic, ToUnixTimestamp(updateTime)));
+            decimal low = (decimal)value.First()[0];
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                "LVLCloseBid_" + epic, ToUnixTimestamp(updateTime)));
+            decimal closeBid = (decimal)value.First()[0];
+            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                "LVLCloseOffer_" + epic, ToUnixTimestamp(updateTime)));
+            decimal closeOffer = (decimal)value.First()[0];
+            return new MarketLevels(epic, low, high, closeBid, closeOffer);
+        }
+
+        Dictionary<string, MarketLevels> IReaderConnection.GetMarketLevels(DateTime updateTime, List<string> ids)
+        {
+            var marketLevels = new Dictionary<string, MarketLevels>();
+            foreach (var id in ids)
+                marketLevels[id] = GetMarketLevels(updateTime, id);
+            return marketLevels;
         }
 
         void IReaderConnection.CloseConnection()
@@ -358,7 +374,8 @@ namespace MidaxLib
         {
             if (_session == null)
                 return "[]";
-            RowSet rowSet = getRows(startTime, stopTime, type, id);
+            var ids = new List<string> { id };
+            var rowSets = getRows(startTime, stopTime, type, ids);
             List<CqlQuote> filteredQuotes = new List<CqlQuote>();
             decimal? prevQuoteValue = null;
             CqlQuote prevQuote = new CqlQuote();
@@ -370,7 +387,7 @@ namespace MidaxLib
             decimal min = 1000000;
             decimal max = 0;
             List<CqlQuote> quotes = new List<CqlQuote>();
-            foreach (Row row in rowSet.GetRows())
+            foreach (Row row in rowSets[id].GetRows())
             {
                 CqlQuote cqlQuote = CqlQuote.CreateInstance(type, row);
                 if (cqlQuote.b < min)

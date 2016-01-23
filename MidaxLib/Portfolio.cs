@@ -16,6 +16,7 @@ namespace MidaxLib
         static Dictionary<IAbstractStreamingClient, Portfolio> _instance = null;
         Dictionary<string, TradingSet> _tradingSets = new Dictionary<string, TradingSet>();
 
+        public List<Trade> Trades { get { return _trades; } }
         public Dictionary<string, Position> Positions { get { return _positions; } }
         
         Portfolio(IAbstractStreamingClient client)
@@ -50,6 +51,18 @@ namespace MidaxLib
         public void ClosePosition(Trade trade, DateTime time)
         {
             _igStreamApiClient.ClosePosition(trade, time, OnTradeBooked);
+        }
+
+        public void CloseAllPositions(DateTime time, string stockid = "")
+        {
+            foreach (var position in Positions)
+            {
+                if (position.Value.Quantity != 0)
+                {
+                    if (stockid == "" || stockid == position.Value.Trade.Epic)
+                        ClosePosition(position.Value.Trade, time);
+                }
+            }
         }
 
         public void Unsubscribe()
@@ -183,9 +196,11 @@ namespace MidaxLib
                 _client.BookTrade(newTrade, OnTradeBooked);
             }
         }
-
+        
         void OnTradeBooked(Trade newTrade)
         {
+            Portfolio.Instance.Trades.Add(newTrade);
+            _positions[newTrade.PlaceHolder].Trade = newTrade;
             newTrade.Publish();
         }
     }

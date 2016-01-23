@@ -90,6 +90,11 @@ namespace MidaxLib
             }
         }
 
+        public void Resume()
+        {
+            _mktDataListener.Resume();
+        }
+
         public void PublishMarketLevels(List<MarketData> mktData)
         {
             foreach (var mkt in mktData)
@@ -122,6 +127,11 @@ namespace MidaxLib
             string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray());
             Log.Instance.WriteEntry("Unsubscribing to market data: " + epicsMsg + "...", System.Diagnostics.EventLogEntryType.Information);
             MarketDataConnection.Instance.StreamClient.Unsubscribe();            
+        }
+
+        public void Resume()
+        {
+            MarketDataConnection.Instance.StreamClient.Resume(this);
         }
 
         public override void OnUpdate(int itemPos, string itemName, IUpdateInfo update)

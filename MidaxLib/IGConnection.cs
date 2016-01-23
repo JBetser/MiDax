@@ -20,6 +20,7 @@ namespace MidaxLib
         void Connect(string username, string password, string apiKey);
         void Subscribe(string[] epics, IHandyTableListener tableListener);
         void Unsubscribe();
+        void Resume(IHandyTableListener tableListener);
         SubscribedTableKey SubscribeToPositions(IHandyTableListener tableListener);
         void UnsubscribeTradeSubscription(SubscribedTableKey tableListener);
         void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked);
@@ -165,6 +166,10 @@ namespace MidaxLib
         void IAbstractStreamingClient.Unsubscribe()
         {
             _igStreamApiClient.UnsubscribeTableKey(_igSubscribedTableKey);
+        }
+
+        void IAbstractStreamingClient.Resume(IHandyTableListener tableListener)
+        {
         }
 
         SubscribedTableKey IAbstractStreamingClient.SubscribeToPositions(IHandyTableListener tableListener)

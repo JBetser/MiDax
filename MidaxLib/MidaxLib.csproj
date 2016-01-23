@@ -99,6 +99,7 @@
     <Compile Include="StaticDataConnection.cs" />
     <Compile Include="TimeSeries.cs" />
     <Compile Include="Trade.cs" />
+    <Compile Include="Trader.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IGApi\IGPublicPcl\IGPublicPcl.csproj">

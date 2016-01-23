@@ -12,12 +12,12 @@ namespace Midax
     class MidaxIceI : MidaxIceDisp_
     {
         string _serverName;
-        List<Model> _models = null;
+        Trader _trader = null;
 
-        public MidaxIceI(List<Model> models, string name)
+        public MidaxIceI(Trader trader, string name)
         {
             _serverName = name;
-            _models = models;
+            _trader = trader;
         }
         
         public override string ping(Ice.Current current)
@@ -29,32 +29,17 @@ namespace Midax
 
         public override void startsignals(Ice.Current current)
         {
-            foreach (var model in _models)
-            {
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Starting signals", EventLogEntryType.Information);
-                model.StartSignals();
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
-            }
+            _trader.Start();
         }
 
         public override void stopsignals(Ice.Current current)
         {
-            foreach (var model in _models)
-            {
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Stopping signals", EventLogEntryType.Information);
-                model.StopSignals();
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);
-            }
+            _trader.Stop();
         }
 
         public override void shutdown(Ice.Current current)
         {
-            foreach (var model in _models)
-            {
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Shutting down", EventLogEntryType.Information);
-                model.StopSignals();
-                Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);                
-            }
+            _trader.Stop();
             current.adapter.getCommunicator().shutdown();
         }
         
