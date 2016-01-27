@@ -15,26 +15,24 @@ namespace MidaxLib
         {            
         }
 
-        protected override void Buy(Signal signal, DateTime time, Price value)
+        protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
-            if (signal.Id == _tradingSignal)
+            if (base.Buy(signal, time, stockValue))
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
-                    Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + value.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + stockValue.Bid);
+                return true;
             }
-            base.Buy(signal, time, value);
-            
+            return false;
         }
 
-        protected override void Sell(Signal signal, DateTime time, Price value)
+        protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            if (signal.Id == _tradingSignal)
+            if (base.Sell(signal, time, stockValue))
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
-                    Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + value.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + stockValue.Bid);
+                return true;
             }
-            base.Sell(signal, time, value);
-            
+            return false;
         }     
    
         public override void ProcessError(string message, string expected = "")
@@ -55,25 +53,25 @@ namespace MidaxLib
         {
         }
 
-        protected override void Buy(Signal signal, DateTime time, Price value)
+        protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
-            if (signal.Id == _tradingSignal)
+            if (base.Buy(signal, time, stockValue))
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
-                    Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + value.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + stockValue.Bid);
+                return true;
             }
-            base.Buy(signal, time, value);
+            return false;
 
         }
 
-        protected override void Sell(Signal signal, DateTime time, Price value)
+        protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            if (signal.Id == _tradingSignal)
+            if (base.Sell(signal, time, stockValue))
             {
-                if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
-                    Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + value.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + stockValue.Bid);
+                return true;
             }
-            base.Sell(signal, time, value);
+            return false;
 
         }
 
@@ -94,27 +92,18 @@ namespace MidaxLib
             : base(macD)
         {
         }
-
-        protected override void Buy(Signal signal, DateTime time, Price value)
+        
+        protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            if (signal.Id == _tradingSignal)
-            {
-                if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
-                    Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + value.Bid);
-            }
-            base.Buy(signal, time, value);
-
+            if (_tradingSet.PlaceTrade(signal.Trade, stockValue.Bid))
+                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + stockValue.Bid);
+            return false;
         }
 
-        protected override void Sell(Signal signal, DateTime time, Price value)
+        protected override void OnUpdateIndex(MarketData mktData, DateTime updateTime, Price stockValue)
         {
-            if (signal.Id == _tradingSignal)
-            {
-                if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
-                    Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + value.Bid);
-            }
-            base.Sell(signal, time, value);
-
+            if (_tradingSet.UpdateIndex(updateTime, stockValue.Offer))
+                Console.WriteLine(updateTime + " Signal " + _signal.Id + " buy " + _signal.MarketData.Id + " " + stockValue.Offer);
         }
 
         public override void ProcessError(string message, string expected = "")

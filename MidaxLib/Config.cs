@@ -81,7 +81,7 @@ namespace MidaxLib
         public static bool TradingOpen(DateTime time)
         {
             bool open = (time.TimeOfDay >= Config.ParseDateTimeLocal(_settings["TRADING_START_TIME"]).TimeOfDay &&
-                    time.TimeOfDay < Config.ParseDateTimeLocal(_settings["TRADING_STOP_TIME"]).TimeOfDay);
+                    time.TimeOfDay < Config.ParseDateTimeLocal(_settings["TRADING_CLOSING_TIME"]).TimeOfDay);
             if (open != _tradingOpen){
                 _tradingOpen = open;
                 Log.Instance.WriteEntry("Trading " + (_tradingOpen ? "started" : "stopped"), EventLogEntryType.Information);

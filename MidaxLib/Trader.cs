@@ -37,7 +37,6 @@ namespace MidaxLib
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals stopped", EventLogEntryType.Information);
             }
             MarketDataConnection.Instance.StopListening();
-            PublisherConnection.Instance.Close();
         }
 
         public void CloseAllPositions(DateTime time)

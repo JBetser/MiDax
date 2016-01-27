@@ -185,30 +185,34 @@ namespace MidaxLib
         void IAbstractStreamingClient.UnsubscribeTradeSubscription(SubscribedTableKey tableListener)
         {
             _tradingEventTable = null;
-        }        
+        }
 
-        public virtual void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
+        string[] _placeHolders = new string[100];
+
+        public virtual void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (trade != null)
             {
                 trade.Id = "###DUMMY_TRADE_ID" + _numId++ + "###";
                 trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
                 trade.ConfirmationTime = trade.TradingTime;
+                _placeHolders[trade.PlaceHolder] = trade.Id;
                 onTradeBooked(trade);
-                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
+                if (_tradingEventTable != null)
+                    _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
             }
         }
 
-        void IAbstractStreamingClient.ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeBooked)
+        void IAbstractStreamingClient.ClosePosition(Trade closingTrade, DateTime time, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
-            if (trade != null)
+            if (closingTrade != null)
             {
-                var closingTrade = new Trade(trade, true, time);
-                closingTrade.Id = "###CLOSE_DUMMY_TRADE_ID" + _numId++ + "###";
+                closingTrade.Id = _placeHolders[closingTrade.PlaceHolder];
                 closingTrade.Reference = "###CLOSE_DUMMY_TRADE_REF" + _numRef++ + "###";
                 closingTrade.ConfirmationTime = time;
                 onTradeBooked(closingTrade);
-                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "DELETED", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
+                if (_tradingEventTable != null)
+                    _tradingEventTable.OnUpdate(0, closingTrade.Epic, new ReplayPositionUpdateInfo(closingTrade.Epic, closingTrade.Id, closingTrade.Reference, "DELETED", "ACCEPTED", closingTrade.Size, closingTrade.Price, closingTrade.Direction));
             }
         }
 
@@ -316,7 +320,7 @@ namespace MidaxLib
     {
         static int _numRef = 1;
 
-        public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
+        public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (trade.Direction == SIGNAL_CODE.SELL)
             {
@@ -325,7 +329,7 @@ namespace MidaxLib
                 onTradeBooked(trade);
             }
             else
-                base.BookTrade(trade, onTradeBooked);
+                base.BookTrade(trade, onTradeBooked, onBookingFailed);
         }
     }
 
@@ -333,7 +337,7 @@ namespace MidaxLib
     {
         static int _numRef = 1;
 
-        public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
+        public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (trade.Direction == SIGNAL_CODE.BUY)
             {
@@ -342,7 +346,41 @@ namespace MidaxLib
                 onTradeBooked(trade);
             }
             else
-                base.BookTrade(trade, onTradeBooked);
+                base.BookTrade(trade, onTradeBooked, onBookingFailed);
+        }
+    }
+
+    public class ReplayStreamingBrokeBuyer : ReplayStreamingClient
+    {
+        static int _numRef = 1;
+
+        public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
+        {
+            if (trade.Direction == SIGNAL_CODE.SELL)
+            {
+                trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
+                trade.ConfirmationTime = trade.TradingTime;
+                onBookingFailed(trade);
+            }
+            else
+                base.BookTrade(trade, onTradeBooked, onBookingFailed);
+        }
+    }
+
+    public class ReplayStreamingLoser : ReplayStreamingClient
+    {
+        static int _numRef = 1;
+
+        public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
+        {
+            if (trade.Direction == SIGNAL_CODE.BUY)
+            {
+                trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
+                trade.ConfirmationTime = trade.TradingTime;
+                onBookingFailed(trade);
+            }
+            else
+                base.BookTrade(trade, onTradeBooked, onBookingFailed);
         }
     }
 
@@ -464,8 +502,8 @@ namespace MidaxLib
         {
             if (trade.TradingTime == DateTimeOffset.MinValue || trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "")
                 throw new ApplicationException("Cannot insert a trade without booking information");
-            var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6},{7}{8}",
-                DATATYPE_TRADE, trade.Epic, trade.ConfirmationTime, trade.Reference, trade.Direction, trade.Price, trade.Size, trade.TradingTime,
+            var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}{9}",
+                DATATYPE_TRADE, trade.Epic, trade.ConfirmationTime, trade.Id, trade.Direction, trade.Price, trade.Size, trade.TradingTime, trade.Reference,
                 Environment.NewLine);
             _csvTradeStringBuilder.Append(newLine);
         }
@@ -608,6 +646,13 @@ namespace MidaxLib
             {
                 string error = "Test failed: trade " + trade.Epic + " expected Size " +
                    _expectedTradeData[tradeKey].Size.ToString() + " != " + trade.Size.ToString();
+                Log.Instance.WriteEntry(error, EventLogEntryType.Error);
+                throw new ApplicationException(error);
+            }
+            if (_expectedTradeData[tradeKey].Id != trade.Id)
+            {
+                string error = "Test failed: trade " + trade.Epic + " expected Id " +
+                   _expectedTradeData[tradeKey].Id + " != " + trade.Id;
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }

@@ -14,6 +14,8 @@ namespace MidaxLib
         static bool? _replay = null;
 
         MarketLevels? _marketLevels = null;
+        DateTime _closePositionTime;
+        bool _allPositionsClosed;
         public MarketLevels? Levels { get { return _marketLevels; } set { _marketLevels = value; } }
         public bool _hasEodLevels = true;
 
@@ -21,10 +23,11 @@ namespace MidaxLib
 
         public MarketData(string name_id)
         {
-            this._id = name_id.Split(':').Count() > 1 ? name_id.Split(':')[1] : name_id;
-            this._name = name_id.Split(':')[0];
-            this._values = new TimeSeries();
-            this._eventHandlers = new List<Tick>();
+            _id = name_id.Split(':').Count() > 1 ? name_id.Split(':')[1] : name_id;
+            _name = name_id.Split(':')[0];
+            _values = new TimeSeries();
+            _eventHandlers = new List<Tick>();
+            _allPositionsClosed = false;
             if (name_id.Contains("VIX"))
                 _hasEodLevels = false;
             if (!_replay.HasValue)
@@ -35,27 +38,35 @@ namespace MidaxLib
 
         public virtual void Subscribe(Tick eventHandler)
         {
+            _allPositionsClosed = false;
+            _closePositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
             Clear();
             bool subscribe = (this._eventHandlers.Count == 0);
-            this._eventHandlers.Add(eventHandler);
+            _eventHandlers.Add(eventHandler);
             if (subscribe)
                 MarketDataConnection.Instance.SubscribeMarketData(this);
         }
 
         public virtual void Unsubscribe(Tick eventHandler)
         {
-            this._eventHandlers.Remove(eventHandler);
+            _eventHandlers.Remove(eventHandler);
             if (this._eventHandlers.Count == 0)
                 MarketDataConnection.Instance.UnsubscribeMarketData(this);
         }
 
         public void Clear()
         {
-            this._values = new TimeSeries();
+            _values = new TimeSeries();
         }
 
         public void FireTick(DateTime updateTime, L1LsPriceData value)
         {
+            if (updateTime > _closePositionTime && !_allPositionsClosed)
+            {
+                Portfolio.Instance.CloseAllPositions(updateTime);
+                _allPositionsClosed = true;
+            }
+
             Price livePrice = new Price(value);
             if (!_replay.Value || value.MarketState == "REPLAY")
                 _values.Add(updateTime, livePrice);

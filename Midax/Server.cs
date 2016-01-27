@@ -60,11 +60,13 @@ public class Server
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
                 otherIndices.Add(new MarketData(dicSettings["INDEX_SNP"]));
                 var models = new List<Model>();
-                var macD = new ModelMacD(index);
-                models.Add(macD);
-                models.Add(new ModelANN(macD, stocks, new MarketData(dicSettings["VOLATILITY"]), otherIndices));
-                models.Add(new ModelMacDCascade(macD));
-                //_models.Add(new ModelMole(macD));
+                var macD_1_5_60 = new ModelMacD(index, 1, 5, 60);
+                var macD_2_10_60 = new ModelMacD(index);
+                models.Add(macD_1_5_60);
+                models.Add(macD_2_10_60);
+                models.Add(new ModelANN(macD_2_10_60, stocks, new MarketData(dicSettings["VOLATILITY"]), otherIndices));
+                //models.Add(new ModelMacDCascade(macD));
+                models.Add(new ModelMole(macD_1_5_60));
                 _trader = new Trader(models);
                 adapter.add(new MidaxIceI(_trader, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
@@ -77,13 +79,11 @@ public class Server
                 
                 var timerStart = new System.Threading.Timer(startSignalCallback);
                 var timerStop = new System.Threading.Timer(stopSignalCallback);
-                var timerClosePositions = new System.Threading.Timer(closePositionsCallback);
                 
                 // Figure how much time until PUBLISHING_STOP_TIME
                 DateTime now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
                 _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
                 DateTime stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
-                DateTime closePositionsTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
 
                 // If it's already past PUBLISHING_STOP_TIME, wait until PUBLISHING_STOP_TIME tomorrow  
                 int msUntilStartTime = 10;
@@ -93,20 +93,16 @@ public class Server
                     {
                         _startTime = _startTime.AddDays(1.0);
                         stopTime = stopTime.AddDays(1.0);
-                        if (now > closePositionsTime)
-                            closePositionsTime = closePositionsTime.AddDays(1.0);
                         msUntilStartTime = (int)((_startTime - now).TotalMilliseconds);
                     }
                 }
                 else
                     msUntilStartTime = (int)((_startTime - now).TotalMilliseconds);
                 int msUntilStopTime = (int)((stopTime - now).TotalMilliseconds);
-                int msUntilCloseTime = (int)((closePositionsTime - now).TotalMilliseconds);
                 
                 // Set the timers to elapse only once, at their respective scheduled times
                 timerStart.Change(msUntilStartTime, Timeout.Infinite);
                 timerStop.Change(msUntilStopTime, Timeout.Infinite);
-                timerClosePositions.Change(msUntilCloseTime, Timeout.Infinite);
 
                 communicator().waitForShutdown();
             }
@@ -137,13 +133,7 @@ public class Server
         {
             _trader.Stop();
             communicator().shutdown();
-        }
-
-        void closePositionsCallback(object state)
-        {
-            DateTime now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
-            _trader.CloseAllPositions(now);
-        }        
+        }      
     }
 
     static public int Main(string[] args)

@@ -17,34 +17,30 @@ namespace MidaxTester
             bool quick_test = (args.Length == 1 && args[0] == "-Q");
             bool generate = (args.Length >= 1 && args[0] == "-G");
             bool generate_to_db = ((args.Length == 2 && generate && args[1] == "-TODB") ||
-                                    (args.Length == 3 && generate && args[2] == "-TODB"));
+                                    (args.Length == 3 && generate && (args[1] == "-TODB" || args[2] == "-TODB")));
             bool generate_from_db = ((args.Length == 2 && generate && args[1] == "-FROMDB") ||
-                                    (args.Length == 3 && generate && args[2] == "-FROMDB"));
+                                    (args.Length == 3 && generate && (args[1] == "-FROMDB" || args[2] == "-FROMDB")));
             // test core functionalities
             if (!generate_to_db)
                 Core.Run(generate, generate_from_db);
 
-            // test whole daily trading batches
-            List<DateTime> tests = new List<DateTime>();
-            tests.Add(new DateTime(2016, 1, 22));
+            List<DateTime> tmp = new List<DateTime>();
+            tmp.Add(new DateTime(2016, 1, 20));
+            tmp.Add(new DateTime(2016, 1, 21));
+            tmp.Add(new DateTime(2016, 1, 22));
+            Heuristic.Run(tmp, generate, generate_from_db, generate_to_db);
+            
             /*
-            tests.Add(new DateTime(2016, 1, 4));
-            tests.Add(new DateTime(2016, 1, 5));
-            tests.Add(new DateTime(2016, 1, 6));
-            tests.Add(new DateTime(2016, 1, 7));
-            tests.Add(new DateTime(2016, 1, 8));
-            tests.Add(new DateTime(2016, 1, 11));
-            tests.Add(new DateTime(2016, 1, 12));
-            tests.Add(new DateTime(2016, 1, 13));
-            tests.Add(new DateTime(2016, 1, 14));
-            tests.Add(new DateTime(2016, 1, 15));
-            tests.Add(new DateTime(2016, 1, 18));*/
             if (!quick_test)
             {
+                // test whole daily trading batches
+                List<DateTime> tests = new List<DateTime>();
+                tests.Add(new DateTime(2016, 1, 22));
+
                 MacD.Run(tests, generate, generate_from_db, generate_to_db);
                 Heuristic.Run(tests, generate, generate_from_db, generate_to_db);
                 ANN.Run(tests, generate, generate_from_db, generate_to_db);
-            }
+            }*/
 
             string statusSuccess = generate ? "Tests generated successfully" : "Tests passed successfully";
             Console.WriteLine(statusSuccess);

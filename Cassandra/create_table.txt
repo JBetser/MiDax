@@ -82,6 +82,7 @@ CREATE TABLE businessdata.trades (
   size int,
   stockid text,
   trading_time timestamp,
+  traderef text,
   PRIMARY KEY (tradeid)
 );
 
@@ -93,6 +94,7 @@ CREATE TABLE businessdata.dummytrades (
   size int,
   stockid text,
   trading_time timestamp,
+  traderef text,
   PRIMARY KEY (tradeid)
 );
 

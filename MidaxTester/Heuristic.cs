@@ -18,7 +18,7 @@ namespace MidaxTester
                 Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
             Config.Settings["TIMESERIES_MAX_RECORD_TIME_HOURS"] = "12";
-            Config.Settings["TRADING_SIGNAL"] = "MacDCas_10_60_100_IX.D.DAX.DAILY.IP";
+            Config.Settings["TRADING_SIGNAL"] = "Mole_1_5_IX.D.DAX.DAILY.IP";
 
             string action = generate ? "Generating" : "Testing";
 
@@ -29,10 +29,10 @@ namespace MidaxTester
                 mktdataFiles.Add(string.Format("..\\..\\expected_results\\heuristic_{0}_{1}_{2}.csv", test.Day, test.Month, test.Year));
                 Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
                 Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 6, 45, 0);
-                Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 10, 30, 0);
+                Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 22, 0, 0);
                 Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 8, 0, 0);
-                Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 10, 0, 0);
-                Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 9, 30, 0);
+                Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 21, 30, 0);
+                Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 16, 30, 0);
                 if (generate)
                 {
                     if (!publish_to_db)
@@ -41,17 +41,15 @@ namespace MidaxTester
 
                 MarketDataConnection.Instance.Connect(null);
                 var models = new List<Model>();
-                models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 2, 10, 60));
-                models.Add(new ModelMacDCascadeTest((ModelMacD)models[0]));
+                models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 1, 5, 60));
+                //models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 2, 10, 60));
+                //models.Add(new ModelMacDCascadeTest((ModelMacD)models[0]));
                 //models.Add(new ModelMoleTest((ModelMacD)models[0]));
+                models.Add(new ModelMoleTest((ModelMacD)models[0]));
                 Console.WriteLine(action + string.Format(" the Heuristic daily record {0}-{1}-{2}...", test.Year, test.Month, test.Day));
-                foreach(var model in models)
-                    model.StartSignals(false);
-                MarketDataConnection.Instance.StartListening();
-                foreach (var model in models)
-                    model.StopSignals(false);
-                MarketDataConnection.Instance.StopListening();
-                PublisherConnection.Instance.Close();
+                var trader = new Trader(models);
+                trader.Start();
+                trader.Stop();
             }
         }
     }

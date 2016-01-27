@@ -115,7 +115,10 @@ namespace MidaxLib
         }
         public override decimal ScaleValue(decimal avg, decimal scale)
         {
-            b = avg + (b.Value - 2) * scale;
+            if ((int)b.Value == (int)SIGNAL_CODE.FAILED)
+                b = 0;
+            else
+                b = avg + (b.Value - 2) * scale;
             return b.Value;
         } 
     }
@@ -207,8 +210,9 @@ namespace MidaxLib
                 throw new ApplicationException("Cannot insert a trade without booking information");
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            _session.Execute(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, stockid, direction, size) values ('{2}', {3}, {4}, '{5}', {6}, {7})",
-                DB_BUSINESSDATA, DATATYPE_TRADE, trade.Reference, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic, Convert.ToInt32(trade.Direction), trade.Size));
+            _session.Execute(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, stockid, direction, size, price, traderef) values ('{2}', {3}, {4}, '{5}', {6}, {7}, {8}, '{9}')",
+                DB_BUSINESSDATA, DATATYPE_TRADE, trade.Id, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic, 
+                Convert.ToInt32(trade.Direction), trade.Size, trade.Price, trade.Reference));
         }
 
         public override void Insert(DateTime updateTime, Value profit)

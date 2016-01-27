@@ -78,7 +78,10 @@ namespace MidaxLib
         public virtual void StartListening()
         {
             if (_refCount++ == 0)
+            {
+                Portfolio.Instance.Subscribe();
                 _mktDataListener.StartListening();
+            }
         }
 
         public virtual void StopListening()
@@ -87,6 +90,8 @@ namespace MidaxLib
             {
                 _refCount = 0;
                 _mktDataListener.StopListening();
+                Portfolio.Instance.Unsubscribe();
+                PublisherConnection.Instance.Close();
             }
         }
 

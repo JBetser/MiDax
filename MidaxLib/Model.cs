@@ -35,19 +35,17 @@ namespace MidaxLib
             _ptf = Portfolio.Instance;
         }
 
-        protected bool OnBuy(Signal signal, DateTime time, Price value, bool check)
+        protected bool OnBuy(Signal signal, DateTime time, Price value)
         {
-            if (check)
-                return true;
             if (_tradingSignal != null)
             {
                 if (signal.Id == _tradingSignal)
-                    Buy(signal, time, value);
+                    return Buy(signal, time, signal.MarketData.TimeSeries[time].Value.Value);
             }
             return true;
         }
 
-        protected bool OnSell(Signal signal, DateTime time, Price value, bool check)
+        protected bool OnSell(Signal signal, DateTime time, Price stockValue)
         {
             if (_tradingSignal != null)
             {
@@ -57,21 +55,20 @@ namespace MidaxLib
                     {
                         if (_ptf.GetPosition(signal.MarketData.Id).Quantity >= 0)
                         {
-                            Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + value.Bid + ". Closing all positions...", EventLogEntryType.Error);
+                            Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
                             Portfolio.Instance.CloseAllPositions(time, signal.MarketData.Id);
                         }
                         return false;
                     }
-                    signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.SELL, _amount, value.Bid);
-                    if (!check)
-                        Sell(signal, time, value);
+                    signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid);
+                    return Sell(signal, time, stockValue);
                 }
-            }            
+            }
             return true;
         }
-        
-        protected abstract void Buy(Signal signal, DateTime time, Price value);
-        protected abstract void Sell(Signal signal, DateTime time, Price value);
+
+        protected abstract bool Buy(Signal signal, DateTime time, Price stockValue);
+        protected abstract bool Sell(Signal signal, DateTime time, Price stockValue);
 
         protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)
         {
@@ -94,7 +91,7 @@ namespace MidaxLib
             foreach (Indicator ind in _mktIndicators)
                 ind.Subscribe(OnUpdateIndicator);
             foreach (Signal sig in _mktSignals)
-                sig.Subscribe(OnBuy, OnSell);  
+                sig.Subscribe(OnBuy, OnSell);
             if (startListening)
                 MarketDataConnection.Instance.StartListening();
         }
@@ -113,10 +110,7 @@ namespace MidaxLib
             finally
             {
                 if (stopListening)
-                {
-                    MarketDataConnection.Instance.StopListening();
-                    PublisherConnection.Instance.Close();
-                }
+                    MarketDataConnection.Instance.StopListening();                    
                 foreach (Signal sig in _mktSignals)
                 {
                     sig.Unsubscribe();
@@ -175,23 +169,24 @@ namespace MidaxLib
             _mktEODIndicators.Add(new IndicatorLevelMean(_daxIndex));
         }
 
-        protected override void Buy(Signal signal, DateTime time, Price value)
+        protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
             if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
             {
-                signal.Trade.Price = value.Offer;
+                signal.Trade.Price = stockValue.Offer;
                 _ptf.ClosePosition(signal.Trade, time);
                 string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.MarketData.Id + " " + value.Offer, EventLogEntryType.Information);
+                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.MarketData.Id + " " + stockValue.Offer, EventLogEntryType.Information);
             }
+            return true;
         }
 
-        protected override void Sell(Signal signal, DateTime time, Price value)
+        protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
             if (_ptf.GetPosition(_daxIndex.Id).Quantity > 0)
             {
                 _ptf.BookTrade(signal.Trade);
-                Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + value.Offer, EventLogEntryType.Error);
+                Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + stockValue.Offer, EventLogEntryType.Error);
             }
             else if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
             {
@@ -199,9 +194,10 @@ namespace MidaxLib
                 {
                     _ptf.BookTrade(signal.Trade);
                     string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.MarketData.Id + " " + value.Bid, EventLogEntryType.Information);
+                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.MarketData.Id + " " + stockValue.Bid, EventLogEntryType.Information);
                 }
             }
+            return true;
         }        
     }
 }

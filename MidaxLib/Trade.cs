@@ -18,9 +18,10 @@ namespace MidaxLib
         DateTime _confirmationTime = DateTime.MinValue;
         decimal _price;
         int _placeHolder = 0;
+        bool _failed = false;
         
         public string Epic { get { return _epic; } }
-        public SIGNAL_CODE Direction { get { return _direction; } }
+        public SIGNAL_CODE Direction { get { return _direction; } set { _direction = value; } }
         public int Size { get { return _size; } }
         public string Id { get { return _id; } set { _id = value; } }
         public string Reference { get { return _reference; } set { _reference = value; } }
@@ -29,13 +30,14 @@ namespace MidaxLib
         public decimal Price { get { return _price; } set { _price = value; } }
         public int PlaceHolder { get { return _placeHolder; } set { _placeHolder = value; } }
 
-        public Trade(DateTime tradingTime, string epic, SIGNAL_CODE direction, int size, decimal price)
+        public Trade(DateTime tradingTime, string epic, SIGNAL_CODE direction, int size, decimal price, int placeHolder = 0)
         {
             _tradingTime = tradingTime;
             _epic = epic;
             _direction = direction;
             _size = size;
             _price = price;
+            _placeHolder = placeHolder;
         }
 
         public Trade(Trade cpy, bool opposite = false, DateTime? trading_time = null)
@@ -56,6 +58,7 @@ namespace MidaxLib
             this._reference = cpy._reference;
             this._id = cpy._id;
             this._price = cpy._price;
+            this._placeHolder = cpy._placeHolder;
         }
 
         public Trade(Row row)

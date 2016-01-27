@@ -51,19 +51,61 @@ function processResponses(jsonData) {
         if (marketData.lastIndexOf("GetSignalData", 0) === 0) {
             if (profit == null)
                 profit = 0;
-            var signalProfit = 0;
-            var buyFirst = jsonData[marketData].response[jsonData[marketData].response.length - 1].b < jsonData[marketData].response[jsonData[marketData].response.length - 2].b;
-            if (buyFirst)
-                jsonData[marketData].response.splice(jsonData[marketData].response.length - 1, 1);
-            var skipLast = (jsonData[marketData].response.length % 2 == 1);
-            var buy = !skipLast;
+            var buyValue = 0;
+            var sellValue = 0;
             jsonData[marketData].response.forEach(function (d) {
-                if (skipLast)
-                    skipLast = false;
-                else
-                    signalProfit += d.o * (buy ? -1 : 1);
-                buy = !buy;
+                if (buyValue == 0)
+                    buyValue = d.b;
+                else if (buyValue > d.b){
+                    sellValue = buyValue;
+                    buyValue = d.b;
+                }
+                else if (buyValue < d.b){
+                    sellValue = d.b;
+                }
             });
+            var buyFirst = false;
+            do{
+                buyFirst = jsonData[marketData].response[jsonData[marketData].response.length - 1].b == buyValue;
+                if (buyFirst)
+                    jsonData[marketData].response.splice(jsonData[marketData].response.length - 1, 1);
+            } while(buyFirst);
+            var nbBuy = 0;
+            var nbSell = 0;            
+            var signalProfit = 0;
+            jsonData[marketData].response.forEach(function (d) {
+                signalProfit += d.o * (d.b == buyValue ? -1 : 1);
+                if (d.b == buyValue)
+                    nbBuy++;
+                else
+                    nbSell++;
+            });
+            if (nbBuy != nbSell) {
+                if (nbBuy > nbSell) {
+                    var buyLast = false;
+                    do {
+                        buyLast = jsonData[marketData].response[0].b == buyValue;
+                        if (buyLast)
+                            jsonData[marketData].response.splice(0, 1);
+                    } while (buyLast);
+                }
+                else {
+                    var sellLast = false;
+                    do {
+                        sellLast = jsonData[marketData].response[0].b == sellValue;
+                        if (sellLast)
+                            jsonData[marketData].response.splice(0, 1);
+                    } while (sellLast);
+                }
+                signalProfit = 0;
+                jsonData[marketData].response.forEach(function (d) {
+                    signalProfit += d.o * (d.b == buyValue ? -1 : 1);
+                    if (d.b == buyValue)
+                        nbBuy++;
+                    else
+                        nbSell++;
+                });
+            }
             profit += signalProfit;
         }
     }
@@ -132,7 +174,7 @@ function processResponses(jsonData) {
 
     if (profit != null)
         profit = Math.round(profit * 100) / 100;
-    var perfSuffix = (profit != null ? " Performance: " + profit : "");
+    var perfSuffix = (profit != null ? " Performance: " + (Math.abs(profit) > 1000 ? "?" : profit) : "");
     svg.append("text")
         .attr("x", (width / 2))
         .attr("y", 5 - (margin.top / 2))
@@ -191,7 +233,10 @@ function recursiveAPICalls(requests, idx, sync)
             if (profit != null) {
                 if (sync['profits'] == null)
                     sync['profits'] = 0;
-                sync['profits'] += profit;
+                if (sync['profits'] != "?")
+                    sync['profits'] += profit;
+                if (Math.abs(profit) > 1000)
+                    sync['profits'] = "?";
                 sync['processedDays'] += 1;
                 if (sync['processedDays'] == sync['nbDays'] && sync['nbDays'] > 1)
                     IG_internalAlertClient("Total profits: " + sync['profits'], false, "Model results");

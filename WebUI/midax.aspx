@@ -229,24 +229,23 @@
              <tr><th><a>To date:</a>
              <input class="form-control input-medium" placeholder="" id="datepickerend"></th></tr></table>
              <select class="combobox input-medium" id="timestart" >
-               <option value="">07:00</option>
-               <option value="1">07:30</option>
-               <option value="2">08:00</option>
-               <option value="2">08:30</option>
-               <option value="3">09:00</option>
-               <option value="4">10:00</option>
-               <option value="5">11:00</option>
-               <option value="6">12:00</option>
-               <option value="7">13:00</option>
-               <option value="8">14:00</option>
-               <option value="9">15:00</option>
-               <option value="10">16:00</option>
-               <option value="11">17:00</option>
+               <option value="">08:00</option>
+               <option value="1">08:30</option>
+               <option value="2">09:00</option>
+               <option value="3">10:00</option>
+               <option value="4">11:00</option>
+               <option value="5">12:00</option>
+               <option value="6">13:00</option>
+               <option value="7">14:00</option>
+               <option value="8">15:00</option>
+               <option value="9">16:00</option>
+               <option value="10">17:00</option>
              </select>
              <select class="combobox input-medium" id="timestop">
                <option value="">21:00</option>
-               <option value="1">29:00</option>
-               <option value="2">18:00</option>
+               <option value="1">20:00</option>
+               <option value="2">19:00</option>
+               <option value="3">18:00</option>
                <option value="4">17:00</option>
                <option value="5">16:00</option>
                <option value="6">15:00</option>
@@ -256,9 +255,6 @@
                <option value="10">11:00</option>
                <option value="11">10:00</option>
                <option value="12">09:00</option>
-               <option value="13">08:30</option>
-               <option value="13">08:00</option>
-               <option value="14">07:30</option>
              </select>
                <br />
              <select class="combobox input-large" id="equity">
@@ -298,8 +294,8 @@
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>
-               <option value="WMA_2#WMA_10">WMA 2mn/10mn</option>
-               <option value="WMA_10#WMA_60">WMA 10mn/1h</option>
+               <option value="WMA_1#WMA_5#WMA_60">WMA 1mn/5mn/1hr</option>
+               <option value="WMA_2#WMA_10#WMA_60">WMA 2mn/10mn/1hr</option>
                <!--option value="LR_0_1_0">Linear regression 1mn</option>
                <option value="LR_0_5_0">Linear regression 5mn</option>
                <option value="LR_0_30_0">Linear regression 30mn</option-->
@@ -312,6 +308,7 @@
                <option value="MacDCas_10_60_50">MacD Cascade 10mn/1h 0.5pts</option>
                <option value="MacDCas_10_60_100">MacD Cascade 10mn/1h 1pt</option>
                <option value="MacDCas_10_60_200">MacD Cascade 10mn/1h 2pts</option>
+               <option value="Mole_1_5">Mole 1mn/5mn</option>
                <option value="Mole_2_10">Mole 2mn/10mn</option>
                <option value="ANNWMA_4_2">ANN WMA</option>
              </select>          

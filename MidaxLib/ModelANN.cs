@@ -68,23 +68,24 @@ namespace MidaxLib
             }
         }
 
-        protected override void Buy(Signal signal, DateTime time, Price value)
+        protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
             if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
             {
-                signal.Trade.Price = value.Offer;
+                signal.Trade.Price = stockValue.Offer;
                 _ptf.ClosePosition(signal.Trade, time);
                 string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.MarketData.Id + " " + value.Offer, EventLogEntryType.Information);
+                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.MarketData.Id + " " + stockValue.Offer, EventLogEntryType.Information);
             }
+            return true;
         }
 
-        protected override void Sell(Signal signal, DateTime time, Price value)
+        protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
             if (_ptf.GetPosition(_daxIndex.Id).Quantity > 0)
             {
                 _ptf.BookTrade(signal.Trade);
-                Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + value.Offer, EventLogEntryType.Error);
+                Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + stockValue.Offer, EventLogEntryType.Error);
             }
             else if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
             {
@@ -92,9 +93,10 @@ namespace MidaxLib
                 {
                     _ptf.BookTrade(signal.Trade);
                     string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.MarketData.Id + " " + value.Bid, EventLogEntryType.Information);
+                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.MarketData.Id + " " + stockValue.Bid, EventLogEntryType.Information);
                 }
             }
+            return true;
         }
     }
 }

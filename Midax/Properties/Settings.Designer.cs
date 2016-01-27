@@ -217,7 +217,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("MacD_10_60_IX.D.DAX.DAILY.IP")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Mole_1_5_IX.D.DAX.DAILY.IP")]
         public string TRADING_SIGNAL {
             get {
                 return ((string)(this["TRADING_SIGNAL"]));

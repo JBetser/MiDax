@@ -23,8 +23,8 @@ namespace MidaxLib
         void Resume(IHandyTableListener tableListener);
         SubscribedTableKey SubscribeToPositions(IHandyTableListener tableListener);
         void UnsubscribeTradeSubscription(SubscribedTableKey tableListener);
-        void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked);
-        void ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeClosed);
+        void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed);
+        void ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeClosed, Portfolio.TradeBookedEvent onBookingFailed);
         void GetMarketDetails(MarketData mktData);
     }
 
@@ -182,7 +182,7 @@ namespace MidaxLib
             _igStreamApiClient.UnsubscribeTableKey(tableListener);
         }
 
-        public async void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked)
+        public async void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             CreatePositionRequest cpr = new CreatePositionRequest();
             cpr.epic = trade.Epic;
@@ -204,11 +204,13 @@ namespace MidaxLib
             }
             else
             {
+                if (onBookingFailed != null)
+                    onBookingFailed(trade);
                 Log.Instance.WriteEntry("Trade booking failed : " + createPositionResponse.StatusCode, EventLogEntryType.Error);
             }
         }
-        
-        public void ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeClosed)
+
+        public void ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeClosed, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (trade == null)
             {
@@ -217,8 +219,7 @@ namespace MidaxLib
             }
             else
                 Log.Instance.WriteEntry("Closing trade id " + (trade.Id == null ? "null" : trade.Id) + " ref " + (trade.Reference == null ? "null" : trade.Reference) + "...");
-            var oppositeTrade = new Trade(trade, true, time);
-            BookTrade(oppositeTrade, onTradeClosed);
+            BookTrade(trade, onTradeClosed, onBookingFailed);
         }
 
         void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
