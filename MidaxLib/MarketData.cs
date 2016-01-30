@@ -26,7 +26,8 @@ namespace MidaxLib
             _id = name_id.Split(':').Count() > 1 ? name_id.Split(':')[1] : name_id;
             _name = name_id.Split(':')[0];
             _values = new TimeSeries();
-            _eventHandlers = new List<Tick>();
+            _updateHandlers = new List<Tick>();
+            _tickHandlers = new List<Tick>();
             _allPositionsClosed = false;
             if (name_id.Contains("VIX"))
                 _hasEodLevels = false;
@@ -36,21 +37,25 @@ namespace MidaxLib
 
         public delegate void Tick(MarketData mktData, DateTime time, Price value);
 
-        public virtual void Subscribe(Tick eventHandler)
+        public virtual void Subscribe(Tick updateHandler, Tick tickerHandler)
         {
             _allPositionsClosed = false;
             _closePositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
             Clear();
-            bool subscribe = (this._eventHandlers.Count == 0);
-            _eventHandlers.Add(eventHandler);
+            bool subscribe = (this._updateHandlers.Count == 0);
+            _updateHandlers.Add(updateHandler);
+            if (tickerHandler != null)
+                _tickHandlers.Add(tickerHandler);
             if (subscribe)
                 MarketDataConnection.Instance.SubscribeMarketData(this);
         }
 
-        public virtual void Unsubscribe(Tick eventHandler)
+        public virtual void Unsubscribe(Tick updateHandler, Tick tickerHandler)
         {
-            _eventHandlers.Remove(eventHandler);
-            if (this._eventHandlers.Count == 0)
+            _updateHandlers.Remove(updateHandler);
+            if (tickerHandler != null)
+                _updateHandlers.Remove(tickerHandler);
+            if (this._updateHandlers.Count == 0)
                 MarketDataConnection.Instance.UnsubscribeMarketData(this);
         }
 
@@ -70,7 +75,9 @@ namespace MidaxLib
             Price livePrice = new Price(value);
             if (!_replay.Value || value.MarketState == "REPLAY")
                 _values.Add(updateTime, livePrice);
-            foreach (Tick ticker in this._eventHandlers)
+            foreach (Tick ticker in this._updateHandlers)
+                ticker(this, updateTime, livePrice);
+            foreach (Tick ticker in this._tickHandlers)
                 ticker(this, updateTime, livePrice);
             Publish(updateTime, livePrice);
         }
@@ -90,7 +97,8 @@ namespace MidaxLib
         protected TimeSeries _values;
         protected string _id;
         protected string _name;
-        protected List<Tick> _eventHandlers;
+        protected List<Tick> _updateHandlers;
+        protected List<Tick> _tickHandlers;
 
         public string Id
         {

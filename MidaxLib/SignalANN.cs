@@ -47,7 +47,6 @@ namespace MidaxLib
             _ann.CalculateOutput(_inputValues);
             var output = _ann.GetOutput()[0];
 
-            _values.Add(updateTime, new Price((decimal)output));
             if (output > 0.5 && _signalCode != SIGNAL_CODE.BUY)
             {
                 tradingOrder = _onBuy;

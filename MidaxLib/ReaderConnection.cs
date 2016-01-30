@@ -109,7 +109,8 @@ namespace MidaxLib
         {
             Trade trade = new Trade(Config.ParseDateTimeLocal(values[7]), values[1], (SIGNAL_CODE)Enum.Parse(typeof(SIGNAL_CODE), values[4]), int.Parse(values[6]), (decimal)double.Parse(values[5]));
             trade.ConfirmationTime = Config.ParseDateTimeLocal(values[2]);
-            trade.Reference = values[3];
+            trade.Id = values[3];
+            trade.Reference = values[8];
             trades.Add(trade);
         }
 

@@ -1,23 +1,19 @@
- MidaxTester/expected_results/mktdata_26_8_2015.csv | 4 ++--
+ MidaxTester/expected_results/core_22_1_2016.csv | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/MidaxTester/expected_results/mktdata_26_8_2015.csv b/MidaxTester/expected_results/mktdata_26_8_2015.csv
-index 72787e9..32fe852 100644
---- a/MidaxTester/expected_results/mktdata_26_8_2015.csv
-+++ b/MidaxTester/expected_results/mktdata_26_8_2015.csv
-@@ -1,5 +1,5 @@
- stocks,IX.D.DAX.DAILY.IP,26/08/2015 08:40:16,DAX,9967.5,9968.5,0
--stocks,IX.D.DAX.DAILY.IP,26/08/2015 08:40:18,DAX,9969,9970,0
-+stocks,IX.D.DAX.DAILY.IP,26/08/2015 08:40:15,DAX,9969,9970,0
- stocks,IX.D.DAX.DAILY.IP,26/08/2015 08:40:19,DAX,9969.5,9970.5,0
- stocks,IX.D.DAX.DAILY.IP,26/08/2015 08:40:22,DAX,9968.5,9969.5,0
- stocks,IX.D.DAX.DAILY.IP,26/08/2015 08:40:23,DAX,9968.8,9969.8,0
-@@ -2875,7 +2875,7 @@ indicators,WMA_10_IX.D.DAX.DAILY.IP,26/08/2015 08:59:59,9971.7273333333333333333
- indicators,WMA_1_IX.D.DAX.DAILY.IP,26/08/2015 09:00:00,9975.600000000000000000000080
- indicators,WMA_5_IX.D.DAX.DAILY.IP,26/08/2015 09:00:00,9968.658833333333333333332932
- indicators,WMA_10_IX.D.DAX.DAILY.IP,26/08/2015 09:00:00,9971.740000000000000000000802
--indicators,WMA_1D_IX.D.DAX.DAILY.IP,26/08/2015 23:59:59,9973.319141068080279635978306
-+indicators,WMA_1D_IX.D.DAX.DAILY.IP,26/08/2015 23:59:59,9964.360169
+diff --git a/MidaxTester/expected_results/core_22_1_2016.csv b/MidaxTester/expected_results/core_22_1_2016.csv
+index a697d80..9ab45bf 100644
+--- a/MidaxTester/expected_results/core_22_1_2016.csv
++++ b/MidaxTester/expected_results/core_22_1_2016.csv
+@@ -3,9 +3,9 @@ marketlevels,LVLHigh_IX.D.DAX.DAILY.IP,9666.3
+ marketlevels,LVLCloseBid_IX.D.DAX.DAILY.IP,9576.4
+ marketlevels,LVLCloseOffer_IX.D.DAX.DAILY.IP,9583.4
  
- signals,MacD_1_5_IX.D.DAX.DAILY.IP,26/08/2015 08:45:31, ###DUMMY_TRADE###,3,9957.5
- signals,MacD_1_5_IX.D.DAX.DAILY.IP,26/08/2015 08:49:19, ###DUMMY_TRADE###,2,9970.8
+-stocks,IX.D.DAX.DAILY.IP,22/01/2016 08:30:00,DAX,9740.3,9741.3,0
+ stocks,IX.D.DAX.DAILY.IP,22/01/2016 08:30:01,DAX,9739.8,9740.8,0
+-stocks,IX.D.DAX.DAILY.IP,22/01/2016 08:30:02,DAX,9740.8,9741.8,0
++stocks,IX.D.DAX.DAILY.IP,22/01/2016 08:30:00,DAX,9740.3,9741.3,0
++stocks,IX.D.DAX.DAILY.IP,22/01/2016 08:30:02,DAX,9740.8,9750,0
+ stocks,IX.D.DAX.DAILY.IP,22/01/2016 08:30:03,DAX,9740.5,9741.5,0
+ stocks,IX.D.DAX.DAILY.IP,22/01/2016 08:30:04,DAX,9740,9741,0
+ stocks,IX.D.DAX.DAILY.IP,22/01/2016 08:30:05,DAX,9740.3,9741.3,0

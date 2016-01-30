@@ -168,43 +168,32 @@ namespace MidaxTester
                 model = new ModelMacDTest(index);
                 MarketDataConnection.Instance.Connect(null);
                 Console.WriteLine(action + " trade booking...");
-                var tradeTime = Config.ParseDateTimeLocal(dicSettings["TRADING_CLOSING_TIME"]);
+                var tradeTime = Config.ParseDateTimeLocal(dicSettings["TRADING_CLOSING_TIME"]).AddSeconds(-1);
                 var tradeTest = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 10000m);
                 var expectedTrades = new Dictionary<KeyValuePair<string, DateTime>, Trade>();
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = tradeTest;
-                ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null); 
-                model.BookTrade(tradeTest);
+                ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null);
+                model.PTF.Subscribe();
+                model.PTF.BookTrade(tradeTest);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != -10)
                     throw new ApplicationException("SELL Trade booking error");
                 var expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.BUY, 10, 10000m);
-                expectedTrade.Reference = "###DUMMY_TRADE_REF2###";
+                expectedTrade.Reference = "###CLOSE_DUMMY_TRADE_REF2###";
+                expectedTrade.Id = "###DUMMY_TRADE_ID1###";
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
-                tradeTest = new Trade(tradeTest, true, tradeTime);
-                model.BookTrade(tradeTest);
+                model.PTF.ClosePosition(tradeTest, tradeTime);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 0)
                     throw new ApplicationException("Trade position closing error");
-                expectedTrade.Reference = "###DUMMY_TRADE_REF3###";                
-                model.BookTrade(tradeTest);
+                expectedTrade.Reference = "###DUMMY_TRADE_REF3###";
+                expectedTrade.Id = "###DUMMY_TRADE_ID2###";
+                model.PTF.BookTrade(new Trade(tradeTest, true, tradeTime));
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 10)
                     throw new ApplicationException("BUY Trade booking error");
-                string expected;
-                bool success = false;
-                expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 20000m);
+                expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 0m);
                 expectedTrade.Reference = "###CLOSE_DUMMY_TRADE_REF4###";
+                expectedTrade.Id = "###DUMMY_TRADE_ID2###";
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
-                try
-                {
-                    Portfolio.Instance.CloseAllPositions(tradeTest.TradingTime);
-                }
-                catch (Exception exc)
-                {
-                    expected = "Test failed: trade IX.D.DAX.DAILY.IP expected Price 20000 != 10000";
-                    success = (exc.Message == expected);
-                    if (!success)
-                        model.ProcessError(exc.Message, expected);
-                }
-                if (!success)
-                    model.ProcessError("An expected exception has not been thrown");
+                Portfolio.Instance.CloseAllPositions(tradeTest.TradingTime);
 
                 // test synchronization issues with the broker
                 List<string> testsSync = new List<string>();
@@ -233,6 +222,8 @@ namespace MidaxTester
                 testError.Add(@"..\..\expected_results\error.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testError);
                 var modelErr = new ModelMacDTest(index);
+                string expected;
+                bool success = false;
                 try
                 {
                     MarketDataConnection.Instance.Connect(null);
@@ -289,7 +280,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:35 expected value 9725.60333333333 != 9725.595000000000000000000078";
+                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:31 expected value 9735.93083333334 != 9735.965000000000000000000078";
                     success = (exc.Message == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);

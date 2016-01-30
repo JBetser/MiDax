@@ -318,12 +318,14 @@ namespace MidaxLib
     // this crazy client never updates the positions
     public class ReplayStreamingCrazySeller : ReplayStreamingClient
     {
+        static int _numId = 1;
         static int _numRef = 1;
 
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (trade.Direction == SIGNAL_CODE.SELL)
             {
+                trade.Id = "###DUMMY_TRADE_ID" + _numId++ + "###";
                 trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onTradeBooked(trade);
@@ -335,12 +337,14 @@ namespace MidaxLib
 
     public class ReplayStreamingCrazyBuyer : ReplayStreamingClient
     {
+        static int _numId = 1;
         static int _numRef = 1;
 
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (trade.Direction == SIGNAL_CODE.BUY)
             {
+                trade.Id = "###DUMMY_TRADE_ID" + _numId++ + "###";
                 trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onTradeBooked(trade);
@@ -352,12 +356,14 @@ namespace MidaxLib
 
     public class ReplayStreamingBrokeBuyer : ReplayStreamingClient
     {
+        static int _numId = 1;
         static int _numRef = 1;
 
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (trade.Direction == SIGNAL_CODE.SELL)
             {
+                trade.Id = "###DUMMY_TRADE_ID" + _numId++ + "###";
                 trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onBookingFailed(trade);
@@ -369,12 +375,14 @@ namespace MidaxLib
 
     public class ReplayStreamingLoser : ReplayStreamingClient
     {
+        static int _numId = 1;
         static int _numRef = 1;
 
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (trade.Direction == SIGNAL_CODE.BUY)
             {
+                trade.Id = "###DUMMY_TRADE_ID" + _numId++ + "###";
                 trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
                 trade.ConfirmationTime = trade.TradingTime;
                 onBookingFailed(trade);
@@ -609,16 +617,18 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue)
         {
-            if (((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Bid != code) ||
-                Math.Abs(_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Offer - stockvalue) > TOLERANCE)
+            var time = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day,
+                updateTime.Hour, updateTime.Minute, updateTime.Second);
+            if (((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(time).Value.Value.Bid != code) ||
+                Math.Abs(_expectedSignalData[signal.Id].Value(time).Value.Value.Offer - stockvalue) > TOLERANCE)
             {
                 string error;
-                if ((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Bid != code)
-                    error = "Test failed: signal " + signal.Name + " time " + updateTime.ToShortTimeString() + " expected value " +
-                   ((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Bid).ToString() + " != " + code.ToString();
+                if ((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(time).Value.Value.Bid != code)
+                    error = "Test failed: signal " + signal.Name + " time " + time.ToShortTimeString() + " expected value " +
+                   ((SIGNAL_CODE)_expectedSignalData[signal.Id].Value(time).Value.Value.Bid).ToString() + " != " + code.ToString();
                 else
-                    error = "Test failed: signal stock value " + signal.Name + " time " + updateTime.ToShortTimeString() + " expected value " +
-                   (_expectedSignalData[signal.Id].Value(updateTime).Value.Value.Offer).ToString() + " != " + stockvalue.ToString();
+                    error = "Test failed: signal stock value " + signal.Name + " time " + time.ToShortTimeString() + " expected value " +
+                   (_expectedSignalData[signal.Id].Value(time).Value.Value.Offer).ToString() + " != " + stockvalue.ToString();
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }
@@ -627,7 +637,8 @@ namespace MidaxLib
         public override void Insert(Trade trade)
         {
             _nbTrades++;
-            var tradeKey = new KeyValuePair<string, DateTime>(trade.Epic, trade.TradingTime);
+            var tradeKey = new KeyValuePair<string, DateTime>(trade.Epic, new DateTime(trade.TradingTime.Year, trade.TradingTime.Month, trade.TradingTime.Day, 
+                trade.TradingTime.Hour, trade.TradingTime.Minute, trade.TradingTime.Second));
             if (Math.Abs(_expectedTradeData[tradeKey].Price - trade.Price) > TOLERANCE)
             {
                 string error = "Test failed: trade " + trade.Epic + " expected Price " +

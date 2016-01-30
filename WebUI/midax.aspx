@@ -308,8 +308,8 @@
                <option value="MacDCas_10_60_50">MacD Cascade 10mn/1h 0.5pts</option>
                <option value="MacDCas_10_60_100">MacD Cascade 10mn/1h 1pt</option>
                <option value="MacDCas_10_60_200">MacD Cascade 10mn/1h 2pts</option>
-               <option value="Mole_1_5">Mole 1mn/5mn</option>
-               <option value="Mole_2_10">Mole 2mn/10mn</option>
+               <option value="Mole_1_5_60">Mole 1mn/5mn/1h</option>
+               <option value="Mole_2_10_60">Mole 2mn/10mn/1h</option>
                <option value="ANNWMA_4_2">ANN WMA</option>
              </select>          
              <button type="button" id="GO" class="btn btn-primary">

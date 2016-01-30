@@ -107,7 +107,6 @@ namespace MidaxLib
         protected MarketData _asset = null;
         protected Signal.Tick _onBuy = null;
         protected Signal.Tick _onSell = null;
-        protected TimeSeries _values = null;
         protected List<Indicator> _mktIndicator = null;
         protected SIGNAL_CODE _signalCode = SIGNAL_CODE.UNKNOWN;
         protected Trade _lastTrade = null;
@@ -118,16 +117,14 @@ namespace MidaxLib
             this._name = id;
             this._asset = asset;
             this._mktIndicator = new List<Indicator>();
-            this._values = new TimeSeries();
         }
 
         public void Subscribe(Signal.Tick onBuy, Signal.Tick onSell)
         {
-            Clear();
             _onBuy = onBuy;
             _onSell = onSell;
             foreach (Indicator indicator in _mktIndicator)
-                indicator.Subscribe(OnUpdate);
+                indicator.Subscribe(OnUpdate, null);
         }
 
         public void Unsubscribe()
@@ -135,14 +132,9 @@ namespace MidaxLib
             _onBuy = null;
             _onSell = null;
             foreach (Indicator indicator in _mktIndicator)
-                indicator.Unsubscribe(OnUpdate);
+                indicator.Unsubscribe(OnUpdate, null);
         }
-
-        public void Clear()
-        {
-            this._values = new TimeSeries();
-        }
-
+        
         public string Id
         {
             get { return _id; }
@@ -152,12 +144,7 @@ namespace MidaxLib
         {
             get { return _name; }
         }
-
-        public TimeSeries Values
-        {
-            get { return _values; }
-        }
-
+        
         public MarketData MarketData
         {
             get { return _asset; }
@@ -232,27 +219,24 @@ namespace MidaxLib
                 return false;
             Price lowWMA = timeValueLow.Value.Value;
             Price highWMA = timeValueHigh.Value.Value;
-            _values.Add(updateTime, lowWMA - highWMA);
-            if (_values.Count > 1)
+            var signalValue = lowWMA - highWMA;
+            if (_signalCode == SIGNAL_CODE.UNKNOWN)
             {
-                if (_signalCode == SIGNAL_CODE.UNKNOWN)
-                {
-                    tradingOrder = _onHold;
-                    _signalCode = SIGNAL_CODE.HOLD;
-                    return false;
-                }
-                else if (_values[updateTime].Value.Value.Offer > 0)
-                {
-                    tradingOrder = _onBuy;
-                    _signalCode = SIGNAL_CODE.BUY;
-                    return true;
-                }
-                else if (_values[updateTime].Value.Value.Bid < 0)
-                {
-                    tradingOrder = _onSell;
-                    _signalCode = SIGNAL_CODE.SELL;
-                    return true;
-                }
+                tradingOrder = _onHold;
+                _signalCode = SIGNAL_CODE.HOLD;
+                return false;
+            }
+            else if (signalValue.Offer > 0)
+            {
+                tradingOrder = _onBuy;
+                _signalCode = SIGNAL_CODE.BUY;
+                return true;
+            }
+            else if (signalValue.Bid < 0)
+            {
+                tradingOrder = _onSell;
+                _signalCode = SIGNAL_CODE.SELL;
+                return true;
             }
             return false;
         }

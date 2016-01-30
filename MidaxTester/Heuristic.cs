@@ -18,7 +18,7 @@ namespace MidaxTester
                 Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
             Config.Settings["TIMESERIES_MAX_RECORD_TIME_HOURS"] = "12";
-            Config.Settings["TRADING_SIGNAL"] = "Mole_1_5_IX.D.DAX.DAILY.IP";
+            Config.Settings["TRADING_SIGNAL"] = "Mole_2_10_60_IX.D.DAX.DAILY.IP";
 
             string action = generate ? "Generating" : "Testing";
 
@@ -41,10 +41,8 @@ namespace MidaxTester
 
                 MarketDataConnection.Instance.Connect(null);
                 var models = new List<Model>();
-                models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 1, 5, 60));
-                //models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 2, 10, 60));
-                //models.Add(new ModelMacDCascadeTest((ModelMacD)models[0]));
-                //models.Add(new ModelMoleTest((ModelMacD)models[0]));
+                models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 2, 10, 60));
+                models.Add(new ModelMacDCascadeTest((ModelMacD)models[0]));
                 models.Add(new ModelMoleTest((ModelMacD)models[0]));
                 Console.WriteLine(action + string.Format(" the Heuristic daily record {0}-{1}-{2}...", test.Year, test.Month, test.Day));
                 var trader = new Trader(models);

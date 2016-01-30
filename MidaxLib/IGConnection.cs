@@ -197,16 +197,17 @@ namespace MidaxLib
 
             if (createPositionResponse && (createPositionResponse.Response != null) && (createPositionResponse.Response.dealReference != null))
             {
+                Log.Instance.WriteEntry("New trade booked successfully : " + createPositionResponse.Response.dealReference, EventLogEntryType.Information);
                 trade.Reference = createPositionResponse.Response.dealReference;
                 trade.ConfirmationTime = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
                 if (onTradeBooked != null)
                     onTradeBooked(trade);
             }
             else
-            {
+            {                
+                Log.Instance.WriteEntry("Trade booking failed : " + createPositionResponse.StatusCode, EventLogEntryType.Error);
                 if (onBookingFailed != null)
                     onBookingFailed(trade);
-                Log.Instance.WriteEntry("Trade booking failed : " + createPositionResponse.StatusCode, EventLogEntryType.Error);
             }
         }
 

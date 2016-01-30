@@ -83,7 +83,7 @@ CREATE TABLE businessdata.trades (
   stockid text,
   trading_time timestamp,
   traderef text,
-  PRIMARY KEY (tradeid)
+  PRIMARY KEY (tradeid,confirmation_time)
 );
 
 CREATE TABLE businessdata.dummytrades (
@@ -95,7 +95,7 @@ CREATE TABLE businessdata.dummytrades (
   stockid text,
   trading_time timestamp,
   traderef text,
-  PRIMARY KEY (tradeid)
+  PRIMARY KEY (tradeid,confirmation_time)
 );
 
 ALTER TABLE businessdata.dummytrades WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};

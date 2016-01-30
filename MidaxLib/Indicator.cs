@@ -12,6 +12,7 @@ namespace MidaxLib
     {
         protected List<MarketData> _mktData = null;
         bool _publishingEnabled = true;
+        bool _subscribed = false;
 
         public bool PublishingEnabled { get { return _publishingEnabled; } set { _publishingEnabled = value; } }
         public MarketData SignalStock { get { return _mktData[0]; } }
@@ -22,25 +23,37 @@ namespace MidaxLib
             _mktData = mktData;
         }
 
-        public override void Subscribe(Tick eventHandler)
+        public override void Subscribe(Tick updateHandler, Tick tickerHandler)
         {
             Clear();
-            foreach (MarketData mktData in _mktData)
-                mktData.Subscribe(OnUpdate);
-            this._eventHandlers.Add(eventHandler);
+            if (!_subscribed)
+            {
+                _subscribed = true;
+                foreach (MarketData mktData in _mktData)
+                    mktData.Subscribe(OnUpdate, OnTick);
+            }
+            this._updateHandlers.Add(updateHandler);
         }
 
-        public override void Unsubscribe(Tick eventHandler)
+        public override void Unsubscribe(Tick updateHandler, Tick tickerHandler)
         {
-            this._eventHandlers.Remove(eventHandler);
-            foreach (MarketData mktData in _mktData)
-                mktData.Unsubscribe(OnUpdate);            
+            this._updateHandlers.Remove(updateHandler);
+            if (_subscribed)
+            {
+                _subscribed = false;
+                foreach (MarketData mktData in _mktData)
+                    mktData.Unsubscribe(OnUpdate, OnTick);
+            }
         }
 
         protected virtual void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
-            _values.Add(updateTime, value);
-            foreach (Tick ticker in this._eventHandlers)
+            _values.Add(updateTime, value);            
+        }
+
+        public virtual void OnTick(MarketData mktData, DateTime updateTime, Price value)
+        {
+            foreach (Tick ticker in this._updateHandlers)
                 ticker(this, updateTime, value);
         }
 

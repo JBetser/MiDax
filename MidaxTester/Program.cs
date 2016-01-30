@@ -24,13 +24,18 @@ namespace MidaxTester
             if (!generate_to_db)
                 Core.Run(generate, generate_from_db);
 
+            /*
             List<DateTime> tmp = new List<DateTime>();
+            tmp.Add(new DateTime(2016, 1, 19));
             tmp.Add(new DateTime(2016, 1, 20));
             tmp.Add(new DateTime(2016, 1, 21));
             tmp.Add(new DateTime(2016, 1, 22));
-            Heuristic.Run(tmp, generate, generate_from_db, generate_to_db);
+            tmp.Add(new DateTime(2016, 1, 25));
+            tmp.Add(new DateTime(2016, 1, 26));
+            tmp.Add(new DateTime(2016, 1, 27));
+            tmp.Add(new DateTime(2016, 1, 28));
+            Heuristic.Run(tmp, generate, generate_from_db, generate_to_db);*/
             
-            /*
             if (!quick_test)
             {
                 // test whole daily trading batches
@@ -40,7 +45,7 @@ namespace MidaxTester
                 MacD.Run(tests, generate, generate_from_db, generate_to_db);
                 Heuristic.Run(tests, generate, generate_from_db, generate_to_db);
                 ANN.Run(tests, generate, generate_from_db, generate_to_db);
-            }*/
+            }
 
             string statusSuccess = generate ? "Tests generated successfully" : "Tests passed successfully";
             Console.WriteLine(statusSuccess);

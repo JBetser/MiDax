@@ -21,13 +21,13 @@ namespace MidaxLib
         protected TimerCallback _callbackConnectionClosed = null;
 
         protected MarketDataConnection() {
-            _mktDataListener = new MarketDataSubscription();             
+            _mktDataListener = new MarketDataSubscription();
         }
 
         protected MarketDataConnection(IAbstractStreamingClient iclient)
         {
             _apiStreamingClient = iclient;
-            _mktDataListener = new MarketDataSubscription();
+            _mktDataListener = new MarketDataSubscription(); 
         }
         
         static public MarketDataConnection Instance

@@ -87,9 +87,9 @@ namespace MidaxLib
                 mktData.GetMarketLevels();  
             // subscribe indicators and signals to market data feed
             foreach (MarketData idx in _mktIndices)
-                idx.Subscribe(OnUpdateMktData);
+                idx.Subscribe(OnUpdateMktData, null);
             foreach (Indicator ind in _mktIndicators)
-                ind.Subscribe(OnUpdateIndicator);
+                ind.Subscribe(OnUpdateIndicator, null);
             foreach (Signal sig in _mktSignals)
                 sig.Subscribe(OnBuy, OnSell);
             if (startListening)
@@ -112,29 +112,21 @@ namespace MidaxLib
                 if (stopListening)
                     MarketDataConnection.Instance.StopListening();                    
                 foreach (Signal sig in _mktSignals)
-                {
                     sig.Unsubscribe();
-                    sig.Clear();
-                }
                 foreach (Indicator ind in _mktIndicators)
                 {
-                    ind.Unsubscribe(OnUpdateIndicator);
+                    ind.Unsubscribe(OnUpdateIndicator, null);
                     ind.Clear();
                 }
                 foreach (MarketData idx in _mktIndices)
                 {
-                    idx.Unsubscribe(OnUpdateMktData);
+                    idx.Unsubscribe(OnUpdateMktData, null);
                     idx.Clear();
                 }
                 foreach (MarketData stock in _mktData)
                     stock.Clear();
             }
-        }        
-        
-        public void BookTrade(Trade trade)
-        {
-            _ptf.BookTrade(trade);
-        }
+        }   
 
         public virtual void ProcessError(string message, string expected = "")
         {            

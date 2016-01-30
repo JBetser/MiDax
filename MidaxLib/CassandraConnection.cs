@@ -254,6 +254,8 @@ namespace MidaxLib
             Row lastVersion = null;
             foreach (var version in versions)
                 lastVersion = version;
+            if (lastVersion == null)
+                return -1;
             return (int)lastVersion[0];
         }
 

@@ -68,13 +68,13 @@ namespace MidaxLib
             List<MarketData> mktData = new List<MarketData>();
             mktData.Add(_daxIndex);
             _mktData = mktData;
-            _signal = new SignalMole(_daxIndex, macD.SignalLow.IndicatorLow.Period / 60, macD.SignalLow.IndicatorHigh.Period / 60, macD.SignalLow.IndicatorLow, macD.SignalLow.IndicatorHigh);
+            _signal = new SignalMole(_daxIndex, macD.SignalLow.IndicatorLow.Period / 60, macD.SignalLow.IndicatorHigh.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, macD.SignalLow.IndicatorLow, macD.SignalLow.IndicatorHigh);
             _mktSignals.Add(_signal);
-            _signalLong = new SignalMole(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh);
+            _signalLong = new SignalMole(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh);
             _signalLong.Subscribe(new Signal.Tick(LongBuy), new Signal.Tick(LongSell));
             _tradingSet = (TradingSetMole)Portfolio.Instance.GetTradingSet(this);
-            _daxIndex.Subscribe(new MarketData.Tick(OnUpdateIndex));
-            _wmaMid.Subscribe(new MarketData.Tick(OnUpdateWMA));            
+            _daxIndex.Subscribe(new MarketData.Tick(OnUpdateIndex), null);
+            _wmaMid.Subscribe(new MarketData.Tick(OnUpdateWMA), null);            
             _tradingSet.Init(_daxIndex);
         }
 
@@ -108,7 +108,7 @@ namespace MidaxLib
 
         protected void OnUpdateWMA(MarketData indicator, DateTime updateTime, Price value)
         {
-            _tradingSet.SetReferenceLevel(((Indicator)indicator).SignalStock.Levels.Value, value.Mid(), _signal);
+            _tradingSet.SetReferenceLevel(value.Mid(), _signal);
         }
 
         public override TradingSet CreateTradingSet(IAbstractStreamingClient client)
@@ -210,6 +210,7 @@ namespace MidaxLib
                 var adjustedTime = time.AddMilliseconds(addms++); // this is to keep the trading_time unique
                 if (price >= placeHolder.Value.Trade.Price + _stopLoss)
                 {
+                    Log.Instance.WriteEntry(time + " A stop loss was hit Price " + price, EventLogEntryType.Information);
                     var tradePrice = placeHolder.Value.Trade.Price;
                     ClosePosition(new Trade(placeHolder.Value.Trade, true, adjustedTime), adjustedTime, price);
                     Log.Instance.WriteEntry(time + " A stop loss was hit: Loss " + (price - tradePrice) + " Price " + price, EventLogEntryType.Information);
@@ -217,6 +218,7 @@ namespace MidaxLib
                 }
                 else if (price <= placeHolder.Value.Trade.Price - _objective)
                 {
+                    Log.Instance.WriteEntry(time + " A win was hit: Price " + price, EventLogEntryType.Information);
                     var tradePrice = placeHolder.Value.Trade.Price;
                     ClosePosition(new Trade(placeHolder.Value.Trade, true, adjustedTime), adjustedTime, price);
                     Log.Instance.WriteEntry(time + " A win was hit: Win " + (tradePrice - price) + " Price " + price, EventLogEntryType.Information);
@@ -226,7 +228,7 @@ namespace MidaxLib
             return signaled;
         }
 
-        public void SetReferenceLevel(MarketLevels mktLevels, decimal wmaValue, Signal signal)
+        public void SetReferenceLevel(decimal wmaValue, Signal signal)
         {
             //_stopLoss = Math.Max(mktLevels.R1 - mktLevels.Pivot, mktLevels.Pivot - mktLevels.S1);            
             _signal = signal;

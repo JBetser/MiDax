@@ -65,6 +65,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TWSLib">
+      <HintPath>.\TWSLib.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Calibration.cs" />
@@ -100,6 +103,7 @@
     <Compile Include="TimeSeries.cs" />
     <Compile Include="Trade.cs" />
     <Compile Include="Trader.cs" />
+    <Compile Include="TWSConnection.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IGApi\IGPublicPcl\IGPublicPcl.csproj">
