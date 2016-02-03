@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MidaxLib;
@@ -152,6 +153,7 @@ namespace MidaxTester
             
             Console.WriteLine(action + " daily indicators...");            
             model.StopSignals();
+            Thread.Sleep(1000);
                 
             if (!dicSettings.ContainsKey("PUBLISHING_CSV"))
             {
@@ -175,6 +177,7 @@ namespace MidaxTester
                 ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null);
                 model.PTF.Subscribe();
                 model.PTF.BookTrade(tradeTest);
+                Thread.Sleep(1000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != -10)
                     throw new ApplicationException("SELL Trade booking error");
                 var expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.BUY, 10, 10000m);
@@ -182,11 +185,13 @@ namespace MidaxTester
                 expectedTrade.Id = "###DUMMY_TRADE_ID1###";
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
                 model.PTF.ClosePosition(tradeTest, tradeTime);
+                Thread.Sleep(1000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 0)
                     throw new ApplicationException("Trade position closing error");
                 expectedTrade.Reference = "###DUMMY_TRADE_REF3###";
                 expectedTrade.Id = "###DUMMY_TRADE_ID2###";
                 model.PTF.BookTrade(new Trade(tradeTest, true, tradeTime));
+                Thread.Sleep(1000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 10)
                     throw new ApplicationException("BUY Trade booking error");
                 expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 0m);

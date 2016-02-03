@@ -68,6 +68,12 @@ namespace MidaxLib
             if (_publishingEnabled)
                 PublisherConnection.Instance.Insert(updateTime, this, price.Bid);
         }
+
+        public void Publish(DateTime updateTime, decimal price)
+        {
+            if (_publishingEnabled)
+                PublisherConnection.Instance.Insert(updateTime, this, price);
+        }
     }
 
     public class IndicatorWMA : Indicator

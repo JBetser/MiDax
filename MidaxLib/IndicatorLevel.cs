@@ -39,6 +39,88 @@ namespace MidaxLib
         }
     }
 
+    public class IndicatorLow : IndicatorLevel
+    {
+        protected decimal _low = decimal.MaxValue;
+
+        public IndicatorLow(MarketData mktData)
+            : base(mktData, "Low")
+        {
+        }
+
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            if (_low > value.Bid)
+                _low = value.Bid;
+        }
+
+        public override void Publish(DateTime updateTime)
+        {
+            Publish(updateTime, _low);
+        }
+    }
+
+    public class IndicatorHigh : IndicatorLevel
+    {
+        protected decimal _high = decimal.MinValue;
+
+        public IndicatorHigh(MarketData mktData)
+            : base(mktData, "High")
+        {
+        }
+
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            if (_high < value.Offer)
+                _high = value.Offer;
+        }
+
+        public override void Publish(DateTime updateTime)
+        {
+            Publish(updateTime, _high);
+        }
+    }
+
+    public class IndicatorCloseBid : IndicatorLevel
+    {
+        protected decimal _closeBid = decimal.MinValue;
+
+        public IndicatorCloseBid(MarketData mktData)
+            : base(mktData, "CloseBid")
+        {
+        }
+
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            _closeBid = value.Bid;
+        }
+
+        public override void Publish(DateTime updateTime)
+        {
+            Publish(updateTime, _closeBid);
+        }
+    }
+
+    public class IndicatorCloseOffer : IndicatorLevel
+    {
+        protected decimal _closeOffer = decimal.MinValue;
+
+        public IndicatorCloseOffer(MarketData mktData)
+            : base(mktData, "CloseOffer")
+        {
+        }
+
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            _closeOffer = value.Offer;
+        }
+
+        public override void Publish(DateTime updateTime)
+        {
+            Publish(updateTime, _closeOffer);
+        }
+    }
+
     public class IndicatorLevelMean : IndicatorWMA, ILevelPublisher
     {
         // Whole day average

@@ -25,7 +25,7 @@ namespace MidaxLib
         void UnsubscribeTradeSubscription(SubscribedTableKey tableListener);
         void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed);
         void ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeClosed, Portfolio.TradeBookedEvent onBookingFailed);
-        void GetMarketDetails(MarketData mktData);
+        //void GetMarketDetails(MarketData mktData);
     }
 
     public class IGMidaxStreamingApiClient : IGStreamingApiClient
@@ -223,6 +223,7 @@ namespace MidaxLib
             BookTrade(trade, onTradeClosed, onBookingFailed);
         }
 
+        /*
         void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
         {
             Log.Instance.WriteEntry("Get Market Details for " + mktData.Name, EventLogEntryType.Information);
@@ -243,7 +244,7 @@ namespace MidaxLib
             }
             else
                 Log.Instance.WriteEntry("GetMarketDetails received a null result", EventLogEntryType.Error);
-        }        
+        }  */      
     }
 
     public class IGConnection : MarketDataConnection

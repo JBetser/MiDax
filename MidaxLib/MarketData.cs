@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -89,9 +90,14 @@ namespace MidaxLib
 
         public void GetMarketLevels()
         {
-            if (PublisherConnection.Instance.Database != null)
-                _marketLevels = PublisherConnection.Instance.Database.GetMarketLevels(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]), 
-                    new List<string> { _id }).Values.First();
+            if (PublisherConnection.Instance.Database != null){
+                var mktLevels = PublisherConnection.Instance.Database.GetMarketLevels(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]), 
+                    new List<string> { _id });
+                if (mktLevels.Count == 1)
+                    _marketLevels = mktLevels.Values.First();
+                else
+                    Log.Instance.WriteEntry("Could not retrieve market levels for Market Data: " + _id, EventLogEntryType.Warning);
+            }                
         }
 
         protected TimeSeries _values;

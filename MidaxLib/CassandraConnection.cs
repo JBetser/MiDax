@@ -183,7 +183,7 @@ namespace MidaxLib
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            _session.Execute(string.Format(DB_INSERTION + "(stockid, trading_time,  name,  bid,  offer,  volume) values ('{2}', {3}, '{4}', {5}, {6}, {7})",
+            executeQuery(string.Format(DB_INSERTION + "(stockid, trading_time,  name,  bid,  offer,  volume) values ('{2}', {3}, '{4}', {5}, {6}, {7})",
                 DB_HISTORICALDATA, DATATYPE_STOCK, mktData.Id, ToUnixTimestamp(updateTime), mktData.Name, price.Bid, price.Offer, price.Volume));
         }
 
@@ -191,7 +191,7 @@ namespace MidaxLib
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
+            executeQuery(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
         }
 
@@ -200,7 +200,7 @@ namespace MidaxLib
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             string tradeRef = signal.Trade == null ? null : " " + signal.Trade.Reference;
-            _session.Execute(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value, stockvalue) values ('{2}', {3}, '{4}', {5}, {6})",
+            executeQuery(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value, stockvalue) values ('{2}', {3}, '{4}', {5}, {6})",
                 DB_HISTORICALDATA, DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), tradeRef, Convert.ToInt32(code), stockvalue));
         }
 
@@ -210,8 +210,8 @@ namespace MidaxLib
                 throw new ApplicationException("Cannot insert a trade without booking information");
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            _session.Execute(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, stockid, direction, size, price, traderef) values ('{2}', {3}, {4}, '{5}', {6}, {7}, {8}, '{9}')",
-                DB_BUSINESSDATA, DATATYPE_TRADE, trade.Id, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic, 
+            executeQuery(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, stockid, direction, size, price, traderef) values ('{2}', {3}, {4}, '{5}', {6}, {7}, {8}, '{9}')",
+                DB_BUSINESSDATA, DATATYPE_TRADE, trade.Id, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic,
                 Convert.ToInt32(trade.Direction), trade.Size, trade.Price, trade.Reference));
         }
 
@@ -224,10 +224,11 @@ namespace MidaxLib
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            _session.Execute(string.Format("insert into staticdata.anncalibration(annid, stockid, version, insert_time, weights) values ('{0}', '{1}', {2}, {3}, {4})",
+            executeQuery(string.Format("insert into staticdata.anncalibration(annid, stockid, version, insert_time, weights) values ('{0}', '{1}', {2}, {3}, {4})",
                 ann.AnnId, ann.StockId, ann.Version, ToUnixTimestamp(insertTime), JsonConvert.SerializeObject(ann.Weights)));
         }
 
+        /*
         public override void Insert(MarketLevels mktDetails)
         {
             if (_session == null)
@@ -235,21 +236,21 @@ namespace MidaxLib
             var publishTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
             publishTime = new DateTime(publishTime.Year, publishTime.Month, publishTime.Day, 22, 0, 0, DateTimeKind.Local);
             var ts = ToUnixTimestamp(publishTime);
-            _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
+            executeQuery(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLHigh_" + mktDetails.AssetId, ts, mktDetails.High));
-            _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
+            executeQuery(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLLow_" + mktDetails.AssetId, ts, mktDetails.Low));
-            _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
+            executeQuery(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseBid_" + mktDetails.AssetId, ts, mktDetails.CloseBid));
-            _session.Execute(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
+            executeQuery(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseOffer_" + mktDetails.AssetId, ts, mktDetails.CloseOffer));
-        }
+        }*/
                 
         int IStaticDataConnection.GetAnnLatestVersion(string annid, string stockid)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            RowSet versions =  _session.Execute(string.Format("select version from staticdata.anncalibration where annid='{0}' and stockid='{1}' ALLOW FILTERING",
+            RowSet versions =  executeQuery(string.Format("select version from staticdata.anncalibration where annid='{0}' and stockid='{1}' ALLOW FILTERING",
                 annid, stockid));
             Row lastVersion = null;
             foreach (var version in versions)
@@ -263,7 +264,7 @@ namespace MidaxLib
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            RowSet weights = _session.Execute(string.Format("select weights from staticdata.anncalibration where annid='{0}' and stockid='{1}' and version={2} ALLOW FILTERING",
+            RowSet weights = executeQuery(string.Format("select weights from staticdata.anncalibration where annid='{0}' and stockid='{1}' and version={2} ALLOW FILTERING",
                 annid, stockid, version));
             var weightLst = new List<decimal>();
             foreach (var row in weights)
@@ -278,7 +279,7 @@ namespace MidaxLib
                 return null;
             var sets = new Dictionary<string, RowSet>();
             foreach(var id in ids)
-                sets[id] = _session.Execute(string.Format(DB_SELECTION + "where {2}id='{3}' and trading_time >= {4} and trading_time <= {5}",
+                sets[id] = executeQuery(string.Format(DB_SELECTION + "where {2}id='{3}' and trading_time >= {4} and trading_time <= {5}",
                                 DB_HISTORICALDATA, type, type.Substring(0, type.Length - 1), id, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
             return sets;
         }
@@ -328,7 +329,7 @@ namespace MidaxLib
             throw new ApplicationException("Profit reading not implemented");
         }
 
-        MarketLevels GetMarketLevels(DateTime updateTime, string epic)
+        MarketLevels? GetMarketLevels(DateTime updateTime, string epic)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
@@ -340,8 +341,8 @@ namespace MidaxLib
             string indicator = "";
             try
             {
-                indicator = "LVLHigh_" + epic;
-                value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                indicator = "High_" + epic;
+                value = executeQuery(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
                     indicator, ToUnixTimestamp(updateTime)));
                 high = (decimal)value.First()[0];
             }
@@ -349,16 +350,16 @@ namespace MidaxLib
             {
                 var errorMsg = "Could not retrieve level indicators for previous COB date. Indicator: " + indicator;
                 Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Error);
-                throw new ApplicationException(errorMsg);
+                return null;
             }
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "LVLLow_" + epic, ToUnixTimestamp(updateTime)));
+            value = executeQuery(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                "Low_" + epic, ToUnixTimestamp(updateTime)));
             decimal low = (decimal)value.First()[0];
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "LVLCloseBid_" + epic, ToUnixTimestamp(updateTime)));
+            value = executeQuery(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                "CloseBid_" + epic, ToUnixTimestamp(updateTime)));
             decimal closeBid = (decimal)value.First()[0];
-            value = _session.Execute(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "LVLCloseOffer_" + epic, ToUnixTimestamp(updateTime)));
+            value = executeQuery(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
+                "CloseOffer_" + epic, ToUnixTimestamp(updateTime)));
             decimal closeOffer = (decimal)value.First()[0];
             return new MarketLevels(epic, low, high, closeBid, closeOffer);
         }
@@ -367,13 +368,30 @@ namespace MidaxLib
         {
             var marketLevels = new Dictionary<string, MarketLevels>();
             foreach (var id in ids)
-                marketLevels[id] = GetMarketLevels(updateTime, id);
+            {
+                MarketLevels? mktLevels = GetMarketLevels(updateTime, id);
+                if (mktLevels.HasValue)
+                    marketLevels[id] = mktLevels.Value;
+            }
             return marketLevels;
         }
 
         void IReaderConnection.CloseConnection()
         {
             Close();
+        }
+
+        RowSet executeQuery(string query)
+        {
+            try
+            {
+                return _session.Execute(query);
+            }
+            catch (Exception exc)
+            {
+                Log.Instance.WriteEntry("The following query: " + query + " failed with the following exception: " + exc.Message + ". source: " + exc.Source + ". Helplink: " + exc.HelpLink + ". Stack: " + exc.StackTrace + ". Infos: " + exc.ToString(), EventLogEntryType.Error);
+            }
+            return null;
         }
 
         public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id, bool auto_select)

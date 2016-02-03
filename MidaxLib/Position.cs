@@ -112,7 +112,8 @@ namespace MidaxLib
                                             tradeSize = 0;
                                         _tradePositions[_lastTrade.Id] = tradeSize;
                                         _quantity += tradeSize;
-                                        Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);                                        
+                                        Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);
+                                        _lastTrade.Publish();
                                         return true;
                                     }
                                     else if (trade_notification["status"].ToString() == "DELETED")
@@ -125,6 +126,7 @@ namespace MidaxLib
                                         _quantity -= _tradePositions[dealId];
                                         _tradePositions.Remove(trade_notification["dealId"].ToString());
                                         Log.Instance.WriteEntry("Closed a trade: " + trade_notification["dealId"].ToString());
+                                        _incomingTrade.Publish();
                                         _lastTrade = null;
                                         _incomingTrade = null;
                                         return true;

@@ -139,6 +139,8 @@ namespace MidaxLib
             _csvReader = new StreamReader(File.OpenRead(_csvFile));
             var mktLevelsGen = getRows<MarketLevels>(updateTime, updateTime, PublisherConnection.DATATYPE_MARKETLEVELS, ids, readMarketLevelData);
             var mktLevels = new Dictionary<string, MarketLevels>();
+            if (mktLevelsGen.Count == 0)
+                return mktLevels;
             mktLevels.Add(mktLevelsGen.Keys.First(), mktLevelsGen.Values.First()[0]);
             return mktLevels;
         }

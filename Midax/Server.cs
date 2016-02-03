@@ -65,8 +65,8 @@ public class Server
                 models.Add(macD_1_5_60);
                 models.Add(macD_2_10_60);
                 models.Add(new ModelANN(macD_2_10_60, stocks, new MarketData(dicSettings["VOLATILITY"]), otherIndices));
-                //models.Add(new ModelMacDCascade(macD));
-                models.Add(new ModelMole(macD_1_5_60));
+                models.Add(new ModelMacDCascade(macD_2_10_60));
+                models.Add(new ModelMole(macD_2_10_60));
                 _trader = new Trader(models);
                 adapter.add(new MidaxIceI(_trader, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();

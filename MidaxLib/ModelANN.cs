@@ -37,7 +37,7 @@ namespace MidaxLib
             _mktIndicators.Add(_wma_high);
             _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 10));
             _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 60));
-
+                        
             var annId = "WMA_4_2";
             int lastversion = StaticDataConnection.Instance.GetAnnLatestVersion(annId, _daxIndex.Id);
             _annWeights = StaticDataConnection.Instance.GetAnnWeights(annId, _daxIndex.Id, lastversion);
@@ -45,7 +45,7 @@ namespace MidaxLib
             List<Indicator> annIndicators = new List<Indicator>();
             annIndicators.Add(_wma_low);
             annIndicators.Add(_wma_mid);
-            annIndicators.Add(_wma_high);
+            annIndicators.Add(_wma_high);            
             List<object> signalParams = new List<object>();
             signalParams.Add(_daxIndex);
             signalParams.Add(annIndicators);
@@ -58,6 +58,18 @@ namespace MidaxLib
             allIndices.AddRange(otherIndices);
             foreach (var index in allIndices)
             {
+                var indicatorLow = new IndicatorLow(index);
+                var indicatorHigh = new IndicatorHigh(index);
+                var indicatorCloseBid = new IndicatorCloseBid(index);
+                var indicatorCloseOffer = new IndicatorCloseOffer(index);
+                _mktIndicators.Add(indicatorLow);
+                _mktIndicators.Add(indicatorHigh);
+                _mktIndicators.Add(indicatorCloseBid);
+                _mktIndicators.Add(indicatorCloseOffer);
+                _mktEODIndicators.Add(indicatorLow);
+                _mktEODIndicators.Add(indicatorHigh);
+                _mktEODIndicators.Add(indicatorCloseBid);
+                _mktEODIndicators.Add(indicatorCloseOffer);                
                 _mktEODIndicators.Add(new IndicatorLevelPivot(index));
                 _mktEODIndicators.Add(new IndicatorLevelR1(index));
                 _mktEODIndicators.Add(new IndicatorLevelR2(index));

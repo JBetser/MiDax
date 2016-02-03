@@ -109,13 +109,13 @@ namespace MidaxLib
         {
             _trades.Add(newTrade);
             GetPosition(newTrade.Epic).IncomingTrade = newTrade;
-            newTrade.Publish();                
         }
 
         protected virtual void OnBookingFailed(Trade newTrade)
         {
             newTrade.Direction = SIGNAL_CODE.FAILED;
             GetPosition(newTrade.Epic).IncomingTrade = null;
+            newTrade.Id = newTrade.Reference;
             newTrade.Publish();
         }
         
@@ -247,7 +247,7 @@ namespace MidaxLib
         public void OnTradeBooked(Trade newTrade)
         {
             _positions[newTrade.PlaceHolder].IncomingTrade = newTrade;
-            publish(newTrade);
+            publishSignal(newTrade);
         }
 
         public void OnBookingFailed(Trade newTrade)
@@ -255,13 +255,13 @@ namespace MidaxLib
             _ready = false;
             newTrade.Direction = SIGNAL_CODE.FAILED;            
             _positions[newTrade.PlaceHolder].IncomingTrade = null;
-            publish(newTrade);
+            newTrade.Id = newTrade.Reference;
+            newTrade.Publish();
         }
 
-        void publish(Trade newTrade)
+        void publishSignal(Trade newTrade)
         {
             Portfolio.Instance.Trades.Add(newTrade);
-            newTrade.Publish();
             _signal.Trade = newTrade;
             PublisherConnection.Instance.Insert(newTrade.TradingTime, _signal, newTrade.Direction, newTrade.Price);
         }

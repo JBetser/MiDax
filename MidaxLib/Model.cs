@@ -103,9 +103,9 @@ namespace MidaxLib
                 Log.Instance.WriteEntry("Publishing indicator levels...", EventLogEntryType.Information);
                 foreach (var indicator in _mktEODIndicators)
                     indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
-                MarketDataConnection.Instance.PublishMarketLevels(_mktData);
-                List<MarketData> eodLevelMktData = (from mktdata in _mktIndices where mktdata.HasEODLevels select mktdata).ToList();
-                MarketDataConnection.Instance.PublishMarketLevels(eodLevelMktData);
+                //MarketDataConnection.Instance.PublishMarketLevels(_mktData);
+                //List<MarketData> eodLevelMktData = (from mktdata in _mktIndices where mktdata.HasEODLevels select mktdata).ToList();
+                //MarketDataConnection.Instance.PublishMarketLevels(eodLevelMktData);
             }
             finally
             {

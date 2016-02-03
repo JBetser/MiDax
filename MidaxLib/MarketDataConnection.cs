@@ -99,7 +99,7 @@ namespace MidaxLib
         {
             _mktDataListener.Resume();
         }
-
+        /*
         public void PublishMarketLevels(List<MarketData> mktData)
         {
             foreach (var mkt in mktData)
@@ -110,7 +110,7 @@ namespace MidaxLib
                 else
                     Log.Instance.WriteEntry("Cannot publish market levels", EventLogEntryType.Error);
             }
-        }
+        }*/
     }
 
     public class MarketDataSubscription : HandyTableListenerAdapter

@@ -1,0 +1,1 @@
+db.createUser({"user":"admin01","pwd":"adminpwd","roles":[{role:"clusterAdmin",db:"admin"},{role:"readAnyDatabase",db:"admin"},"readWrite"]},{w:"majority",wtimeout:5000})

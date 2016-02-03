@@ -99,6 +99,17 @@ namespace MidaxLib
         }
     }
 
+    class TradeBookingEvent : EventWaitHandle
+    {
+        Trade _trade;
+        public Trade Trade { get { return _trade; } }
+        public TradeBookingEvent(Trade trade)
+            : base(false, EventResetMode.AutoReset)
+        {
+            _trade = trade;
+        }
+    }
+
     public class ReplayStreamingClient : IAbstractStreamingClient
     {
         IReaderConnection _reader = null;
@@ -188,34 +199,49 @@ namespace MidaxLib
         }
 
         string[] _placeHolders = new string[100];
+        List<Timer> _bookingTimers = new List<Timer>();
 
         public virtual void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (trade != null)
             {
-                trade.Id = "###DUMMY_TRADE_ID" + _numId++ + "###";
                 trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
-                trade.ConfirmationTime = trade.TradingTime;
-                _placeHolders[trade.PlaceHolder] = trade.Id;
+                trade.ConfirmationTime = trade.TradingTime;                
                 onTradeBooked(trade);
-                if (_tradingEventTable != null)
-                    _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
+                var bookingEvent = new TradeBookingEvent(trade);
+                _bookingTimers.Add(new System.Threading.Timer(onCreateTradeNotification, bookingEvent, 100, Timeout.Infinite));
             }
+        }
+
+        void onCreateTradeNotification(object state)
+        {
+            var trade = ((TradeBookingEvent)state).Trade;
+            trade.Id = "###DUMMY_TRADE_ID" + _numId++ + "###";
+            _placeHolders[trade.PlaceHolder] = trade.Id;  
+            if (_tradingEventTable != null)
+                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
         }
 
         void IAbstractStreamingClient.ClosePosition(Trade closingTrade, DateTime time, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (closingTrade != null)
             {
-                closingTrade.Id = _placeHolders[closingTrade.PlaceHolder];
                 closingTrade.Reference = "###CLOSE_DUMMY_TRADE_REF" + _numRef++ + "###";
                 closingTrade.ConfirmationTime = time;
                 onTradeBooked(closingTrade);
-                if (_tradingEventTable != null)
-                    _tradingEventTable.OnUpdate(0, closingTrade.Epic, new ReplayPositionUpdateInfo(closingTrade.Epic, closingTrade.Id, closingTrade.Reference, "DELETED", "ACCEPTED", closingTrade.Size, closingTrade.Price, closingTrade.Direction));
+                TradeBookingEvent bookingEvent = new TradeBookingEvent(closingTrade);
+                _bookingTimers.Add(new System.Threading.Timer(onClosePositionNotification, bookingEvent, 100, Timeout.Infinite));
             }
         }
 
+        void onClosePositionNotification(object state)
+        {
+            var trade = ((TradeBookingEvent)state).Trade;
+            trade.Id = _placeHolders[trade.PlaceHolder];
+            if (_tradingEventTable != null)
+                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "DELETED", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
+        }
+        /*
         void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
         {
             var mktLevels = _reader.GetMarketLevels(_startTime, new List<string> { mktData.Id }).Values.First();
@@ -223,7 +249,7 @@ namespace MidaxLib
             mkt.epic = mktData.Id;
             mkt.high = mktLevels.High; mkt.low = mktLevels.Low; mkt.bid = mktLevels.CloseBid; mkt.offer = mktLevels.CloseOffer;
             mktData.Levels = new MarketLevels(mkt.epic, mkt.low.Value, mkt.high.Value, mkt.bid.Value, mkt.offer.Value);
-        }
+        }*/
 
         protected void replay(Dictionary<string, List<CqlQuote>> priceData, IHandyTableListener tableListener)
         {
@@ -481,6 +507,8 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
         {
+            if (updateTime == DateTimeOffset.MinValue || mktData.Id == "")
+                throw new ApplicationException("Cannot insert a market data without id and update time");
             var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6}{7}",
                 DATATYPE_STOCK, mktData.Id,
                 updateTime, mktData.Name,
@@ -491,6 +519,14 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Indicator indicator, decimal value)
         {
+            if (updateTime == DateTimeOffset.MinValue || indicator.Id == "")
+                throw new ApplicationException("Cannot insert a indicator without id and update time");
+            if (indicator.Id.Contains("Low") || indicator.Id.Contains("High") ||
+                indicator.Id.Contains("CloseBid") || indicator.Id.Contains("CloseOffer")){
+                // insert end of day level
+                Insert(indicator.Id, value);
+                return;
+            }
             var newLine = string.Format("{0},{1},{2},{3}{4}",
                 DATATYPE_INDICATOR, indicator.Id,
                 updateTime, value, Environment.NewLine);
@@ -499,6 +535,8 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue)
         {
+            if (updateTime == DateTimeOffset.MinValue || signal.Id == "")
+                throw new ApplicationException("Cannot insert a signal without id and update time");
             string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
             var newLine = string.Format("{0},{1},{2},{3},{4},{5}{6}",
                 DATATYPE_SIGNAL, signal.Id,
@@ -508,7 +546,7 @@ namespace MidaxLib
 
         public override void Insert(Trade trade)
         {
-            if (trade.TradingTime == DateTimeOffset.MinValue || trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "")
+            if (trade.TradingTime == DateTimeOffset.MinValue || trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "" || trade.Id == "")
                 throw new ApplicationException("Cannot insert a trade without booking information");
             var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}{9}",
                 DATATYPE_TRADE, trade.Epic, trade.ConfirmationTime, trade.Id, trade.Direction, trade.Price, trade.Size, trade.TradingTime, trade.Reference,
@@ -528,15 +566,9 @@ namespace MidaxLib
             throw new ApplicationException("ANN insertion not implemented");
         }
 
-        public override void Insert(MarketLevels mktDetails)
+        public void Insert(string lvlId, decimal value)
         {
-            var newLine = string.Format("marketlevels,{0},{1}{2}", "LVLLow_" + mktDetails.AssetId, mktDetails.Low, Environment.NewLine);
-            _csvMktDetailsStringBuilder.Append(newLine);
-            newLine = string.Format("marketlevels,{0},{1}{2}", "LVLHigh_" + mktDetails.AssetId, mktDetails.High, Environment.NewLine);
-            _csvMktDetailsStringBuilder.Append(newLine);
-            newLine = string.Format("marketlevels,{0},{1}{2}", "LVLCloseBid_" + mktDetails.AssetId, mktDetails.CloseBid, Environment.NewLine);
-            _csvMktDetailsStringBuilder.Append(newLine);
-            newLine = string.Format("marketlevels,{0},{1}{2}", "LVLCloseOffer_" + mktDetails.AssetId, mktDetails.CloseOffer, Environment.NewLine);
+            var newLine = string.Format("marketlevels,{0},{1}{2}", lvlId, value, Environment.NewLine);
             _csvMktDetailsStringBuilder.Append(newLine);
         }        
 
@@ -594,10 +626,11 @@ namespace MidaxLib
             _database = ((ReplayStreamingClient)MarketDataConnection.Instance.StreamClient).Reader;            
         }
 
+        /*
         public override void Insert(MarketLevels mktDetails)
         {
             // this a source market data, no need to compare
-        }
+        }*/
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
         {

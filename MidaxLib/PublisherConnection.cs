@@ -48,7 +48,6 @@ namespace MidaxLib
         public abstract void Insert(Trade trade);
         public abstract void Insert(DateTime updateTime, Value profit);
         public abstract void Insert(DateTime updateTime, NeuralNetworkForCalibration calibratedNeuralNetwork);
-        public abstract void Insert(MarketLevels mktDetails);
         
         public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, 
             Dictionary<KeyValuePair<string, DateTime>, Trade> tradeData, Dictionary<KeyValuePair<string, DateTime>, double> profitData)
