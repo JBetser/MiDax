@@ -60,13 +60,11 @@ public class Server
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
                 otherIndices.Add(new MarketData(dicSettings["INDEX_SNP"]));
                 var models = new List<Model>();
-                var macD_1_5_60 = new ModelMacD(index, 1, 5, 60);
-                var macD_2_10_60 = new ModelMacD(index);
-                models.Add(macD_1_5_60);
-                models.Add(macD_2_10_60);
-                models.Add(new ModelANN(macD_2_10_60, stocks, new MarketData(dicSettings["VOLATILITY"]), otherIndices));
-                models.Add(new ModelMacDCascade(macD_2_10_60));
-                models.Add(new ModelMole(macD_2_10_60));
+                var macD_10_30_90 = new ModelMacD(index);
+                models.Add(macD_10_30_90);
+                models.Add(new ModelANN(macD_10_30_90, stocks, new MarketData(dicSettings["VOLATILITY"]), otherIndices));
+                models.Add(new ModelMacDCascade(macD_10_30_90));
+                //models.Add(new ModelMole(macD_10_30_90));
                 _trader = new Trader(models);
                 adapter.add(new MidaxIceI(_trader, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();

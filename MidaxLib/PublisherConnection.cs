@@ -9,11 +9,12 @@ namespace MidaxLib
 {
     public abstract class PublisherConnection
     {
+        public const string DATATYPE_MARKETLEVELS = "marketlevels";
         public const string DATATYPE_STOCK = "stocks";
         public const string DATATYPE_INDICATOR = "indicators";
         public const string DATATYPE_SIGNAL = "signals";
         public const string DATATYPE_TRADE = "trades";
-        public const string DATATYPE_MARKETLEVELS = "marketlevels";
+        public const string DATATYPE_PROFIT = "profit";        
 
         protected Dictionary<string, TimeSeries> _expectedIndicatorData = null;
         protected Dictionary<string, TimeSeries> _expectedSignalData = null;
@@ -46,7 +47,7 @@ namespace MidaxLib
         public abstract void Insert(DateTime updateTime, Indicator indicator, decimal value);
         public abstract void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue);
         public abstract void Insert(Trade trade);
-        public abstract void Insert(DateTime updateTime, Value profit);
+        public abstract void Insert(DateTime updateTime, string stockid, Value profit);
         public abstract void Insert(DateTime updateTime, NeuralNetworkForCalibration calibratedNeuralNetwork);
         
         public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, 

@@ -116,7 +116,7 @@ namespace MidaxLib
 
         void readProfitData(List<KeyValuePair<DateTime,double>> profits, string[] values)
         {
-            profits.Add(new KeyValuePair<DateTime,double>(Config.ParseDateTimeLocal(values[0]), double.Parse(values[1])));
+            profits.Add(new KeyValuePair<DateTime,double>(Config.ParseDateTimeLocal(values[0]), double.Parse(values[2])));
         }
 
         void readMarketLevelData(List<MarketLevels> mktLevels, string[] values)

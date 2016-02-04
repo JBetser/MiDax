@@ -42,4 +42,44 @@ namespace Calibrator
             }            
         }          
     }
+
+    class NeuralNetworkWMA_5_2 : NeuralNetworkForCalibration
+    {
+        public NeuralNetworkWMA_5_2(string stockid,
+            Dictionary<string, List<CqlQuote>> marketData,
+            Dictionary<string, List<CqlQuote>> indicatorData,
+            Dictionary<string, List<double>> profitData)
+            : base("WMA_5_2", stockid, 5, 1, new List<int>() { 2 })
+        {
+            // build the neural network and the training set
+            var daxQuotes = new List<double>();
+            foreach (var quote in marketData[StockId])
+                daxQuotes.Add((double)quote.MidPrice());
+            var wma2 = new List<double>();
+            foreach (var quote in indicatorData["WMA_2_" + StockId])
+                wma2.Add((double)quote.MidPrice());
+            var wma10 = new List<double>();
+            foreach (var quote in indicatorData["WMA_10_" + StockId])
+                wma10.Add((double)quote.MidPrice());
+            var wma30 = new List<double>();
+            foreach (var quote in indicatorData["WMA_30_" + StockId])
+                wma30.Add((double)quote.MidPrice());
+            var wma90 = new List<double>();
+            foreach (var quote in indicatorData["WMA_90_" + StockId])
+                wma90.Add((double)quote.MidPrice());
+            for (int idxQuote = 0; idxQuote < daxQuotes.Count; idxQuote++)
+            {
+                var newInputset = new List<double>();
+                newInputset.Add(daxQuotes[idxQuote]);
+                newInputset.Add(wma2[idxQuote]);
+                newInputset.Add(wma10[idxQuote]);
+                newInputset.Add(wma30[idxQuote]);
+                newInputset.Add(wma90[idxQuote]);
+                _annInputs.Add(newInputset);
+                var newOutputset = new List<double>();
+                newOutputset.Add(profitData[StockId][idxQuote]);
+                _annOutputs.Add(newOutputset);
+            }
+        }
+    }
 }

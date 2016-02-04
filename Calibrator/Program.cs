@@ -49,7 +49,7 @@ namespace Calibrator
                     var processableMktData = new List<CqlQuote>();
                     foreach (var quote in keyVal.Value)
                     {
-                        if (client.ExpectedIndicatorData["WMA_60_" + ids[0]].Select(cqlq => cqlq.t).Contains(quote.t))
+                        if (client.ExpectedIndicatorData["WMA_90_" + ids[0]].Select(cqlq => cqlq.t).Contains(quote.t))
                             processableMktData.Add(quote);
                     }
                     if (marketData.ContainsKey(keyVal.Key))
@@ -81,11 +81,11 @@ namespace Calibrator
 
             var error = 100.0;
             int trials = 10;
-            NeuralNetworkWMA_4_2 ann = null;
+            NeuralNetworkWMA_5_2 ann = null;
             var rndSeed = new Random();
             while (trials-- > 0)
             {
-                var annTest = new NeuralNetworkWMA_4_2(ids[0], marketData, indicatorData, profitData);
+                var annTest = new NeuralNetworkWMA_5_2(ids[0], marketData, indicatorData, profitData);
                 annTest.Train(5.0, rndSeed.Next(1000));
                 if (annTest.Error < error)
                 {

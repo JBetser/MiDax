@@ -63,7 +63,7 @@ namespace MidaxLib
                 var selection = new SortedList<DateTime, KeyValuePair<int, CqlQuote>>();
                 while (idxProfit++ < nbPoints)
                 {
-                    PublisherConnection.Instance.Insert(nextProfit.Value, new Value(nextProfit.Key));
+                    PublisherConnection.Instance.Insert(nextProfit.Value, epic, new Value(nextProfit.Key));
                     selection.Add(nextProfit.Value, new KeyValuePair<int, CqlQuote>(nextProfit.Key, expectations[nextProfit.Value].Key));
                     nextProfit = gainDistribution.First(keyVal => keyVal.Key >= ((decimal)minProfit.Key + (decimal)idxProfit * (decimal)(maxProfit.Key - minProfit.Key) / (decimal)nbPoints));
                 }

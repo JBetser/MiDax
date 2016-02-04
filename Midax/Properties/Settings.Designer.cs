@@ -136,7 +136,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("06:45:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("06:30:00")]
         public string PUBLISHING_START_TIME {
             get {
                 return ((string)(this["PUBLISHING_START_TIME"]));
@@ -217,7 +217,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Mole_1_5_60_IX.D.DAX.DAILY.IP")]
+        [global::System.Configuration.DefaultSettingValueAttribute("MacDCas_30_90_200_IX.D.DAX.DAILY.IP")]
         public string TRADING_SIGNAL {
             get {
                 return ((string)(this["TRADING_SIGNAL"]));

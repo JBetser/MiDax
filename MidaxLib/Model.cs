@@ -35,7 +35,7 @@ namespace MidaxLib
             _ptf = Portfolio.Instance;
         }
 
-        protected bool OnBuy(Signal signal, DateTime time, Price value)
+        protected virtual bool OnBuy(Signal signal, DateTime time, Price value)
         {
             if (_tradingSignal != null)
             {
@@ -45,7 +45,7 @@ namespace MidaxLib
             return true;
         }
 
-        protected bool OnSell(Signal signal, DateTime time, Price stockValue)
+        protected virtual bool OnSell(Signal signal, DateTime time, Price stockValue)
         {
             if (_tradingSignal != null)
             {

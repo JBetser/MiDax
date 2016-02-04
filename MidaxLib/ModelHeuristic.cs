@@ -14,9 +14,12 @@ namespace MidaxLib
         public ModelMacDCascade(ModelMacD macD)
         {
             _daxIndex = macD.Index;
+            /*
             _mktSignals.Add(new SignalMacDCascade(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, 0.5m, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh));
             _mktSignals.Add(new SignalMacDCascade(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh));
-            _mktSignals.Add(new SignalMacDCascade(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh));
+            _mktSignals.Add(new SignalMacDCascade(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh));*/
+            _mktSignals.Add(new SignalMacDCascade(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, 3.0m, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh));
+            _mktSignals.Add(new SignalMacDCascade(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, 4.0m, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh));
         }
 
         protected override bool Buy(Signal signal, DateTime time, Price stockValue)
@@ -78,6 +81,29 @@ namespace MidaxLib
             _tradingSet.Init(_daxIndex);
         }
 
+        protected override bool OnBuy(Signal signal, DateTime time, Price value)
+        {
+            if (_tradingSignal != null)
+            {
+                if (signal.Id == _tradingSignal)
+                    return Buy(signal, time, signal.MarketData.TimeSeries[time].Value.Value);
+            }
+            return false;
+        }
+
+        protected override bool OnSell(Signal signal, DateTime time, Price stockValue)
+        {
+            if (_tradingSignal != null)
+            {
+                if (signal.Id == _tradingSignal)
+                {
+                    signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid);
+                    return Sell(signal, time, stockValue);
+                }
+            }
+            return false;
+        }
+
         protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
             return false;
@@ -108,7 +134,7 @@ namespace MidaxLib
 
         protected void OnUpdateWMA(MarketData indicator, DateTime updateTime, Price value)
         {
-            _tradingSet.SetReferenceLevel(value.Mid(), _signal);
+            _tradingSet.SetReferenceLevel(value.Mid(), _signal, _mktLevels);
         }
 
         public override TradingSet CreateTradingSet(IAbstractStreamingClient client)
@@ -228,7 +254,7 @@ namespace MidaxLib
             return signaled;
         }
 
-        public void SetReferenceLevel(decimal wmaValue, Signal signal)
+        public void SetReferenceLevel(decimal wmaValue, Signal signal, MarketLevels? mktLevels)
         {
             //_stopLoss = Math.Max(mktLevels.R1 - mktLevels.Pivot, mktLevels.Pivot - mktLevels.S1);            
             _signal = signal;
@@ -269,7 +295,7 @@ namespace MidaxLib
             {
                 diff = Math.Abs(wmaValue - mktLevels.S3);
                 _referenceLevel = mktLevels.S3;
-            }*/            
+            }    */        
         }
     }
 }

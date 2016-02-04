@@ -328,7 +328,7 @@ namespace MidaxLib
                 }
                 _expectedProfitData = new Dictionary<KeyValuePair<string, DateTime>, double>();
                 var profits = _reader.GetProfits(_startTime, _stopTime,
-                                                                    CassandraConnection.DATATYPE_TRADE, epicLst);
+                                                                    CassandraConnection.DATATYPE_PROFIT, epicLst);
                 foreach (var epicProfit in profits)
                 {
                     foreach (var profit in epicProfit.Value)
@@ -554,9 +554,9 @@ namespace MidaxLib
             _csvTradeStringBuilder.Append(newLine);
         }
 
-        public override void Insert(DateTime updateTime, Value profit)
+        public override void Insert(DateTime updateTime, string stockid, Value profit)
         {
-            var newLine = string.Format("{0},{1}{2}", updateTime, profit.X,
+            var newLine = string.Format("{0},{1},{2}{3}", updateTime, stockid, profit.X,
                 Environment.NewLine);
             _csvProfitStringBuilder.Append(newLine);
         }
@@ -708,8 +708,8 @@ namespace MidaxLib
                 throw new ApplicationException(error);
             }
         }
-        
-        public override void Insert(DateTime updateTime, Value profit)
+
+        public override void Insert(DateTime updateTime, string stockid, Value profit)
         {
         }
 

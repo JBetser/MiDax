@@ -215,7 +215,7 @@ namespace MidaxLib
                 Convert.ToInt32(trade.Direction), trade.Size, trade.Price, trade.Reference));
         }
 
-        public override void Insert(DateTime updateTime, Value profit)
+        public override void Insert(DateTime updateTime, string stockid, Value profit)
         {
             throw new ApplicationException("Profit insertion not implemented in Cassandra");
         }
@@ -335,7 +335,7 @@ namespace MidaxLib
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             // process previous day
             updateTime = updateTime.AddDays(-1);
-            updateTime = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 22, 0, 0, DateTimeKind.Local);
+            updateTime = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 22, 45, 0, DateTimeKind.Local);
             RowSet value = null;
             decimal high = 0m;
             string indicator = "";
@@ -397,7 +397,7 @@ namespace MidaxLib
         public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id, bool auto_select)
         {
             if (_session == null)
-                return "[]";
+                return @"[]";
             var ids = new List<string> { id };
             var rowSets = getRows(startTime, stopTime, type, ids);
             List<CqlQuote> filteredQuotes = new List<CqlQuote>();
@@ -411,15 +411,24 @@ namespace MidaxLib
             decimal min = 1000000;
             decimal max = 0;
             List<CqlQuote> quotes = new List<CqlQuote>();
-            foreach (Row row in rowSets[id].GetRows())
+            try
             {
-                CqlQuote cqlQuote = CqlQuote.CreateInstance(type, row);
-                if (cqlQuote.b < min)
-                    min = cqlQuote.b.Value;
-                if (cqlQuote.b > max)
-                    max = cqlQuote.b.Value;
-                quotes.Add(cqlQuote);
+                foreach (Row row in rowSets[id].GetRows())
+                {
+                    CqlQuote cqlQuote = CqlQuote.CreateInstance(type, row);
+                    if (cqlQuote.b < min)
+                        min = cqlQuote.b.Value;
+                    if (cqlQuote.b > max)
+                        max = cqlQuote.b.Value;
+                    quotes.Add(cqlQuote);
+                }
             }
+            catch
+            {
+                return @"[]";
+            }
+            if (quotes.Count == 0)
+                return @"[]";
             DateTime ts = new DateTime(quotes.Last().t.Ticks);
             DateTime te = new DateTime(quotes.First().t.Ticks);
             startTime = startTime > te ? startTime : ts;

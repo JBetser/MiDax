@@ -372,6 +372,7 @@ namespace MidaxLib
             var error = 100.0;
             int trials = 10;
             LevenbergMarquardt optimizerOpt = null;
+            _learningRate = 0.0;
             while (trials-- > 0)
             {
                 LevenbergMarquardt optimizer = new LevenbergMarquardt(objFunc, inputs, modelParams, modelFunc, jacFunc, 0.001, obj_error, 200, rnd_seed);
@@ -386,12 +387,12 @@ namespace MidaxLib
                 {
                     error = optimizer.Error;
                     optimizerOpt = optimizer;
+                    _learningRate = Math.Max(_learningRate, (optimizerOpt.StartError - optimizerOpt.Error) / optimizerOpt.StartError);
                 }
             }
             if (optimizerOpt.Error > max_error)
                 throw new StallException();
-            _totalError = optimizerOpt.Error;
-            _learningRate = (optimizerOpt.StartError - optimizerOpt.Error) / optimizerOpt.Error;
+            _totalError = optimizerOpt.Error;            
         }
     }    
 }

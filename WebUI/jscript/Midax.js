@@ -51,53 +51,29 @@ function processResponses(jsonData) {
         if (marketData.lastIndexOf("GetSignalData", 0) === 0) {
             if (profit == null)
                 profit = 0;
-            var buyValue = 0;
-            var sellValue = 0;
-            jsonData[marketData].response.forEach(function (d) {
-                if (buyValue == 0)
-                    buyValue = d.b;
-                else if (buyValue > d.b){
-                    sellValue = buyValue;
-                    buyValue = d.b;
-                }
-                else if (buyValue < d.b){
-                    sellValue = d.b;
-                }
-            });
-            var buyFirst = false;
-            do{
-                buyFirst = jsonData[marketData].response[jsonData[marketData].response.length - 1].b == buyValue;
-                if (buyFirst)
-                    jsonData[marketData].response.splice(jsonData[marketData].response.length - 1, 1);
-            } while(buyFirst);
-            var nbBuy = 0;
-            var nbSell = 0;            
-            var signalProfit = 0;
-            jsonData[marketData].response.forEach(function (d) {
-                signalProfit += d.o * (d.b == buyValue ? -1 : 1);
-                if (d.b == buyValue)
-                    nbBuy++;
-                else
-                    nbSell++;
-            });
-            if (nbBuy != nbSell) {
-                if (nbBuy > nbSell) {
-                    var buyLast = false;
-                    do {
-                        buyLast = jsonData[marketData].response[0].b == buyValue;
-                        if (buyLast)
-                            jsonData[marketData].response.splice(0, 1);
-                    } while (buyLast);
-                }
-                else {
-                    var sellLast = false;
-                    do {
-                        sellLast = jsonData[marketData].response[0].b == sellValue;
-                        if (sellLast)
-                            jsonData[marketData].response.splice(0, 1);
-                    } while (sellLast);
-                }
-                signalProfit = 0;
+            if (jsonData[marketData].response.length > 0) {
+                var buyValue = 0;
+                var sellValue = 0;
+                jsonData[marketData].response.forEach(function (d) {
+                    if (buyValue == 0)
+                        buyValue = d.b;
+                    else if (buyValue > d.b) {
+                        sellValue = buyValue;
+                        buyValue = d.b;
+                    }
+                    else if (buyValue < d.b) {
+                        sellValue = d.b;
+                    }
+                });
+                var buyFirst = false;
+                do {
+                    buyFirst = jsonData[marketData].response[jsonData[marketData].response.length - 1].b == buyValue;
+                    if (buyFirst)
+                        jsonData[marketData].response.splice(jsonData[marketData].response.length - 1, 1);
+                } while (buyFirst);
+                var nbBuy = 0;
+                var nbSell = 0;
+                var signalProfit = 0;
                 jsonData[marketData].response.forEach(function (d) {
                     signalProfit += d.o * (d.b == buyValue ? -1 : 1);
                     if (d.b == buyValue)
@@ -105,8 +81,34 @@ function processResponses(jsonData) {
                     else
                         nbSell++;
                 });
+                if (nbBuy != nbSell) {
+                    if (nbBuy > nbSell) {
+                        var buyLast = false;
+                        do {
+                            buyLast = jsonData[marketData].response[0].b == buyValue;
+                            if (buyLast)
+                                jsonData[marketData].response.splice(0, 1);
+                        } while (buyLast);
+                    }
+                    else {
+                        var sellLast = false;
+                        do {
+                            sellLast = jsonData[marketData].response[0].b == sellValue;
+                            if (sellLast)
+                                jsonData[marketData].response.splice(0, 1);
+                        } while (sellLast);
+                    }
+                    signalProfit = 0;
+                    jsonData[marketData].response.forEach(function (d) {
+                        signalProfit += d.o * (d.b == buyValue ? -1 : 1);
+                        if (d.b == buyValue)
+                            nbBuy++;
+                        else
+                            nbSell++;
+                    });
+                }
+                profit += signalProfit;
             }
-            profit += signalProfit;
         }
     }
 

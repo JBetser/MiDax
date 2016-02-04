@@ -3,11 +3,11 @@
     <meta charset="utf-8">
     <title>MiDAX</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="description" content="DAX Trading Signals"/>
+    <meta name="description" content="Trading Signals"/>
     <meta name="author" content="Bitlsoft"/>
     <meta property="og:url" content="http://bitlsoft.com/midax.aspx" />
     <meta property="og:title" content="MiDAX" />
-    <meta property="og:description" content="DAX Trading Signals" />
+    <meta property="og:description" content="Trading Signals" />
     <meta property="og:image" content="http://bitlsoft.com/images/logo.png" />
 
     <!-- official bootstrap styles -->
@@ -296,6 +296,8 @@
                <option value="">Choose an indicator</option>
                <option value="WMA_1#WMA_5#WMA_60">WMA 1mn/5mn/1hr</option>
                <option value="WMA_2#WMA_10#WMA_60">WMA 2mn/10mn/1hr</option>
+               <option value="WMA_7#WMA_20#WMA_60">WMA 7mn/20mn/1hr</option>
+               <option value="WMA_10#WMA_30#WMA_90">WMA 10mn/30mn/1hr30</option>
                <!--option value="LR_0_1_0">Linear regression 1mn</option>
                <option value="LR_0_5_0">Linear regression 5mn</option>
                <option value="LR_0_30_0">Linear regression 30mn</option-->
@@ -305,12 +307,18 @@
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
                <option value="MacD_10_60">MacD 10mn/1h</option>
+               <option value="MacD_20_60">MacD 20mn/1h</option>
+               <option value="MacD_30_90">MacD 30mn/1h30</option>
                <option value="MacDCas_5_60_200">MacD Cascade 5mn/1h 2pts</option>
                <option value="MacDCas_10_60_50">MacD Cascade 10mn/1h 0.5pts</option>
                <option value="MacDCas_10_60_100">MacD Cascade 10mn/1h 1pt</option>
                <option value="MacDCas_10_60_200">MacD Cascade 10mn/1h 2pts</option>
+               <option value="MacDCas_20_60_200">MacD Cascade 20mn/1h 2pts</option>
+               <option value="MacDCas_30_90_200">MacD Cascade 30mn/1h30 2pts</option>
                <option value="Mole_1_5_60">Mole 1mn/5mn/1h</option>
                <option value="Mole_2_10_60">Mole 2mn/10mn/1h</option>
+               <option value="Mole_2_10_90">Mole 2mn/10mn/1h30</option>
+               <option value="Mole_7_20_60">Mole 7mn/20mn/1h</option>
                <option value="ANNWMA_4_2">ANN WMA</option>
              </select>          
              <button type="button" id="GO" class="btn btn-primary">

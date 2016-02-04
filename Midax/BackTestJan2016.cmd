@@ -1,2 +1,2 @@
 @ECHO OFF
-call BackTestOneMonth.cmd 2016-01
+call BackTestOneMonth.cmd 2016-01 Heuristic

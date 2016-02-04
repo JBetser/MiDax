@@ -37,11 +37,10 @@ namespace MarketSelector
 
                 MarketDataConnection.Instance.Connect(null);
                 MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
-                index.Subscribe(OnUpdateMktData);
+                index.Subscribe(OnUpdateMktData,null);
                 MarketDataConnection.Instance.StartListening();
                 MarketDataConnection.Instance.StopListening();
-                PublisherConnection.Instance.Close();
-                index.Unsubscribe(OnUpdateMktData);
+                index.Unsubscribe(OnUpdateMktData,null);
                 index.Clear();
 
                 do

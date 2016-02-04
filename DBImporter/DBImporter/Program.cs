@@ -34,10 +34,10 @@ namespace DBImporter
                 MarketDataConnection.Instance.Connect(null);
 
                 var index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
-                var indicator = new IndicatorWMA(index, 2);
-                indicator.Subscribe(OnUpdateIndicatora);  
+                index.Subscribe(OnUpdate, null);
                 MarketDataConnection.Instance.StartListening();
                 MarketDataConnection.Instance.StopListening();
+                /*
                 var indicatorLevels = new List<ILevelPublisher>();
                 indicatorLevels.Add(new IndicatorLevelPivot(index));
                 indicatorLevels.Add(new IndicatorLevelR1(index));
@@ -48,9 +48,7 @@ namespace DBImporter
                 indicatorLevels.Add(new IndicatorLevelS3(index));
                 foreach (var ind in indicatorLevels)
                     ind.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
-                PublisherConnection.Instance.Close();
-                indicator.Unsubscribe(OnUpdateIndicatora);
-                indicator.Clear();
+                PublisherConnection.Instance.Close();*/
                 index.Clear();
 
                 do
@@ -61,7 +59,7 @@ namespace DBImporter
             }
         }
 
-        static void OnUpdateIndicatora(MarketData mktData, DateTime updateTime, Price value)
+        static void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
         }
     }
