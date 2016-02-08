@@ -9,8 +9,8 @@ namespace MidaxLib
 {
     public class Log
     {
-        public static string APPNAME = "Midax";
-        public static string SOURCE = "MidaxLogger";
+        public static string APPNAME = Config.ReplayEnabled ? "MidaxTest" : "Midax";
+        public static string SOURCE =  Config.ReplayEnabled ? "MidaxLoggerTest" : "MidaxLogger";
         static EventLog _logMgr = null;        
 
         Log() { }

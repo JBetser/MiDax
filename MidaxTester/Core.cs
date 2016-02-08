@@ -199,6 +199,7 @@ namespace MidaxTester
                 expectedTrade.Id = "###DUMMY_TRADE_ID2###";
                 expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
                 Portfolio.Instance.CloseAllPositions(tradeTest.TradingTime);
+                Thread.Sleep(1000);
 
                 // test synchronization issues with the broker
                 List<string> testsSync = new List<string>();

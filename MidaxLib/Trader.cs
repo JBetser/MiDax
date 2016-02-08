@@ -26,6 +26,7 @@ namespace MidaxLib
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
             }
             MarketDataConnection.Instance.StartListening();
+            //TWSConnection.Instance.Connect(connectionLostCallback);
         }
 
         public void Stop()

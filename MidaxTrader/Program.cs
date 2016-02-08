@@ -30,7 +30,7 @@ namespace MidaxTrader
             Config.Settings["TRADING_SIGNAL"] = "Mole_1_2_5_IX.D.DAX.DAILY.IP";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
             Config.Settings["TRADING_CURRENCY"] = "GBP";
-            
+                     
             var otherIndices = new List<MarketData>();
             otherIndices.Add(new MarketData("SNP:IX.D.SPTRD.DAILY.IP"));
             otherIndices.Add(new MarketData("CAC:IX.D.CAC.DAILY.IP"));
@@ -47,6 +47,10 @@ namespace MidaxTrader
             System.Threading.Thread.Sleep(10000);
             trader.Stop();
             Console.WriteLine("Trading stopped");
+        }
+
+        static void connectionLostCallback(object state)
+        {
         }
     }
 }

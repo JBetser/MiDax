@@ -8,15 +8,22 @@ using IBApi;
 
 namespace MidaxLib
 {
-    class TWSConnection  : MarketDataConnection, EWrapper
+    public class TWSConnection  : MarketDataConnection, EWrapper
     {
         static TWSConnection _instance = null;
         EClientSocket _client;
         private int _nextOrderId;
+        Dictionary<string, TimeSeries> _mktDataPrices;
+        Dictionary<string, TimeSeries> _mktDataVolumes;
+        List<string> _tickers;
+        DateTime _curTime;
 
         TWSConnection()
         {
             _client = new EClientSocket(this);
+            _mktDataPrices = new Dictionary<string, TimeSeries>();
+            _mktDataVolumes = new Dictionary<string, TimeSeries>();
+            _tickers = new List<string>();
         }
 
         public static TWSConnection Instance
@@ -31,12 +38,17 @@ namespace MidaxLib
 
         public override void Connect(TimerCallback connectionClosed)
         {
-            var contract = new Contract();
-            contract.Symbol = "EUR";
-            contract.SecType = "Cash";
-            contract.Currency = "GBP";
-            contract.Exchange = "IDEALPRO";
-            _client.reqMktData(1, contract, "", false, null);
+            _client.eConnect("", 7496, 0, false);
+            _tickers.Add("ADIDAS");
+            int idxTicker = 0;
+            foreach (var ticker in _tickers)
+            {
+                var contract = new Contract();
+                contract.Symbol = ticker;
+                contract.SecType = "STK";
+                contract.Currency = "EUR";
+                _client.reqMktData(idxTicker++, contract, "233", false, null);
+            }
         }
 
         public EClientSocket ClientSocket
@@ -73,18 +85,21 @@ namespace MidaxLib
         }
 
         public virtual void currentTime(long time)
-        {
+        {            
             Console.WriteLine("Current Time: " + time + "\n");
+            _curTime = new DateTime(time);
         }
 
         public virtual void tickPrice(int tickerId, int field, double price, int canAutoExecute)
         {
             Console.WriteLine("Tick Price. Ticker Id:" + tickerId + ", Field: " + field + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute + "\n");
+            _mktDataPrices[_tickers[tickerId]].Add(_curTime, new Price((decimal)price));          
         }
 
         public virtual void tickSize(int tickerId, int field, int size)
         {
             Console.WriteLine("Tick Size. Ticker Id:" + tickerId + ", Field: " + field + ", Size: " + size + "\n");
+            _mktDataVolumes[_tickers[tickerId]].Add(_curTime, new Price((decimal)size)); 
         }
 
         public virtual void tickString(int tickerId, int tickType, string value)

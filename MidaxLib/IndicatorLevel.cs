@@ -45,7 +45,7 @@ namespace MidaxLib
 
         public IndicatorLow(MarketData mktData)
             : base(mktData, "Low")
-        {
+        {            
         }
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
@@ -56,6 +56,8 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
+            if (_low == decimal.MaxValue && _levelMktData.Levels.HasValue)
+                _low = _levelMktData.Levels.Value.Low;
             Publish(updateTime, _low);
         }
     }
@@ -77,6 +79,8 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
+            if (_high == decimal.MinValue && _levelMktData.Levels.HasValue)
+                _high = _levelMktData.Levels.Value.High;
             Publish(updateTime, _high);
         }
     }
@@ -97,6 +101,8 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
+            if (_closeBid == decimal.MinValue && _levelMktData.Levels.HasValue)
+                _closeBid = _levelMktData.Levels.Value.CloseBid;
             Publish(updateTime, _closeBid);
         }
     }
@@ -117,6 +123,8 @@ namespace MidaxLib
 
         public override void Publish(DateTime updateTime)
         {
+            if (_closeOffer == decimal.MinValue && _levelMktData.Levels.HasValue)
+                _closeOffer = _levelMktData.Levels.Value.CloseOffer;
             Publish(updateTime, _closeOffer);
         }
     }

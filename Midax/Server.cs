@@ -60,7 +60,7 @@ public class Server
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
                 otherIndices.Add(new MarketData(dicSettings["INDEX_SNP"]));
                 var models = new List<Model>();
-                var macD_10_30_90 = new ModelMacD(index);
+                var macD_10_30_90 = new ModelMacD(index, 10, 30, 90);
                 models.Add(macD_10_30_90);
                 models.Add(new ModelANN(macD_10_30_90, stocks, new MarketData(dicSettings["VOLATILITY"]), otherIndices));
                 models.Add(new ModelMacDCascade(macD_10_30_90));
@@ -89,9 +89,9 @@ public class Server
                 {
                     if (now > stopTime)
                     {
-                        _startTime = _startTime.AddDays(1.0);
+                        var nextDay = _startTime.AddDays(1.0);
                         stopTime = stopTime.AddDays(1.0);
-                        msUntilStartTime = (int)((_startTime - now).TotalMilliseconds);
+                        msUntilStartTime = (int)((nextDay - now).TotalMilliseconds);
                     }
                 }
                 else

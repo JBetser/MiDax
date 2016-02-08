@@ -146,14 +146,24 @@ namespace MidaxLib
             High = high;
             CloseBid = closeBid;
             CloseOffer = closeOffer;
-            CloseMid = (CloseBid + CloseOffer) / 2m;
-            Pivot = (High + Low + CloseMid) / 3m;
-            R1 = 2m * Pivot - Low;
-            S1 = 2m * Pivot - High;
-            R2 = Pivot + (High - Low);
-            S2 = Pivot - (High - Low);
-            R3 = R1 + (High - Low);
-            S3 = S1 - (High - Low);
+            if ((Low > decimal.MinValue && Low < decimal.MaxValue) &&
+                (High > decimal.MinValue && High < decimal.MaxValue) &&
+                (CloseBid > decimal.MinValue && CloseBid < decimal.MaxValue) &&
+                (CloseOffer > decimal.MinValue && CloseOffer < decimal.MaxValue))
+            {
+                CloseMid = (CloseBid + CloseOffer) / 2m;
+                Pivot = (High + Low + CloseMid) / 3m;
+                R1 = 2m * Pivot - Low;
+                S1 = 2m * Pivot - High;
+                R2 = Pivot + (High - Low);
+                S2 = Pivot - (High - Low);
+                R3 = R1 + (High - Low);
+                S3 = S1 - (High - Low);
+            }
+            else
+            {
+                CloseMid = Pivot = R1 = S1 = R2 = S2 = R3 = S3 = 0m;
+            }
         }
     }
 }

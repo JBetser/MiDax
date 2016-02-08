@@ -29,7 +29,7 @@ namespace MidaxLib
         {
             get
             {
-                return _settings["TRADING_MODE"] == "REPLAY";
+                return (_settings["TRADING_MODE"] == "REPLAY" || _settings["TRADING_MODE"] == "REPLAY_UAT");
             }
         }
 
@@ -71,7 +71,7 @@ namespace MidaxLib
         {
             get
             {
-                return Config.Settings["TRADING_MODE"] == "UAT";
+                return Config.Settings["TRADING_MODE"] == "REPLAY_UAT";
             }
         }
 

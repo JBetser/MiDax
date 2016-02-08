@@ -342,8 +342,8 @@ namespace MidaxLib
             try
             {
                 indicator = "High_" + epic;
-                value = executeQuery(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                    indicator, ToUnixTimestamp(updateTime)));
+                value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
+                    Config.UATSourceDB ? "dummy" : "", indicator, ToUnixTimestamp(updateTime)));
                 high = (decimal)value.First()[0];
             }
             catch
@@ -352,14 +352,14 @@ namespace MidaxLib
                 Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Error);
                 return null;
             }
-            value = executeQuery(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "Low_" + epic, ToUnixTimestamp(updateTime)));
+            value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
+                Config.UATSourceDB ? "dummy" : "", "Low_" + epic, ToUnixTimestamp(updateTime)));
             decimal low = (decimal)value.First()[0];
-            value = executeQuery(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "CloseBid_" + epic, ToUnixTimestamp(updateTime)));
+            value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
+                Config.UATSourceDB ? "dummy" : "", "CloseBid_" + epic, ToUnixTimestamp(updateTime)));
             decimal closeBid = (decimal)value.First()[0];
-            value = executeQuery(string.Format("select value from historicaldata.indicators where indicatorid='{0}' and trading_time={1}",
-                "CloseOffer_" + epic, ToUnixTimestamp(updateTime)));
+            value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
+                Config.UATSourceDB ? "dummy" : "", "CloseOffer_" + epic, ToUnixTimestamp(updateTime)));
             decimal closeOffer = (decimal)value.First()[0];
             return new MarketLevels(epic, low, high, closeBid, closeOffer);
         }

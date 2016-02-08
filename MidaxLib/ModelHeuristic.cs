@@ -250,12 +250,14 @@ namespace MidaxLib
             return signaled;
         }
 
-        public void SetReferenceLevel(decimal wmaValue, Signal signal, MarketLevels? mktLevels)
+        public void SetReferenceLevel(decimal wmaValue, Signal signal, MarketLevels? mktLevelsMaybe)
         {
             //_stopLoss = Math.Max(mktLevels.R1 - mktLevels.Pivot, mktLevels.Pivot - mktLevels.S1);            
             _signal = signal;
             _referenceLevel = wmaValue;
-            /*
+            if (!mktLevelsMaybe.HasValue)
+                return;
+            var mktLevels = mktLevelsMaybe.Value;
             var diff = decimal.MaxValue;
             if (Math.Abs(wmaValue - mktLevels.R3) < diff)
             {
@@ -291,7 +293,7 @@ namespace MidaxLib
             {
                 diff = Math.Abs(wmaValue - mktLevels.S3);
                 _referenceLevel = mktLevels.S3;
-            }    */        
+            }          
         }
     }
 }

@@ -78,7 +78,7 @@ namespace MidaxLib
             if (update.NumFields == 0)
                 return false;
             JavaScriptSerializer json_serializer = new JavaScriptSerializer();
-            if (update.ToString() == "[ (null) ]")
+            if ((update.ToString().Replace(" ", "") == "[(null)]") || (update.ToString().Replace(" ", "") == "[null]"))
                 return false;
             Log.Instance.WriteEntry("Incoming position update: " + update.ToString());
             var json = json_serializer.DeserializeObject(update.ToString());
