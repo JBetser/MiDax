@@ -17,8 +17,7 @@ public class Server
 {
     public class App : Ice.Application
     {
-        Trader _trader;
-        DateTime _startTime;
+        Trader _trader;        
 
         public override int run(string[] args)
         {           
@@ -65,42 +64,11 @@ public class Server
                 models.Add(new ModelANN(macD_10_30_90, stocks, new MarketData(dicSettings["VOLATILITY"]), otherIndices));
                 models.Add(new ModelMacDCascade(macD_10_30_90));
                 //models.Add(new ModelMole(macD_10_30_90));
-                _trader = new Trader(models);
+                _trader = new Trader(models, communicator().shutdown);
                 adapter.add(new MidaxIceI(_trader, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
 
-                Assembly thisAssem = typeof(Server).Assembly;
-                AssemblyName thisAssemName = thisAssem.GetName();
-                Version ver = thisAssemName.Version;
-
-                Log.Instance.WriteEntry("Midax " + ver + " service initialized", EventLogEntryType.Information);
-                
-                var timerStart = new System.Threading.Timer(startSignalCallback);
-                var timerStop = new System.Threading.Timer(stopSignalCallback);
-                
-                // Figure how much time until PUBLISHING_STOP_TIME
-                DateTime now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
-                _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
-                DateTime stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
-
-                // If it's already past PUBLISHING_STOP_TIME, wait until PUBLISHING_STOP_TIME tomorrow  
-                int msUntilStartTime = 10;
-                if (now > _startTime)
-                {
-                    if (now > stopTime)
-                    {
-                        var nextDay = _startTime.AddDays(1.0);
-                        stopTime = stopTime.AddDays(1.0);
-                        msUntilStartTime = (int)((nextDay - now).TotalMilliseconds);
-                    }
-                }
-                else
-                    msUntilStartTime = (int)((_startTime - now).TotalMilliseconds);
-                int msUntilStopTime = (int)((stopTime - now).TotalMilliseconds);
-                
-                // Set the timers to elapse only once, at their respective scheduled times
-                timerStart.Change(msUntilStartTime, Timeout.Infinite);
-                timerStop.Change(msUntilStopTime, Timeout.Infinite);
+                _trader.Init(DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local));
 
                 communicator().waitForShutdown();
             }
@@ -114,24 +82,7 @@ public class Server
             }
 
             return 0;
-        }
-
-        void startSignalCallback(object state)
-        {
-            DateTime now = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
-            if (now.Date != _startTime.Date)
-            {
-                Log.Instance.WriteEntry("Restarting the service", EventLogEntryType.Information);
-                communicator().shutdown();
-            }
-            _trader.Start();
-        }
-
-        void stopSignalCallback(object state)
-        {
-            _trader.Stop();
-            communicator().shutdown();
-        }      
+        }             
     }
 
     static public int Main(string[] args)

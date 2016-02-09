@@ -42,7 +42,7 @@ namespace MidaxTrader
             models.Add(new ModelMole(macD));
             Console.WriteLine("Starting signals...");
             var trader = new Trader(models);
-            trader.Start();            
+            trader.Init(DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local));            
             Console.WriteLine("Trading...");
             System.Threading.Thread.Sleep(10000);
             trader.Stop();

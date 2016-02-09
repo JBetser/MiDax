@@ -21,8 +21,6 @@ public class MidaxWS : System.Web.Services.WebService {
     [WebMethod(EnableSession = true)]
     public string GetStockData(string begin, string end, string stockid)
     {
-        if (!MidaxWebServer.Instance.OpenSession())
-            return MidaxWebServer.WEBSERVICE_RESULT_DISCONNECTED;
         return MidaxWebServer.Instance.GetStockData(begin, end, stockid);
     }
 
@@ -30,8 +28,6 @@ public class MidaxWS : System.Web.Services.WebService {
     [WebMethod(EnableSession = true)]
     public string GetIndicatorData(string begin, string end, string indicatorid)
     {
-        if (!MidaxWebServer.Instance.OpenSession())
-            return MidaxWebServer.WEBSERVICE_RESULT_DISCONNECTED;
         return MidaxWebServer.Instance.GetIndicatorData(begin, end, indicatorid);
     }
 
@@ -39,8 +35,6 @@ public class MidaxWS : System.Web.Services.WebService {
     [WebMethod(EnableSession = true)]
     public string GetSignalData(string begin, string end, string signalid)
     {
-        if (!MidaxWebServer.Instance.OpenSession())
-            return MidaxWebServer.WEBSERVICE_RESULT_DISCONNECTED;
         return MidaxWebServer.Instance.GetSignalData(begin, end, signalid);
     }
 }

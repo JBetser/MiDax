@@ -135,8 +135,10 @@ namespace MidaxLib
 
         public void Connect(string username, string password, string apiKey)
         {
-            _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
-            _stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
+            if (Config.Settings.ContainsKey("PUBLISHING_START_TIME"))
+                _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
+            if (Config.Settings.ContainsKey("PUBLISHING_STOP_TIME"))
+                _stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
             _testReplayFiles.Clear();
             if (Config.Settings["REPLAY_MODE"] == "DB")
             {
@@ -145,10 +147,15 @@ namespace MidaxLib
             }
             else if (Config.Settings["REPLAY_MODE"] == "CSV")
             {
-                _testReplayFiles = Config.Settings["REPLAY_CSV"].Split(';').ToList();
-                if (_reader != null)
-                    _reader.CloseConnection();
-                _reader = new CsvReader(_testReplayFiles[0]);
+                if (Config.Settings.ContainsKey("REPLAY_CSV"))
+                {
+                    _testReplayFiles = Config.Settings["REPLAY_CSV"].Split(';').ToList();
+                    if (_reader != null)
+                        _reader.CloseConnection();
+                    _reader = new CsvReader(_testReplayFiles[0]);
+                }
+                else
+                    _reader = new CsvReader(null);
             }
             else
                 _reader = null;
@@ -525,7 +532,6 @@ namespace MidaxLib
                 indicator.Id.Contains("CloseBid") || indicator.Id.Contains("CloseOffer")){
                 // insert end of day level
                 Insert(indicator.Id, value);
-                return;
             }
             var newLine = string.Format("{0},{1},{2},{3}{4}",
                 DATATYPE_INDICATOR, indicator.Id,

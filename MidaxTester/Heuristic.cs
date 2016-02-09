@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MidaxLib;
 
@@ -9,6 +10,9 @@ namespace MidaxTester
 {
     class Heuristic
     {
+        static Trader _trader;
+        static AutoResetEvent _stopEvent;
+
         public static void Run(List<DateTime> dates, bool generate = false, bool generate_from_db = false, bool publish_to_db = false)
         {
             Config.Settings = new Dictionary<string, string>();
@@ -56,10 +60,19 @@ namespace MidaxTester
                 models.Add(new ModelMacDCascadeTest((ModelMacD)models[0]));
                 models.Add(new ModelMoleTest((ModelMacD)models[0]));
                 Console.WriteLine(action + string.Format(" the Heuristic daily record {0}-{1}-{2}...", test.Year, test.Month, test.Day));
-                var trader = new Trader(models);
-                trader.Start();
-                trader.Stop();
+                _trader = new Trader(models, onShutdown);
+                _trader.Init(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]));
+                _stopEvent = new AutoResetEvent(false);
+                _stopEvent.WaitOne();
             }
+        }
+
+        static void onShutdown()
+        {
+            if (ReplayTester.Instance.NbProducedTrades != ReplayTester.Instance.NbExpectedTrades)
+                _trader.ProcessError(string.Format("the model did not produced the expected number of trades. It produced {0} trades instead of {1} expected",
+                                                ReplayTester.Instance.NbProducedTrades, ReplayTester.Instance.NbExpectedTrades));
+            _stopEvent.Set();
         }
     }
 }

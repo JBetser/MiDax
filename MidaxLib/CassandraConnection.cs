@@ -145,18 +145,16 @@ namespace MidaxLib
     }
 
     public class CassandraConnection : PublisherConnection, IReaderConnection, IStaticDataConnection
-    { 
+    {
         Cluster _cluster = null;
-        ISession _session = null;
-        Dictionary<string, decimal> _avg = new Dictionary<string, decimal>();
-        Dictionary<string, decimal> _scale = new Dictionary<string, decimal>();
+        ISession _session = null;        
         const string DB_BUSINESSDATA = "business";
         const string DB_HISTORICALDATA = "historical";
         const string EXCEPTION_CONNECTION_CLOSED = "Cassandra session is closed";
         static string DB_INSERTION = "insert into {0}data." + (Config.ReplayEnabled ? "dummy" : "") + "{1} ";
         static string DB_SELECTION = "select * from {0}data." + (Config.UATSourceDB ? "dummy" : "") + "{1} ";
 
-        public CassandraConnection() 
+        public CassandraConnection()
         {
             _database = this;
             if (Config.Settings != null)
@@ -173,7 +171,7 @@ namespace MidaxLib
             {
                 _session.Dispose();
                 info = "Closed connection to Cassandra";
-                Log.Instance.WriteEntry(info, EventLogEntryType.Information);                
+                Log.Instance.WriteEntry(info, EventLogEntryType.Information);
             }
             _instance = null;
             return info;
@@ -245,12 +243,12 @@ namespace MidaxLib
             executeQuery(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseOffer_" + mktDetails.AssetId, ts, mktDetails.CloseOffer));
         }*/
-                
+
         int IStaticDataConnection.GetAnnLatestVersion(string annid, string stockid)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            RowSet versions =  executeQuery(string.Format("select version from staticdata.anncalibration where annid='{0}' and stockid='{1}' ALLOW FILTERING",
+            RowSet versions = executeQuery(string.Format("select version from staticdata.anncalibration where annid='{0}' and stockid='{1}' ALLOW FILTERING",
                 annid, stockid));
             Row lastVersion = null;
             foreach (var version in versions)
@@ -278,18 +276,13 @@ namespace MidaxLib
             if (_session == null)
                 return null;
             var sets = new Dictionary<string, RowSet>();
-            foreach(var id in ids)
+            foreach (var id in ids)
                 sets[id] = executeQuery(string.Format(DB_SELECTION + "where {2}id='{3}' and trading_time >= {4} and trading_time <= {5}",
                                 DB_HISTORICALDATA, type, type.Substring(0, type.Length - 1), id, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
             return sets;
         }
 
-        Dictionary<string, List<Trade>> getTrades(DateTime startTime, DateTime stopTime, string type, List<string> stockids)
-        {
-            throw new ApplicationException("Trade reading not implemented");
-        }
-
-        Dictionary<string, List<CqlQuote>> getQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        public Dictionary<string, List<CqlQuote>> GetRows(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
             var epicQuotes = new Dictionary<string, List<CqlQuote>>();
             var rowSets = getRows(startTime, stopTime, type, ids);
@@ -298,25 +291,31 @@ namespace MidaxLib
                 if (!epicQuotes.ContainsKey(rowSet.Key))
                     epicQuotes[rowSet.Key] = new List<CqlQuote>();
                 foreach (Row row in rowSet.Value.GetRows())
-                    epicQuotes[rowSet.Key].Add(new CqlQuote(row));
+                    epicQuotes[rowSet.Key].Add(CqlQuote.CreateInstance(type, row));
                 epicQuotes[rowSet.Key].Reverse();
             }
             return epicQuotes;
         }
 
+
+        Dictionary<string, List<Trade>> getTrades(DateTime startTime, DateTime stopTime, string type, List<string> stockids)
+        {
+            throw new ApplicationException("Trade reading not implemented");
+        }
+
         Dictionary<string, List<CqlQuote>> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            return getQuotes(startTime, stopTime, type, ids);            
+            return GetRows(startTime, stopTime, type, ids);
         }
 
         Dictionary<string, List<CqlQuote>> IReaderConnection.GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            return getQuotes(startTime, stopTime, type, ids);
+            return GetRows(startTime, stopTime, type, ids);
         }
 
         Dictionary<string, List<CqlQuote>> IReaderConnection.GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            return getQuotes(startTime, stopTime, type, ids);
+            return GetRows(startTime, stopTime, type, ids);
         }
 
         Dictionary<string, List<Trade>> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, List<string> ids)
@@ -394,139 +393,5 @@ namespace MidaxLib
             return null;
         }
 
-        public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id, bool auto_select)
-        {
-            if (_session == null)
-                return @"[]";
-            var ids = new List<string> { id };
-            var rowSets = getRows(startTime, stopTime, type, ids);
-            List<CqlQuote> filteredQuotes = new List<CqlQuote>();
-            decimal? prevQuoteValue = null;
-            CqlQuote prevQuote = new CqlQuote();
-            bool? trendUp = null;
-            // find local minima
-            List<Gap> gaps = new List<Gap>();
-            SortedList<decimal, CqlQuote> buffer = new SortedList<decimal,CqlQuote>();
-
-            decimal min = 1000000;
-            decimal max = 0;
-            List<CqlQuote> quotes = new List<CqlQuote>();
-            try
-            {
-                foreach (Row row in rowSets[id].GetRows())
-                {
-                    CqlQuote cqlQuote = CqlQuote.CreateInstance(type, row);
-                    if (cqlQuote.b < min)
-                        min = cqlQuote.b.Value;
-                    if (cqlQuote.b > max)
-                        max = cqlQuote.b.Value;
-                    quotes.Add(cqlQuote);
-                }
-            }
-            catch
-            {
-                return @"[]";
-            }
-            if (quotes.Count == 0)
-                return @"[]";
-            DateTime ts = new DateTime(quotes.Last().t.Ticks);
-            DateTime te = new DateTime(quotes.First().t.Ticks);
-            startTime = startTime > te ? startTime : ts;
-            stopTime = stopTime < te ? stopTime : te;
-            double intervalSeconds = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 250);
-            double intervalSecondsLarge = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 100);            
-            string keyAvg = id.Split('_').Last() + "_" +startTime.ToShortDateString();
-            if (type == PublisherConnection.DATATYPE_STOCK)
-            {
-                _avg[keyAvg] = (min + max) / 2m;
-                _scale[keyAvg] = (max - min) / 2m;
-            }
-            foreach (CqlQuote cqlQuote in quotes)
-            {
-                decimal quoteValue = cqlQuote.ScaleValue(_avg[keyAvg], _scale[keyAvg]);
-                if (!prevQuoteValue.HasValue)
-                {
-                    filteredQuotes.Add(cqlQuote);
-                    prevQuoteValue = quoteValue;
-                    prevQuote = cqlQuote;
-                    continue;
-                }                
-                if (!trendUp.HasValue)
-                {
-                    trendUp = quoteValue > prevQuoteValue;
-                    prevQuoteValue = quoteValue;
-                    prevQuote = cqlQuote;
-                    if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
-                        buffer.Add(quoteValue, cqlQuote);
-                    else
-                        filteredQuotes.Add(cqlQuote);
-                    continue;
-                }
-                if (((quoteValue < prevQuoteValue) && trendUp.Value) ||
-                    ((quoteValue > prevQuoteValue) && !trendUp.Value))
-                {
-                    if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
-                    {
-                        if (!buffer.ContainsKey(quoteValue))
-                            buffer.Add(quoteValue, cqlQuote);
-                        continue;
-                    }
-                    if (buffer.Count > 1)
-                    {
-                        if (buffer.First().Value.t > buffer.Last().Value.t)
-                        {
-                            filteredQuotes.Add(buffer.First().Value);
-                            filteredQuotes.Add(buffer.Last().Value);
-                        }
-                        else
-                        {
-                            filteredQuotes.Add(buffer.Last().Value);
-                            filteredQuotes.Add(buffer.First().Value);
-                        }
-                    }
-                    else if (buffer.Count == 1)
-                        filteredQuotes.Add(buffer.First().Value);                        
-                    buffer.Clear();
-                    trendUp = !trendUp;
-                }
-                else
-                {
-                    if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSecondsLarge)
-                    {
-                        if (!buffer.ContainsKey(quoteValue))
-                            buffer.Add(quoteValue, cqlQuote);
-                        continue;
-                    }
-                    if (buffer.Count > 1)
-                    {
-                        if (buffer.First().Value.t > buffer.Last().Value.t)
-                        {
-                            filteredQuotes.Add(buffer.First().Value);
-                            filteredQuotes.Add(buffer.Last().Value);
-                        }
-                        else
-                        {
-                            filteredQuotes.Add(buffer.Last().Value);
-                            filteredQuotes.Add(buffer.First().Value);
-                        }
-                    }
-                    else if (buffer.Count == 1)
-                        filteredQuotes.Add(buffer.First().Value);
-                    buffer.Clear();
-                }
-                buffer.Add(quoteValue, cqlQuote);
-                prevQuoteValue = quoteValue;
-                prevQuote = cqlQuote;
-            }
-            if (filteredQuotes.Last() != prevQuote)
-                filteredQuotes.Add(prevQuote);
-                                    
-            string json = "[";
-            foreach (var row in filteredQuotes)
-            {
-                json += JsonConvert.SerializeObject(row) + ",";
-            }
-            return json.Substring(0, json.Length - 1) + "]";
-        } 
     }
 }

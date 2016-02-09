@@ -9,17 +9,19 @@ namespace MidaxLib
 {
     public class Log
     {
-        public static string APPNAME = Config.ReplayEnabled ? "MidaxTest" : "Midax";
-        public static string SOURCE =  Config.ReplayEnabled ? "MidaxLoggerTest" : "MidaxLogger";
+        public static string APPNAME = "Midax";
+        public static string SOURCE = "MidaxLogger";
+        public static string APPNAME_TEST = "MidaxTest";
+        public static string SOURCE_TEST = "MidaxLoggerTest";
         static EventLog _logMgr = null;        
 
         Log() { }
 
         static EventLog newEventLog()
         {
-            if (!EventLog.SourceExists(SOURCE))
-                EventLog.CreateEventSource(new EventSourceCreationData(SOURCE, APPNAME));
-            return new EventLog(APPNAME, Environment.MachineName, SOURCE);
+            if (!EventLog.SourceExists(Config.ReplayEnabled ? SOURCE_TEST : SOURCE))
+                EventLog.CreateEventSource(new EventSourceCreationData(Config.ReplayEnabled ? SOURCE_TEST : SOURCE, Config.ReplayEnabled ? APPNAME_TEST : APPNAME));
+            return new EventLog(Config.ReplayEnabled ? APPNAME_TEST : APPNAME, Environment.MachineName, Config.ReplayEnabled ? SOURCE_TEST : SOURCE);
         }
 
         static public EventLog Instance

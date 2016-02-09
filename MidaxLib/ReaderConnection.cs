@@ -14,7 +14,8 @@ namespace MidaxLib
         Dictionary<string,List<CqlQuote>> GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids);
         Dictionary<string,List<Trade>> GetTrades(DateTime startTime, DateTime stopTime, string type, List<string> ids);
         Dictionary<string,List<KeyValuePair<DateTime, double>>> GetProfits(DateTime startTime, DateTime stopTime, string type, List<string> ids);
-        Dictionary<string, MarketLevels> GetMarketLevels(DateTime updateTime, List<string> ids);      
+        Dictionary<string, MarketLevels> GetMarketLevels(DateTime updateTime, List<string> ids);
+        Dictionary<string, List<CqlQuote>> GetRows(DateTime startTime, DateTime stopTime, string type, List<string> ids);
         void CloseConnection();        
     }
 
@@ -25,8 +26,13 @@ namespace MidaxLib
 
         public CsvReader(string csv)
         {
-            _csvFile = csv;
-            _csvReader = new StreamReader(File.OpenRead(_csvFile));
+            _csvFile = csv;            
+            if (_csvFile != null)
+            {
+                if (Config.Settings.ContainsKey("ROOT_FOLDER"))
+                    _csvFile = Config.Settings["ROOT_FOLDER"] + _csvFile;
+                _csvReader = new StreamReader(File.OpenRead(_csvFile));
+            }
         }
 
         delegate void funcReadData<T>(List<T> data, string[] values);
@@ -84,6 +90,22 @@ namespace MidaxLib
             return data;
         }
 
+        Dictionary<string, List<CqlQuote>> IReaderConnection.GetRows(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        {
+            var csv = new CsvReader(string.Format(@"DBImporter\MktData\mktdata_{0}_{1}_{2}.csv",startTime.Day, startTime.Month, startTime.Year));
+            csv.GetMarketLevels(startTime, ids);
+            var mktQuotes = csv.GetMarketDataQuotes(startTime, stopTime, type, ids);
+            if (type == PublisherConnection.DATATYPE_STOCK)
+                return mktQuotes;
+            mktQuotes = csv.GetIndicatorDataQuotes(startTime, stopTime, type, ids);
+            if (type == PublisherConnection.DATATYPE_INDICATOR)
+                return mktQuotes;
+            mktQuotes = csv.GetSignalDataQuotes(startTime, stopTime, type, ids);            
+            if (type == PublisherConnection.DATATYPE_SIGNAL)
+                return mktQuotes;
+            return null;
+        }
+
         void readMarketData(List<CqlQuote> quotes, string[] values)
         {
             decimal? bid = values.Length >= 5 ? (decimal)double.Parse(values[4]) : default(decimal?);
@@ -133,7 +155,7 @@ namespace MidaxLib
                 mktLevels[0] = new MarketLevels(mktLevels[0].AssetId, mktLevels[0].Low, mktLevels[0].High, mktLevels[0].CloseBid, (decimal)double.Parse(values[2]));
         }
 
-        Dictionary<string, MarketLevels> IReaderConnection.GetMarketLevels(DateTime updateTime, List<string> ids)
+        public Dictionary<string, MarketLevels> GetMarketLevels(DateTime updateTime, List<string> ids)
         {
             _csvReader.Close();
             _csvReader = new StreamReader(File.OpenRead(_csvFile));
@@ -145,17 +167,17 @@ namespace MidaxLib
             return mktLevels;
         }
 
-        Dictionary<string, List<CqlQuote>> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        public Dictionary<string, List<CqlQuote>> GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {            
             return getRows<CqlQuote>(startTime, stopTime, type, ids, readMarketData);
         }
 
-        Dictionary<string, List<CqlQuote>> IReaderConnection.GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        public Dictionary<string, List<CqlQuote>> GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
             return getRows<CqlQuote>(startTime, stopTime, type, ids, readIndicatorData);
         }
 
-        Dictionary<string, List<CqlQuote>> IReaderConnection.GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        public Dictionary<string, List<CqlQuote>> GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
             return getRows<CqlQuote>(startTime, stopTime, type, ids, readSignalData);
         }
