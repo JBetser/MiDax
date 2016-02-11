@@ -14,9 +14,10 @@ namespace MidaxLib
         List<Model> _models;
 
         public delegate void shutdown();
+        public delegate DateTime getNow();
         shutdown _onShutdown;
         DateTime _startTime;
-        DateTime _now;
+        getNow _getNow;
 
         public Trader(List<Model> models, shutdown communicatorShutdown = null)
         {
@@ -24,12 +25,13 @@ namespace MidaxLib
             _onShutdown = communicatorShutdown;
         }
 
-        public void Init(DateTime now)
+        public void Init(getNow getNow)
         {
             Assembly thisAssem = typeof(Trader).Assembly;
             AssemblyName thisAssemName = thisAssem.GetName();
             Version ver = thisAssemName.Version;
-            _now = now;
+            _getNow = getNow;
+            DateTime now = getNow();
 
             Log.Instance.WriteEntry("Midax " + ver + " service initialized", EventLogEntryType.Information);
 
@@ -42,18 +44,18 @@ namespace MidaxLib
 
             // If it's already past PUBLISHING_STOP_TIME, wait until PUBLISHING_STOP_TIME tomorrow  
             int msUntilStartTime = 10;
-            if (_now > _startTime)
+            if (now > _startTime)
             {
-                if (_now > stopTime)
+                if (now > stopTime)
                 {
                     var nextDay = _startTime.AddDays(1.0);
                     stopTime = stopTime.AddDays(1.0);
-                    msUntilStartTime = (int)((nextDay - _now).TotalMilliseconds);
+                    msUntilStartTime = (int)((nextDay - now).TotalMilliseconds);
                 }
             }
             else
-                msUntilStartTime = (int)((_startTime - _now).TotalMilliseconds);
-            int msUntilStopTime = (int)((stopTime - _now).TotalMilliseconds);
+                msUntilStartTime = (int)((_startTime - now).TotalMilliseconds);
+            int msUntilStopTime = (int)((stopTime - now).TotalMilliseconds);
 
             Log.Instance.WriteEntry(string.Format("Next scheduling in {0}h{1}mn", msUntilStartTime / (3600 * 1000), 
                 (msUntilStartTime - 3600 * 1000 * (msUntilStartTime / (3600 * 1000))) / (60 * 1000)), EventLogEntryType.Information);
@@ -78,6 +80,7 @@ namespace MidaxLib
 
         public void Stop()
         {
+            MarketDataConnection.Instance.StreamClient.WaitForClosing();
             foreach (var model in _models)
             {
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Stopping signals...", EventLogEntryType.Information);
@@ -107,7 +110,7 @@ namespace MidaxLib
 
         void startSignalCallback(object state)
         {
-            if (_now.Date != _startTime.Date)
+            if (_getNow().Date != _startTime.Date)
             {
                 Log.Instance.WriteEntry("Restarting the service", EventLogEntryType.Information);
                 if (_onShutdown != null)

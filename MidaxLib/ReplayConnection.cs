@@ -125,6 +125,7 @@ namespace MidaxLib
         bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
         Dictionary<string, List<CqlQuote>> _priceData;
+        ClosingWaitHandle _closing = new ClosingWaitHandle();
 
         public IReaderConnection Reader { get { return _reader; } }
         
@@ -132,7 +133,7 @@ namespace MidaxLib
         public Dictionary<string, List<CqlQuote>> ExpectedSignalData { get { return _expectedSignalData; } }
         public Dictionary<KeyValuePair<string, DateTime>, Trade> ExpectedTradeData { get { return _expectedTradeData; } }
         public Dictionary<KeyValuePair<string, DateTime>, double> ExpectedProfitData { get { return _expectedProfitData; } }
-
+                
         public void Connect(string username, string password, string apiKey)
         {
             if (Config.Settings.ContainsKey("PUBLISHING_START_TIME"))
@@ -241,6 +242,11 @@ namespace MidaxLib
             }
         }
 
+        void IAbstractStreamingClient.WaitForClosing()
+        {
+            _closing.WaitOne(10000);
+        }
+
         void onClosePositionNotification(object state)
         {
             var trade = ((TradeBookingEvent)state).Trade;
@@ -288,6 +294,11 @@ namespace MidaxLib
                 {
                     priceData[nextUpdate.Id].RemoveAt(0);
                     tableListener.OnUpdate(0, nextUpdate.Id, nextUpdate);
+                    if (_closing.Signaled)
+                    {
+                        _closing.Set();
+                        break;
+                    }
                 }
             }
         }
@@ -602,10 +613,9 @@ namespace MidaxLib
     public class ReplayTester : PublisherConnection
     {
         public const decimal TOLERANCE = 1e-4m;
-        int _nbTrades = 0;
 
-        public int NbExpectedTrades { get { return _expectedTradeData.Count; } }
-        public int NbProducedTrades { get { return _nbTrades; } }
+        public int NbExpectedTrades { get { return _expectedTradeDataCount; } }
+        public int NbProducedTrades { get { return _nbPublishedTrades; } }
 
         Model _model = null;
         public Model ModelTest {
@@ -675,7 +685,7 @@ namespace MidaxLib
 
         public override void Insert(Trade trade)
         {
-            _nbTrades++;
+            _nbPublishedTrades++;
             var tradeKey = new KeyValuePair<string, DateTime>(trade.Epic, new DateTime(trade.TradingTime.Year, trade.TradingTime.Month, trade.TradingTime.Day, 
                 trade.TradingTime.Hour, trade.TradingTime.Minute, trade.TradingTime.Second));
             if (Math.Abs(_expectedTradeData[tradeKey].Price - trade.Price) > TOLERANCE)

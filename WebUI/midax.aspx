@@ -217,7 +217,7 @@
         <h3 class="muted">
         <div><table>
             <tr><th><img alt="BitL" src="images/logo_mini.png" class="logo"/></th>
-                <th style="text-align: left; padding-left: 20px"><img alt="MiDAX" src="images/midax.png" class="logo" style="width: 150px"/><br/>DAX Trading Signals</th></tr></table></div></h3>
+                <th style="text-align: left; padding-left: 20px"><img alt="MiDAX" src="images/midax.png" class="logo" style="width: 150px"/><br/>Trading Signals</th></tr></table></div></h3>
       </div>
 
       <!-- Jumbotron -->

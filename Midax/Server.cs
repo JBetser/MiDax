@@ -68,7 +68,7 @@ public class Server
                 adapter.add(new MidaxIceI(_trader, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();
 
-                _trader.Init(DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local));
+                _trader.Init(Config.GetNow);
 
                 communicator().waitForShutdown();
             }

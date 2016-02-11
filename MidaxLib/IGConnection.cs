@@ -15,6 +15,35 @@ using Newtonsoft.Json;
 
 namespace MidaxLib
 {
+    public class ClosingWaitHandle : EventWaitHandle
+    {
+        bool _signaled = false;
+        public bool Signaled { get { return _signaled; } set { _signaled = value; } }
+
+        public ClosingWaitHandle()
+            : base(false, EventResetMode.AutoReset)
+        {
+        }
+
+        public override bool WaitOne()
+        {
+            _signaled = true;
+            return base.WaitOne();
+        }
+
+        public override bool WaitOne(int ms)
+        {
+            _signaled = true;
+            return base.WaitOne(ms);
+        }
+
+        public new bool Set()
+        {
+            _signaled = false;
+            return base.Set();
+        }
+    }
+
     public interface IAbstractStreamingClient
     {
         void Connect(string username, string password, string apiKey);
@@ -25,6 +54,7 @@ namespace MidaxLib
         void UnsubscribeTradeSubscription(SubscribedTableKey tableListener);
         void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed);
         void ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeClosed, Portfolio.TradeBookedEvent onBookingFailed);
+        void WaitForClosing();
         //void GetMarketDetails(MarketData mktData);
     }
 
@@ -91,6 +121,7 @@ namespace MidaxLib
         public IgRestApiClient _igRestApiClient = new IgRestApiClient();
         SubscribedTableKey _igSubscribedTableKey = null;
         string _currentAccount = null;
+        ClosingWaitHandle _closing = new ClosingWaitHandle();
 
         public async void Connect(string username, string password, string apikey)
         {
@@ -184,6 +215,11 @@ namespace MidaxLib
 
         public async void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
+            if (_closing.Signaled)
+            {
+                Log.Instance.WriteEntry("Application is stopping: cannot book trade", EventLogEntryType.Warning);
+                return;
+            }
             CreatePositionRequest cpr = new CreatePositionRequest();
             cpr.epic = trade.Epic;
             cpr.expiry = "DFB";
@@ -221,6 +257,11 @@ namespace MidaxLib
             else
                 Log.Instance.WriteEntry("Closing trade id " + (trade.Id == null ? "null" : trade.Id) + " ref " + (trade.Reference == null ? "null" : trade.Reference) + "...");
             BookTrade(trade, onTradeClosed, onBookingFailed);
+        }
+
+        void IAbstractStreamingClient.WaitForClosing()
+        {
+            _closing.WaitOne(60000);
         }
 
         /*

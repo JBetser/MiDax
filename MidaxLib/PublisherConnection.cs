@@ -20,7 +20,9 @@ namespace MidaxLib
         protected Dictionary<string, TimeSeries> _expectedSignalData = null;
         protected Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
         protected Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;
-
+        protected int _nbPublishedTrades = 0;
+        protected int _expectedTradeDataCount = -1;
+        
         static protected PublisherConnection _instance = null;
         protected IReaderConnection _database = null;
 
@@ -56,7 +58,9 @@ namespace MidaxLib
             _expectedIndicatorData = new Dictionary<string,TimeSeries>();
             _expectedSignalData = new Dictionary<string, TimeSeries>();
             _expectedTradeData = tradeData;
+            _expectedTradeDataCount = tradeData.Count;
             _expectedProfitData = profitData;
+            _nbPublishedTrades = 0;
             if (indicatorData != null)
             {
                 foreach (var indData in indicatorData)

@@ -117,5 +117,10 @@ namespace MidaxLib
         {
             return DateTime.SpecifyKind(DateTime.Parse(dt), DateTimeKind.Local);
         }
+
+        public static DateTime GetNow()
+        {
+            return DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
+        }
     }
 }

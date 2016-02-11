@@ -177,6 +177,13 @@ namespace MidaxLib
             return _series.First().First().Value;
         }
 
+        public bool Empty()
+        {
+            if (_series.Count == 0)
+                return true;
+            return _series.First().Count == 0;
+        }
+
         void deleteOldData(DateTime updateTime)
         {
             while (_series.Count > 1)
