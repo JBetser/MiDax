@@ -117,14 +117,14 @@ namespace MidaxLib
         void readIndicatorData(List<CqlQuote> quotes, string[] values)
         {
             decimal? value = values.Length >= 2 ? (decimal)double.Parse(values[3]) : default(decimal?);
-            quotes.Add(new CqlQuote(values[1], DateTimeOffset.Parse(values[2]), values[1], value, value, 0));
+            quotes.Add(new CqlIndicator(values[1], DateTimeOffset.Parse(values[2]), values[1], value));
         }
 
         void readSignalData(List<CqlQuote> quotes, string[] values)
         {
-            decimal? value = (decimal)double.Parse(values[4]);
-            decimal? stockvalue = (decimal)double.Parse(values[5]);
-            quotes.Add(new CqlQuote(values[1], DateTimeOffset.Parse(values[2]), values[1], value, stockvalue, 0));
+            decimal value = (decimal)double.Parse(values[4]);
+            decimal stockvalue = (decimal)double.Parse(values[5]);
+            quotes.Add(new CqlSignal(values[1], DateTimeOffset.Parse(values[2]), values[1], (SIGNAL_CODE)value, stockvalue));
         }
 
         void readTradeData(List<Trade> trades, string[] values)
