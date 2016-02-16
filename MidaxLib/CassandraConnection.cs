@@ -277,8 +277,18 @@ namespace MidaxLib
                 return null;
             var sets = new Dictionary<string, RowSet>();
             foreach (var id in ids)
+            {
+                DateTime curStartTime, curStopTime;
+                if (id.StartsWith("LVL") || id.StartsWith("High") || id.StartsWith("Low") || id.StartsWith("Close"))
+                    curStartTime = curStopTime = new DateTime(startTime.Year, startTime.Month, startTime.Day, 22, 45, 0);
+                else
+                {
+                    curStartTime = startTime;
+                    curStopTime = stopTime;
+                }
                 sets[id] = executeQuery(string.Format(DB_SELECTION + "where {2}id='{3}' and trading_time >= {4} and trading_time <= {5}",
-                                DB_HISTORICALDATA, type, type.Substring(0, type.Length - 1), id, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
+                                DB_HISTORICALDATA, type, type.Substring(0, type.Length - 1), id, ToUnixTimestamp(curStartTime), ToUnixTimestamp(curStopTime)));
+            }
             return sets;
         }
 

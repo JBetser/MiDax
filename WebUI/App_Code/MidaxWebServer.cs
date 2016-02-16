@@ -97,6 +97,8 @@ namespace MidaxWebService
             var rowSets = PublisherConnection.Instance.Database.GetRows(startTime, stopTime, type, ids);            
             if (rowSets == null)
                 return @"[]";
+            if (rowSets.Count() == 0)
+                return @"[]";
             foreach (var quoteSet in rowSets)
                 quoteSet.Value.Reverse();
             List<CqlQuote> filteredQuotes = new List<CqlQuote>();
@@ -125,15 +127,31 @@ namespace MidaxWebService
             {
                 return @"[]";
             }
+            string keyAvg = id.Split('_').Last() + "_" + startTime.ToShortDateString();
             if (quotes.Count == 0)
                 return @"[]";
+            else if (quotes.Count == 1)
+            {
+                if (quotes[0].n.StartsWith("LVL") || quotes[0].n.StartsWith("High") || quotes[0].n.StartsWith("Low") || quotes[0].n.StartsWith("Close"))
+                {
+                    var newQuotes = new List<CqlQuote>();
+                    newQuotes.Add(new CqlQuote(quotes[0].s, startTime, quotes[0].n, quotes[0].b, quotes[0].o, quotes[0].v));
+                    newQuotes.Add(new CqlQuote(quotes[0].s, stopTime, quotes[0].n, quotes[0].b, quotes[0].o, quotes[0].v));
+                    quotes = newQuotes;
+                    if (!_avg.ContainsKey(keyAvg))
+                        _avg[keyAvg] = _avg[id.Split('_').Last() + "_" + startTime.AddDays(1).ToShortDateString()];
+                    if (!_scale.ContainsKey(keyAvg))
+                        _scale[keyAvg] = _scale[id.Split('_').Last() + "_" + startTime.AddDays(1).ToShortDateString()];
+                }
+                else
+                    quotes.Add(new CqlQuote(quotes[0].s, quotes[0].t.AddSeconds(30), quotes[0].n, quotes[0].b, quotes[0].o, quotes[0].v));
+            }
             DateTime ts = new DateTime(quotes.Last().t.Ticks);
             DateTime te = new DateTime(quotes.First().t.Ticks);
             startTime = startTime > te ? startTime : ts;
             stopTime = stopTime < te ? stopTime : te;
             double intervalSeconds = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 250);
             double intervalSecondsLarge = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 100);            
-            string keyAvg = id.Split('_').Last() + "_" +startTime.ToShortDateString();
             if (type == PublisherConnection.DATATYPE_STOCK)
             {
                 _avg[keyAvg] = (min + max) / 2m;

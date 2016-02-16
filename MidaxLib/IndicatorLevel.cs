@@ -169,7 +169,7 @@ namespace MidaxLib
         {
             Publish(updateTime, new Price(_levelMktData.Levels.Value.Pivot));
         }
-    }
+    }            
 
     public class IndicatorLevelR1 : IndicatorLevel
     {

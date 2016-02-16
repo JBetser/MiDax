@@ -136,7 +136,9 @@
 	<script type="text/javascript" src="jscript/d3.legend.js"></script>
     <script type="text/javascript" src="jscript/Init.js"></script>
     <script type="text/javascript" src="jscript/Modal.js"></script>
-    <script type="text/javascript" src="jscript/Midax.js"></script>        
+    <script type="text/javascript" src="jscript/Midax.js"></script> 
+    <script type="text/javascript" src="jscript/highstock-all.js"></script> 
+    <script type="text/javascript" src="jscript/MarkitTimeseriesServiceSample.js"></script>        
     <!--[if lte IE 9]>
     <script type='text/javascript' src='//cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.0/jquery.xdomainrequest.min.js'></script>
     <![endif]--> 
@@ -177,7 +179,9 @@
                 }
                 while (currentDate <= endDate) {
                     var genericParams = { "begin": formatDate(currentDate) + " " + $('#timestart option:selected').text(), "end": formatDate(currentDate) + " " + $('#timestop option:selected').text() };
-                    var equityParams = $.extend({ "stockid": $("#equity").val() }, genericParams);
+
+                    var equity = $("#equity").val();
+                    var equityParams = $.extend({ "stockid": equity }, genericParams);
 
                     var requests = { "GetStockData0": equityParams };
                     if (window.document.getElementById("indicator").selectedIndex > 0) {
@@ -185,6 +189,11 @@
                         var idx = 0;
                         for (var id in indicatorIds) {
                             var indicatorParams = $.extend({ "indicatorid": indicatorIds[id] + "_" + $("#equity").val() }, genericParams);
+                            if (indicatorIds[id].startsWith("Low") || indicatorIds[id].startsWith("High") || indicatorIds[id].startsWith("Close")) {
+                                var prevDate = new Date((new Date(currentDate)).setDate(currentDate.getDate() - 1));
+                                indicatorParams["begin"] = formatDate(prevDate) + " " + $('#timestart option:selected').text();
+                                indicatorParams["end"] = formatDate(prevDate) + " " + $('#timestop option:selected').text();
+                            }
                             var key = "GetIndicatorData";
                             key = key.concat(idx.toString());
                             var newDict = {};
@@ -199,6 +208,12 @@
                     }
 
                     MidaxAPI(requests, sync);
+                    
+                    /*
+                    if (equity.startsWith("MARKIT:")) {
+                        equity = equity.substring(7);
+                        var markitChart = new Markit.InteractiveChartApi(equity, 14);
+                    }*/
 
                     do {
                         var newDate = currentDate.setDate(currentDate.getDate() + 1);
@@ -259,9 +274,10 @@
                <br />
              <select class="combobox input-large" id="equity">
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
-               <option value="IX.D.SPTRD.DAILY.IP">SNP</option>
+               <option value="IX.D.DOW.DAILY.IP">DOW</option>
                <option value="IX.D.CAC.DAILY.IP">CAC</option>
                <option value="IN.D.VIX.MONTH2.IP">VIX</option>
+               <option value="AAPL">Apple</option>
                <!--option value="ED.D.ADSGY.DAILY.IP">Adidas AG</!--option>
                <option value="ED.D.ALVGY.DAILY.IP">Allianz SE</option>
                <option value="ED.D.BAS.DAILY.IP">BASF SE</option>
@@ -294,6 +310,9 @@
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>
+               <option value="High#Low#CloseBid">High/Low/Close D-1</option>
+               <option value="LVLPivot#LVLS1#LVLR1">Levels Pivot/S1/R1</option>
+               <option value="NearestLevel">Nearest Level</option>
                <option value="WMA_1#WMA_5#WMA_60">WMA 1mn/5mn/1hr</option>
                <option value="WMA_2#WMA_10#WMA_60">WMA 2mn/10mn/1hr</option>
                <option value="WMA_7#WMA_20#WMA_60">WMA 7mn/20mn/1hr</option>
@@ -302,7 +321,7 @@
                <option value="LR_0_5_0">Linear regression 5mn</option>
                <option value="LR_0_30_0">Linear regression 30mn</option-->
                <option value="WMVol_10">WM Vol 10mn</option>
-               <option value="WMVol_60">WM Vol 1h</option>
+               <option value="WMVol_60">WM Vol 1h</option>               
              </select>   
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
@@ -316,6 +335,7 @@
                <option value="MacDCas_20_60_200">MacD Cascade 20mn/1h 2pts</option>
                <option value="MacDCas_30_90_200">MacD Cascade 30mn/1h30 2pts</option>
                <option value="Mole_1_5_60">Mole 1mn/5mn/1h</option>
+               <option value="Mole_2_7_60">Mole 2mn/7mn/1h</option>
                <option value="Mole_2_10_60">Mole 2mn/10mn/1h</option>
                <option value="Mole_2_10_90">Mole 2mn/10mn/1h30</option>
                <option value="Mole_7_20_60">Mole 7mn/20mn/1h</option>

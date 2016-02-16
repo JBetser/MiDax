@@ -17,7 +17,7 @@ namespace MidaxTester
         public static void Run(List<DateTime> dates, bool generate = false, bool generate_from_db = false, bool publish_to_db = false)
         {
             Config.Settings = new Dictionary<string, string>();
-            Config.Settings["TRADING_MODE"] = "REPLAY";
+            Config.Settings["TRADING_MODE"] = "REPLAY_UAT";
             Config.Settings["REPLAY_MODE"] = generate_from_db ? "DB" : "CSV";
             if (generate_from_db)
                 Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
@@ -61,14 +61,22 @@ namespace MidaxTester
                 var models = new List<Model>();
                 models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 2, 10, 60));
                 List<MarketData> otherIndices = new List<MarketData>();
-                otherIndices.Add(new MarketData("SNP:IX.D.SPTRD.DAILY.IP"));
+                otherIndices.Add(new MarketData("DOW:IX.D.DOW.DAILY.IP"));
                 otherIndices.Add(new MarketData("CAC:IX.D.CAC.DAILY.IP"));
                 models.Add(new ModelANN((ModelMacD)models[0], new List<MarketData>(), new MarketData(Config.Settings["VOLATILITY"]), otherIndices));
                 Console.WriteLine(action + string.Format(" the ANN daily record {0}-{1}-{2}...", test.Year, test.Month, test.Day));
                 _trader = new Trader(models, onShutdown);
-                _trader.Init(GetNow);
-                _stopEvent = new AutoResetEvent(false);
-                _stopEvent.WaitOne();
+                if (generate)
+                {
+                    _trader.Start();
+                    _trader.Stop();
+                }
+                else
+                {
+                    _trader.Init(GetNow);
+                    _stopEvent = new AutoResetEvent(false);
+                    _stopEvent.WaitOne();
+                }
             }
         }
 

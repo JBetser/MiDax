@@ -17,7 +17,7 @@ namespace MidaxTester
         public static void Run(List<DateTime> dates, bool generate = false, bool generate_from_db = false, bool publish_to_db = false)
         {
             Config.Settings = new Dictionary<string, string>();
-            Config.Settings["TRADING_MODE"] = "REPLAY";
+            Config.Settings["TRADING_MODE"] = "REPLAY_UAT";
             Config.Settings["REPLAY_MODE"] = generate_from_db ? "DB" : "CSV";
             if (generate_from_db)
                 Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
@@ -63,15 +63,23 @@ namespace MidaxTester
                 models.Add(new ModelMoleTest((ModelMacD)models[0]));
                 Console.WriteLine(action + string.Format(" the Heuristic daily record {0}-{1}-{2}...", test.Year, test.Month, test.Day));
                 _trader = new Trader(models, onShutdown);
-                _trader.Init(GetNow);
-                _stopEvent = new AutoResetEvent(false);
-                _stopEvent.WaitOne();
+                if (generate)
+                {
+                    _trader.Start();
+                    _trader.Stop();
+                }
+                else
+                {
+                    _trader.Init(GetNow);
+                    _stopEvent = new AutoResetEvent(false);
+                    _stopEvent.WaitOne();
+                }
             }            
         }
 
         static DateTime GetNow()
         {
-            return Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]).AddMinutes(-2);
+            return Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]).AddMinutes(-5);
         }
 
         static void onShutdown()

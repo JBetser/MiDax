@@ -37,6 +37,7 @@ namespace MidaxLib
             _mktIndicators.Add(_wma_high);
             _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 10));
             _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 60));
+            _mktIndicators.Add(new IndicatorNearestLevel(_daxIndex));
                         
             var annId = "WMA_4_2";
             int lastversion = StaticDataConnection.Instance.GetAnnLatestVersion(annId, _daxIndex.Id);

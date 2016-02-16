@@ -99,5 +99,8 @@
     <Setting Name="INDEX_SNP" Type="System.String" Scope="Application">
       <Value Profile="(Default)">SNP:IX.D.SPTRD.DAILY.IP</Value>
     </Setting>
+    <Setting Name="INDEX_DOW" Type="System.String" Scope="User">
+      <Value Profile="(Default)">DOW:IX.D.DOW.DAILY.IP</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

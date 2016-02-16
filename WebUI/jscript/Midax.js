@@ -5,6 +5,27 @@ var monthNames = [
   "Nov", "Dec"
 ];
 
+// from here: http://stackoverflow.com/a/1968345/16363
+function get_line_intersection(p0_x, p0_y, p1_x, p1_y,
+    p2_x, p2_y, p3_x, p3_y) {
+    var rV = {};
+    var s1_x, s1_y, s2_x, s2_y;
+    s1_x = p1_x - p0_x; s1_y = p1_y - p0_y;
+    s2_x = p3_x - p2_x; s2_y = p3_y - p2_y;
+
+    var s, t;
+    s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+    t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
+
+    if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+        // Collision detected
+        rV.x = p0_x + (t * s1_x);
+        rV.y = p0_y + (t * s1_y);
+    }
+
+    return rV;
+}
+
 function processResponses(jsonData) {
     var margin = { top: 20, right: 80, bottom: 30, left: 50 },
         width = 960 - margin.left - margin.right,
@@ -27,7 +48,7 @@ function processResponses(jsonData) {
     var yAxis = d3.svg.axis()
         .scale(y)
         .orient("left");
-    
+
     var svg = d3.select("#graphs").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -40,7 +61,9 @@ function processResponses(jsonData) {
         jsonData[marketData].response.forEach(function (d) {
             d.t = new Date(d.t);
             if (!keyValueMap[d.n])
-                keyValueMap[d.n] = []
+                keyValueMap[d.n] = [];
+            if (d.n.startsWith("Low") || d.n.startsWith("High") || d.n.startsWith("Close"))
+                d.t.setDate(d.t.getDate() + 1);
             keyValueMap[d.n].push({
                 t: d.t,
                 b: d.b,
@@ -116,7 +139,7 @@ function processResponses(jsonData) {
         .interpolate("linear")
         .x(function (d) { return x(d.t); })
         .y(function (d) { return y(d.b); });
-    
+
     var stocks = Object.keys(keyValueMap);
     color.domain(stocks);
 
@@ -183,6 +206,78 @@ function processResponses(jsonData) {
         .attr("text-anchor", "middle")
         .style("font-size", "16px")
         .text(keyValueMap[firstStock][0].t.getDate() + " " + monthNames[keyValueMap[firstStock][0].t.getMonth()] + " " + keyValueMap[firstStock][0].t.getFullYear() + perfSuffix);
+
+    svg.append("path") // this is the black vertical line to follow mouse
+      .attr("class", "mouseLine")
+      .style("stroke", "black")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+    var mouseCircle = quote.append("g") // for each line, add group to hold text and circle
+          .attr("class", "mouseCircle");
+
+    mouseCircle.append("circle") // add a circle to follow along path
+      .attr("r", 7)
+      .style("stroke", function (d) { console.log(d); return color(d.name); })
+      .style("fill", "none")
+      .style("stroke-width", "1px");
+
+    mouseCircle.append("text")
+      .attr("transform", "translate(10,3)"); // text to hold coordinates
+
+    var bisect = d3.bisector(function (d) { return -d.t; }); // reusable bisect to find points before/after line
+
+    svg.append('svg:rect') // append a rect to catch mouse movements on canvas
+      .attr('width', width) // can't catch mouse events on a g element
+      .attr('height', height)
+      .attr('fill', 'none')
+      .attr('pointer-events', 'all')
+      .on('mouseout', function () { // on mouse out hide line, circles and text
+          d3.select(".mouseLine")
+              .style("opacity", "0");
+          d3.selectAll(".mouseCircle circle")
+              .style("opacity", "0");
+          d3.selectAll(".mouseCircle text")
+                .style("opacity", "0");
+      })
+      .on('mouseover', function () { // on mouse in show line, circles and text
+          d3.select(".mouseLine")
+              .style("opacity", "1");
+          d3.selectAll(".mouseCircle circle")
+             .style("opacity", "1");
+          d3.selectAll(".mouseCircle text")
+              .style("opacity", "1");
+      })
+      .on('mousemove', function () { // mouse moving over canvas
+          d3.select(".mouseLine")
+          .attr("d", function () {
+              yRange = y.range(); // range of y axis
+              var xCoor = d3.mouse(this)[0]; // mouse position in x
+              var xDate = x.invert(xCoor); // date corresponding to mouse x 
+              d3.selectAll('.mouseCircle') // for each circle group
+                  .each(function (d, i) {
+                      var rightIdx = bisect.left(quotes[i].values, -xDate); // find date in data that right off mouse
+                      var interSect = get_line_intersection(xCoor,  // get the intersection of our vertical line and the data line
+                           yRange[0],
+                           xCoor,
+                           yRange[1],
+                           x(quotes[i].values[rightIdx - 1].t),
+                           y(quotes[i].values[rightIdx - 1].b),
+                           x(quotes[i].values[rightIdx].t),
+                           y(quotes[i].values[rightIdx].b));
+
+                      d3.select(this) // move the circle to intersection
+                          .attr('transform', 'translate(' + interSect.x + ',' + interSect.y + ')');
+
+                      d3.select(this.children[1]) // write coordinates out
+                          .text(xDate.getHours() + ":" + xDate.getMinutes() + ":" + xDate.getSeconds() + " " + y.invert(interSect.y).toFixed(0));
+
+                  });
+
+              return "M" + xCoor + "," + yRange[0] + "L" + xCoor + "," + yRange[1]; // position vertical line
+          });
+      });
+
     return profit;
 }
 
@@ -223,8 +318,7 @@ function internalAPI(functionName, jsonData, sync, successCallback, errorCallbac
     });
 }
 
-function recursiveAPICalls(requests, idx, sync)
-{
+function recursiveAPICalls(requests, idx, sync) {
     var key = Object.keys(requests)[idx];
     internalAPI(key.substring(0, key.length - 1), requests[key], sync, function (jsonResponse) {
         $.extend(requests[key], { "response": jsonResponse });
@@ -244,7 +338,7 @@ function recursiveAPICalls(requests, idx, sync)
                     IG_internalAlertClient("Total profits: " + sync['profits'], false, "Model results");
             }
         }
-    });    
+    });
 }
 
 function MidaxAPI(requests, sync) {

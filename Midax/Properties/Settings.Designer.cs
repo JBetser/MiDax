@@ -241,5 +241,17 @@ namespace Midax.Properties {
                 return ((string)(this["INDEX_SNP"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("DOW:IX.D.DOW.DAILY.IP")]
+        public string INDEX_DOW {
+            get {
+                return ((string)(this["INDEX_DOW"]));
+            }
+            set {
+                this["INDEX_DOW"] = value;
+            }
+        }
     }
 }

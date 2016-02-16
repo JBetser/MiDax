@@ -73,8 +73,29 @@ namespace MidaxLib
             _signalLong.Subscribe(new Signal.Tick(LongBuy), new Signal.Tick(LongSell));
             _tradingSet = (TradingSetMole)Portfolio.Instance.GetTradingSet(this);
             _daxIndex.Subscribe(new MarketData.Tick(OnUpdateIndex), null);
-            _wmaMid.Subscribe(new MarketData.Tick(OnUpdateWMA), null);            
-            _tradingSet.Init(_daxIndex);
+
+            var indicatorLow = new IndicatorLow(_daxIndex);
+            var indicatorHigh = new IndicatorHigh(_daxIndex);
+            var indicatorCloseBid = new IndicatorCloseBid(_daxIndex);
+            var indicatorCloseOffer = new IndicatorCloseOffer(_daxIndex);
+            _mktIndicators.Add(new IndicatorNearestLevel(_daxIndex));
+            _mktIndicators.Add(indicatorLow);
+            _mktIndicators.Add(indicatorHigh);
+            _mktIndicators.Add(indicatorCloseBid);
+            _mktIndicators.Add(indicatorCloseOffer);
+            _mktEODIndicators.Add(indicatorLow);
+            _mktEODIndicators.Add(indicatorHigh);
+            _mktEODIndicators.Add(indicatorCloseBid);
+            _mktEODIndicators.Add(indicatorCloseOffer);
+            _mktEODIndicators.Add(new IndicatorLevelPivot(_daxIndex));
+            _mktEODIndicators.Add(new IndicatorLevelR1(_daxIndex));
+            _mktEODIndicators.Add(new IndicatorLevelR2(_daxIndex));
+            _mktEODIndicators.Add(new IndicatorLevelR3(_daxIndex));
+            _mktEODIndicators.Add(new IndicatorLevelS1(_daxIndex));
+            _mktEODIndicators.Add(new IndicatorLevelS2(_daxIndex));
+            _mktEODIndicators.Add(new IndicatorLevelS3(_daxIndex));
+
+            _tradingSet.Init(_daxIndex, _signal);
         }
 
         protected override bool OnBuy(Signal signal, DateTime time, Price value)
@@ -124,13 +145,8 @@ namespace MidaxLib
         }
 
         protected virtual void OnUpdateIndex(MarketData mktData, DateTime updateTime, Price stockValue)
-        {
+        {            
             _tradingSet.UpdateIndex(updateTime, stockValue.Offer); 
-        }
-
-        protected void OnUpdateWMA(MarketData indicator, DateTime updateTime, Price value)
-        {
-            _tradingSet.SetReferenceLevel(value.Mid(), _signal, _mktLevels);
         }
 
         public override TradingSet CreateTradingSet(IAbstractStreamingClient client)
@@ -158,9 +174,10 @@ namespace MidaxLib
 
     public class TradingSetMole : TradingSet
     {
-        decimal _referenceLevel = 0.0m;
+        decimal? _referenceLevel;
         int _nbPlaceholders = 0;
         Dictionary<Interval, Position> _placeHolders = new Dictionary<Interval, Position>();
+        MarketData _index;
 
         public bool Ready { get { return _ready; } }
 
@@ -172,18 +189,20 @@ namespace MidaxLib
             _nbPlaceholders = 8;
         }
 
-        public void Init(MarketData index)
+        public void Init(MarketData index, Signal signal)
         {
+            _index = index;
+            _signal = signal;
             int nbplaceholders = _nbPlaceholders;
             while(nbplaceholders-- > 0)
                 _positions.Add(new Position(index.Id));
             var idxPlaceHolder = 0;
-            _placeHolders[new Interval(-15.0m, -10.0m)] = _positions[idxPlaceHolder++];
-            _placeHolders[new Interval(-10.0m, -5.0m)] = _positions[idxPlaceHolder++];
-            _placeHolders[new Interval(-5.0m, -2.5m)] = _positions[idxPlaceHolder++];
             _placeHolders[new Interval(-2.5m, 0.0m)] = _positions[idxPlaceHolder++];
             _placeHolders[new Interval(0.0m, 2.5m)] = _positions[idxPlaceHolder++];
+            _placeHolders[new Interval(0.0m, 2.5m)] = _positions[idxPlaceHolder++];
             _placeHolders[new Interval(2.5m, 5.0m)] = _positions[idxPlaceHolder++];
+            _placeHolders[new Interval(2.5m, 5.0m)] = _positions[idxPlaceHolder++];
+            _placeHolders[new Interval(5.0m, 10.0m)] = _positions[idxPlaceHolder++];
             _placeHolders[new Interval(5.0m, 10.0m)] = _positions[idxPlaceHolder++];
             _placeHolders[new Interval(10.0m, 15.0m)] = _positions[idxPlaceHolder++];
             if (idxPlaceHolder != _nbPlaceholders)
@@ -203,13 +222,13 @@ namespace MidaxLib
 
         public bool PlaceTrade(Trade trade, decimal price)
         {
-            if (!_ready || !Config.TradingOpen(trade.TradingTime))
+            if (!_ready || !Config.TradingOpen(trade.TradingTime) || !_referenceLevel.HasValue)
                 return false;
             int idxPlaceHolder = -1;
             foreach (var placeHolder in _placeHolders)
             {
                 idxPlaceHolder++;
-                if (!placeHolder.Key.IsInside(price - _referenceLevel))
+                if (!placeHolder.Key.IsInside(price - _referenceLevel.Value))
                     continue;
                 if (!placeHolder.Value.Closed || placeHolder.Value.AwaitingTrade)
                     continue;
@@ -223,6 +242,9 @@ namespace MidaxLib
 
         public bool UpdateIndex(DateTime time, decimal price)
         {
+            if (!_index.Levels.HasValue)
+                return false;
+            _referenceLevel = IndicatorNearestLevel.GetNearestLevel(price, _index.Levels.Value);
             var signaled = false;
             var addms = 1;
             foreach (var placeHolder in _placeHolders)
@@ -248,52 +270,6 @@ namespace MidaxLib
                 }
             }
             return signaled;
-        }
-
-        public void SetReferenceLevel(decimal wmaValue, Signal signal, MarketLevels? mktLevelsMaybe)
-        {
-            //_stopLoss = Math.Max(mktLevels.R1 - mktLevels.Pivot, mktLevels.Pivot - mktLevels.S1);            
-            _signal = signal;
-            _referenceLevel = wmaValue;
-            if (!mktLevelsMaybe.HasValue)
-                return;
-            var mktLevels = mktLevelsMaybe.Value;
-            var diff = decimal.MaxValue;
-            if (Math.Abs(wmaValue - mktLevels.R3) < diff)
-            {
-                diff = Math.Abs(wmaValue - mktLevels.R3);
-                _referenceLevel = mktLevels.R3;                
-            }
-            if (Math.Abs(wmaValue - mktLevels.R2) < diff)
-            {
-                diff = Math.Abs(wmaValue - mktLevels.R2);
-                _referenceLevel = mktLevels.R2;
-            }
-            if (Math.Abs(wmaValue - mktLevels.R1) < diff)
-            {
-                diff = Math.Abs(wmaValue - mktLevels.R1);
-                _referenceLevel = mktLevels.R1;
-            }
-            if (Math.Abs(wmaValue - mktLevels.Pivot) < diff)
-            {
-                diff = Math.Abs(wmaValue - mktLevels.Pivot);
-                _referenceLevel = mktLevels.Pivot;
-            }
-            if (Math.Abs(wmaValue - mktLevels.S1) < diff)
-            {
-                diff = Math.Abs(wmaValue - mktLevels.S1);
-                _referenceLevel = mktLevels.S1;
-            }
-            if (Math.Abs(wmaValue - mktLevels.S2) < diff)
-            {
-                diff = Math.Abs(wmaValue - mktLevels.S2);
-                _referenceLevel = mktLevels.S2;
-            }
-            if (Math.Abs(wmaValue - mktLevels.S3) < diff)
-            {
-                diff = Math.Abs(wmaValue - mktLevels.S3);
-                _referenceLevel = mktLevels.S3;
-            }          
         }
     }
 }

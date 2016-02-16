@@ -57,7 +57,7 @@ public class Server
                     stocks.Add(new MarketData(stock));
                 List<MarketData> otherIndices = new List<MarketData>();
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
-                otherIndices.Add(new MarketData(dicSettings["INDEX_SNP"]));
+                otherIndices.Add(new MarketData(dicSettings["INDEX_DOW"]));
                 var models = new List<Model>();
                 var macD_10_30_90 = new ModelMacD(index, 10, 30, 90);
                 models.Add(macD_10_30_90);
