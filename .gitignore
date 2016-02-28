@@ -71,6 +71,8 @@ MidaxTrader/bin/Debug/*.*
 MidaxTrader/obj/Debug/*.*
 Calibrator/bin/Debug/*.*
 Calibrator/obj/Debug/*.*
+MarkitDataFeedTest/bin/Debug/*.*
+MarkitDataFeedTest/obj/Debug/*.*
 MidaxTester/bin/Release/*.*
 MidaxTester/obj/Release/*.*
 Midax/bin/Release/*.*
@@ -93,5 +95,7 @@ MidaxTrader/bin/Release/*.*
 MidaxTrader/obj/Release/*.*
 Calibrator/bin/Release/*.*
 Calibrator/obj/Release/*.*
+MarkitDataFeedTest/bin/Release/*.*
+MarkitDataFeedTest/obj/Release/*.*
 WebDebug/*
 *.bak
