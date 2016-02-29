@@ -135,7 +135,7 @@ namespace MidaxLib
         public IndicatorLevelMean(MarketData mktData)
             : base("WMA_1D_" + mktData.Id, mktData, 0)
         {
-            TimeSpan timeDiff = (DateTime.Parse(Config.Settings["PUBLISHING_STOP_TIME"]) - DateTime.Parse(Config.Settings["PUBLISHING_START_TIME"]));
+            TimeSpan timeDiff = (Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]) - Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]));
             _periodSeconds = (timeDiff.Hours * 60 + timeDiff.Minutes) * 60 + timeDiff.Seconds;
         }
 

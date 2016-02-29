@@ -14,10 +14,13 @@ namespace MidaxTester
         static AutoResetEvent _stopEvent;
         static bool _generate;
 
-        public static void Run(List<DateTime> dates, bool generate = false, bool generate_from_db = false, bool publish_to_db = false)
+        public static void Run(List<DateTime> dates, bool generate = false, bool generate_from_db = false, bool publish_to_db = false, bool use_uat_db = false)
         {
             Config.Settings = new Dictionary<string, string>();
-            Config.Settings["TRADING_MODE"] = "REPLAY_UAT";
+            if (use_uat_db)
+                Config.Settings["TRADING_MODE"] = "REPLAY_UAT";
+            else
+                Config.Settings["TRADING_MODE"] = "REPLAY";
             Config.Settings["REPLAY_MODE"] = generate_from_db ? "DB" : "CSV";
             if (generate_from_db)
                 Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";

@@ -33,23 +33,18 @@ namespace DBImporter
 
                 MarketDataConnection.Instance.Connect(null);
 
-                var index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
-                index.Subscribe(OnUpdate, null);
+                var indexDAX = new MarketData("DAX:IX.D.DAX.DAILY.IP");
+                indexDAX.Subscribe(OnUpdate, null);
+                var indexCAC = new MarketData("CAC:IX.D.CAC.DAILY.IP");
+                indexCAC.Subscribe(OnUpdate, null);
+                var indexDOW = new MarketData("DOW:IX.D.DOW.DAILY.IP");
+                indexDOW.Subscribe(OnUpdate, null);
                 MarketDataConnection.Instance.StartListening();
                 MarketDataConnection.Instance.StopListening();
-                /*
-                var indicatorLevels = new List<ILevelPublisher>();
-                indicatorLevels.Add(new IndicatorLevelPivot(index));
-                indicatorLevels.Add(new IndicatorLevelR1(index));
-                indicatorLevels.Add(new IndicatorLevelR2(index));
-                indicatorLevels.Add(new IndicatorLevelR3(index));
-                indicatorLevels.Add(new IndicatorLevelS1(index));
-                indicatorLevels.Add(new IndicatorLevelS2(index));
-                indicatorLevels.Add(new IndicatorLevelS3(index));
-                foreach (var ind in indicatorLevels)
-                    ind.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
-                PublisherConnection.Instance.Close();*/
-                index.Clear();
+
+                indexDAX.Clear();
+                indexCAC.Clear();
+                indexDOW.Clear();
 
                 do
                 {

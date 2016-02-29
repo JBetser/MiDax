@@ -108,28 +108,28 @@ namespace MidaxLib
 
         void readMarketData(List<CqlQuote> quotes, string[] values)
         {
-            decimal? bid = values.Length >= 5 ? (decimal)double.Parse(values[4]) : default(decimal?);
-            decimal? offer = values.Length >= 6 ? (decimal)double.Parse(values[5]) : default(decimal?);
+            decimal? bid = values.Length >= 5 ? decimal.Parse(values[4]) : default(decimal?);
+            decimal? offer = values.Length >= 6 ? decimal.Parse(values[5]) : default(decimal?);
             int? volume = values.Length >= 7 ? int.Parse(values[6]) : default(int?);
             quotes.Add(new CqlQuote(values[1], DateTimeOffset.Parse(values[2]), values[3], bid, offer, volume)); 
         }
 
         void readIndicatorData(List<CqlQuote> quotes, string[] values)
         {
-            decimal? value = values.Length >= 2 ? (decimal)double.Parse(values[3]) : default(decimal?);
+            decimal? value = values.Length >= 2 ? decimal.Parse(values[3]) : default(decimal?);
             quotes.Add(new CqlIndicator(values[1], DateTimeOffset.Parse(values[2]), values[1], value));
         }
 
         void readSignalData(List<CqlQuote> quotes, string[] values)
         {
-            decimal value = (decimal)double.Parse(values[4]);
-            decimal stockvalue = (decimal)double.Parse(values[5]);
+            decimal value = decimal.Parse(values[4]);
+            decimal stockvalue = decimal.Parse(values[5]);
             quotes.Add(new CqlSignal(values[1], DateTimeOffset.Parse(values[2]), values[1], (SIGNAL_CODE)value, stockvalue));
         }
 
         void readTradeData(List<Trade> trades, string[] values)
         {
-            Trade trade = new Trade(Config.ParseDateTimeLocal(values[7]), values[1], (SIGNAL_CODE)Enum.Parse(typeof(SIGNAL_CODE), values[4]), int.Parse(values[6]), (decimal)double.Parse(values[5]));
+            Trade trade = new Trade(Config.ParseDateTimeLocal(values[7]), values[1], (SIGNAL_CODE)Enum.Parse(typeof(SIGNAL_CODE), values[4]), int.Parse(values[6]), decimal.Parse(values[5]));
             trade.ConfirmationTime = Config.ParseDateTimeLocal(values[2]);
             trade.Id = values[3];
             trade.Reference = values[8];
@@ -143,16 +143,19 @@ namespace MidaxLib
 
         void readMarketLevelData(List<MarketLevels> mktLevels, string[] values)
         {
+            var value = decimal.Parse(values[2]);
+            if (value == decimal.MinValue || value == decimal.MaxValue)
+                return;
             if (mktLevels.Count == 0)
                 mktLevels.Add(new MarketLevels(values[1].Split('_')[1], 0m, 0m, 0m, 0m));
             if (values[1].Contains("Low"))
-                mktLevels[0] = new MarketLevels(mktLevels[0].AssetId, (decimal)double.Parse(values[2]), mktLevels[0].High, mktLevels[0].CloseBid, mktLevels[0].CloseOffer);
+                mktLevels[0] = new MarketLevels(mktLevels[0].AssetId, value, mktLevels[0].High, mktLevels[0].CloseBid, mktLevels[0].CloseOffer);
             else if (values[1].Contains("High"))
-                mktLevels[0] = new MarketLevels(mktLevels[0].AssetId, mktLevels[0].Low, (decimal)double.Parse(values[2]), mktLevels[0].CloseBid, mktLevels[0].CloseOffer);
+                mktLevels[0] = new MarketLevels(mktLevels[0].AssetId, mktLevels[0].Low, value, mktLevels[0].CloseBid, mktLevels[0].CloseOffer);
             else if (values[1].Contains("CloseBid"))
-                mktLevels[0] = new MarketLevels(mktLevels[0].AssetId, mktLevels[0].Low, mktLevels[0].High, (decimal)double.Parse(values[2]), mktLevels[0].CloseOffer);
+                mktLevels[0] = new MarketLevels(mktLevels[0].AssetId, mktLevels[0].Low, mktLevels[0].High, value, mktLevels[0].CloseOffer);
             else if (values[1].Contains("CloseOffer"))
-                mktLevels[0] = new MarketLevels(mktLevels[0].AssetId, mktLevels[0].Low, mktLevels[0].High, mktLevels[0].CloseBid, (decimal)double.Parse(values[2]));
+                mktLevels[0] = new MarketLevels(mktLevels[0].AssetId, mktLevels[0].Low, mktLevels[0].High, mktLevels[0].CloseBid, value);
         }
 
         public Dictionary<string, MarketLevels> GetMarketLevels(DateTime updateTime, List<string> ids)
@@ -162,6 +165,8 @@ namespace MidaxLib
             var mktLevelsGen = getRows<MarketLevels>(updateTime, updateTime, PublisherConnection.DATATYPE_MARKETLEVELS, ids, readMarketLevelData);
             var mktLevels = new Dictionary<string, MarketLevels>();
             if (mktLevelsGen.Count == 0)
+                return mktLevels;
+            if (mktLevelsGen.Values.First().Count == 0)
                 return mktLevels;
             mktLevels.Add(mktLevelsGen.Keys.First(), mktLevelsGen.Values.First()[0]);
             return mktLevels;

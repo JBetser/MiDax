@@ -14,16 +14,46 @@ namespace MidaxTester
         static void Main(string[] args)
         {
             // if there is a first argument "-G" then generate new results, otherwise test against the existing ones
-            bool quick_test = (args.Length == 1 && args[0] == "-Q");
-            bool generate = (args.Length >= 1 && args[0] == "-G");
-            bool generate_to_db = ((args.Length >= 2 && generate && args[1] == "-TODB") ||
-                                    (args.Length >= 3 && generate && (args[1] == "-TODB" || args[2] == "-TODB")));
-            bool generate_from_db = ((args.Length >= 2 && generate && args[1] == "-FROMDB") ||
-                                    (args.Length >= 3 && generate && (args[1] == "-FROMDB" || args[2] == "-FROMDB")));
-            string type = args.Length >= 4 ? args[3] : "";
-            string date = args.Length >= 5 ? args[4] : "";
+            bool quick_test = false;
+            bool generate = false;
+            bool generate_to_db = false;
+            bool generate_from_db = false;
+            bool heuristic = true;
+            bool ann = true;
+            bool use_uat_db = false;
+            string date = "";
+            foreach (var arg in args)
+            {
+                switch (arg)
+                {
+                    case "-Q":
+                        quick_test = true;
+                        break;
+                    case "-G":
+                        generate = true;
+                        break;
+                    case "-FROMDB":
+                        generate_from_db = true;
+                        break;
+                    case "-TODB":
+                        generate_to_db = true;
+                        break;
+                    case "-UAT":
+                        use_uat_db = true;
+                        break;
+                    case "-Heuristic":
+                        ann = false;
+                        break;
+                    case "-ANN":
+                        heuristic = false;
+                        break;
+                    case "-DATE":
+                        date = arg.Substring(5);
+                        break;
+                }
+            }
             // test core functionalities
-            if (!generate_to_db)
+            if (!generate_to_db && heuristic && ann)
                 Core.Run(generate, generate_from_db);
 
             /*
@@ -44,14 +74,14 @@ namespace MidaxTester
                 // test whole daily trading batches
                 List<DateTime> tests = new List<DateTime>();
                 if (date == "")
-                    tests.Add(new DateTime(2016, 1, 22));
+                    tests.Add(new DateTime(2016, 2, 26));
                 else
-                    tests.Add(DateTime.Parse(date.Substring(1)));
+                    tests.Add(DateTime.Parse(date));
 
-                if (type == "" || type == "-Heuristic")
-                    Heuristic.Run(tests, generate, generate_from_db, generate_to_db);
-                if (type == "" || type == "-ANN")
-                    ANN.Run(tests, generate, generate_from_db, generate_to_db);
+                if (heuristic)
+                    Heuristic.Run(tests, generate, generate_from_db, generate_to_db, use_uat_db);
+                if (ann)
+                    ANN.Run(tests, generate, generate_from_db, generate_to_db, use_uat_db);
             }
 
             string statusSuccess = generate ? "Tests generated successfully" : "Tests passed successfully";

@@ -108,14 +108,26 @@ namespace MidaxLib
             return tests.Aggregate("", (prev, next) => prev + next + ";", res => res.Substring(0, res.Length - 1));
         }
 
+        static DateTime parseDateTime(string dt)
+        {
+            if (dt.Length > 4)
+            {
+                if (dt[4] == '/')
+                    return DateTime.ParseExact(dt, "yyyy/M/d h:m:s", System.Globalization.CultureInfo.InvariantCulture);
+                else if (dt[4] == '-')
+                    return DateTime.ParseExact(dt, "yyyy-M-d h:m:s", System.Globalization.CultureInfo.InvariantCulture);
+            }
+            return DateTime.Parse(dt);
+        }
+
         public static DateTime ParseDateTimeUTC(string dt)
         {
-            return DateTime.SpecifyKind(DateTime.Parse(dt), DateTimeKind.Utc);
+            return DateTime.SpecifyKind(parseDateTime(dt), DateTimeKind.Utc);
         }
 
         public static DateTime ParseDateTimeLocal(string dt)
         {
-            return DateTime.SpecifyKind(DateTime.Parse(dt), DateTimeKind.Local);
+            return DateTime.SpecifyKind(parseDateTime(dt), DateTimeKind.Local);
         }
 
         public static DateTime GetNow()

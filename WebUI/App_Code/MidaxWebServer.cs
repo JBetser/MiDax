@@ -42,6 +42,8 @@ namespace MidaxWebService
                 try
                 {
                     rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/Midax/Web.config");
+                    if (rootWebConfig.AppSettings.Settings.Count == 0)
+                        rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/WebDebug/Web.config");
                 }
                 catch (Exception)
                 {

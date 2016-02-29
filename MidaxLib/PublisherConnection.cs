@@ -92,7 +92,7 @@ namespace MidaxLib
 
         protected static long ToUnixTimestamp(string dateTime)
         {
-            return ToUnixTimestamp(DateTime.Parse(dateTime));
+            return ToUnixTimestamp(Config.ParseDateTimeLocal(dateTime));
         }
     }
 }
