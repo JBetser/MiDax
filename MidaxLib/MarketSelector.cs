@@ -24,6 +24,8 @@ namespace MidaxLib
         public override void Subscribe(string[] epics, IHandyTableListener tableListener)
         {
             Dictionary<string, List<CqlQuote>> priceData = GetReplayData(epics);
+            if (priceData.Count == 0)
+                return;
 
             foreach(var epic in epics){
                 // for each quote, associate the observed gains in the near future

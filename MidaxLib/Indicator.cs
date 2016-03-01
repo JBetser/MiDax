@@ -13,6 +13,8 @@ namespace MidaxLib
         protected List<MarketData> _mktData = null;
         bool _publishingEnabled = true;
         bool _subscribed = false;
+        DateTime _lastTime;
+        Price _lastValue = null;
 
         public bool PublishingEnabled { get { return _publishingEnabled; } set { _publishingEnabled = value; } }
         public MarketData SignalStock { get { return _mktData[0]; } }
@@ -48,13 +50,18 @@ namespace MidaxLib
 
         protected virtual void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
-            _values.Add(updateTime, value);            
+            _values.Add(updateTime, value);
+            _lastTime = updateTime;
+            _lastValue = value;
         }
 
         public virtual void OnTick(MarketData mktData, DateTime updateTime, Price value)
         {
-            foreach (Tick ticker in this._updateHandlers)
-                ticker(this, updateTime, value);
+            if (_lastValue != null)
+            {
+                foreach (Tick ticker in this._updateHandlers)
+                    ticker(this, _lastTime, _lastValue);
+            }
         }
 
         public override void Publish(DateTime updateTime, Price price)
