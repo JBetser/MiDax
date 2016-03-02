@@ -523,13 +523,19 @@ namespace MidaxLib
             _csvMktDetailsStringBuilder = new StringBuilder();
         }
 
+        string formatDateTime(DateTime dt)
+        {
+            return string.Format("{0}/{1}/{2} {3}:{4}:{5}", dt.Day, dt.Month, dt.Year,
+                dt.Hour, dt.Minute, dt.Second);
+        }
+
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
         {
             if (updateTime == DateTimeOffset.MinValue || mktData.Id == "")
                 throw new ApplicationException("Cannot insert a market data without id and update time");
             var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6}{7}",
                 DATATYPE_STOCK, mktData.Id,
-                updateTime, mktData.Name,
+                formatDateTime(updateTime), mktData.Name,
                 price.Bid, price.Offer,
                 price.Volume, Environment.NewLine);
             _csvStockStringBuilder.Append(newLine);
@@ -546,7 +552,7 @@ namespace MidaxLib
             }
             var newLine = string.Format("{0},{1},{2},{3}{4}",
                 DATATYPE_INDICATOR, indicator.Id,
-                updateTime, value, Environment.NewLine);
+                formatDateTime(updateTime), value, Environment.NewLine);
             _csvIndicatorStringBuilder.Append(newLine);
         }
 
@@ -557,7 +563,7 @@ namespace MidaxLib
             string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
             var newLine = string.Format("{0},{1},{2},{3},{4},{5}{6}",
                 DATATYPE_SIGNAL, signal.Id,
-                updateTime, tradeRef, (int)code, stockvalue, Environment.NewLine);
+                formatDateTime(updateTime), tradeRef, (int)code, stockvalue, Environment.NewLine);
             _csvSignalStringBuilder.Append(newLine);
         }
 
@@ -566,14 +572,15 @@ namespace MidaxLib
             if (trade.TradingTime == DateTimeOffset.MinValue || trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "" || trade.Id == "")
                 throw new ApplicationException("Cannot insert a trade without booking information");
             var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}{9}",
-                DATATYPE_TRADE, trade.Epic, trade.ConfirmationTime, trade.Id, trade.Direction, trade.Price, trade.Size, trade.TradingTime, trade.Reference,
+                DATATYPE_TRADE, trade.Epic, formatDateTime(trade.ConfirmationTime), trade.Id, trade.Direction, trade.Price, trade.Size, 
+                formatDateTime(trade.TradingTime), trade.Reference,
                 Environment.NewLine);
             _csvTradeStringBuilder.Append(newLine);
         }
 
         public override void Insert(DateTime updateTime, string stockid, Value profit)
         {
-            var newLine = string.Format("{0},{1},{2}{3}", updateTime, stockid, profit.X,
+            var newLine = string.Format("{0},{1},{2}{3}", formatDateTime(updateTime), stockid, profit.X,
                 Environment.NewLine);
             _csvProfitStringBuilder.Append(newLine);
         }
