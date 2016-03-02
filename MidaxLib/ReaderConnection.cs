@@ -24,15 +24,28 @@ namespace MidaxLib
         string _csvFile = null;
         StreamReader _csvReader;
 
+        public CsvReader(DateTime dataTime)
+        {
+            _csvFile = Config.Settings["ROOT_FOLDER"] + string.Format(@"AlgoTesting\algotest_{0}_{1}_{2}.csv", dataTime.Day, dataTime.Month, dataTime.Year);
+            if (!File.Exists(_csvFile))
+                _csvFile = Config.Settings["ROOT_FOLDER"] + string.Format(@"DBImporter\MktData\mktdata_{0}_{1}_{2}.csv", dataTime.Day, dataTime.Month, dataTime.Year);
+            if (!File.Exists(_csvFile))
+                throw new ApplicationException(string.Format(@"No market data available for {0} {1} {2}", dataTime.Day, dataTime.Month, dataTime.Year));
+            openCsv();
+        }
+
         public CsvReader(string csv)
         {
-            _csvFile = csv;            
-            if (_csvFile != null)
+            if (csv != null)
             {
-                if (Config.Settings.ContainsKey("ROOT_FOLDER"))
-                    _csvFile = Config.Settings["ROOT_FOLDER"] + _csvFile;
-                _csvReader = new StreamReader(File.OpenRead(_csvFile));
+                _csvFile = Config.Settings["ROOT_FOLDER"] + csv;
+                openCsv();
             }
+        }
+
+        void openCsv()
+        {
+            _csvReader = new StreamReader(File.OpenRead(_csvFile));
         }
 
         delegate void funcReadData<T>(List<T> data, string[] values);
@@ -92,7 +105,7 @@ namespace MidaxLib
 
         Dictionary<string, List<CqlQuote>> IReaderConnection.GetRows(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            var csv = new CsvReader(string.Format(@"DBImporter\MktData\mktdata_{0}_{1}_{2}.csv",startTime.Day, startTime.Month, startTime.Year));
+            var csv = new CsvReader(startTime);
             csv.GetMarketLevels(startTime, ids);
             var mktQuotes = csv.GetMarketDataQuotes(startTime, stopTime, type, ids);
             if (type == PublisherConnection.DATATYPE_STOCK)
@@ -111,20 +124,20 @@ namespace MidaxLib
             decimal? bid = values.Length >= 5 ? decimal.Parse(values[4]) : default(decimal?);
             decimal? offer = values.Length >= 6 ? decimal.Parse(values[5]) : default(decimal?);
             int? volume = values.Length >= 7 ? int.Parse(values[6]) : default(int?);
-            quotes.Add(new CqlQuote(values[1], DateTimeOffset.Parse(values[2]), values[3], bid, offer, volume)); 
+            quotes.Add(new CqlQuote(values[1], Config.ParseDateTimeUTC(values[2]), values[3], bid, offer, volume)); 
         }
 
         void readIndicatorData(List<CqlQuote> quotes, string[] values)
         {
             decimal? value = values.Length >= 2 ? decimal.Parse(values[3]) : default(decimal?);
-            quotes.Add(new CqlIndicator(values[1], DateTimeOffset.Parse(values[2]), values[1], value));
+            quotes.Add(new CqlIndicator(values[1], Config.ParseDateTimeUTC(values[2]), values[1], value));
         }
 
         void readSignalData(List<CqlQuote> quotes, string[] values)
         {
             decimal value = decimal.Parse(values[4]);
             decimal stockvalue = decimal.Parse(values[5]);
-            quotes.Add(new CqlSignal(values[1], DateTimeOffset.Parse(values[2]), values[1], (SIGNAL_CODE)value, stockvalue));
+            quotes.Add(new CqlSignal(values[1], Config.ParseDateTimeUTC(values[2]), values[1], (SIGNAL_CODE)value, stockvalue));
         }
 
         void readTradeData(List<Trade> trades, string[] values)

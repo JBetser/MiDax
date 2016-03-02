@@ -114,16 +114,12 @@ namespace MidaxLib
             {
                 var dateTimeComponents = dt.Split(' ');
                 var hrmnsec = (from cmpnt in dateTimeComponents[1].Split(':') select int.Parse(cmpnt)).ToArray();
-                if (dt[1] == '/' || dt[2] == '/')
-                {
-                    var yrmntday = (from cmpnt in dateTimeComponents[0].Split('/') select int.Parse(cmpnt)).ToArray();
-                    return new DateTime(yrmntday[2], yrmntday[1], yrmntday[0], hrmnsec[0], hrmnsec[1], hrmnsec[2]);
-                }
-                else
-                {
-                    var yrmntday = (from cmpnt in dateTimeComponents[0].Split(dt[4]) select int.Parse(cmpnt)).ToArray();
-                    return new DateTime(yrmntday[0], yrmntday[1], yrmntday[2], hrmnsec[0], hrmnsec[1], hrmnsec[2]);
-                }
+                var splitChar = (dt[1] == '/' || dt[2] == '/') ? '/' : dt[4];
+                var yrmntday = (from cmpnt in dateTimeComponents[0].Split(splitChar) select int.Parse(cmpnt)).ToArray();
+                var year = yrmntday[2] > 1900 ? yrmntday[2] : yrmntday[0];
+                var day = yrmntday[2] > 1900 ? yrmntday[0] : yrmntday[2];
+                return hrmnsec.Length == 2 ? new DateTime(year, yrmntday[1], day, hrmnsec[0], hrmnsec[1], 0)
+                    : new DateTime(yrmntday[2], yrmntday[1], yrmntday[0], hrmnsec[0], hrmnsec[1], hrmnsec[2]);
             }
             return DateTime.Parse(dt);
         }
