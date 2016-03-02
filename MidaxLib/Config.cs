@@ -110,16 +110,18 @@ namespace MidaxLib
 
         static DateTime parseDateTime(string dt)
         {
-            if (dt.Length > 13)
+            // covers string like "2016-1-1 8:0", "2016/1/1 8:0", "28/1/2016 8:0", "28-1-2016 8:0", 
+            // "2016-1-1 13:0:0", "2016/1/1 13:0:0", "28/1/2016 13:45:10", "28-1-2016 13:45:10"
+            if (dt.Length > 11) 
             {
                 var dateTimeComponents = dt.Split(' ');
                 var hrmnsec = (from cmpnt in dateTimeComponents[1].Split(':') select int.Parse(cmpnt)).ToArray();
-                var splitChar = (dt[1] == '/' || dt[2] == '/') ? '/' : dt[4];
+                var splitChar = (dt[1] == '/' || dt[2] == '/') ? '/' : ((dt[1] == '-' || dt[2] == '-') ? '-' : dt[4]);
                 var yrmntday = (from cmpnt in dateTimeComponents[0].Split(splitChar) select int.Parse(cmpnt)).ToArray();
                 var year = yrmntday[2] > 1900 ? yrmntday[2] : yrmntday[0];
                 var day = yrmntday[2] > 1900 ? yrmntday[0] : yrmntday[2];
                 return hrmnsec.Length == 2 ? new DateTime(year, yrmntday[1], day, hrmnsec[0], hrmnsec[1], 0)
-                    : new DateTime(yrmntday[2], yrmntday[1], yrmntday[0], hrmnsec[0], hrmnsec[1], hrmnsec[2]);
+                    : new DateTime(year, yrmntday[1], day, hrmnsec[0], hrmnsec[1], hrmnsec[2]);
             }
             return DateTime.Parse(dt);
         }

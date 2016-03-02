@@ -38,7 +38,8 @@ namespace MidaxLib
         {
             if (csv != null)
             {
-                _csvFile = Config.Settings["ROOT_FOLDER"] + csv;
+                var root = Config.Settings.ContainsKey("ROOT_FOLDER") ? Config.Settings["ROOT_FOLDER"] : "";
+                _csvFile = root + csv;
                 openCsv();
             }
         }
