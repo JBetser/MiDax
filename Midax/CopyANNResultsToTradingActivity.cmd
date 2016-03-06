@@ -3,6 +3,7 @@ cd /d %~dp0
 cd ..\MidaxTester\expected_results
 for /r . %%A in (anngen_*.csv) DO CALL :loopbody %%~nxA
 cd ..\..\Midax
+msg "%username%" Copy succeeded
 GOTO :EOF
 :loopbody
 SET curcsv=%1

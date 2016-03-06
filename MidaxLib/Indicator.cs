@@ -43,7 +43,7 @@ namespace MidaxLib
             if (_subscribed)
             {
                 _subscribed = false;
-                foreach (MarketData mktData in _mktData)
+                foreach (MarketData mktData in (from m in _mktData select m).Reverse())
                     mktData.Unsubscribe(OnUpdate, OnTick);
             }
         }

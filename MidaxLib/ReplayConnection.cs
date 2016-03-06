@@ -191,6 +191,7 @@ namespace MidaxLib
 
         void IAbstractStreamingClient.Unsubscribe()
         {
+            _closing = new ClosingWaitHandle();
         }
 
         protected IHandyTableListener _tradingEventTable = null;

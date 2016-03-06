@@ -16,7 +16,7 @@ namespace MidaxTrader
         {
             Config.Settings = new Dictionary<string, string>();
             Config.Settings["APP_NAME"] = "Midax";
-            Config.Settings["API_KEY"] = "8d341413c2eae2c35bb5b47a594ef08ae18cb3b7";
+            Config.Settings["IG_KEY"] = "8d341413c2eae2c35bb5b47a594ef08ae18cb3b7";
             Config.Settings["USER_NAME"] = "ksbitlsoftdemo";
             Config.Settings["PASSWORD"] = "Kotik0483";
             Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";

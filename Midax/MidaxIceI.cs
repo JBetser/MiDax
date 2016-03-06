@@ -45,7 +45,18 @@ namespace Midax
         
         public override string getStatus(Ice.Current current)
         {
-            return  "OK";
+            return "OK";
+        }
+
+        public override void log(string message, long logType, Ice.Current current)
+        {
+            Log.Instance.WriteEntry(message, (EventLogEntryType)logType);
+        }
+
+        public override void tick(string mktDataId, long year, long month, long day,
+            long hours, long minutes, long seconds, long milliseconds, 
+            double price, long volume, Ice.Current current)
+        {
         }
     }
 }

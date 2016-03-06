@@ -111,19 +111,19 @@ namespace MidaxLib
             {
                 if (stopListening)
                     MarketDataConnection.Instance.StopListening();                    
-                foreach (Signal sig in _mktSignals)
+                foreach (Signal sig in (from s in _mktSignals select s).Reverse())
                     sig.Unsubscribe();
-                foreach (Indicator ind in _mktIndicators)
+                foreach (Indicator ind in (from i in _mktIndicators select i).Reverse())
                 {
                     ind.Unsubscribe(OnUpdateIndicator, null);
                     ind.Clear();
                 }
-                foreach (MarketData idx in _mktIndices)
+                foreach (MarketData idx in (from i in _mktIndices select i).Reverse())
                 {
                     idx.Unsubscribe(OnUpdateMktData, null);
                     idx.Clear();
                 }
-                foreach (MarketData stock in _mktData)
+                foreach (MarketData stock in (from s in _mktData select s).Reverse())
                     stock.Clear();
             }
         }   

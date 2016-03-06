@@ -51,8 +51,8 @@ namespace MidaxLib
             signalParams.Add(_daxIndex);
             signalParams.Add(annIndicators);
             signalParams.Add(_annWeights);
-            //this._ann = (SignalANN)Activator.CreateInstance(signalType, signalParams.ToArray());
-            //this._mktSignals.Add(this._ann);
+            this._ann = (SignalANN)Activator.CreateInstance(signalType, signalParams.ToArray());
+            this._mktSignals.Add(this._ann);
 
             var allIndices = new List<MarketData>();
             allIndices.Add(macD.Index);

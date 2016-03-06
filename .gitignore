@@ -47,6 +47,8 @@ Temporary Items
 *.suo
 *.dll
 *.cache
+*/Debug64/*.*
+*/Release64/*.*
 Midax/db/logs/*.*
 WebUI/bin/*.*
 MidaxTester/bin/Debug/*.*
@@ -73,6 +75,7 @@ Calibrator/bin/Debug/*.*
 Calibrator/obj/Debug/*.*
 MarkitDataFeedTest/bin/Debug/*.*
 MarkitDataFeedTest/obj/Debug/*.*
+ActiveTick/Debug/*.*
 MidaxTester/bin/Release/*.*
 MidaxTester/obj/Release/*.*
 Midax/bin/Release/*.*
@@ -97,5 +100,15 @@ Calibrator/bin/Release/*.*
 Calibrator/obj/Release/*.*
 MarkitDataFeedTest/bin/Release/*.*
 MarkitDataFeedTest/obj/Release/*.*
+ActiveTick/Release/*.*
 WebDebug/*
 *.bak
+*.sdf
+*.log
+*.tlog
+*.obj
+*.pch
+*.lastbuildstate
+*.ilk
+*.idb
+*.ipch

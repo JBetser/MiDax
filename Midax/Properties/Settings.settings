@@ -8,13 +8,13 @@
     <Setting Name="APP_NAME" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Midax</Value>
     </Setting>
-    <Setting Name="API_KEY" Type="System.String" Scope="Application">
+    <Setting Name="IG_KEY" Type="System.String" Scope="Application">
       <Value Profile="(Default)">8d341413c2eae2c35bb5b47a594ef08ae18cb3b7</Value>
     </Setting>
-    <Setting Name="USER_NAME" Type="System.String" Scope="Application">
+    <Setting Name="IG_USER_NAME" Type="System.String" Scope="Application">
       <Value Profile="(Default)">ksbitlsoftdemo</Value>
     </Setting>
-    <Setting Name="PASSWORD" Type="System.String" Scope="Application">
+    <Setting Name="IG_PASSWORD" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Kotik0483</Value>
     </Setting>
     <Setting Name="INDEX" Type="System.String" Scope="Application">
@@ -99,7 +99,7 @@
     <Setting Name="INDEX_SNP" Type="System.String" Scope="Application">
       <Value Profile="(Default)">SNP:IX.D.SPTRD.DAILY.IP</Value>
     </Setting>
-    <Setting Name="INDEX_DOW" Type="System.String" Scope="User">
+    <Setting Name="INDEX_DOW" Type="System.String" Scope="Application">
       <Value Profile="(Default)">DOW:IX.D.DOW.DAILY.IP</Value>
     </Setting>
   </Settings>

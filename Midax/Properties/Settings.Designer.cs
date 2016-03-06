@@ -44,27 +44,27 @@ namespace Midax.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("8d341413c2eae2c35bb5b47a594ef08ae18cb3b7")]
-        public string API_KEY {
+        public string IG_KEY {
             get {
-                return ((string)(this["API_KEY"]));
+                return ((string)(this["IG_KEY"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("ksbitlsoftdemo")]
-        public string USER_NAME {
+        public string IG_USER_NAME {
             get {
-                return ((string)(this["USER_NAME"]));
+                return ((string)(this["IG_USER_NAME"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Kotik0483")]
-        public string PASSWORD {
+        public string IG_PASSWORD {
             get {
-                return ((string)(this["PASSWORD"]));
+                return ((string)(this["IG_PASSWORD"]));
             }
         }
         
@@ -242,15 +242,12 @@ namespace Midax.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("DOW:IX.D.DOW.DAILY.IP")]
         public string INDEX_DOW {
             get {
                 return ((string)(this["INDEX_DOW"]));
-            }
-            set {
-                this["INDEX_DOW"] = value;
             }
         }
     }

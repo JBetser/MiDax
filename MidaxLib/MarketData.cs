@@ -94,7 +94,7 @@ namespace MidaxLib
                 var mktLevels = PublisherConnection.Instance.Database.GetMarketLevels(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]), 
                     new List<string> { _id });
                 if (mktLevels.Count == 1)
-                    _marketLevels = mktLevels.Values.First();
+                    _marketLevels = new MarketLevels(mktLevels.Values.First());
                 else
                     Log.Instance.WriteEntry("Could not retrieve market levels for Market Data: " + _id, EventLogEntryType.Warning);
             }                
@@ -163,7 +163,12 @@ namespace MidaxLib
             else
             {
                 CloseMid = Pivot = R1 = S1 = R2 = S2 = R3 = S3 = 0m;
-            }
+            }      
+        }
+
+        public MarketLevels(MarketLevels cpy) : this(cpy.AssetId, cpy.Low, cpy.High, cpy.CloseBid,
+                                                cpy.CloseOffer)
+        {
         }
     }
 }

@@ -131,7 +131,7 @@ namespace MidaxLib
         {
             _onBuy = null;
             _onSell = null;
-            foreach (Indicator indicator in _mktIndicator)
+            foreach (Indicator indicator in (from i in _mktIndicator select i).Reverse())
                 indicator.Unsubscribe(OnUpdate, null);
         }
         

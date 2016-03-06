@@ -81,7 +81,7 @@ namespace MidaxLib
         public void Stop()
         {
             MarketDataConnection.Instance.StreamClient.WaitForClosing();
-            foreach (var model in _models)
+            foreach (var model in (from m in _models select m).Reverse())
             {
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Stopping signals...", EventLogEntryType.Information);
                 model.StopSignals(false);

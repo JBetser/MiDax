@@ -303,7 +303,7 @@ namespace MidaxLib
             try
             {
                 ((IGTradingStreamingClient)_apiStreamingClient).ConnectionClosed = connectionClosed;
-                _apiStreamingClient.Connect(Config.Settings["USER_NAME"], Config.Settings["PASSWORD"], Config.Settings["API_KEY"]);                
+                _apiStreamingClient.Connect(Config.Settings["IG_USER_NAME"], Config.Settings["IG_PASSWORD"], Config.Settings["IG_KEY"]);                
             }
             catch (Exception ex)
             {
