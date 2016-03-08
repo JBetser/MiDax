@@ -20,13 +20,13 @@ namespace Calibrator
             foreach (var quote in marketData[StockId])
                 daxQuotes.Add((double)quote.MidPrice());
             var wma2 = new List<double>();
-            foreach (var quote in indicatorData["WMA_2_" + StockId])
+            foreach (var quote in indicatorData["WMA_10_" + StockId])
                 wma2.Add((double)quote.MidPrice());
             var wma10 = new List<double>();
-            foreach (var quote in indicatorData["WMA_10_" + StockId])
+            foreach (var quote in indicatorData["WMA_30_" + StockId])
                 wma10.Add((double)quote.MidPrice());
             var wma60 = new List<double>();
-            foreach (var quote in indicatorData["WMA_60_" + StockId])
+            foreach (var quote in indicatorData["WMA_90_" + StockId])
                 wma60.Add((double)quote.MidPrice());            
             for (int idxQuote = 0; idxQuote < daxQuotes.Count; idxQuote++)
             {

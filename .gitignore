@@ -173,10 +173,10 @@ WebDebug/*
 *.ilk
 *.idb
 *.ipch
-ActiveTick/ActiveTick.sln
-ActiveTick/ActiveTick.vcxproj
-ActiveTick/ActiveTick.vcxproj.filters
-ActiveTick/ActiveTick.vcxproj.user
+ActiveTick/ActiveTick100.sln
+ActiveTick/ActiveTick100.vcxproj
+ActiveTick/ActiveTick100.vcxproj.filters
+ActiveTick/ActiveTick100.vcxproj.user
 ActiveTick/config.client
 ActiveTick/Helper.cpp
 ActiveTick/Helper.h

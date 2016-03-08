@@ -24,15 +24,15 @@ namespace MidaxLib
             decimal curAssetVal = (_asset.TimeSeries[updateTime].Value.Value.Mid() - _asset.Levels.Value.Pivot) / amplitude;
 
             _inputValues.Add((double)curAssetVal);
-            var indicatorId = "WMA_2_" + _asset.Id;
+            var indicatorId = "WMA_10_" + _asset.Id;
             if (!_indicatorLatestValues.ContainsKey(indicatorId))
                 return false;
             _inputValues.Add((double)((_indicatorLatestValues[indicatorId].Value.Mid() - _asset.Levels.Value.Pivot) / amplitude));
-            indicatorId = "WMA_10_" + _asset.Id;
+            indicatorId = "WMA_30_" + _asset.Id;
             if (!_indicatorLatestValues.ContainsKey(indicatorId))
                 return false;
             _inputValues.Add((double)((_indicatorLatestValues[indicatorId].Value.Mid() - _asset.Levels.Value.Pivot) / amplitude));
-            indicatorId = "WMA_60_" + _asset.Id;
+            indicatorId = "WMA_90_" + _asset.Id;
             if (!_indicatorLatestValues.ContainsKey(indicatorId))
                 return false;
             _inputValues.Add((double)((_indicatorLatestValues[indicatorId].Value.Mid() - _asset.Levels.Value.Pivot) / amplitude));

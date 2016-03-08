@@ -18,9 +18,9 @@ namespace MidaxLib
             {
                 // for each quote, associate the observed gains in the near future
                 var mktData = new MarketData(epic);
-                var wmaLow = new IndicatorWMA(mktData, 2);
-                var wmaMid = new IndicatorWMA(mktData, 10);
-                var wmaHigh = new IndicatorWMA(mktData, 60);
+                var wmaLow = new IndicatorWMA(mktData, 10);
+                var wmaMid = new IndicatorWMA(mktData, 30);
+                var wmaHigh = new IndicatorWMA(mktData, 90);
                 var wmaDailyAvg = new IndicatorLevelMean(mktData);
 
                 foreach (var quote in priceData[epic])

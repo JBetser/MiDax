@@ -42,15 +42,18 @@ namespace MidaxLib
                     throw new ApplicationException("Time series is inconsistent");
                 _series.Last()[_series.Last().Count - 1] = new KeyValuePair<DateTime, Price>(updateTime, price);
             }
-            _latest = updateTime;
-            if (_series.Count == 0)
-                _series.Add(new List<KeyValuePair<DateTime, Price>>());
-            else if (lastIntervalMinutes(updateTime) > _tsInterval)
+            else
             {
-                deleteOldData(updateTime);
-                _series.Add(new List<KeyValuePair<DateTime, Price>>());
+                _latest = updateTime;
+                if (_series.Count == 0)
+                    _series.Add(new List<KeyValuePair<DateTime, Price>>());
+                else if (lastIntervalMinutes(updateTime) > _tsInterval)
+                {
+                    deleteOldData(updateTime);
+                    _series.Add(new List<KeyValuePair<DateTime, Price>>());
+                }
+                _series.Last().Add(new KeyValuePair<DateTime, Price>(updateTime, price));
             }
-            _series.Last().Add(new KeyValuePair<DateTime, Price>(updateTime, price));            
         }
 
         double lastIntervalMinutes(DateTime updateTime)
