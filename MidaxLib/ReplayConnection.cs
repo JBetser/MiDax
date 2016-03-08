@@ -514,7 +514,14 @@ namespace MidaxLib
         public ReplayPublisher()
         {
             // this attaches the database handle from the publisher to our current reader (csvreader / cassandra)
-            _database = ((ReplayStreamingClient)MarketDataConnection.Instance.StreamClient).Reader;
+            try
+            {
+                _database = ((ReplayStreamingClient)MarketDataConnection.Instance.StreamClient).Reader;
+            }
+            catch
+            {
+                _database = null;
+            }
             _csvFile = Config.Settings["PUBLISHING_CSV"];
             _csvStockStringBuilder = new StringBuilder();
             _csvIndicatorStringBuilder = new StringBuilder();
