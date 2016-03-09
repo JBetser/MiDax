@@ -93,6 +93,8 @@ function processResponses(jsonData) {
                     buyFirst = jsonData[marketData].response[jsonData[marketData].response.length - 1].b == buyValue;
                     if (buyFirst)
                         jsonData[marketData].response.splice(jsonData[marketData].response.length - 1, 1);
+                    if (jsonData[marketData].response.length == 0)
+                        buyFirst = false;
                 } while (buyFirst);
                 var nbBuy = 0;
                 var nbSell = 0;
@@ -111,6 +113,8 @@ function processResponses(jsonData) {
                             buyLast = jsonData[marketData].response[0].b == buyValue;
                             if (buyLast)
                                 jsonData[marketData].response.splice(0, 1);
+                            if (jsonData[marketData].response.length == 0)
+                                buyLast = false;
                         } while (buyLast);
                     }
                     else {
@@ -119,6 +123,8 @@ function processResponses(jsonData) {
                             sellLast = jsonData[marketData].response[0].b == sellValue;
                             if (sellLast)
                                 jsonData[marketData].response.splice(0, 1);
+                            if (jsonData[marketData].response.length == 0)
+                                sellLast = false;
                         } while (sellLast);
                     }
                     signalProfit = 0;

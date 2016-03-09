@@ -145,7 +145,7 @@ namespace MidaxWebService
                     if (!_scale.ContainsKey(keyAvg))
                         _scale[keyAvg] = _scale[id.Split('_').Last() + "_" + startTime.AddDays(1).ToShortDateString()];
                 }
-                else
+                else if (quotes[0].GetType() == typeof(CqlQuote))
                     quotes.Add(new CqlQuote(quotes[0].s, quotes[0].t.AddSeconds(30), quotes[0].n, quotes[0].b, quotes[0].o, quotes[0].v));
             }
             DateTime ts = new DateTime(quotes.Last().t.Ticks);
