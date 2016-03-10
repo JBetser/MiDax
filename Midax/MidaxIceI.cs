@@ -60,7 +60,7 @@ namespace Midax
             try
             {
                 var dowStockId = (DOW_STOCK)Enum.Parse(typeof(DOW_STOCK), mktDataId);
-                IceStreamingClient.Instance.OnTick((int)dowStockId, new DateTime((int)year, (int)month, (int)day, (int)hours, (int)minutes, (int)seconds, (int)milliseconds, DateTimeKind.Utc),
+                IceStreamingMarketData.Instance.OnTick((int)dowStockId, new DateTime((int)year, (int)month, (int)day, (int)hours, (int)minutes, (int)seconds, (int)milliseconds, DateTimeKind.Utc),
                                                     (decimal)price, (decimal)volume);
             }
             catch(Exception e)

@@ -15,8 +15,8 @@ namespace MidaxLib
         static bool? _replay = null;
 
         MarketLevels? _marketLevels = null;
-        DateTime _closePositionTime;
-        bool _allPositionsClosed;
+        protected DateTime _closePositionTime;
+        protected bool _allPositionsClosed;
         public MarketLevels? Levels { get { return _marketLevels; } set { _marketLevels = value; } }
         public bool _hasEodLevels = true;
 
@@ -67,15 +67,19 @@ namespace MidaxLib
 
         public void FireTick(DateTime updateTime, L1LsPriceData value)
         {
+            Price livePrice = new Price(value);
+            if (!_replay.Value || value.MarketState == "REPLAY")
+                _values.Add(updateTime, livePrice);
+            FireTick(updateTime, livePrice);
+        }
+
+        public void FireTick(DateTime updateTime, Price livePrice)
+        {
             if (updateTime > _closePositionTime && !_allPositionsClosed)
             {
                 Portfolio.Instance.CloseAllPositions(updateTime);
                 _allPositionsClosed = true;
             }
-
-            Price livePrice = new Price(value);
-            if (!_replay.Value || value.MarketState == "REPLAY")
-                _values.Add(updateTime, livePrice);
             foreach (Tick ticker in this._updateHandlers)
                 ticker(this, updateTime, livePrice);
             foreach (Tick ticker in this._tickHandlers)

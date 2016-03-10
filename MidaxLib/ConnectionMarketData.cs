@@ -144,8 +144,6 @@ namespace MidaxLib
             try
             {
                 L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
-                //if (priceData.MarketState == "TRADEABLE" || priceData.MarketState == "REPLAY")
-                //{
                 foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
                 {
                     var curTime = Config.ParseDateTimeUTC(priceData.UpdateTime);

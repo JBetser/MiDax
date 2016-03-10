@@ -43,31 +43,29 @@ namespace MidaxLib
         WMT = 29
     }
 
-    public class IceStreamingClient : MarketData, IAbstractStreamingClient
+    public class IceStreamingMarketData : MarketData
     {
-        static IceStreamingClient _instance;
+        static IceStreamingMarketData _instance;
         protected decimal[] _stockLastPrices = null;
         protected decimal[] _stockLastVolumes = null;
         protected decimal[] _stockWeights = null;
-        TimeSeries _index = new TimeSeries();
         bool _isReady = false;
-        IHandyTableListener _tableListener = null;
 
         public bool Ready { get { return _isReady; } }
 
-        static public IceStreamingClient Instance
+        static public IceStreamingMarketData Instance
         {
             get
             {
                 if (_instance != null)
                     return _instance;
                 else
-                    _instance = new IceStreamingClientDow();
+                    _instance = new IceStreamingDow();
                 return _instance;
             }
         }
 
-        protected IceStreamingClient(string name)
+        protected IceStreamingMarketData(string name)
             : base(name)
         {          
         }
@@ -78,10 +76,12 @@ namespace MidaxLib
             _stockLastVolumes[stockId] = volume;
             if (_isReady)
             {
-                var idxPrice = 0m;
+                var idxPriceValue = 0m;
                 for (int idx = 0; idx < 30; idx++)
-                    idxPrice += _stockLastPrices[idx] * _stockWeights[idx];
-                _index.Add(dt, new Price(idxPrice, idxPrice, volume * _stockWeights[stockId]));
+                    idxPriceValue += _stockLastPrices[idx] * _stockWeights[idx];
+                var idxPrice = new Price(idxPriceValue, idxPriceValue, volume * _stockWeights[stockId]);
+                _values.Add(dt, idxPrice);
+                FireTick(dt, idxPrice);
             }
             else
             {
@@ -100,52 +100,29 @@ namespace MidaxLib
             }
         }
 
-        void IAbstractStreamingClient.Connect(string username, string password, string apikey)
+        public override void Subscribe(Tick updateHandler, Tick tickerHandler)
         {
+            _allPositionsClosed = false;
+            _closePositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
+            Clear();
+            bool subscribe = (this._updateHandlers.Count == 0);
+            _updateHandlers.Add(updateHandler);
+            if (tickerHandler != null)
+                _tickHandlers.Add(tickerHandler);
         }
 
-        void IAbstractStreamingClient.Subscribe(string[] mktDataIds, IHandyTableListener tableListener)
+        public override void Unsubscribe(Tick updateHandler, Tick tickerHandler)
         {
-            _tableListener = tableListener;
-        }
-
-        void IAbstractStreamingClient.Unsubscribe()
-        {
-        }
-
-        void IAbstractStreamingClient.Resume(IHandyTableListener tableListener)
-        {
-        }
-
-        SubscribedTableKey IAbstractStreamingClient.SubscribeToPositions(IHandyTableListener tableListener)
-        {
-            throw new ApplicationException("Ice API is not for trading, only for market data");
-        }
-
-        void IAbstractStreamingClient.UnsubscribeTradeSubscription(SubscribedTableKey tableListener)
-        {
-            throw new ApplicationException("Ice API is not for trading, only for market data");
-        }
-
-        void IAbstractStreamingClient.BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
-        {
-            throw new ApplicationException("Ice API is not for trading, only for market data");
-        }
-
-        void IAbstractStreamingClient.ClosePosition(Trade trade, DateTime time, Portfolio.TradeBookedEvent onTradeClosed, Portfolio.TradeBookedEvent onBookingFailed)
-        {
-            throw new ApplicationException("Ice API is not for trading, only for market data");
-        }
-
-        void IAbstractStreamingClient.WaitForClosing()
-        {
-            throw new ApplicationException("Ice API is not for trading, only for market data");
+            _updateHandlers.Remove(updateHandler);
+            if (tickerHandler != null)
+                _updateHandlers.Remove(tickerHandler);
         }
     }
 
-    public class IceStreamingClientDow : IceStreamingClient
+    public class IceStreamingDow : IceStreamingMarketData
     {
-        public IceStreamingClientDow() : base("DOW:IceConnection.DOW")
+        public IceStreamingDow()
+            : base("DOW:IceConnection.DOW")
         {
             _stockLastPrices = new decimal[30];
             _stockLastVolumes = new decimal[30];
