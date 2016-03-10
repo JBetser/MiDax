@@ -57,6 +57,17 @@ namespace Midax
             long hours, long minutes, long seconds, long milliseconds, 
             double price, long volume, Ice.Current current)
         {
+            try
+            {
+                var dowStockId = (DOW_STOCK)Enum.Parse(typeof(DOW_STOCK), mktDataId);
+                IceStreamingClient.Instance.OnTick((int)dowStockId, new DateTime((int)year, (int)month, (int)day, (int)hours, (int)minutes, (int)seconds, (int)milliseconds, DateTimeKind.Utc),
+                                                    (decimal)price, (decimal)volume);
+            }
+            catch(Exception e)
+            {
+                Log.Instance.WriteEntry("IceConnection error: Could not register price for stock: " + mktDataId + 
+                    ". Exception: " + e.ToString(), EventLogEntryType.Error);
+            }
         }
     }
 }

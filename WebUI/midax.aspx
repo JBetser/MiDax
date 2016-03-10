@@ -339,8 +339,9 @@
                <option value="Mole_2_10_60">Mole 2mn/10mn/1h</option>
                <option value="Mole_2_10_90">Mole 2mn/10mn/1h30</option>
                <option value="Mole_7_20_60">Mole 7mn/20mn/1h</option>
-               <option value="ANNWMA_4_2">ANN WMA</option>
+               <option value="ANN_WMA_4_2_1">ANN WMA</option>
              </select>          
+
              <button type="button" id="GO" class="btn btn-primary">
                     <span class="glyphicon glyphicon-ok"></span> </button>
             <div>

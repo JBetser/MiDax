@@ -104,6 +104,7 @@
     <Compile Include="Calibration.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="ConnectionCassandra.cs" />
+    <Compile Include="ConnectionIce.cs" />
     <Compile Include="ConnectionIG.cs" />
     <Compile Include="ConnectionMarketData.cs" />
     <Compile Include="ConnectionPublisher.cs" />
