@@ -13,7 +13,8 @@ namespace Midax
     {
         string _serverName;
         Trader _trader = null;
-
+        TimeZoneInfo _est = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+                
         public MidaxIceI(Trader trader, string name)
         {
             _serverName = name;
@@ -60,7 +61,8 @@ namespace Midax
             try
             {
                 var dowStockId = (DOW_STOCK)Enum.Parse(typeof(DOW_STOCK), mktDataId);
-                IceStreamingMarketData.Instance.OnTick((int)dowStockId, new DateTime((int)year, (int)month, (int)day, (int)hours, (int)minutes, (int)seconds, (int)milliseconds, DateTimeKind.Utc),
+                DateTime utcTime = TimeZoneInfo.ConvertTimeToUtc(new DateTime((int)year, (int)month, (int)day, (int)hours, (int)minutes, (int)seconds, (int)milliseconds), _est);
+                IceStreamingMarketData.Instance.OnTick((int)dowStockId, utcTime,
                                                     (decimal)price, (decimal)volume);
             }
             catch(Exception e)

@@ -274,7 +274,8 @@
                <br />
              <select class="combobox input-large" id="equity">
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
-               <option value="IX.D.DOW.DAILY.IP">DOW</option>
+               <option value="IX.D.DOW.DAILY.IP">DOW IG</option>
+               <option value="IceConnection.DOW">DOW Ice</option>
                <option value="IX.D.CAC.DAILY.IP">CAC</option>
                <option value="IN.D.VIX.MONTH2.IP">VIX</option>
                <option value="AAPL">Apple</option>

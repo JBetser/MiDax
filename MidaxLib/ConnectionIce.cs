@@ -49,6 +49,7 @@ namespace MidaxLib
         protected decimal[] _stockLastPrices = null;
         protected decimal[] _stockLastVolumes = null;
         protected decimal[] _stockWeights = null;
+        DateTime? _lastTradePrice = null;
         bool _isReady = false;
 
         public bool Ready { get { return _isReady; } }
@@ -73,14 +74,22 @@ namespace MidaxLib
         public void OnTick(int stockId, DateTime dt, decimal price, decimal volume)
         {
             _stockLastPrices[stockId] = price;
-            _stockLastVolumes[stockId] = volume;
+            _stockLastVolumes[stockId] = volume;            
             if (_isReady)
             {
                 var idxPriceValue = 0m;
                 for (int idx = 0; idx < 30; idx++)
-                    idxPriceValue += _stockLastPrices[idx] * _stockWeights[idx];
+                    idxPriceValue += _stockLastPrices[idx];
+                idxPriceValue /= 0.14602128057775m;
                 var idxPrice = new Price(idxPriceValue, idxPriceValue, volume * _stockWeights[stockId]);
                 _values.Add(dt, idxPrice);
+                if (_lastTradePrice.HasValue)
+                {
+                    dt = dt > _lastTradePrice.Value ? dt : _lastTradePrice.Value;
+                    _lastTradePrice = dt > _lastTradePrice.Value ? dt : _lastTradePrice.Value;
+                }
+                else
+                    _lastTradePrice = dt;
                 FireTick(dt, idxPrice);
             }
             else

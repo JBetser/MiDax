@@ -7,7 +7,7 @@ CREATE TABLE historicaldata.stocks (
   name text,
   bid decimal,
   offer decimal,
-  volume int,
+  volume decimal,
   PRIMARY KEY (stockid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);
@@ -20,7 +20,7 @@ CREATE TABLE historicaldata.dummystocks (
   name text,
   bid decimal,
   offer decimal,
-  volume int,
+  volume decimal,
   PRIMARY KEY (stockid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);

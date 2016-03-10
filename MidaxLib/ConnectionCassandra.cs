@@ -17,7 +17,7 @@ namespace MidaxLib
         public decimal? b;
         public string n;
         public decimal? o;
-        public int? v;
+        public decimal? v;
         public CqlQuote()
         {
         }
@@ -28,9 +28,9 @@ namespace MidaxLib
             b = (decimal)row[2];
             n = (string)row[3];
             o = (decimal)row[4];
-            v = (int)row[5];
+            v = (decimal?)row[5];
         }
-        public CqlQuote(string stockId, DateTimeOffset tradingTime, string stockName, decimal? bid, decimal? offer, int? volume)
+        public CqlQuote(string stockId, DateTimeOffset tradingTime, string stockName, decimal? bid, decimal? offer, decimal? volume)
         {
             s = stockId;
             t = tradingTime;
@@ -72,7 +72,7 @@ namespace MidaxLib
             b = (decimal)row[2];
             n = (string)row[0];
             o = (decimal)row[2];
-            v = 0;
+            v = 0m;
         }
         public CqlIndicator(string stockId, DateTimeOffset tradingTime, string stockName, decimal? value)
         {
@@ -81,7 +81,7 @@ namespace MidaxLib
             b = value;
             n = stockName;
             o = value;
-            v = 0;
+            v = 0m;
         }
         public override decimal ScaleValue(decimal avg, decimal scale)
         {
@@ -102,7 +102,7 @@ namespace MidaxLib
             b = Convert.ToInt32(row[4]);
             n = (string)row[0];
             o = (decimal)row[2];
-            v = 0;
+            v = 0m;
         }
         public CqlSignal(string stockId, DateTimeOffset tradingTime, string stockName, SIGNAL_CODE? value, decimal stockvalue)
         {
@@ -111,7 +111,7 @@ namespace MidaxLib
             b = Convert.ToInt32(value);
             n = stockName;
             o = stockvalue;
-            v = 0;
+            v = 0m;
         }
         public override decimal ScaleValue(decimal avg, decimal scale)
         {
