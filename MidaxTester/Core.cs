@@ -286,7 +286,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:31 expected value 9735.930833333333333333333411 != 9735.965000000000000000000078";
+                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:31 expected value 9735.930833333333333333333411 != 9735.965000000000000000000016";
                     success = (exc.Message.Replace(" AM", "") == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);

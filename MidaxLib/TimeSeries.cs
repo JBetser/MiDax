@@ -51,8 +51,11 @@ namespace MidaxLib
                     deleteOldData(updateTime);
                     _series.Add(new List<KeyValuePair<DateTime, Price>>());
                 }
-                _latest = updateTime > _latest ? updateTime : _latest;
-                _series.Last().Add(new KeyValuePair<DateTime, Price>(updateTime > _latest ? updateTime : _latest, price));
+                if (updateTime > _latest)
+                    _latest = updateTime;
+                else
+                    updateTime = _latest;
+                _series.Last().Add(new KeyValuePair<DateTime, Price>(updateTime, price));
             }
         }
 

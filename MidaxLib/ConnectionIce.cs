@@ -49,6 +49,7 @@ namespace MidaxLib
         protected decimal[] _stockLastPrices = null;
         protected decimal[] _stockLastVolumes = null;
         protected decimal[] _stockWeights = null;
+        protected decimal _indexWeight = 1.0m;
         DateTime? _lastTradePrice = null;
         bool _isReady = false;
 
@@ -80,13 +81,15 @@ namespace MidaxLib
                 var idxPriceValue = 0m;
                 for (int idx = 0; idx < 30; idx++)
                     idxPriceValue += _stockLastPrices[idx];
-                idxPriceValue /= 0.14602128057775m;
+                idxPriceValue *= _indexWeight;
                 var idxPrice = new Price(idxPriceValue, idxPriceValue, volume * _stockWeights[stockId]);
                 _values.Add(dt, idxPrice);
                 if (_lastTradePrice.HasValue)
                 {
-                    dt = dt > _lastTradePrice.Value ? dt : _lastTradePrice.Value;
-                    _lastTradePrice = dt > _lastTradePrice.Value ? dt : _lastTradePrice.Value;
+                    if (dt > _lastTradePrice.Value)
+                        _lastTradePrice = dt;                        
+                    else
+                        dt = _lastTradePrice.Value;                        
                 }
                 else
                     _lastTradePrice = dt;
@@ -142,6 +145,7 @@ namespace MidaxLib
                 _stockLastVolumes[idx] = -1.0m;
                 _stockWeights[idx] = -1.0m;
             }
+            _indexWeight = 1.0m / 0.14602128057775m;
 
             _stockWeights[(int)DOW_STOCK.MMM] = 0.0647m;
             _stockWeights[(int)DOW_STOCK.GS] = 0.0612m;

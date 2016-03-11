@@ -236,4 +236,59 @@ namespace MidaxLib
             Publish(updateTime, new Price(_levelMktData.Levels.Value.S3));
         }
     }
+
+    public class IndicatorNearestLevel : Indicator
+    {
+        public IndicatorNearestLevel(MarketData mktData)
+            : base("NearestLevel_" + mktData.Id, new List<MarketData> { mktData }) { }
+
+        public static decimal GetNearestLevel(decimal midPrice, MarketLevels mktLevels)
+        {
+            decimal referenceLevel = 0m;
+            var diff = decimal.MaxValue;
+            if (Math.Abs(midPrice - mktLevels.R3) < diff)
+            {
+                diff = Math.Abs(midPrice - mktLevels.R3);
+                referenceLevel = mktLevels.R3;
+            }
+            if (Math.Abs(midPrice - mktLevels.R2) < diff)
+            {
+                diff = Math.Abs(midPrice - mktLevels.R2);
+                referenceLevel = mktLevels.R2;
+            }
+            if (Math.Abs(midPrice - mktLevels.R1) < diff)
+            {
+                diff = Math.Abs(midPrice - mktLevels.R1);
+                referenceLevel = mktLevels.R1;
+            }
+            if (Math.Abs(midPrice - mktLevels.Pivot) < diff)
+            {
+                diff = Math.Abs(midPrice - mktLevels.Pivot);
+                referenceLevel = mktLevels.Pivot;
+            }
+            if (Math.Abs(midPrice - mktLevels.S1) < diff)
+            {
+                diff = Math.Abs(midPrice - mktLevels.S1);
+                referenceLevel = mktLevels.S1;
+            }
+            if (Math.Abs(midPrice - mktLevels.S2) < diff)
+            {
+                diff = Math.Abs(midPrice - mktLevels.S2);
+                referenceLevel = mktLevels.S2;
+            }
+            if (Math.Abs(midPrice - mktLevels.S3) < diff)
+            {
+                diff = Math.Abs(midPrice - mktLevels.S3);
+                referenceLevel = mktLevels.S3;
+            }
+            return referenceLevel;
+        }
+
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            if (!mktData.Levels.HasValue)
+                return;
+            Publish(updateTime, new Price(GetNearestLevel(value.Mid(), mktData.Levels.Value)));
+        }
+    }
 }

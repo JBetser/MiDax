@@ -115,6 +115,7 @@
     <Compile Include="IndicatorCorrelation.cs" />
     <Compile Include="IndicatorLevel.cs" />
     <Compile Include="IndicatorLinearRegression.cs" />
+    <Compile Include="IndicatorWM.cs" />
     <Compile Include="LapackLib.cs" />
     <Compile Include="LevenbergMarquardt.cs" />
     <Compile Include="Log.cs" />
@@ -132,6 +133,7 @@
     <Compile Include="SignalANN.cs" />
     <Compile Include="SignalANNWMA.cs" />
     <Compile Include="SignalHeuristic.cs" />
+    <Compile Include="TimeDecay.cs" />
     <Compile Include="TimeSeries.cs" />
     <Compile Include="Trade.cs" />
     <Compile Include="Trader.cs" />
