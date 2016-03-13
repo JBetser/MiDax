@@ -115,6 +115,7 @@
     <Compile Include="IndicatorCorrelation.cs" />
     <Compile Include="IndicatorLevel.cs" />
     <Compile Include="IndicatorLinearRegression.cs" />
+    <Compile Include="IndicatorRSI.cs" />
     <Compile Include="IndicatorWM.cs" />
     <Compile Include="LapackLib.cs" />
     <Compile Include="LevenbergMarquardt.cs" />
