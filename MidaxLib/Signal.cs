@@ -47,6 +47,11 @@ namespace MidaxLib
             this.Bid = priceData.Bid.Value;
             this.Offer = priceData.Offer.Value;
         }
+        public void set(decimal val)
+        {
+            this.Bid = val;
+            this.Offer = val;
+        }
         public decimal Mid()
         {
             return (this.Bid + this.Offer) / 2m;
@@ -93,6 +98,33 @@ namespace MidaxLib
             mult.Bid /= factor;
             mult.Offer /= factor;
             return mult;
+        }
+        public static int comparison(Price p1, Price p2)
+        {
+            if (p1.Bid < p2.Bid || p1.Offer < p2.Offer)
+                return -1;
+            else if (p1.Bid == p2.Bid || p1.Offer == p2.Offer)
+                return 0;
+            else if (p1.Bid > p2.Bid || p1.Offer > p2.Offer)
+                return 1;
+            else
+                return 0;
+        }
+        public static bool operator <=(Price p1, Price p2)
+        {
+            return comparison(p1, p2) <= 0;
+        }
+        public static bool operator <(Price p1, Price p2)
+        {
+            return comparison(p1, p2) < 0;
+        }
+        public static bool operator >=(Price p1, Price p2)
+        {
+            return comparison(p1, p2) >= 0;
+        }
+        public static bool operator >(Price p1, Price p2)
+        {
+            return comparison(p1, p2) > 0;
         }
     }
 
