@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace MidaxLib
 {
+    /// <summary>
+    /// Weighted Moving Average
+    /// it gives more weight to recent data and as a result is more volatile than SMA
+    /// 
+    /// WMA = sum(weighted averages) / sum(weight)
+    /// </summary> 
     public class IndicatorWMA : Indicator
     {
         protected int _periodSeconds;
@@ -88,6 +94,10 @@ namespace MidaxLib
         }
     }
 
+
+    /// <summary>
+    /// 
+    /// </summary>
     public class IndicatorWMVol : IndicatorWMA
     {
         public IndicatorWMVol(MarketData mktData, int periodMinutes)
@@ -129,4 +139,15 @@ namespace MidaxLib
             return var;
         }
     }
+
+    /// <summary>
+    /// Exponential Moving Average
+    /// it gives more weight to recent data and as a result is more volatile than SMA
+    /// 
+    /// EMA = Price(t) * k + EMA(y) * (1 – k)
+    /// with:
+    ///     t = now, y = previous, N = number of periods in EMA, k = 2/(N+1)
+    /// </summary>
+    /// TODO: public class IndicatorEMA : IndicatorWMA
+
 }
