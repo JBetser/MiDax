@@ -23,7 +23,6 @@ namespace MidaxLib
      *      
      * with RS = 14d Exp.MovingAverage(gains) / 14d Exp.MovingAverage(loss)
      * if period = 14d
-     * 
      * *********************************************************************************************************/
     public class IndicatorRSI : IndicatorWMA
     {

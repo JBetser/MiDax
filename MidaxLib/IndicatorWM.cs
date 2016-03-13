@@ -11,7 +11,7 @@ namespace MidaxLib
     /// it gives more weight to recent data and as a result is more volatile than SMA
     /// 
     /// WMA = sum(weighted averages) / sum(weight)
-    /// </summary>
+    /// </summary> 
     public class IndicatorWMA : Indicator
     {
         protected int _periodSeconds;

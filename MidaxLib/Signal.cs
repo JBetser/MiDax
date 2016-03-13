@@ -125,7 +125,7 @@ namespace MidaxLib
         public static bool operator >(Price p1, Price p2)
         {
             return comparison(p1, p2) > 0;
-        }
+        } 
     }
 
     public enum SIGNAL_CODE { UNKNOWN = 0, HOLD = 1, BUY = 2, SELL = 3, FAILED = 4 }
