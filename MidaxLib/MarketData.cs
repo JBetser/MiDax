@@ -71,6 +71,7 @@ namespace MidaxLib
             if (!_replay.Value || value.MarketState == "REPLAY")
                 _values.Add(updateTime, livePrice);
             FireTick(updateTime, livePrice);
+            Publish(updateTime, livePrice);
         }
 
         public void FireTick(DateTime updateTime, Price livePrice)
@@ -83,8 +84,7 @@ namespace MidaxLib
             foreach (Tick ticker in this._updateHandlers)
                 ticker(this, updateTime, livePrice);
             foreach (Tick ticker in this._tickHandlers)
-                ticker(this, updateTime, livePrice);
-            Publish(updateTime, livePrice);
+                ticker(this, updateTime, livePrice);            
         }
 
         public virtual void Publish(DateTime updateTime, Price price)

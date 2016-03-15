@@ -276,38 +276,9 @@
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
                <option value="IX.D.DOW.DAILY.IP">DOW IG</option>
                <option value="IceConnection.DOW">DOW Ice</option>
+               <option value="IceConnection.DOW.Volume">DOW Volumes</option>
                <option value="IX.D.CAC.DAILY.IP">CAC</option>
                <option value="IN.D.VIX.MONTH2.IP">VIX</option>
-               <option value="AAPL">Apple</option>
-               <!--option value="ED.D.ADSGY.DAILY.IP">Adidas AG</!--option>
-               <option value="ED.D.ALVGY.DAILY.IP">Allianz SE</option>
-               <option value="ED.D.BAS.DAILY.IP">BASF SE</option>
-               <option value="ED.D.BAY.DAILY.IP">Bayer AG</option>
-               <option value="ED.D.BMW.DAILY.IP">Bayerische Motoren Werke AG</option>
-               <option value="ED.D.BEI.DAILY.IP">Beiersdorf AG</option>
-               <option value="ED.D.CBK.DAILY.IP">Commerzbank AG</option>
-               <option value="ED.D.CON.DAILY.IP">Continental AG</option>
-               <option value="ED.D.DCX.DAILY.IP">Daimler AG</option>
-               <option value="ED.D.DBK.DAILY.IP">Deutsche Bank AG</option>
-               <option value="ED.D.DB1.DAILY.IP">Deutsche Boerse AG</option>
-               <option value="ED.D.LHAG.DAILY.IP">Deutsche Lufthansa AG</option>
-               <option value="ED.D.DPW.DAILY.IP">Deutsche Post AG</option>
-               <option value="ED.D.DTE.DAILY.IP">Deutsche Telekom AG</option>
-               <option value="ED.D.EOA.DAILY.IP">E.ON SE</option>
-               <option value="ED.D.FME.DAILY.IP">Fresenius Medical Care AG</option>
-               <option value="ED.D.HEI.DAILY.IP">HeidelbergCement AG</option>
-               <option value="ED.D.HENGY.DAILY.IP">Henkel AG</option>
-               <option value="ED.D.IFX.DAILY.IP">Infineon Technologies AG</option>
-               <option value="ED.D.SDF.DAILY.IP">K+S AG</option>
-               <option value="ED.D.LXS.DAILY.IP">LANXESS AG</option>
-               <option value="ED.D.LING.DAILY.IP">Linde AG</option>
-               <option value="ED.D.MRCG.DAILY.IP">Merck KGaA</option>
-               <option value="ED.D.MUV2.DAILY.IP">Muenchener Rueckversicherungs AG</option>
-               <option value="ED.D.RWEG.DAILY.IP">RWE AG</option>
-               <option value="ED.D.SAPG.DAILY.IP">SAP AG</option>
-               <option value="ED.D.SIEGn.DAILY.IP">Siemens AG</option>
-               <option value="ED.D.TKAG.DAILY.IP">ThyssenKrupp AG</option>
-               <option value="ED.D.VOW.DAILY.IP">Volkswagen AG</option-->
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>
@@ -318,9 +289,6 @@
                <option value="WMA_2#WMA_10#WMA_60">WMA 2mn/10mn/1hr</option>
                <option value="WMA_7#WMA_20#WMA_60">WMA 7mn/20mn/1hr</option>
                <option value="WMA_10#WMA_30#WMA_90">WMA 10mn/30mn/1hr30</option>
-               <!--option value="LR_0_1_0">Linear regression 1mn</option>
-               <option value="LR_0_5_0">Linear regression 5mn</option>
-               <option value="LR_0_30_0">Linear regression 30mn</option-->
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_60">WM Vol 1h</option>               
              </select>   
@@ -329,8 +297,6 @@
                <option value="MacD_10_60">MacD 10mn/1h</option>
                <option value="MacD_20_60">MacD 20mn/1h</option>
                <option value="MacD_30_90">MacD 30mn/1h30</option>
-               <option value="MacDCas_5_60_200">MacD Cascade 5mn/1h 2pts</option>
-               <option value="MacDCas_10_60_50">MacD Cascade 10mn/1h 0.5pts</option>
                <option value="MacDCas_10_60_100">MacD Cascade 10mn/1h 1pt</option>
                <option value="MacDCas_10_60_200">MacD Cascade 10mn/1h 2pts</option>
                <option value="MacDCas_20_60_200">MacD Cascade 20mn/1h 2pts</option>

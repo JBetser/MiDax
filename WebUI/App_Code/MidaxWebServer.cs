@@ -95,6 +95,8 @@ namespace MidaxWebService
 
         public string GetJSON(DateTime startTime, DateTime stopTime, string type, string id, bool auto_select)
         {
+            bool isVolume = id.Contains(".Volume");
+            id = id.Replace(".Volume", "");
             var ids = new List<string> { id };
             var rowSets = PublisherConnection.Instance.Database.GetRows(startTime, stopTime, type, ids);            
             if (rowSets == null)
@@ -238,7 +240,11 @@ namespace MidaxWebService
             }
             if (filteredQuotes.Last() != prevQuote)
                 filteredQuotes.Add(prevQuote);
-                                    
+            if (isVolume)
+            {
+                foreach (var quote in filteredQuotes)
+                    quote.b = quote.o = quote.v;
+            }                                    
             string json = "[";
             foreach (var row in filteredQuotes)
             {

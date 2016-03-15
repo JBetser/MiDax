@@ -83,7 +83,6 @@ namespace MidaxLib
                     idxPriceValue += _stockLastPrices[idx];
                 idxPriceValue *= _indexWeight;
                 var idxPrice = new Price(idxPriceValue, idxPriceValue, volume * _stockWeights[stockId]);
-                _values.Add(dt, idxPrice);
                 if (_lastTradePrice.HasValue)
                 {
                     if (dt > _lastTradePrice.Value)
@@ -93,7 +92,9 @@ namespace MidaxLib
                 }
                 else
                     _lastTradePrice = dt;
+                _values.Add(dt, idxPrice);
                 FireTick(dt, idxPrice);
+                Publish(dt, idxPrice);
             }
             else
             {
