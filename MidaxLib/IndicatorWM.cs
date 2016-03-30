@@ -75,8 +75,8 @@ namespace MidaxLib
                 }
             }
         }
-        
-        Price IndicatorFunc(MarketData mktData, DateTime updateTime)
+
+        protected virtual Price IndicatorFunc(MarketData mktData, DateTime updateTime)
         {
             DateTime startTime;
             if (_curavg == null){

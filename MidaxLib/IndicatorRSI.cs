@@ -72,7 +72,7 @@ namespace MidaxLib
                         loss += beginPeriodValue.Value - endPeriodValue.Value;
                     }
 
-                    val += beginPeriodValue.Value * _timeDecay.Weight(beginPeriodValue.Key, endPeriodValue.Key, (decimal)_periodSeconds);
+                    val += beginPeriodValue.Value * _timeDecay.Weight(beginPeriodValue.Key, endPeriodValue.Key, _periodMilliSeconds, startTime);
                 }
                 beginPeriodValue = endPeriodValue;
             }

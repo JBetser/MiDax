@@ -51,7 +51,7 @@ namespace MidaxLib
                         Portfolio.Instance.CloseAllPositions(time, signal.MarketData.Id, stockValue.Bid, signal);
                         return false;
                     }
-                    signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.BUY, _amount, stockValue.Bid);
+                    signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.BUY, _amount, stockValue.Offer);
                     return Buy(signal, time, stockValue);
                 }
             }
