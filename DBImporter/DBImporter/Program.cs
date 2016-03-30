@@ -33,14 +33,39 @@ namespace DBImporter
 
                 MarketDataConnection.Instance.Connect(null);
 
+                var lstIndices = new List<MarketData>();
                 var indexDAX = new MarketData("DAX:IX.D.DAX.DAILY.IP");
                 indexDAX.Subscribe(OnUpdate, null);
                 var indexCAC = new MarketData("CAC:IX.D.CAC.DAILY.IP");
                 indexCAC.Subscribe(OnUpdate, null);
                 var indexDOW = new MarketData("DOW:IX.D.DOW.DAILY.IP");
                 indexDOW.Subscribe(OnUpdate, null);
+                lstIndices.Add(indexDAX);
+                lstIndices.Add(indexCAC);
+                lstIndices.Add(indexDOW);
+
+                var lstIndicators = new List<IndicatorLevel>();
+                foreach (var index in lstIndices){
+                    lstIndicators.Add(new IndicatorLow(index));
+                    lstIndicators.Add(new IndicatorHigh(index));
+                    lstIndicators.Add(new IndicatorCloseBid(index));
+                    lstIndicators.Add(new IndicatorCloseOffer(index));
+                    lstIndicators.Add(new IndicatorLevelPivot(index));
+                    lstIndicators.Add(new IndicatorLevelR1(index));
+                    lstIndicators.Add(new IndicatorLevelR2(index));
+                    lstIndicators.Add(new IndicatorLevelR3(index));
+                    lstIndicators.Add(new IndicatorLevelS1(index));
+                    lstIndicators.Add(new IndicatorLevelS2(index));
+                    lstIndicators.Add(new IndicatorLevelS3(index));                    
+                }
+                foreach(var indicator in lstIndicators)
+                    indicator.Subscribe(OnUpdate, null);
+
                 MarketDataConnection.Instance.StartListening();
-                MarketDataConnection.Instance.StopListening();
+
+                foreach (var indicator in lstIndicators)
+                    indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
+                MarketDataConnection.Instance.StopListening();                
 
                 indexDAX.Clear();
                 indexCAC.Clear();

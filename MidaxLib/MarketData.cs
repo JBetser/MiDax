@@ -57,7 +57,14 @@ namespace MidaxLib
             if (tickerHandler != null)
                 _updateHandlers.Remove(tickerHandler);
             if (this._updateHandlers.Count == 0)
+            {
                 MarketDataConnection.Instance.UnsubscribeMarketData(this);
+                if (!_allPositionsClosed)
+                {
+                    Portfolio.Instance.CloseAllPositions(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
+                    _allPositionsClosed = true;
+                }
+            }
         }
 
         public void Clear()
@@ -150,6 +157,12 @@ namespace MidaxLib
         public decimal S1;
         public decimal S2;
         public decimal S3;
+
+        public bool Available { get { return AssetId != ""; } }
+        public void SetAvailable(bool val)
+        {
+            AssetId = val ? AssetId : "";
+        }
 
         public MarketLevels(string assetId, decimal low, decimal high, decimal closeBid, decimal closeOffer)
         {

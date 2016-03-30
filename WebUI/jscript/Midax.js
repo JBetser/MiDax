@@ -1,3 +1,5 @@
+var ASSUMPTION_TREND = "BEAR";
+
 var monthNames = [
   "Jan", "Feb", "Mar",
   "Apr", "May", "Jun", "Jul",
@@ -88,55 +90,74 @@ function processResponses(jsonData) {
                         sellValue = d.b;
                     }
                 });
-                var buyFirst = false;
-                do {
-                    buyFirst = jsonData[marketData].response[jsonData[marketData].response.length - 1].b == buyValue;
-                    if (buyFirst)
-                        jsonData[marketData].response.splice(jsonData[marketData].response.length - 1, 1);
-                    if (jsonData[marketData].response.length == 0)
-                        buyFirst = false;
-                } while (buyFirst);
+                if (ASSUMPTION_TREND == "BEAR") {
+                    var buyFirst = false;
+                    do {
+                        buyFirst = jsonData[marketData].response[jsonData[marketData].response.length - 1].b == buyValue;
+                        if (buyFirst)
+                            jsonData[marketData].response.splice(jsonData[marketData].response.length - 1, 1);
+                        if (jsonData[marketData].response.length == 0)
+                            buyFirst = false;
+                    } while (buyFirst);
+                }
+                else if (ASSUMPTION_TREND == "BULL") {
+                    var sellFirst = false;
+                    do {
+                        sellFirst = jsonData[marketData].response[jsonData[marketData].response.length - 1].b == sellValue;
+                        if (sellFirst)
+                            jsonData[marketData].response.splice(jsonData[marketData].response.length - 1, 1);
+                        if (jsonData[marketData].response.length == 0)
+                            sellFirst = false;
+                    } while (sellFirst);
+                }
                 var nbBuy = 0;
                 var nbSell = 0;
-                var signalProfit = 0;
                 jsonData[marketData].response.forEach(function (d) {
-                    signalProfit += d.o * (d.b == buyValue ? -1 : 1);
                     if (d.b == buyValue)
                         nbBuy++;
                     else
                         nbSell++;
                 });
-                if (nbBuy != nbSell) {
-                    if (nbBuy > nbSell) {
-                        var buyLast = false;
-                        do {
-                            buyLast = jsonData[marketData].response[0].b == buyValue;
-                            if (buyLast)
-                                jsonData[marketData].response.splice(0, 1);
-                            if (jsonData[marketData].response.length == 0)
-                                buyLast = false;
-                        } while (buyLast);
+                if (ASSUMPTION_TREND != "") {
+                    if (nbBuy != nbSell) {
+                        if (nbBuy > nbSell) {
+                            var buyLast = false;
+                            do {
+                                buyLast = jsonData[marketData].response[0].b == buyValue;
+                                if (buyLast) {
+                                    jsonData[marketData].response.splice(0, 1);
+                                    nbBuy--;
+                                }
+                                if (jsonData[marketData].response.length == 0)
+                                    buyLast = false;
+                            } while (buyLast);
+                        }
+                        else {
+                            var sellLast = false;
+                            do {
+                                sellLast = jsonData[marketData].response[0].b == sellValue;
+                                if (sellLast) {
+                                    jsonData[marketData].response.splice(0, 1);
+                                    nbSell--;
+                                }
+                                if (jsonData[marketData].response.length == 0)
+                                    sellLast = false;
+                            } while (sellLast);
+                        }
                     }
-                    else {
-                        var sellLast = false;
-                        do {
-                            sellLast = jsonData[marketData].response[0].b == sellValue;
-                            if (sellLast)
-                                jsonData[marketData].response.splice(0, 1);
-                            if (jsonData[marketData].response.length == 0)
-                                sellLast = false;
-                        } while (sellLast);
-                    }
-                    signalProfit = 0;
-                    jsonData[marketData].response.forEach(function (d) {
-                        signalProfit += d.o * (d.b == buyValue ? -1 : 1);
-                        if (d.b == buyValue)
-                            nbBuy++;
-                        else
-                            nbSell++;
-                    });
                 }
-                profit += signalProfit;
+                if (nbBuy == nbSell || ASSUMPTION_TREND == "") {
+                    var signalProfit = 0;
+                    var idxSignal = 0;
+                    jsonData[marketData].response.forEach(function (d) {
+                        var coeff = ((idxSignal > 0) && (idxSignal < nbBuy + nbSell - 1) && ASSUMPTION_TREND == "") ? 2.0 : 1.0;
+                        signalProfit += d.o * coeff * (d.b == buyValue ? -1 : 1);
+                        idxSignal++;
+                    });
+                    profit += signalProfit;
+                }
+                else  // Set an error value if the orders do not match
+                    profit = 1000000;
             }
         }
     }
@@ -205,7 +226,7 @@ function processResponses(jsonData) {
 
     if (profit != null)
         profit = Math.round(profit * 100) / 100;
-    var perfSuffix = (profit != null ? " Performance: " + (Math.abs(profit) > 1000 ? "?" : profit) : "");
+    var perfSuffix = (profit != null ? " Performance: " + (Math.abs(profit) > 1500 ? "?" : profit) : "");
     svg.append("text")
         .attr("x", (width / 2))
         .attr("y", 5 - (margin.top / 2))

@@ -21,6 +21,7 @@ namespace MidaxTester
             bool heuristic = true;
             bool ann = true;
             bool use_uat_db = false;
+            bool fullday = false;
             string date = "";
             foreach (var arg in args)
             {
@@ -31,6 +32,9 @@ namespace MidaxTester
                         break;
                     case "-G":
                         generate = true;
+                        break;
+                    case "-FULL":
+                        fullday = true;
                         break;
                     case "-FROMDB":
                         generate_from_db = true;
@@ -46,11 +50,10 @@ namespace MidaxTester
                         break;
                     case "-ANN":
                         heuristic = false;
-                        break;
-                    case "-DATE":
-                        date = arg.Substring(5);
-                        break;
+                        break;                    
                 }
+                if (arg.StartsWith("-DATE"))
+                    date = arg.Substring(5);
             }
             // test core functionalities
             if (!generate_to_db && heuristic && ann)
@@ -74,14 +77,14 @@ namespace MidaxTester
                 // test whole daily trading batches
                 List<DateTime> tests = new List<DateTime>();
                 if (date == "")
-                    tests.Add(new DateTime(2016, 2, 26));
+                    tests.Add(new DateTime(2016, 2, 25));
                 else
                     tests.Add(DateTime.Parse(date));
 
                 if (heuristic)
-                    Heuristic.Run(tests, generate, generate_from_db, generate_to_db, use_uat_db);
+                    Heuristic.Run(tests, generate, generate_from_db, generate_to_db, use_uat_db, fullday);
                 if (ann)
-                    ANN.Run(tests, generate, generate_from_db, generate_to_db, use_uat_db);
+                    ANN.Run(tests, generate, generate_from_db, generate_to_db, use_uat_db, fullday);
             }
 
             string statusSuccess = generate ? "Tests generated successfully" : "Tests passed successfully";

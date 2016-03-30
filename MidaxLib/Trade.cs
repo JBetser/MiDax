@@ -18,11 +18,10 @@ namespace MidaxLib
         DateTime _confirmationTime = DateTime.MinValue;
         decimal _price;
         int _placeHolder = 0;
-        bool _failed = false;
         
         public string Epic { get { return _epic; } }
         public SIGNAL_CODE Direction { get { return _direction; } set { _direction = value; } }
-        public int Size { get { return _size; } }
+        public int Size { get { return _size; } set { _size = value; } }
         public string Id { get { return _id; } set { _id = value; } }
         public string Reference { get { return _reference; } set { _reference = value; } }
         public DateTime TradingTime { get { return _tradingTime; } }

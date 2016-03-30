@@ -59,26 +59,27 @@ namespace MidaxLib
         {
             return new Price(this.Bid >= 0m ? this.Bid : -this.Bid);
         }
-        public static Price operator +(Price p1, Price p2)
+        public static Price operator +(Price p1, decimal p2)
         {
             Price sum = new Price();
-            sum.Bid = p1.Bid + p2.Bid;
-            sum.Offer = p1.Offer + p2.Offer;
+            sum.Bid = p1.Bid + p2;
+            sum.Offer = p1.Offer + p2;
             return sum;
+        }
+        public static Price operator -(Price p1, decimal p2)
+        {
+            Price diff = new Price();
+            diff.Bid = p1.Bid - p2;
+            diff.Offer = p1.Offer - p2;
+            return diff;
+        }
+        public static Price operator +(Price p1, Price p2)
+        {
+            return p1 + p2.Mid();
         }
         public static Price operator -(Price p1, Price p2)
         {
-            Price diff = new Price();
-            diff.Bid = p1.Bid - p2.Bid;
-            diff.Offer = p1.Offer - p2.Offer;
-            return diff;
-        }
-        public static Price operator *(Price p1, Price p2)
-        {
-            Price mult = new Price(p1);
-            mult.Bid *= p2.Bid;
-            mult.Offer *= p2.Offer;
-            return mult;
+            return p1 - p2.Mid();
         }
         public static Price operator *(Price p, decimal factor)
         {
@@ -188,6 +189,7 @@ namespace MidaxLib
     {
         protected IndicatorWMA _low = null;
         protected IndicatorWMA _high = null;
+        protected SIGNAL_CODE _trendAssumption = SIGNAL_CODE.UNKNOWN;
 
         public IndicatorWMA IndicatorLow { get { return _low; } }
         public IndicatorWMA IndicatorHigh { get { return _high; } }
@@ -195,6 +197,8 @@ namespace MidaxLib
         public SignalMacD(MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null)
             : base("MacD_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset)
         {
+            if (Config.Settings.ContainsKey("ASSUMPTION_TREND"))
+                _trendAssumption = Config.Settings["ASSUMPTION_TREND"] == "BULL" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL;            
             _low = low == null ? new IndicatorWMA(asset, lowPeriod) : new IndicatorWMA(low);
             if (low != null)
                 _low.PublishingEnabled = false;
@@ -208,6 +212,8 @@ namespace MidaxLib
         public SignalMacD(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null)
             : this(asset, lowPeriod, highPeriod, low, high)
         {
+            if (Config.Settings.ContainsKey("ASSUMPTION_TREND"))
+                _trendAssumption = Config.Settings["ASSUMPTION_TREND"] == "BULL" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL;            
             _id = id;
         }
 
@@ -220,6 +226,7 @@ namespace MidaxLib
             Price lowWMA = timeValueLow.Value.Value;
             Price highWMA = timeValueHigh.Value.Value;
             var signalValue = lowWMA - highWMA;
+            var tradeTrigger = _signalCode != SIGNAL_CODE.UNKNOWN && _signalCode != SIGNAL_CODE.HOLD;
             if (_signalCode == SIGNAL_CODE.UNKNOWN)
             {
                 tradingOrder = _onHold;
@@ -230,13 +237,13 @@ namespace MidaxLib
             {
                 tradingOrder = _onBuy;
                 _signalCode = SIGNAL_CODE.BUY;
-                return true;
+                return tradeTrigger;
             }
             else if (signalValue.Bid < 0)
             {
                 tradingOrder = _onSell;
                 _signalCode = SIGNAL_CODE.SELL;
-                return true;
+                return tradeTrigger;
             }
             return false;
         }

@@ -122,7 +122,7 @@ namespace MidaxLib
                     beginPeriodRef = curendPeriodValueRef;
                 }
             }
-            return coeff * intervalCorrel;
+            return coeff * intervalCorrel.Mid();
         }
     }
 }

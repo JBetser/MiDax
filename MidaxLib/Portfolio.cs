@@ -54,24 +54,24 @@ namespace MidaxLib
             }
         }
 
-        public void ClosePosition(Trade trade, DateTime closing_time, TradeBookedEvent onTradeBooked = null, TradeBookedEvent onBookingFailed = null)
+        public void ClosePosition(Trade trade, DateTime closing_time, TradeBookedEvent onTradeBooked = null, TradeBookedEvent onBookingFailed = null, Signal signal = null)
         {
             if (trade == null)
                 return;
             if (onTradeBooked == null)
                 onTradeBooked = new TradeBookedEvent(OnTradeBooked);
             if (onBookingFailed == null)
-                onBookingFailed = new TradeBookedEvent(OnBookingFailed); 
-            _igStreamApiClient.ClosePosition(new Trade(trade, true, closing_time), closing_time, onTradeBooked, onBookingFailed);
+                onBookingFailed = new TradeBookedEvent(OnBookingFailed);
+            closePosition(new Trade(trade, true, closing_time), closing_time, onTradeBooked, onBookingFailed, 0, signal);
         }
-                
-        public void CloseAllPositions(DateTime time, string stockid = "")
+
+        public void CloseAllPositions(DateTime time, string stockid = "", decimal stockValue = 0m, Signal signal = null)
         {
             var addms = 1;
             foreach (var position in Positions)
             {
                 if (stockid == "" || stockid == position.Value.Epic)
-                    closePosition(position.Value, time.AddMilliseconds(addms++), new TradeBookedEvent(OnTradeBooked), new TradeBookedEvent(OnBookingFailed));
+                    closePosition(position.Value, time.AddMilliseconds(addms++), new TradeBookedEvent(OnTradeBooked), new TradeBookedEvent(OnBookingFailed), 0, stockValue, signal);
             }
             foreach (var tradingSet in _tradingSets)
                 CloseTradingSet(tradingSet.Value, time);
@@ -85,14 +85,29 @@ namespace MidaxLib
                 closePosition(pos, time.AddMilliseconds(addms++), new TradeBookedEvent(set.OnTradeBooked), new TradeBookedEvent(set.OnBookingFailed), idxPos++, stockValue);
         }
 
-        void closePosition(Position pos, DateTime time, TradeBookedEvent onTradeBooked, TradeBookedEvent onBookingFailed, int idxPlaceHolder = 0, decimal stockValue = 0m)
+        void closePosition(Position pos, DateTime time, TradeBookedEvent onTradeBooked, TradeBookedEvent onBookingFailed, int idxPlaceHolder = 0, decimal stockValue = 0m, Signal signal = null)
         {
             if (pos.Quantity != 0)
             {
-                if (pos.Closed)
-                    Log.Instance.WriteEntry(string.Format("A position has not been closed successfully, Epic: {0}, Size: {1}, Value: {2}", pos.Epic, pos.Quantity, pos.AssetValue), System.Diagnostics.EventLogEntryType.Error);
-                _igStreamApiClient.ClosePosition(new Trade(time, pos.Epic, pos.Quantity > 0 ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY, Math.Abs(pos.Quantity), stockValue, idxPlaceHolder), time, onTradeBooked, onBookingFailed);
+                var positionClose = new Trade(time, pos.Epic, pos.Quantity > 0 ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY, Math.Abs(pos.Quantity), stockValue, idxPlaceHolder);
+                _igStreamApiClient.ClosePosition(positionClose, time, onTradeBooked, onBookingFailed);
                 Log.Instance.WriteEntry(string.Format("Forcefully closed a position, Epic: {0}, Size: {1}, Value: {2}", pos.Epic, pos.Quantity, pos.AssetValue), System.Diagnostics.EventLogEntryType.Warning);
+                if (signal != null)
+                {
+                    signal.Trade = positionClose;
+                    PublisherConnection.Instance.Insert(time, signal, pos.Quantity > 0 ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY, stockValue);
+                }
+            }
+        }
+
+        void closePosition(Trade trade, DateTime time, TradeBookedEvent onTradeBooked, TradeBookedEvent onBookingFailed, int idxPlaceHolder = 0, Signal signal = null)
+        {
+            _igStreamApiClient.ClosePosition(trade, time, onTradeBooked, onBookingFailed);
+            Log.Instance.WriteEntry(string.Format("Forcefully closed a position, Epic: {0}, Size: {1}, Value: {2}", trade.Epic, trade.Size, trade.Price), System.Diagnostics.EventLogEntryType.Warning);
+            if (signal != null)
+            {
+                signal.Trade = trade;
+                PublisherConnection.Instance.Insert(time, signal, trade.Direction, trade.Price);
             }
         }
 
@@ -108,13 +123,12 @@ namespace MidaxLib
         protected virtual void OnTradeBooked(Trade newTrade)
         {
             _trades.Add(newTrade);
-            GetPosition(newTrade.Epic).IncomingTrade = newTrade;
+            GetPosition(newTrade.Epic).AddIncomingTrade(newTrade);
         }
 
         protected virtual void OnBookingFailed(Trade newTrade)
         {
             newTrade.Direction = SIGNAL_CODE.FAILED;
-            GetPosition(newTrade.Epic).IncomingTrade = null;
             newTrade.Id = newTrade.Reference;
             newTrade.Publish();
         }
@@ -246,7 +260,7 @@ namespace MidaxLib
 
         public void OnTradeBooked(Trade newTrade)
         {
-            _positions[newTrade.PlaceHolder].IncomingTrade = newTrade;
+            _positions[newTrade.PlaceHolder].AddIncomingTrade(newTrade);
             publishSignal(newTrade);
         }
 
@@ -254,7 +268,6 @@ namespace MidaxLib
         {
             _ready = false;
             newTrade.Direction = SIGNAL_CODE.FAILED;            
-            _positions[newTrade.PlaceHolder].IncomingTrade = null;
             newTrade.Id = newTrade.Reference;
             newTrade.Publish();
         }

@@ -11,34 +11,43 @@ namespace MidaxLib
     {
         protected MarketData _daxIndex = null;
         protected List<MarketData> _daxStocks = null;
+        protected List<MarketData> _otherIndices = null;
         protected MarketData _vix = null;
         protected IndicatorWMA _wma_low = null;
         protected IndicatorWMA _wma_mid = null;
         protected IndicatorWMA _wma_high = null;
         protected SignalANN _ann = null;
         protected List<decimal> _annWeights = null;
+        ModelMacD _macD;
 
         public ModelANN(ModelMacD macD, List<MarketData> daxStocks, MarketData vix, List<MarketData> otherIndices)
         {
+            _macD = macD;
             _daxIndex = macD.Index;
             _daxStocks = daxStocks;
+            _otherIndices = otherIndices;
             _vix = vix;
             if (_vix != null)
-                _mktIndices.Add(_vix);
-            _wma_low = new IndicatorWMA(macD.SignalLow.IndicatorLow);
+                _mktIndices.Add(_vix);           
+        }
+
+        public override void Init()
+        {
+            base.Init();
+            _wma_low = new IndicatorWMA(_macD.SignalLow.IndicatorLow);
             _wma_low.PublishingEnabled = false;
-            _wma_mid = new IndicatorWMA(macD.SignalLow.IndicatorHigh);
+            _wma_mid = new IndicatorWMA(_macD.SignalLow.IndicatorHigh);
             _wma_mid.PublishingEnabled = false;
-            _wma_high = new IndicatorWMA(macD.SignalHigh.IndicatorHigh);
+            _wma_high = new IndicatorWMA(_macD.SignalHigh.IndicatorHigh);
             _wma_high.PublishingEnabled = false;
-            _mktIndices.AddRange(otherIndices);
+            _mktIndices.AddRange(_otherIndices);
             _mktIndicators.Add(_wma_low);
             _mktIndicators.Add(_wma_mid);
             _mktIndicators.Add(_wma_high);
             _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 10));
             _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 60));
             _mktIndicators.Add(new IndicatorNearestLevel(_daxIndex));
-                        
+
             var annId = "WMA_4_2";
             int lastversion = StaticDataConnection.Instance.GetAnnLatestVersion(annId, _daxIndex.Id);
             _annWeights = StaticDataConnection.Instance.GetAnnWeights(annId, _daxIndex.Id, lastversion);
@@ -46,7 +55,7 @@ namespace MidaxLib
             List<Indicator> annIndicators = new List<Indicator>();
             annIndicators.Add(_wma_low);
             annIndicators.Add(_wma_mid);
-            annIndicators.Add(_wma_high);            
+            annIndicators.Add(_wma_high);
             List<object> signalParams = new List<object>();
             signalParams.Add(_daxIndex);
             signalParams.Add(annIndicators);
@@ -55,8 +64,8 @@ namespace MidaxLib
             this._mktSignals.Add(this._ann);
 
             var allIndices = new List<MarketData>();
-            allIndices.Add(macD.Index);
-            allIndices.AddRange(otherIndices);
+            allIndices.Add(_daxIndex);
+            allIndices.AddRange(_otherIndices);
             foreach (var index in allIndices)
             {
                 var indicatorLow = new IndicatorLow(index);
@@ -70,7 +79,7 @@ namespace MidaxLib
                 _mktEODIndicators.Add(indicatorLow);
                 _mktEODIndicators.Add(indicatorHigh);
                 _mktEODIndicators.Add(indicatorCloseBid);
-                _mktEODIndicators.Add(indicatorCloseOffer);                
+                _mktEODIndicators.Add(indicatorCloseOffer);
                 _mktEODIndicators.Add(new IndicatorLevelPivot(index));
                 _mktEODIndicators.Add(new IndicatorLevelR1(index));
                 _mktEODIndicators.Add(new IndicatorLevelR2(index));

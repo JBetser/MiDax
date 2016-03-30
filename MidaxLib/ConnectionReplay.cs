@@ -79,11 +79,13 @@ namespace MidaxLib
 
     public class ReplayPositionUpdateInfo : ReplayUpdateInfo
     {
-        public ReplayPositionUpdateInfo(string epic, string dealId, string dealRef, string status, string dealStatus, int size, decimal level, SIGNAL_CODE direction)
+        public ReplayPositionUpdateInfo(DateTime timestamp, string epic, string dealId, string dealRef, string status, string dealStatus, int size, decimal level, SIGNAL_CODE direction)
             : base(null)
         {
             _name = epic;
             _id = dealId;
+            _itemData["timestamp"] = string.Format("{0}-{1}-{2}T {3}:{4}:{5}.{6}", timestamp.Year, timestamp.Month, timestamp.Day,
+                                                               timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Millisecond);
             _itemData["dealRef"] = dealRef;
             _itemData["status"] = status;
             _itemData["dealStatus"] = dealStatus;
@@ -94,8 +96,8 @@ namespace MidaxLib
 
         public override string ToString()
         {
-            return string.Format("[ {{ \"epic\" : \"{0}\", \"dealId\" : \"{1}\", \"dealRef\" : \"{2}\", \"status\" : \"{3}\", \"dealStatus\" : \"{4}\", \"size\" : \"{5}\", \"level\" : \"{6}\", \"direction\" : \"{7}\" }} ]",
-                _name, _id, _itemData["dealRef"], _itemData["status"], _itemData["dealStatus"], _itemData["size"], _itemData["level"], _itemData["direction"]);
+            return string.Format("[ {{ \"timestamp\" : \"{8}\", \"epic\" : \"{0}\", \"dealId\" : \"{1}\", \"dealRef\" : \"{2}\", \"status\" : \"{3}\", \"dealStatus\" : \"{4}\", \"size\" : \"{5}\", \"level\" : \"{6}\", \"direction\" : \"{7}\" }} ]",
+                _name, _id, _itemData["dealRef"], _itemData["status"], _itemData["dealStatus"], _itemData["size"], _itemData["level"], _itemData["direction"], _itemData["timestamp"]);
         }
     }
 
@@ -113,6 +115,7 @@ namespace MidaxLib
     public class ReplayStreamingClient : IAbstractStreamingClient
     {
         IReaderConnection _reader = null;
+        IReaderConnection _readerExpectedResults = null;
         DateTime _startTime;
         DateTime _stopTime;
         Dictionary<string, List<CqlQuote>> _expectedIndicatorData = null;
@@ -161,6 +164,13 @@ namespace MidaxLib
             else
                 _reader = null;
             _hasExpectedResults = Config.TestReplayEnabled || Config.MarketSelectorEnabled || Config.CalibratorEnabled;
+            if (_hasExpectedResults)
+            {
+                if (Config.Settings.ContainsKey("EXPECTEDRESULTS_CSV"))
+                    _readerExpectedResults = new CsvReader(Config.Settings["EXPECTEDRESULTS_CSV"]);
+                else
+                    _readerExpectedResults = new CsvReader(_testReplayFiles[0]);
+            }
             _numId = 1;
             _numRef = 1;
         }
@@ -228,7 +238,7 @@ namespace MidaxLib
             trade.Id = "###DUMMY_TRADE_ID" + _numId++ + "###";
             _placeHolders[trade.PlaceHolder] = trade.Id;  
             if (_tradingEventTable != null)
-                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
+                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.TradingTime, trade.Epic, trade.Id, trade.Reference, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
         }
 
         void IAbstractStreamingClient.ClosePosition(Trade closingTrade, DateTime time, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
@@ -253,7 +263,7 @@ namespace MidaxLib
             var trade = ((TradeBookingEvent)state).Trade;
             trade.Id = _placeHolders[trade.PlaceHolder];
             if (_tradingEventTable != null)
-                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.Epic, trade.Id, trade.Reference, "DELETED", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
+                _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.TradingTime, trade.Epic, trade.Id, trade.Reference, "DELETED", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
         }
         /*
         void IAbstractStreamingClient.GetMarketDetails(MarketData mktData)
@@ -317,8 +327,12 @@ namespace MidaxLib
                                         CassandraConnection.DATATYPE_STOCK, epicLst);
             if (_hasExpectedResults)
             {
+                _readerExpectedResults.GetMarketLevels(_stopTime, stockEpics);
+                _readerExpectedResults.GetMarketDataQuotes(_startTime, _stopTime,
+                                            CassandraConnection.DATATYPE_STOCK, epicLst);
+
                 _expectedIndicatorData = new Dictionary<string, List<CqlQuote>>();
-                var quotes = _reader.GetIndicatorDataQuotes(_startTime, _stopTime,
+                var quotes = _readerExpectedResults.GetIndicatorDataQuotes(_startTime, _stopTime,
                         CassandraConnection.DATATYPE_INDICATOR, epicLst);
                 foreach (var epicQuotes in quotes)
                 {
@@ -328,7 +342,7 @@ namespace MidaxLib
                     indicatorData.Aggregate(_expectedIndicatorData, (agg, keyVal) => { agg.Add(keyVal.Key, keyVal.Value); return agg; });
                 }
                 _expectedSignalData = new Dictionary<string, List<CqlQuote>>();
-                quotes = _reader.GetSignalDataQuotes(_startTime, _stopTime,
+                quotes = _readerExpectedResults.GetSignalDataQuotes(_startTime, _stopTime,
                         CassandraConnection.DATATYPE_SIGNAL, epicLst);
                 foreach (var epicQuotes in quotes)
                 {
@@ -338,7 +352,7 @@ namespace MidaxLib
                     signalData.Aggregate(_expectedSignalData, (agg, keyVal) => { agg.Add(keyVal.Key, keyVal.Value); return agg; });
                 }
                 _expectedTradeData = new Dictionary<KeyValuePair<string,DateTime>, Trade>();
-                var trades = _reader.GetTrades(_startTime, _stopTime,
+                var trades = _readerExpectedResults.GetTrades(_startTime, _stopTime,
                                                                     CassandraConnection.DATATYPE_TRADE, epicLst);
                 foreach (var epicTrades in trades)
                 {
@@ -346,7 +360,7 @@ namespace MidaxLib
                         _expectedTradeData.Add(new KeyValuePair<string, DateTime>(epicTrades.Key, trade.TradingTime), trade);
                 }
                 _expectedProfitData = new Dictionary<KeyValuePair<string, DateTime>, double>();
-                var profits = _reader.GetProfits(_startTime, _stopTime,
+                var profits = _readerExpectedResults.GetProfits(_startTime, _stopTime,
                                                                     CassandraConnection.DATATYPE_PROFIT, epicLst);
                 foreach (var epicProfit in profits)
                 {
@@ -721,20 +735,6 @@ namespace MidaxLib
             {
                 string error = "Test failed: trade " + trade.Epic + " expected Size " +
                    _expectedTradeData[tradeKey].Size.ToString() + " != " + trade.Size.ToString();
-                Log.Instance.WriteEntry(error, EventLogEntryType.Error);
-                throw new ApplicationException(error);
-            }
-            if (_expectedTradeData[tradeKey].Id != trade.Id)
-            {
-                string error = "Test failed: trade " + trade.Epic + " expected Id " +
-                   _expectedTradeData[tradeKey].Id + " != " + trade.Id;
-                Log.Instance.WriteEntry(error, EventLogEntryType.Error);
-                throw new ApplicationException(error);
-            }
-            if (_expectedTradeData[tradeKey].Reference != trade.Reference)
-            {
-                string error = "Test failed: trade " + trade.Epic + " expected Reference " +
-                   _expectedTradeData[tradeKey].Reference + " != " + trade.Reference;
                 Log.Instance.WriteEntry(error, EventLogEntryType.Error);
                 throw new ApplicationException(error);
             }

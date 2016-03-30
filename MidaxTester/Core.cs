@@ -14,20 +14,14 @@ namespace MidaxTester
     public class Core
     {
         public static void Run(bool generate = false, bool generate_from_db = false)
-        {
-            List<string> tests = new List<string>();
-            tests.Add(@"..\..\expected_results\core_22_1_2016.csv");
-
+        {           
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["PUBLISHING_START_TIME"] = "2016-01-22 08:30:00";
             dicSettings["PUBLISHING_STOP_TIME"] = "2016-01-22 09:00:00";
             if (generate_from_db)
-                dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";
-            if (generate)
-                dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\coregen_22_1_2016.csv");
-            dicSettings["REPLAY_MODE"] = generate_from_db ? "DB" : "CSV";
-            dicSettings["REPLAY_CSV"] = Config.TestList(tests);
+                dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";            
+            dicSettings["REPLAY_MODE"] = generate_from_db ? "DB" : "CSV";            
             dicSettings["REPLAY_POPUP"] = "1";
             dicSettings["TRADING_START_TIME"] = "2016-01-22 08:45:00";
             dicSettings["TRADING_STOP_TIME"] = "2016-01-22 08:59:00";
@@ -39,6 +33,51 @@ namespace MidaxTester
             Config.Settings = dicSettings;
 
             string action = generate ? "Generating" : "Testing";
+            var index = new MarketData("DAX:IX.D.DAX.DAILY.IP");            
+            List<string> tests = new List<string>();
+
+            Console.WriteLine(action + " WMA...");
+            // Test weighted moving average with long intervals
+            tests.Add(@"..\..\expected_results\testWMA.csv");
+            dicSettings["REPLAY_CSV"] = Config.TestList(tests);
+            if (generate)
+                dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMAgen.csv");
+            var macDTestWMA = new ModelMacDTest(index,1,2,3);
+            macDTestWMA.Init();
+            MarketDataConnection.Instance.Connect(null);
+            macDTestWMA.StartSignals();
+            macDTestWMA.StopSignals();
+
+            // Test weighted moving average with short intervals
+            tests = new List<string>();
+            tests.Add(@"..\..\expected_results\testWMA2.csv");
+            dicSettings["REPLAY_CSV"] = Config.TestList(tests);
+            if (generate)
+                dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMA2gen.csv");
+            macDTestWMA = new ModelMacDTest(index, 1, 2, 3);
+            macDTestWMA.Init();
+            MarketDataConnection.Instance.Connect(null);
+            macDTestWMA.StartSignals();
+            macDTestWMA.StopSignals();
+
+            // Test weighted moving average with time decay
+            tests = new List<string>();
+            tests.Add(@"..\..\expected_results\testWMA3.csv");
+            dicSettings["REPLAY_CSV"] = Config.TestList(tests);
+            dicSettings["TIME_DECAY_FACTOR"] = "3";
+            if (generate)
+                dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMA3gen.csv");
+            macDTestWMA = new ModelMacDTest(index, 1, 2, 3);
+            macDTestWMA.Init();
+            MarketDataConnection.Instance.Connect(null);
+            macDTestWMA.StartSignals();
+            macDTestWMA.StopSignals();
+
+            tests = new List<string>();
+            tests.Add(@"..\..\expected_results\core_22_1_2016.csv");
+            dicSettings["REPLAY_CSV"] = Config.TestList(tests);
+            if (generate)
+                dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\coregen_22_1_2016.csv");
             Console.WriteLine(action + " calibration...");
 
             // Test a 1mn linear regression
@@ -145,8 +184,8 @@ namespace MidaxTester
 
             MarketDataConnection.Instance.Connect(null);
 
-            var index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
             var model = new ModelMacDTest(index);
+            model.Init();
             
             Console.WriteLine(action + " live indicators and signals...");
             model.StartSignals();
@@ -168,6 +207,7 @@ namespace MidaxTester
                 // test trade booking
                 MarketDataConnection.Instance = new ReplayConnection();
                 model = new ModelMacDTest(index);
+                model.Init();
                 MarketDataConnection.Instance.Connect(null);
                 Console.WriteLine(action + " trade booking...");
                 var tradeTime = Config.ParseDateTimeLocal(dicSettings["TRADING_CLOSING_TIME"]).AddSeconds(-1);
@@ -207,6 +247,7 @@ namespace MidaxTester
                 dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
                 MarketDataConnection.Instance = new ReplayCrazySeller();
                 model = new ModelMacDTest(index);
+                model.Init();
                 Console.WriteLine(action + " synchronization...");
                 MarketDataConnection.Instance.Connect(null);
                 model.StartSignals();
@@ -216,6 +257,7 @@ namespace MidaxTester
                 dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
                 MarketDataConnection.Instance = new ReplayCrazyBuyer();
                 model = new ModelMacDTest(index);
+                model.Init();
                 MarketDataConnection.Instance.Connect(null);
                 model.StartSignals();
                 model.StopSignals();
@@ -228,6 +270,7 @@ namespace MidaxTester
                 testError.Add(@"..\..\expected_results\error.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testError);
                 var modelErr = new ModelMacDTest(index);
+                modelErr.Init();
                 string expected;
                 bool success = false;
                 try
@@ -268,6 +311,7 @@ namespace MidaxTester
                     MarketDataConnection.Instance = new ReplayConnection();
                     MarketDataConnection.Instance.Connect(null);
                     model = new ModelMacDTest(new MarketData(index.Id));
+                    model.Init();
                     model.StartSignals();
                 }
                 catch (Exception exc)
@@ -286,7 +330,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:31 expected value 9735.930833333333333333333411 != 9735.965000000000000000000016";
+                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:31 expected value 9735.710930440771349862258972 != 9735.705972222222222222222239";
                     success = (exc.Message.Replace(" AM", "") == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);

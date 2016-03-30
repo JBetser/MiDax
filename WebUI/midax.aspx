@@ -285,7 +285,6 @@
                <option value="High#Low#CloseBid">High/Low/Close D-1</option>
                <option value="LVLPivot#LVLS1#LVLR1">Levels Pivot/S1/R1</option>
                <option value="NearestLevel">Nearest Level</option>
-               <option value="WMA_1#WMA_5#WMA_60">WMA 1mn/5mn/1hr</option>
                <option value="WMA_2#WMA_10#WMA_60">WMA 2mn/10mn/1hr</option>
                <option value="WMA_7#WMA_20#WMA_60">WMA 7mn/20mn/1hr</option>
                <option value="WMA_10#WMA_30#WMA_90">WMA 10mn/30mn/1hr30</option>
@@ -297,10 +296,8 @@
                <option value="MacD_10_60">MacD 10mn/1h</option>
                <option value="MacD_20_60">MacD 20mn/1h</option>
                <option value="MacD_30_90">MacD 30mn/1h30</option>
-               <option value="MacDCas_10_60_100">MacD Cascade 10mn/1h 1pt</option>
-               <option value="MacDCas_10_60_200">MacD Cascade 10mn/1h 2pts</option>
-               <option value="MacDCas_20_60_200">MacD Cascade 20mn/1h 2pts</option>
-               <option value="MacDCas_30_90_200">MacD Cascade 30mn/1h30 2pts</option>
+               <option value="MacDCas_10_30_90_100">MacD Cascade 10mn/30mn/1h30 1pt</option>
+               <option value="MacDCas_10_30_90_200">MacD Cascade 10mn/30mn/1h30 2pts</option>
                <option value="Mole_1_5_60">Mole 1mn/5mn/1h</option>
                <option value="Mole_2_7_60">Mole 2mn/7mn/1h</option>
                <option value="Mole_2_10_60">Mole 2mn/10mn/1h</option>

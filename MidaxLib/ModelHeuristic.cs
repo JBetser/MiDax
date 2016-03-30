@@ -7,51 +7,29 @@ using System.Threading.Tasks;
 
 namespace MidaxLib
 {
-    public class ModelMacDCascade : Model
+    public class ModelMacDCascade : ModelMacD
     {
-        protected MarketData _daxIndex = null;
+        ModelMacD _macD;
 
-        public ModelMacDCascade(ModelMacD macD)
+        public ModelMacDCascade(ModelMacD macD) : base(macD.Index, macD.LowPeriod, macD.MidPeriod, macD.HighPeriod)
         {
-            _daxIndex = macD.Index;
-            _mktSignals.Add(new SignalMacDCascade(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh));
-            _mktSignals.Add(new SignalMacDCascade(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh));
+            _macD = macD;
         }
 
-        protected override bool Buy(Signal signal, DateTime time, Price stockValue)
+        public override void Init()
         {
-            if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
-            {
-                signal.Trade.Price = stockValue.Offer;
-                _ptf.ClosePosition(signal.Trade, time);
-                string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.MarketData.Id + " " + stockValue.Offer, EventLogEntryType.Information);
-            }
-            return true;
-        }
-
-        protected override bool Sell(Signal signal, DateTime time, Price stockValue)
-        {
-            if (_ptf.GetPosition(_daxIndex.Id).Quantity > 0)
-            {
-                _ptf.BookTrade(signal.Trade);
-                Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + stockValue.Offer, EventLogEntryType.Error);
-            }
-            else if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
-            {
-                if (time <= _closingTime)
-                {
-                    _ptf.BookTrade(signal.Trade);
-                    string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.MarketData.Id + " " + stockValue.Bid, EventLogEntryType.Information);
-                }
-            }
-            return true;
+            base.Init();
+            _macD_low = new SignalMacDCascade(_daxIndex, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, _macD.SignalHigh.IndicatorLow, _macD.SignalHigh.IndicatorHigh);
+            _macD_high = new SignalMacDCascade(_daxIndex, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, _macD.SignalHigh.IndicatorLow, _macD.SignalHigh.IndicatorHigh);
+            _mktSignals = new List<Signal>();
+            _mktSignals.Add(_macD_low);
+            _mktSignals.Add(_macD_high);
         }
     }
 
     public class ModelMole : Model
     {
+        ModelMacD _macD;
         protected MarketData _daxIndex = null;
         protected SignalMacD _signal = null;
         protected SignalMacD _signalLong = null;
@@ -61,15 +39,21 @@ namespace MidaxLib
 
         public ModelMole(ModelMacD macD)
         {
+            _macD = macD;
             _daxIndex = macD.Index;
-            _wmaMid = macD.SignalLow.IndicatorHigh;
-            _mktLevels = _daxIndex.Levels;
+            _mktLevels = _daxIndex.Levels;            
+        }
+
+        public override void Init()
+        {
+            base.Init();
             List<MarketData> mktData = new List<MarketData>();
             mktData.Add(_daxIndex);
             _mktData = mktData;
-            _signal = new SignalMole(_daxIndex, macD.SignalLow.IndicatorLow.Period / 60, macD.SignalLow.IndicatorHigh.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, macD.SignalLow.IndicatorLow, macD.SignalLow.IndicatorHigh);
+            _wmaMid = _macD.SignalLow.IndicatorHigh;
+            _signal = new SignalMole(_daxIndex, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalLow.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalLow.IndicatorLow, _macD.SignalLow.IndicatorHigh);
             _mktSignals.Add(_signal);
-            _signalLong = new SignalMole(_daxIndex, macD.SignalHigh.IndicatorLow.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, macD.SignalHigh.IndicatorHigh.Period / 60, macD.SignalHigh.IndicatorLow, macD.SignalHigh.IndicatorHigh);
+            _signalLong = new SignalMole(_daxIndex, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorLow, _macD.SignalHigh.IndicatorHigh);
             _signalLong.Subscribe(new Signal.Tick(LongBuy), new Signal.Tick(LongSell));
             _tradingSet = (TradingSetMole)Portfolio.Instance.GetTradingSet(this);
             _daxIndex.Subscribe(new MarketData.Tick(OnUpdateIndex), null);
@@ -230,7 +214,7 @@ namespace MidaxLib
                 idxPlaceHolder++;
                 if (!placeHolder.Key.IsInside(price - _referenceLevel.Value))
                     continue;
-                if (!placeHolder.Value.Closed || placeHolder.Value.AwaitingTrade)
+                if (placeHolder.Value.AwaitingTrade)
                     continue;
                 trade.PlaceHolder = idxPlaceHolder;
                 BookTrade(trade);
@@ -249,7 +233,7 @@ namespace MidaxLib
             var addms = 1;
             foreach (var placeHolder in _placeHolders)
             {
-                if (placeHolder.Value.Closed || placeHolder.Value.AwaitingTrade)
+                if (placeHolder.Value.AwaitingTrade || placeHolder.Value.Trade == null)
                     continue;
                 var adjustedTime = time.AddMilliseconds(addms++); // this is to keep the trading_time unique
                 if (price >= placeHolder.Value.Trade.Price + _stopLoss)

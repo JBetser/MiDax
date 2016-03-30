@@ -25,6 +25,10 @@ namespace MidaxLib
         public Portfolio PTF { get { return _ptf; } }
         
         public Model()
+        {            
+        }
+
+        public virtual void Init()
         {
             _closingTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
             if (Config.Settings.ContainsKey("TRADING_SIGNAL"))
@@ -35,12 +39,21 @@ namespace MidaxLib
             _ptf = Portfolio.Instance;
         }
 
-        protected virtual bool OnBuy(Signal signal, DateTime time, Price value)
+        protected virtual bool OnBuy(Signal signal, DateTime time, Price stockValue)
         {
             if (_tradingSignal != null)
             {
                 if (signal.Id == _tradingSignal)
-                    return Buy(signal, time, signal.MarketData.TimeSeries[time].Value.Value);
+                {
+                    if (_ptf.GetPosition(signal.MarketData.Id).Quantity > 0)
+                    {
+                        Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
+                        Portfolio.Instance.CloseAllPositions(time, signal.MarketData.Id, stockValue.Bid, signal);
+                        return false;
+                    }
+                    signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.BUY, _amount, stockValue.Bid);
+                    return Buy(signal, time, stockValue);
+                }
             }
             return true;
         }
@@ -51,13 +64,10 @@ namespace MidaxLib
             {
                 if (signal.Id == _tradingSignal)
                 {
-                    if (!_ptf.GetPosition(signal.MarketData.Id).Closed)
+                    if (_ptf.GetPosition(signal.MarketData.Id).Quantity < 0)
                     {
-                        if (_ptf.GetPosition(signal.MarketData.Id).Quantity >= 0)
-                        {
-                            Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
-                            Portfolio.Instance.CloseAllPositions(time, signal.MarketData.Id);
-                        }
+                        Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
+                        Portfolio.Instance.CloseAllPositions(time, signal.MarketData.Id, stockValue.Offer, signal);
                         return false;
                     }
                     signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid);
@@ -143,33 +153,75 @@ namespace MidaxLib
         protected MarketData _daxIndex = null;
         protected SignalMacD _macD_low = null;
         protected SignalMacD _macD_high = null;
+        protected SIGNAL_CODE _trendAssumption = SIGNAL_CODE.UNKNOWN;
+        int _tradeSize = 0;
+        int _lowPeriod = 0;
+        int _midPeriod = 0;
+        int _highPeriod = 0;
 
         public MarketData Index { get { return _daxIndex; } }
         public SignalMacD SignalLow { get { return _macD_low; } }
         public SignalMacD SignalHigh { get { return _macD_high; } }
 
+        public int LowPeriod { get { return _lowPeriod; } }
+        public int MidPeriod { get { return _midPeriod; } }
+        public int HighPeriod { get { return _highPeriod; } }
+
         public ModelMacD(MarketData daxIndex, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
         {
+            if (Config.Settings.ContainsKey("ASSUMPTION_TREND"))
+                _trendAssumption = Config.Settings["ASSUMPTION_TREND"] == "BULL" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL;
             List<MarketData> mktData = new List<MarketData>();
             mktData.Add(daxIndex);         
             _mktData = mktData;
             _daxIndex = daxIndex;
-            _macD_low = new SignalMacD(_daxIndex, lowPeriod, midPeriod);
-            _macD_high = new SignalMacD(_daxIndex, midPeriod, highPeriod, _macD_low.IndicatorHigh);
+            _lowPeriod = lowPeriod;
+            _midPeriod = midPeriod;
+            _highPeriod = highPeriod;
+        }
+
+        public override void Init()
+        {
+            base.Init();
+            _macD_low = new SignalMacD(_daxIndex, _lowPeriod, _midPeriod);
+            _macD_high = new SignalMacD(_daxIndex, _midPeriod, _highPeriod, _macD_low.IndicatorHigh);
             _mktSignals.Add(_macD_low);
             _mktSignals.Add(_macD_high);
-            _mktEODIndicators.Add(new IndicatorLevelMean(_daxIndex));
         }
 
         protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
             if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
             {
-                signal.Trade.Price = stockValue.Offer;
-                _ptf.ClosePosition(signal.Trade, time);
-                string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.MarketData.Id + " " + stockValue.Offer, EventLogEntryType.Information);
+                if (time >= _closingTime)
+                {
+                    signal.Trade.Price = stockValue.Offer;
+                    _ptf.ClosePosition(signal.Trade, time, null, null, signal);
+                    string closeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+                    Log.Instance.WriteEntry(time + closeRef + " Signal close " + signal.Id + ": BUY " + signal.MarketData.Id + " " + stockValue.Bid, EventLogEntryType.Information);
+                    return false;
+                }
+                else
+                {
+                    if (_trendAssumption != SIGNAL_CODE.SELL)
+                        signal.Trade.Size = _tradeSize * 2;
+                    _ptf.BookTrade(signal.Trade);
+                }
             }
+            else if (_trendAssumption != SIGNAL_CODE.SELL && _ptf.GetPosition(_daxIndex.Id).Quantity == 0)
+            {
+                if (time <= _closingTime)
+                {
+                    _tradeSize = signal.Trade.Size;
+                    _ptf.BookTrade(signal.Trade);
+                }
+                else
+                    return false;
+            }
+            else
+                return false;
+            string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+            Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.MarketData.Id + " " + stockValue.Bid, EventLogEntryType.Information);
             return true;
         }
 
@@ -177,18 +229,35 @@ namespace MidaxLib
         {
             if (_ptf.GetPosition(_daxIndex.Id).Quantity > 0)
             {
-                _ptf.BookTrade(signal.Trade);
-                Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + stockValue.Offer, EventLogEntryType.Error);
+                if (time >= _closingTime)
+                {
+                    signal.Trade.Price = stockValue.Bid;
+                    _ptf.ClosePosition(signal.Trade, time, null, null, signal);
+                    string closeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+                    Log.Instance.WriteEntry(time + closeRef + " Signal close " + signal.Id + ": SELL " + signal.MarketData.Id + " " + stockValue.Offer, EventLogEntryType.Information);
+                    return false;
+                }
+                else
+                {
+                    if (_trendAssumption != SIGNAL_CODE.BUY)
+                        signal.Trade.Size = _tradeSize * 2;
+                    _ptf.BookTrade(signal.Trade);
+                }
             }
-            else if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
+            else if (_trendAssumption != SIGNAL_CODE.BUY && _ptf.GetPosition(_daxIndex.Id).Quantity == 0)
             {
                 if (time <= _closingTime)
                 {
+                    _tradeSize = signal.Trade.Size;
                     _ptf.BookTrade(signal.Trade);
-                    string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.MarketData.Id + " " + stockValue.Bid, EventLogEntryType.Information);
                 }
+                else
+                    return false;
             }
+            else
+                return false;
+            string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+            Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.MarketData.Id + " " + stockValue.Offer, EventLogEntryType.Information);
             return true;
         }        
     }
