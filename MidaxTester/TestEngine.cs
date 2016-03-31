@@ -67,8 +67,6 @@ namespace MidaxTester
                     Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 10, 0, 0);
                     Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 9, 30, 0);
                 }
-                foreach (var model in models)
-                    model.Init();
 
                 if (_generate)
                 {

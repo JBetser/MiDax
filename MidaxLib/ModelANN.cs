@@ -31,7 +31,7 @@ namespace MidaxLib
                 _mktIndices.Add(_vix);           
         }
 
-        public override void Init()
+        protected override void Init()
         {
             base.Init();
             _wma_low = new IndicatorWMA(_macD.SignalLow.IndicatorLow);

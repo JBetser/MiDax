@@ -16,7 +16,7 @@ namespace MidaxLib
             _macD = macD;
         }
 
-        public override void Init()
+        protected override void Init()
         {
             base.Init();
             _macD_low = new SignalMacDCascade(_daxIndex, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, _macD.SignalHigh.IndicatorLow, _macD.SignalHigh.IndicatorHigh);
@@ -44,7 +44,7 @@ namespace MidaxLib
             _mktLevels = _daxIndex.Levels;            
         }
 
-        public override void Init()
+        protected override void Init()
         {
             base.Init();
             List<MarketData> mktData = new List<MarketData>();
@@ -160,7 +160,7 @@ namespace MidaxLib
     {
         decimal? _referenceLevel;
         int _nbPlaceholders = 0;
-        Dictionary<Interval, Position> _placeHolders = new Dictionary<Interval, Position>();
+        Dictionary<Interval, List<Position>> _placeHolders = new Dictionary<Interval, List<Position>>();
         MarketData _index;
 
         public bool Ready { get { return _ready; } }
@@ -181,14 +181,19 @@ namespace MidaxLib
             while(nbplaceholders-- > 0)
                 _positions.Add(new Position(index.Id));
             var idxPlaceHolder = 0;
-            _placeHolders[new Interval(-2.5m, 0.0m)] = _positions[idxPlaceHolder++];
+            var placeholderGroup = new Interval(-20.0m, 15.0m);
+            _placeHolders[placeholderGroup] = new List<Position>();
+            nbplaceholders = _nbPlaceholders;
+            while (nbplaceholders-- > 0)
+                _placeHolders[placeholderGroup].Add(_positions[idxPlaceHolder++]);
+            /*
             _placeHolders[new Interval(0.0m, 2.5m)] = _positions[idxPlaceHolder++];
             _placeHolders[new Interval(0.0m, 2.5m)] = _positions[idxPlaceHolder++];
             _placeHolders[new Interval(2.5m, 5.0m)] = _positions[idxPlaceHolder++];
             _placeHolders[new Interval(2.5m, 5.0m)] = _positions[idxPlaceHolder++];
             _placeHolders[new Interval(5.0m, 10.0m)] = _positions[idxPlaceHolder++];
             _placeHolders[new Interval(5.0m, 10.0m)] = _positions[idxPlaceHolder++];
-            _placeHolders[new Interval(10.0m, 15.0m)] = _positions[idxPlaceHolder++];
+            _placeHolders[new Interval(10.0m, 15.0m)] = _positions[idxPlaceHolder++];*/
             if (idxPlaceHolder != _nbPlaceholders)
                 throw new ApplicationException("Mole init error: Inconsistent number of placeholders");
         }
@@ -209,17 +214,20 @@ namespace MidaxLib
             if (!_ready || !Config.TradingOpen(trade.TradingTime) || !_referenceLevel.HasValue)
                 return false;
             int idxPlaceHolder = -1;
-            foreach (var placeHolder in _placeHolders)
+            foreach (var placeHolderGroup in _placeHolders)
             {
-                idxPlaceHolder++;
-                if (!placeHolder.Key.IsInside(price - _referenceLevel.Value))
+                if (!placeHolderGroup.Key.IsInside(price - _referenceLevel.Value))
                     continue;
-                if (placeHolder.Value.AwaitingTrade)
-                    continue;
-                trade.PlaceHolder = idxPlaceHolder;
-                BookTrade(trade);
-                Log.Instance.WriteEntry(trade.TradingTime + "Mole Signal " + _signal.Id + ": SELL " + _signal.MarketData.Id + " " + price, EventLogEntryType.Information);
-                return true;
+                foreach (var placeHolder in placeHolderGroup.Value)
+                {
+                    idxPlaceHolder++;
+                    if (placeHolder.Quantity != 0)
+                        continue;
+                    trade.PlaceHolder = idxPlaceHolder;
+                    BookTrade(trade);
+                    Log.Instance.WriteEntry(trade.TradingTime + "Mole Signal " + _signal.Id + ": SELL " + _signal.MarketData.Id + " " + price, EventLogEntryType.Information);
+                    return true;
+                }
             }
             return false;
         }
@@ -231,26 +239,29 @@ namespace MidaxLib
             _referenceLevel = IndicatorNearestLevel.GetNearestLevel(price, _index.Levels.Value);
             var signaled = false;
             var addms = 1;
-            foreach (var placeHolder in _placeHolders)
+            foreach (var placeHolderGroup in _placeHolders)
             {
-                if (placeHolder.Value.AwaitingTrade || placeHolder.Value.Trade == null)
-                    continue;
-                var adjustedTime = time.AddMilliseconds(addms++); // this is to keep the trading_time unique
-                if (price >= placeHolder.Value.Trade.Price + _stopLoss)
+                foreach (var placeHolder in placeHolderGroup.Value)
                 {
-                    Log.Instance.WriteEntry(time + " A stop loss was hit Price " + price, EventLogEntryType.Information);
-                    var tradePrice = placeHolder.Value.Trade.Price;
-                    ClosePosition(new Trade(placeHolder.Value.Trade, true, adjustedTime), adjustedTime, price);
-                    Log.Instance.WriteEntry(time + " A stop loss was hit: Loss " + (price - tradePrice) + " Price " + price, EventLogEntryType.Information);
-                    signaled = true;
-                }
-                else if (price <= placeHolder.Value.Trade.Price - _objective)
-                {
-                    Log.Instance.WriteEntry(time + " A win was hit: Price " + price, EventLogEntryType.Information);
-                    var tradePrice = placeHolder.Value.Trade.Price;
-                    ClosePosition(new Trade(placeHolder.Value.Trade, true, adjustedTime), adjustedTime, price);
-                    Log.Instance.WriteEntry(time + " A win was hit: Win " + (tradePrice - price) + " Price " + price, EventLogEntryType.Information);
-                    signaled = true;
+                    if (placeHolder.AwaitingTrade || placeHolder.Trade == null)
+                        continue;
+                    var adjustedTime = time.AddMilliseconds(addms++); // this is to keep the trading_time unique
+                    if (price >= placeHolder.Trade.Price + _stopLoss)
+                    {
+                        Log.Instance.WriteEntry(time + " A stop loss was hit Price " + price, EventLogEntryType.Information);
+                        var tradePrice = placeHolder.Trade.Price;
+                        ClosePosition(new Trade(placeHolder.Trade, true, adjustedTime), adjustedTime, price);
+                        Log.Instance.WriteEntry(time + " A stop loss was hit: Loss " + (price - tradePrice) + " Price " + price, EventLogEntryType.Information);
+                        signaled = true;
+                    }
+                    else if (price <= placeHolder.Trade.Price - _objective)
+                    {
+                        Log.Instance.WriteEntry(time + " A win was hit: Price " + price, EventLogEntryType.Information);
+                        var tradePrice = placeHolder.Trade.Price;
+                        ClosePosition(new Trade(placeHolder.Trade, true, adjustedTime), adjustedTime, price);
+                        Log.Instance.WriteEntry(time + " A win was hit: Win " + (tradePrice - price) + " Price " + price, EventLogEntryType.Information);
+                        signaled = true;
+                    }
                 }
             }
             return signaled;

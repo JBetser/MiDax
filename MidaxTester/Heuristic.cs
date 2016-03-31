@@ -17,9 +17,10 @@ namespace MidaxTester
             testEngine.Settings["TIME_DECAY_FACTOR"] = "15";
             testEngine.Settings["ASSUMPTION_TREND"] = "BEAR";
             var models = new List<Model>();
+            //models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 3, 15, 75));
             models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 10, 30, 90));
-            models.Add(new ModelMacDCascadeTest((ModelMacD)models[0]));
             models.Add(new ModelMoleTest((ModelMacD)models[0]));
+            models.Add(new ModelMacDCascadeTest((ModelMacD)models[0]));
             testEngine.Run(models);          
         }
     }

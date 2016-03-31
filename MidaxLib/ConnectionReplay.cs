@@ -86,7 +86,7 @@ namespace MidaxLib
             _id = dealId;
             _itemData["timestamp"] = string.Format("{0}-{1}-{2}T {3}:{4}:{5}.{6}", timestamp.Year, timestamp.Month, timestamp.Day,
                                                                timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Millisecond);
-            _itemData["dealRef"] = dealRef;
+            _itemData["dealReference"] = dealRef;
             _itemData["status"] = status;
             _itemData["dealStatus"] = dealStatus;
             _itemData["size"] = size.ToString();
@@ -96,8 +96,8 @@ namespace MidaxLib
 
         public override string ToString()
         {
-            return string.Format("[ {{ \"timestamp\" : \"{8}\", \"epic\" : \"{0}\", \"dealId\" : \"{1}\", \"dealRef\" : \"{2}\", \"status\" : \"{3}\", \"dealStatus\" : \"{4}\", \"size\" : \"{5}\", \"level\" : \"{6}\", \"direction\" : \"{7}\" }} ]",
-                _name, _id, _itemData["dealRef"], _itemData["status"], _itemData["dealStatus"], _itemData["size"], _itemData["level"], _itemData["direction"], _itemData["timestamp"]);
+            return string.Format("[ {{ \"timestamp\" : \"{8}\", \"epic\" : \"{0}\", \"dealId\" : \"{1}\", \"dealReference\" : \"{2}\", \"status\" : \"{3}\", \"dealStatus\" : \"{4}\", \"size\" : \"{5}\", \"level\" : \"{6}\", \"direction\" : \"{7}\" }} ]",
+                _name, _id, _itemData["dealReference"], _itemData["status"], _itemData["dealStatus"], _itemData["size"], _itemData["level"], _itemData["direction"], _itemData["timestamp"]);
         }
     }
 

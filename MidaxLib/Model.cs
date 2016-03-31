@@ -25,18 +25,18 @@ namespace MidaxLib
         public Portfolio PTF { get { return _ptf; } }
         
         public Model()
-        {            
+        {
+            _ptf = Portfolio.Instance;
         }
 
-        public virtual void Init()
+        protected virtual void Init()
         {
             _closingTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
             if (Config.Settings.ContainsKey("TRADING_SIGNAL"))
                 _tradingSignal = Config.Settings["TRADING_SIGNAL"];
             if (Config.Settings.ContainsKey("REPLAY_POPUP"))
                 _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
-            _amount = Config.MarketSelectorEnabled ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);
-            _ptf = Portfolio.Instance;
+            _amount = Config.MarketSelectorEnabled ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);            
         }
 
         protected virtual bool OnBuy(Signal signal, DateTime time, Price stockValue)
@@ -89,6 +89,7 @@ namespace MidaxLib
         
         public void StartSignals(bool startListening = true)
         {
+            Init();
             // get the level indicators for the day (low, high, close)
             foreach (MarketData mktData in _mktData)
                 mktData.GetMarketLevels();
@@ -180,7 +181,7 @@ namespace MidaxLib
             _highPeriod = highPeriod;
         }
 
-        public override void Init()
+        protected override void Init()
         {
             base.Init();
             _macD_low = new SignalMacD(_daxIndex, _lowPeriod, _midPeriod);

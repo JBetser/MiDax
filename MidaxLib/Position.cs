@@ -38,12 +38,12 @@ namespace MidaxLib
             get { return _incomingTrades.Count != 0; }
         }
 
-        bool pullTrade(SIGNAL_CODE direction, int tradeSize, out Trade trade)
+        bool pullTrade(string dealReference, out Trade trade)
         {
 
             for (int idxTrade = 0; idxTrade < _incomingTrades.Count; idxTrade++)
             {
-                if (_incomingTrades[idxTrade].Direction == direction && _incomingTrades[idxTrade].Size == tradeSize)
+                if (_incomingTrades[idxTrade].Reference == dealReference)
                 {
                     trade = _incomingTrades[idxTrade];
                     _incomingTrades.Remove(trade);
@@ -109,12 +109,13 @@ namespace MidaxLib
                                         string dealId = trade_notification["dealId"].ToString();
                                         if (!AwaitingTrade)
                                             Log.Instance.WriteEntry("An unexpected trade has been booked: " + dealId, System.Diagnostics.EventLogEntryType.Error);
-                                        var direction = trade_notification["direction"].ToString() == "SELL" ? SIGNAL_CODE.SELL: SIGNAL_CODE.BUY;
+                                        var reference = trade_notification["dealReference"].ToString();
+                                        var direction = trade_notification["direction"].ToString() == "SELL" ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY;
                                         var tradeSize = int.Parse(trade_notification["size"].ToString());                                        
                                         Trade trade;
                                         lock (_incomingTrades)
                                         {
-                                            if (pullTrade(direction, tradeSize, out trade))
+                                            if (pullTrade(reference, out trade))
                                                 _lastTrade = trade;
                                             else
                                                 return false;
@@ -135,12 +136,13 @@ namespace MidaxLib
                                         Log.Instance.WriteEntry("Closed a position: " + dealId);
                                         if (!AwaitingTrade || _tradePositions.Count == 0)
                                             Log.Instance.WriteEntry("An unexpected trade has been closed: " + dealId, System.Diagnostics.EventLogEntryType.Error);
+                                        var reference = trade_notification["dealReference"].ToString();
                                         var direction = trade_notification["direction"].ToString() == "SELL" ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY;
                                         var tradeSize = int.Parse(trade_notification["size"].ToString());
                                         Trade trade;
                                         lock (_incomingTrades)
                                         {
-                                            if (!pullTrade(direction, tradeSize, out trade))
+                                            if (!pullTrade(reference, out trade))
                                                 return false;
                                             if (direction == SIGNAL_CODE.SELL)
                                                 tradeSize *= -1;

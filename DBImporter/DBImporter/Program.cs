@@ -60,6 +60,8 @@ namespace DBImporter
                 }
                 foreach(var indicator in lstIndicators)
                     indicator.Subscribe(OnUpdate, null);
+                foreach (MarketData mktData in lstIndices)
+                    mktData.GetMarketLevels();  
 
                 MarketDataConnection.Instance.StartListening();
 
