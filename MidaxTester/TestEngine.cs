@@ -93,7 +93,7 @@ namespace MidaxTester
 
         static DateTime GetNow()
         {
-            return Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]).AddMinutes(-5);
+            return Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]).AddMinutes(-2);
         }
 
         static void onShutdown()

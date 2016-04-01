@@ -255,21 +255,25 @@
                <option value="8">15:00</option>
                <option value="9">16:00</option>
                <option value="10">17:00</option>
+               <option value="11">18:00</option>
+               <option value="12">19:00</option>
+               <option value="13">20:00</option>
              </select>
              <select class="combobox input-medium" id="timestop">
-               <option value="">21:00</option>
-               <option value="1">20:00</option>
-               <option value="2">19:00</option>
-               <option value="3">18:00</option>
-               <option value="4">17:00</option>
-               <option value="5">16:00</option>
-               <option value="6">15:00</option>
-               <option value="7">14:00</option>
-               <option value="8">13:00</option>
-               <option value="9">12:00</option>
-               <option value="10">11:00</option>
-               <option value="11">10:00</option>
-               <option value="12">09:00</option>
+               <option value="">21:30</option>
+               <option value="1">21:00</option>
+               <option value="2">20:00</option>
+               <option value="3">19:00</option>
+               <option value="4">18:00</option>
+               <option value="5">17:00</option>
+               <option value="6">16:00</option>
+               <option value="7">15:00</option>
+               <option value="8">14:00</option>
+               <option value="9">13:00</option>
+               <option value="10">12:00</option>
+               <option value="11">11:00</option>
+               <option value="12">10:00</option>
+               <option value="13">09:00</option>
              </select>
                <br />
              <select class="combobox input-large" id="equity">
@@ -289,17 +293,14 @@
                <option value="WMA_7#WMA_20#WMA_60">WMA 7mn/20mn/1hr</option>
                <option value="WMA_10#WMA_30#WMA_90">WMA 10mn/30mn/1hr30</option>
                <option value="WMVol_10">WM Vol 10mn</option>
-               <option value="WMVol_60">WM Vol 1h</option>               
+               <option value="WMVol_90">WM Vol 1h30</option>               
              </select>   
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
                <option value="MacD_10_60">MacD 10mn/1h</option>
-               <option value="MacD_20_60">MacD 20mn/1h</option>
                <option value="MacD_30_90">MacD 30mn/1h30</option>
                <option value="MacDCas_10_30_90_100">MacD Cascade 10mn/30mn/1h30 1pt</option>
                <option value="MacDCas_10_30_90_200">MacD Cascade 10mn/30mn/1h30 2pts</option>
-               <option value="Mole_1_5_60">Mole 1mn/5mn/1h</option>
-               <option value="Mole_2_7_60">Mole 2mn/7mn/1h</option>
                <option value="Mole_2_10_60">Mole 2mn/10mn/1h</option>
                <option value="Mole_2_10_90">Mole 2mn/10mn/1h30</option>
                <option value="Mole_7_20_60">Mole 7mn/20mn/1h</option>

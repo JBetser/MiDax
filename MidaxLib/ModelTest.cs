@@ -10,8 +10,8 @@ namespace MidaxLib
 {
     public class ModelMacDTest : ModelMacD
     {
-        public ModelMacDTest(MarketData daxIndex, int lowPeriod = 1, int midPeriod = 5, int highPeriod = 10)
-            : base(daxIndex, lowPeriod, midPeriod, highPeriod)
+        public ModelMacDTest(MarketData index, int lowPeriod = 1, int midPeriod = 5, int highPeriod = 10, MarketData tradingIndex = null)
+            : base(index, lowPeriod, midPeriod, highPeriod, tradingIndex)
         {            
         }
 

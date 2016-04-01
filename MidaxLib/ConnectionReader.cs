@@ -124,7 +124,7 @@ namespace MidaxLib
         {
             decimal? bid = values.Length >= 5 ? decimal.Parse(values[4]) : default(decimal?);
             decimal? offer = values.Length >= 6 ? decimal.Parse(values[5]) : default(decimal?);
-            int? volume = values.Length >= 7 ? int.Parse(values[6]) : default(int?);
+            decimal? volume = values.Length >= 7 ? decimal.Parse(values[6]) : default(decimal?);
             quotes.Add(new CqlQuote(values[1], Config.ParseDateTimeUTC(values[2]), values[3], bid, offer, volume)); 
         }
 

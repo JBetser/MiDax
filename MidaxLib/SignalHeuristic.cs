@@ -16,8 +16,8 @@ namespace MidaxLib
         bool _buying = false;
         bool _selling = false;
         
-        public SignalMacDCascade(MarketData asset, int verylowPeriod, int lowPeriod, int highPeriod, decimal threshold, IndicatorWMA low = null, IndicatorWMA high = null)
-            : base("MacDCas_" + verylowPeriod + "_" + lowPeriod + "_" + highPeriod + "_" + (int)decimal.Round(threshold * 100.0m) + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high)
+        public SignalMacDCascade(MarketData asset, int verylowPeriod, int lowPeriod, int highPeriod, decimal threshold, IndicatorWMA low = null, IndicatorWMA high = null, MarketData tradingIndex = null)
+            : base("MacDCas_" + verylowPeriod + "_" + lowPeriod + "_" + highPeriod + "_" + (int)decimal.Round(threshold * 100.0m) + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high, tradingIndex)
         {
             _threshold = threshold;
         }

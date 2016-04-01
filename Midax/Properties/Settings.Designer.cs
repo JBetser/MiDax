@@ -71,9 +71,9 @@ namespace Midax.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("DAX:IX.D.DAX.DAILY.IP")]
-        public string INDEX {
+        public string INDEX_DAX {
             get {
-                return ((string)(this["INDEX"]));
+                return ((string)(this["INDEX_DAX"]));
             }
         }
         
@@ -248,6 +248,33 @@ namespace Midax.Properties {
         public string INDEX_DOW {
             get {
                 return ((string)(this["INDEX_DOW"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("DOW:IceConnection.DOW")]
+        public string INDEX_ICEDOW {
+            get {
+                return ((string)(this["INDEX_ICEDOW"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("BEAR")]
+        public string ASSUMPTION_TREND {
+            get {
+                return ((string)(this["ASSUMPTION_TREND"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("15")]
+        public string TIME_DECAY_FACTOR {
+            get {
+                return ((string)(this["TIME_DECAY_FACTOR"]));
             }
         }
     }

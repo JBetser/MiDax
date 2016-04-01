@@ -51,7 +51,7 @@ public class Server
                 Ice.Properties properties = communicator().getProperties();
                 Ice.Identity id = communicator().stringToIdentity(properties.getProperty("Identity"));
                                
-                var index = new MarketData(dicSettings["INDEX"]);
+                var index = new MarketData(dicSettings["INDEX_DAX"]);
                 List<MarketData> stocks = new List<MarketData>();
                 foreach (string stock in stockList)
                     stocks.Add(new MarketData(stock));

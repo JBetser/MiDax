@@ -12,7 +12,7 @@ namespace MidaxLib
     {
         public decimal Bid;
         public decimal Offer;
-        public decimal Volume;
+        public decimal? Volume;
         public Price()
         { 
             this.Bid = 0;
@@ -41,16 +41,19 @@ namespace MidaxLib
         {
             this.Bid = cql.b.Value;
             this.Offer = cql.o.Value;
+            this.Volume = cql.v;
         }
         public Price(L1LsPriceData priceData)
         {
             this.Bid = priceData.Bid.Value;
             this.Offer = priceData.Offer.Value;
+            this.Volume = priceData.Volume;
         }
         public void set(decimal val)
         {
             this.Bid = val;
             this.Offer = val;
+            this.Volume = 0;
         }
         public decimal Mid()
         {
@@ -138,17 +141,19 @@ namespace MidaxLib
         protected string _id = null;
         protected string _name = null;
         protected MarketData _asset = null;
+        protected MarketData _tradingAsset = null;
         protected Signal.Tick _onBuy = null;
         protected Signal.Tick _onSell = null;
         protected List<Indicator> _mktIndicator = null;
         protected SIGNAL_CODE _signalCode = SIGNAL_CODE.UNKNOWN;
         protected Trade _lastTrade = null;
-        
-        public Signal(string id, MarketData asset)
+
+        public Signal(string id, MarketData asset, MarketData tradingAsset = null)
         {
             this._id = id;
             this._name = id;
             this._asset = asset;
+            this._tradingAsset = tradingAsset == null ? asset : tradingAsset;
             this._mktIndicator = new List<Indicator>();
         }
 
@@ -180,7 +185,7 @@ namespace MidaxLib
         
         public MarketData MarketData
         {
-            get { return _asset; }
+            get { return _tradingAsset; }
         }
 
         public Trade Trade
@@ -226,8 +231,8 @@ namespace MidaxLib
         public IndicatorWMA IndicatorLow { get { return _low; } }
         public IndicatorWMA IndicatorHigh { get { return _high; } }
 
-        public SignalMacD(MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null)
-            : base("MacD_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset)
+        public SignalMacD(MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null, MarketData tradingAsset = null)
+            : base("MacD_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset, tradingAsset)
         {
             if (Config.Settings.ContainsKey("ASSUMPTION_TREND"))
                 _trendAssumption = Config.Settings["ASSUMPTION_TREND"] == "BULL" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL;            
@@ -241,8 +246,8 @@ namespace MidaxLib
             _mktIndicator.Add(_high);
         }
 
-        public SignalMacD(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null)
-            : this(asset, lowPeriod, highPeriod, low, high)
+        public SignalMacD(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null, MarketData tradingAsset = null)
+            : this(asset, lowPeriod, highPeriod, low, high, tradingAsset)
         {
             if (Config.Settings.ContainsKey("ASSUMPTION_TREND"))
                 _trendAssumption = Config.Settings["ASSUMPTION_TREND"] == "BULL" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL;            

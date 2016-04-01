@@ -151,7 +151,8 @@ namespace MidaxLib
 
     public class ModelMacD : Model
     {
-        protected MarketData _daxIndex = null;
+        protected MarketData _index = null;
+        protected MarketData _tradingIndex = null;
         protected SignalMacD _macD_low = null;
         protected SignalMacD _macD_high = null;
         protected SIGNAL_CODE _trendAssumption = SIGNAL_CODE.UNKNOWN;
@@ -160,7 +161,8 @@ namespace MidaxLib
         int _midPeriod = 0;
         int _highPeriod = 0;
 
-        public MarketData Index { get { return _daxIndex; } }
+        public MarketData Index { get { return _index; } }
+        public MarketData TradingIndex { get { return _tradingIndex; } }
         public SignalMacD SignalLow { get { return _macD_low; } }
         public SignalMacD SignalHigh { get { return _macD_high; } }
 
@@ -168,14 +170,14 @@ namespace MidaxLib
         public int MidPeriod { get { return _midPeriod; } }
         public int HighPeriod { get { return _highPeriod; } }
 
-        public ModelMacD(MarketData daxIndex, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60)
+        public ModelMacD(MarketData index, int lowPeriod = 2, int midPeriod = 10, int highPeriod = 60, MarketData tradingIndex = null)
         {
             if (Config.Settings.ContainsKey("ASSUMPTION_TREND"))
                 _trendAssumption = Config.Settings["ASSUMPTION_TREND"] == "BULL" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL;
             List<MarketData> mktData = new List<MarketData>();
-            mktData.Add(daxIndex);         
+            mktData.Add(index);         
             _mktData = mktData;
-            _daxIndex = daxIndex;
+            _index = index;
             _lowPeriod = lowPeriod;
             _midPeriod = midPeriod;
             _highPeriod = highPeriod;
@@ -184,15 +186,15 @@ namespace MidaxLib
         protected override void Init()
         {
             base.Init();
-            _macD_low = new SignalMacD(_daxIndex, _lowPeriod, _midPeriod);
-            _macD_high = new SignalMacD(_daxIndex, _midPeriod, _highPeriod, _macD_low.IndicatorHigh);
+            _macD_low = new SignalMacD(_index, _lowPeriod, _midPeriod, null, null, _tradingIndex);
+            _macD_high = new SignalMacD(_index, _midPeriod, _highPeriod, _macD_low.IndicatorHigh, null, _tradingIndex);
             _mktSignals.Add(_macD_low);
             _mktSignals.Add(_macD_high);
         }
 
         protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
-            if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
+            if (_ptf.GetPosition(_index.Id).Quantity < 0)
             {
                 if (time >= _closingTime)
                 {
@@ -209,7 +211,7 @@ namespace MidaxLib
                     _ptf.BookTrade(signal.Trade);
                 }
             }
-            else if (_trendAssumption != SIGNAL_CODE.SELL && _ptf.GetPosition(_daxIndex.Id).Quantity == 0)
+            else if (_trendAssumption != SIGNAL_CODE.SELL && _ptf.GetPosition(_index.Id).Quantity == 0)
             {
                 if (time <= _closingTime)
                 {
@@ -228,7 +230,7 @@ namespace MidaxLib
 
         protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            if (_ptf.GetPosition(_daxIndex.Id).Quantity > 0)
+            if (_ptf.GetPosition(_index.Id).Quantity > 0)
             {
                 if (time >= _closingTime)
                 {
@@ -245,7 +247,7 @@ namespace MidaxLib
                     _ptf.BookTrade(signal.Trade);
                 }
             }
-            else if (_trendAssumption != SIGNAL_CODE.BUY && _ptf.GetPosition(_daxIndex.Id).Quantity == 0)
+            else if (_trendAssumption != SIGNAL_CODE.BUY && _ptf.GetPosition(_index.Id).Quantity == 0)
             {
                 if (time <= _closingTime)
                 {

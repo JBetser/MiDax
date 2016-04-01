@@ -1,0 +1,33 @@
+@ECHO OFF
+SET TESTER=C:\Shared\MidaxTester\MidaxTester.exe
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-01 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-02 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-03 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-04 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-05 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-06 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-07 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-08 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-09 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-10 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-11 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-12 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-13 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-14 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-15 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-16 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-17 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-18 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-19 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-20 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-21 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-22 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-23 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-24 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-25 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-26 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-27 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-28 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-29 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-30 -FULL
+start PsExec -accepteula \\COMPUTESERV2 %TESTER% -G -FROMDB -TODB -%2 -DATE%1-31 -FULL

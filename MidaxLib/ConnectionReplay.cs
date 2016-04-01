@@ -35,6 +35,7 @@ namespace MidaxLib
                 _itemData["MARKET_STATE"] = "REPLAY";
                 _itemData["BID"] = quote.b.ToString();
                 _itemData["OFFER"] = quote.o.ToString();
+                _itemData["VOLUME"] = quote.v.ToString();
             }
         }
 

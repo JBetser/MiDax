@@ -90,7 +90,8 @@ namespace IGPublicPcl
         public int? MarketDelay;
         public string MarketState;
         public decimal? Bid;
-        public decimal? Offer;       
+        public decimal? Offer;
+        public decimal? Volume;  
     }
 
     public class StreamingAccountData
@@ -124,6 +125,7 @@ namespace IGPublicPcl
                 var marketState = update.GetNewValue("MARKET_STATE");
                 var bid = update.GetNewValue("BID");
                 var offer = update.GetNewValue("OFFER");
+                var volume = update.GetNewValue("VOLUME");
 
                 if (!String.IsNullOrEmpty(midOpen))               
                 {
@@ -164,6 +166,10 @@ namespace IGPublicPcl
                 if (!String.IsNullOrEmpty(offer))
                 {
                     lsL1PriceData.Offer = Convert.ToDecimal(offer);
+                }
+                if (!String.IsNullOrEmpty(volume))
+                {
+                    lsL1PriceData.Volume = Convert.ToDecimal(volume);
                 }
             }
             catch (Exception)
