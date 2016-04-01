@@ -358,7 +358,7 @@ namespace MidaxLib
                 foreach (var epicTrades in trades)
                 {
                     foreach (Trade trade in epicTrades.Value)
-                        _expectedTradeData.Add(new KeyValuePair<string, DateTime>(epicTrades.Key, trade.TradingTime), trade);
+                        _expectedTradeData.Add(new KeyValuePair<string, DateTime>(trade.Reference, trade.TradingTime), trade);
                 }
                 _expectedProfitData = new Dictionary<KeyValuePair<string, DateTime>, double>();
                 var profits = _readerExpectedResults.GetProfits(_startTime, _stopTime,
@@ -716,7 +716,7 @@ namespace MidaxLib
         public override void Insert(Trade trade)
         {
             _nbPublishedTrades++;
-            var tradeKey = new KeyValuePair<string, DateTime>(trade.Epic, new DateTime(trade.TradingTime.Year, trade.TradingTime.Month, trade.TradingTime.Day, 
+            var tradeKey = new KeyValuePair<string, DateTime>(trade.Reference, new DateTime(trade.TradingTime.Year, trade.TradingTime.Month, trade.TradingTime.Day, 
                 trade.TradingTime.Hour, trade.TradingTime.Minute, trade.TradingTime.Second));
             if (Math.Abs(_expectedTradeData[tradeKey].Price - trade.Price) > TOLERANCE)
             {
