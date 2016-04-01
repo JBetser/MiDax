@@ -208,7 +208,7 @@ namespace MidaxTester
                 var tradeTime = Config.ParseDateTimeLocal(dicSettings["TRADING_CLOSING_TIME"]).AddSeconds(-1);
                 var tradeTest = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 10000m);
                 var expectedTrades = new Dictionary<KeyValuePair<string, DateTime>, Trade>();
-                expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = tradeTest;
+                expectedTrades[new KeyValuePair<string, DateTime>("###DUMMY_TRADE_REF1###", tradeTime)] = tradeTest;
                 ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null);
                 model.PTF.Subscribe();
                 model.PTF.BookTrade(tradeTest);
@@ -218,13 +218,14 @@ namespace MidaxTester
                 var expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.BUY, 10, 10000m);
                 expectedTrade.Reference = "###CLOSE_DUMMY_TRADE_REF2###";
                 expectedTrade.Id = "###DUMMY_TRADE_ID1###";
-                expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
+                expectedTrades[new KeyValuePair<string, DateTime>(expectedTrade.Reference, tradeTime)] = expectedTrade;
                 model.PTF.ClosePosition(tradeTest, tradeTime);
                 Thread.Sleep(1000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 0)
                     throw new ApplicationException("Trade position closing error");
                 expectedTrade.Reference = "###DUMMY_TRADE_REF3###";
                 expectedTrade.Id = "###DUMMY_TRADE_ID2###";
+                expectedTrades[new KeyValuePair<string, DateTime>(expectedTrade.Reference, tradeTime)] = expectedTrade;
                 model.PTF.BookTrade(new Trade(tradeTest, true, tradeTime));
                 Thread.Sleep(1000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 10)
@@ -232,7 +233,7 @@ namespace MidaxTester
                 expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 0m);
                 expectedTrade.Reference = "###CLOSE_DUMMY_TRADE_REF4###";
                 expectedTrade.Id = "###DUMMY_TRADE_ID2###";
-                expectedTrades[new KeyValuePair<string, DateTime>(index.Id, tradeTime)] = expectedTrade;
+                expectedTrades[new KeyValuePair<string, DateTime>(expectedTrade.Reference, tradeTime)] = expectedTrade;
                 Portfolio.Instance.CloseAllPositions(tradeTest.TradingTime);
                 Thread.Sleep(1000);
 
