@@ -125,7 +125,9 @@ namespace IGPublicPcl
                 var marketState = update.GetNewValue("MARKET_STATE");
                 var bid = update.GetNewValue("BID");
                 var offer = update.GetNewValue("OFFER");
-                var volume = update.GetNewValue("VOLUME");
+                string volume = "0";
+                if (update.NumFields > 10)
+                    volume = update.GetNewValue("VOLUME");
 
                 if (!String.IsNullOrEmpty(midOpen))               
                 {
