@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace MidaxLib
 {
-    public class ModelMacDCascade : ModelMacD
+    public class ModelMacDCascade : ModelMacDV
     {
-        ModelMacD _macD;
+        ModelMacDV _macD;
 
-        public ModelMacDCascade(ModelMacD macD)
+        public ModelMacDCascade(ModelMacDV macD)
             : base(macD.Index, macD.LowPeriod, macD.MidPeriod, macD.HighPeriod, macD.TradingIndex)
         {
             _macD = macD;
@@ -20,8 +20,8 @@ namespace MidaxLib
         protected override void Init()
         {
             base.Init();
-            _macD_low = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, _macD.SignalHigh.IndicatorLow, _macD.SignalHigh.IndicatorHigh, _tradingIndex);
-            _macD_high = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, _macD.SignalHigh.IndicatorLow, _macD.SignalHigh.IndicatorHigh, _tradingIndex);
+            _macD_low = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, (IndicatorVWMA)_macD.SignalHigh.IndicatorLow, (IndicatorVWMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
+            _macD_high = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, (IndicatorVWMA)_macD.SignalHigh.IndicatorLow, (IndicatorVWMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
             _mktSignals = new List<Signal>();
             _mktSignals.Add(_macD_low);
             _mktSignals.Add(_macD_high);

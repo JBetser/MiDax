@@ -68,7 +68,7 @@ namespace MidaxLib
                     if (!_expectedIndicatorData.ContainsKey(indData.Key))
                         _expectedIndicatorData.Add(indData.Key, new TimeSeries());
                     foreach (var value in indData.Value)
-                        _expectedIndicatorData[indData.Key].Add(value.t.DateTime, new Price(value.b.Value, value.o.Value, value.v.Value));
+                        _expectedIndicatorData[indData.Key].Add(value.t, new Price(value.b.Value, value.o.Value, value.v.Value));
                 }
             }
             if (signalData != null)
@@ -78,7 +78,7 @@ namespace MidaxLib
                     if (!_expectedSignalData.ContainsKey(sigData.Key))
                         _expectedSignalData.Add(sigData.Key, new TimeSeries());
                     foreach (var value in sigData.Value)
-                        _expectedSignalData[sigData.Key].Add(value.t.DateTime, new Price(value.b.Value, value.o.Value, value.v.Value));
+                        _expectedSignalData[sigData.Key].Add(value.t, new Price(value.b.Value, value.o.Value, value.v.Value));
                 }
             }
         }

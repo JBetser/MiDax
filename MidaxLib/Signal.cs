@@ -69,25 +69,29 @@ namespace MidaxLib
         }
         public static Price operator +(Price p1, decimal p2)
         {
-            Price sum = new Price();
-            sum.Bid = p1.Bid + p2;
-            sum.Offer = p1.Offer + p2;
+            Price sum = new Price(p1);
+            sum.Bid += p2;
+            sum.Offer += p2;
             return sum;
         }
         public static Price operator -(Price p1, decimal p2)
         {
-            Price diff = new Price();
-            diff.Bid = p1.Bid - p2;
-            diff.Offer = p1.Offer - p2;
+            Price diff = new Price(p1);
+            diff.Bid -= p2;
+            diff.Offer -= p2;
             return diff;
         }
         public static Price operator +(Price p1, Price p2)
         {
-            return p1 + p2.Mid();
+            Price sum = new Price(p1);
+            sum += p2.Mid();
+            return sum;
         }
         public static Price operator -(Price p1, Price p2)
         {
-            return p1 - p2.Mid();
+            Price sum = new Price(p1);
+            sum -= p2.Mid();
+            return sum;
         }
         public static Price operator *(Price p, decimal factor)
         {
@@ -202,10 +206,9 @@ namespace MidaxLib
 
         protected void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {            
-            SIGNAL_CODE oldSignalCode = _signalCode;
             Signal.Tick tradingOrder = _onHold;
             bool signaled = Process(mktData, updateTime, value, ref tradingOrder);
-            if (signaled && _signalCode != oldSignalCode)
+            if (signaled)
             {
                 // send a signal
                 var stockValue = MarketData.TimeSeries[updateTime].Value.Value;
@@ -213,76 +216,12 @@ namespace MidaxLib
                 {
                     if (_signalCode == SIGNAL_CODE.BUY)
                         PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Offer);
-                    else
+                    else if (_signalCode == SIGNAL_CODE.SELL)
                         PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Bid);
                 }
             }
         }
 
         protected abstract bool Process(MarketData indicator, DateTime updateTime, Price value, ref Signal.Tick tradingOrder);
-    }
-       
-    public class SignalMacD : Signal
-    {
-        protected IndicatorWMA _low = null;
-        protected IndicatorWMA _high = null;
-        protected SIGNAL_CODE _trendAssumption = SIGNAL_CODE.UNKNOWN;
-
-        public IndicatorWMA IndicatorLow { get { return _low; } }
-        public IndicatorWMA IndicatorHigh { get { return _high; } }
-
-        public SignalMacD(MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null, MarketData tradingAsset = null)
-            : base("MacD_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset, tradingAsset)
-        {
-            if (Config.Settings.ContainsKey("ASSUMPTION_TREND"))
-                _trendAssumption = Config.Settings["ASSUMPTION_TREND"] == "BULL" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL;            
-            _low = low == null ? new IndicatorWMA(asset, lowPeriod) : new IndicatorWMA(low);
-            if (low != null)
-                _low.PublishingEnabled = false;
-            _high = high == null ? new IndicatorWMA(asset, highPeriod) : new IndicatorWMA(high);
-            if (high != null)
-                _high.PublishingEnabled = false;
-            _mktIndicator.Add(_low);
-            _mktIndicator.Add(_high);
-        }
-
-        public SignalMacD(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null, MarketData tradingAsset = null)
-            : this(asset, lowPeriod, highPeriod, low, high, tradingAsset)
-        {
-            if (Config.Settings.ContainsKey("ASSUMPTION_TREND"))
-                _trendAssumption = Config.Settings["ASSUMPTION_TREND"] == "BULL" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL;            
-            _id = id;
-        }
-
-        protected override bool Process(MarketData indicator, DateTime updateTime, Price value, ref Signal.Tick tradingOrder)
-        {
-            KeyValuePair<DateTime, Price>? timeValueLow = _low.TimeSeries[updateTime];
-            KeyValuePair<DateTime, Price>? timeValueHigh = _high.TimeSeries[updateTime];
-            if (timeValueLow == null || timeValueHigh == null)
-                return false;
-            Price lowWMA = timeValueLow.Value.Value;
-            Price highWMA = timeValueHigh.Value.Value;
-            var signalValue = lowWMA - highWMA;
-            var tradeTrigger = _signalCode != SIGNAL_CODE.UNKNOWN && _signalCode != SIGNAL_CODE.HOLD;
-            if (_signalCode == SIGNAL_CODE.UNKNOWN)
-            {
-                tradingOrder = _onHold;
-                _signalCode = SIGNAL_CODE.HOLD;
-                return false;
-            }
-            else if (signalValue.Offer > 0)
-            {
-                tradingOrder = _onBuy;
-                _signalCode = SIGNAL_CODE.BUY;
-                return tradeTrigger;
-            }
-            else if (signalValue.Bid < 0)
-            {
-                tradingOrder = _onSell;
-                _signalCode = SIGNAL_CODE.SELL;
-                return tradeTrigger;
-            }
-            return false;
-        }
     }
 }

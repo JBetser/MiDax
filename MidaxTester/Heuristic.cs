@@ -18,11 +18,11 @@ namespace MidaxTester
             testEngine.Settings["ASSUMPTION_TREND"] = "BEAR";
             var models = new List<Model>();
             var dow = new MarketData("DOW:IX.D.DOW.DAILY.IP");
-            //var dowNSYE = new MarketData("DOW:IceConnection.DOW", "IX.D.DOW.DAILY.IP");
+            var dowNSYE = new MarketData("DOW:IceConnection.DOW", "IX.D.DOW.DAILY.IP");
             models.Add(new ModelMacDTest(dow, 10, 30, 90));
-            //models.Add(new ModelMacDVTest(dowNSYE, 10, 30, 90, dow));
+            models.Add(new ModelMacDVTest(dowNSYE, 10, 30, 90, dow));
             models.Add(new ModelMoleTest((ModelMacD)models[0]));
-            //models.Add(new ModelMacDCascadeTest((ModelMacDV)models[1]));
+            models.Add(new ModelMacDCascadeTest((ModelMacDV)models[1]));
             testEngine.Run(models);          
         }
     }

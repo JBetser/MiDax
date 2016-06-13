@@ -71,7 +71,7 @@ namespace MidaxLib
             return (updateTime - _series.First().First().Key).TotalMinutes;
         }
         
-        public IEnumerable<KeyValuePair<DateTime, Price>> ValueGenerator(DateTime timeStart, DateTime timeEnd)
+        public virtual IEnumerable<KeyValuePair<DateTime, Price>> ValueGenerator(DateTime timeStart, DateTime timeEnd)
         {
             if (_series.Count == 0)
                 yield break;
@@ -86,9 +86,11 @@ namespace MidaxLib
             {
                 if (timeStart < _series[idx + 1].First().Key)
                 {
-                    KeyValuePair<DateTime, Price> start = ClosestValue(idx, timeStart);
-                    curPos = _series[idx].IndexOf(start);
-                    curTime = start.Key;                    
+                    KeyValuePair<DateTime, Price>? start = ClosestValue(idx, timeStart);
+                    if (!start.HasValue)
+                        break;
+                    curPos = _series[idx].IndexOf(start.Value);
+                    curTime = start.Value.Key;                    
                     curIdx = idx;
                     break;
                 }
@@ -97,9 +99,11 @@ namespace MidaxLib
             {
                 if (timeStart <= _series[curIdx].Last().Key)
                 {
-                    KeyValuePair<DateTime, Price> start = ClosestValue(curIdx, timeStart);
-                    curPos = _series[curIdx].IndexOf(start);
-                    curTime = start.Key;
+                    KeyValuePair<DateTime, Price>? start = ClosestValue(curIdx, timeStart);
+                    if (!start.HasValue)
+                        yield break;
+                    curPos = _series[curIdx].IndexOf(start.Value);
+                    curTime = start.Value.Key;
                 }
                 else
                     yield break;
@@ -129,12 +133,44 @@ namespace MidaxLib
         }
         static SeriesComparer _seriesComparer = new SeriesComparer();
 
-        public KeyValuePair<DateTime, Price> ClosestValue(int seriesIdx, DateTime time)
+        public KeyValuePair<DateTime, Price>? ClosestValue(int seriesIdx, DateTime time)
         {
             int closestIndex = _series[seriesIdx].BinarySearch(new KeyValuePair<DateTime, Price>(time, null), _seriesComparer);
             if (closestIndex < 0)
                 closestIndex = ~closestIndex - 1;
+            if (closestIndex == -1)
+                return null;
             return _series[seriesIdx][closestIndex];
+        }
+
+        public KeyValuePair<DateTime, Price>? NextValue(int seriesIdx, DateTime time)
+        {
+            int closestIndex = _series[seriesIdx].BinarySearch(new KeyValuePair<DateTime, Price>(time, null), _seriesComparer);
+            if (closestIndex < 0)
+                closestIndex = ~closestIndex - 1;
+            if (closestIndex == -1)
+                return null;
+            if (closestIndex < _series[seriesIdx].Count - 1)
+                return _series[seriesIdx][closestIndex + 1];
+            else if (seriesIdx < _series.Count - 1)
+                return _series[seriesIdx + 1][0];
+            else
+                return null;
+        }
+
+        public KeyValuePair<DateTime, Price>? PrevValue(int seriesIdx, DateTime time)
+        {
+            int closestIndex = _series[seriesIdx].BinarySearch(new KeyValuePair<DateTime, Price>(time, null), _seriesComparer);
+            if (closestIndex < 0)
+                closestIndex = ~closestIndex - 1;
+            if (closestIndex == -1)
+                return null;
+            if (closestIndex > 0)
+                return _series[seriesIdx][closestIndex - 1];
+            else if (seriesIdx > 0)
+                return _series[seriesIdx - 1].Last();
+            else
+                return null;
         }
 
         public KeyValuePair<DateTime, Price>? Value(DateTime time)
@@ -149,6 +185,30 @@ namespace MidaxLib
             return ClosestValue(_series.Count - 1, time);
         }
 
+        public KeyValuePair<DateTime, Price>? Next(DateTime time)
+        {
+            if (_series.Count == 0)
+                return null;
+            for (int idx = 0; idx < _series.Count - 1; idx++)
+            {
+                if (time < _series[idx + 1].First().Key)
+                    return NextValue(idx, time);
+            }
+            return NextValue(_series.Count - 1, time);
+        }
+
+        public KeyValuePair<DateTime, Price>? Prev(DateTime time)
+        {
+            if (_series.Count == 0)
+                return null;
+            for (int idx = 0; idx < _series.Count - 1; idx++)
+            {
+                if (time < _series[idx + 1].First().Key)
+                    return PrevValue(idx, time);
+            }
+            return PrevValue(_series.Count - 1, time);
+        }
+
         public List<KeyValuePair<DateTime, Price>> Values(DateTime endTime, TimeSpan interval)
         {
             if (_series.Count == 0)
@@ -161,7 +221,7 @@ namespace MidaxLib
             return ValueGenerator(startTime, endTime).ToList(); 
         }
 
-        public KeyValuePair<DateTime, Price>? this[DateTime time]
+        public virtual KeyValuePair<DateTime, Price>? this[DateTime time]
         {
             get { return Value(time); }
         }
@@ -174,6 +234,16 @@ namespace MidaxLib
         public Price First()
         {
             return _series.First().First().Value;
+        }
+
+        public DateTime StartTime()
+        {
+            return _series.Count == 0 ? DateTime.MaxValue : _series.First().First().Key;
+        }
+
+        public DateTime EndTime()
+        {
+            return _series.Count == 0 ? DateTime.MinValue : _series.Last().Last().Key;
         }
 
         public bool Empty()
@@ -192,6 +262,27 @@ namespace MidaxLib
                 else
                     break;
             }
+        }
+    }
+
+    public class TimeSeriesConstant : TimeSeries
+    {
+        Price _val;
+        
+        public TimeSeriesConstant(decimal val)
+        {
+            _val = new Price(val);
+        }
+
+        public override KeyValuePair<DateTime, Price>? this[DateTime time]
+        {
+            get { return new KeyValuePair<DateTime, Price>(time, _val); }
+        }
+
+        public override IEnumerable<KeyValuePair<DateTime, Price>> ValueGenerator(DateTime timeStart, DateTime timeEnd)
+        {
+            while (true)
+                yield return new KeyValuePair<DateTime, Price>(timeEnd, _val);
         }
     }
 }

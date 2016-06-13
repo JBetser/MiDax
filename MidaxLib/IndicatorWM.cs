@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,11 +18,11 @@ namespace MidaxLib
     {
         protected int _periodSeconds;
         protected decimal _periodMilliSeconds;
+        protected TimeSpan _periodTimeSpan;
         protected TimeDecay _timeDecay;
-        protected TimeDecay _timeDecayNull = new TimeDecayNull();
-        protected Price _curavg = null;
-        protected DateTime _curavgTime;
-        protected DateTime _decrementStartTime;
+        protected Price _curAvg = null;
+        protected DateTime _curAvgTime;
+        protected DateTime _decrementStartTime = DateTime.MinValue;
         protected Price _incrementAvg = null;
 
         public MarketData MarketData { get { return _mktData[0]; } }
@@ -33,10 +34,11 @@ namespace MidaxLib
         {
             _periodSeconds = periodMinutes * 60;
             _periodMilliSeconds = _periodSeconds * 1000m;
+            _periodTimeSpan = new TimeSpan(0, 0, _periodSeconds);
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
-                _timeDecay = new TimeDecayLinear(int.Parse(Config.Settings["TIME_DECAY_FACTOR"]));
+                _timeDecay = new TimeDecayLinear(int.Parse(Config.Settings["TIME_DECAY_FACTOR"]), new TimeSpan(0, periodMinutes, 0));
             else
-                _timeDecay = _timeDecayNull;
+                _timeDecay = new TimeDecayNull(new TimeSpan(0, periodMinutes, 0));
         }
 
         public IndicatorWMA(string id, MarketData mktData, int periodMinutes)
@@ -44,7 +46,10 @@ namespace MidaxLib
         {
             _periodSeconds = periodMinutes * 60;
             _periodMilliSeconds = _periodSeconds * 1000m;
-            _timeDecay = new TimeDecayLinear(3m);
+            if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
+                _timeDecay = new TimeDecayLinear(int.Parse(Config.Settings["TIME_DECAY_FACTOR"]), new TimeSpan(0, periodMinutes, 0));
+            else
+                _timeDecay = new TimeDecayNull(new TimeSpan(0, periodMinutes, 0));
         }
 
         public IndicatorWMA(IndicatorWMA indicator)
@@ -55,93 +60,190 @@ namespace MidaxLib
             _timeDecay = indicator.TimeDecay;
         }
 
-        public Price Average(DateTime updateTime, bool acceptMissingValues = false, bool linearInterpolation = true)
+        public Price Average(DateTime updateTime)
         {
-            DateTime startTime = updateTime.AddSeconds(-_periodSeconds);
-            var avg = new Price();
-            Average(ref avg, startTime, updateTime, acceptMissingValues);
-            return avg;
+            DateTime startTime;
+            startTime = updateTime.AddSeconds(-_periodSeconds);
+            if (MarketData.TimeSeries.Count == 0)
+                return null;
+            //if (MarketData.TimeSeries.StartTime() > startTime)
+            //    return null;
+            var curAvg = new Price();
+            if (!MobileAverage(ref curAvg, startTime, updateTime))
+                return null;
+            return curAvg;
         }
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
-            if (mktData.TimeSeries.TotalMinutes(updateTime) >= (double)_periodSeconds / 60.0)
+            Price avgPrice = IndicatorFunc(mktData, updateTime);
+            if (avgPrice != null)
             {
-                Price avgPrice = IndicatorFunc(mktData, updateTime);
-                if (avgPrice != null)
-                {
-                    base.OnUpdate(mktData, updateTime, avgPrice);                    
-                    Publish(updateTime, avgPrice.MidPrice());
-                }
+                base.OnUpdate(mktData, updateTime, avgPrice);
+                Publish(updateTime, avgPrice.MidPrice());
             }
         }
 
         protected virtual Price IndicatorFunc(MarketData mktData, DateTime updateTime)
         {
+            return Average(updateTime);
+            /*
             DateTime startTime;
-            if (_curavg == null){
+            if (_curAvg == null)
+            {
                 startTime = updateTime.AddSeconds(-_periodSeconds);
-                _decrementStartTime = startTime;
-                _curavg = new Price();
+                if (MarketData.TimeSeries.Count == 0)
+                    return null;
+                if (MarketData.TimeSeries.StartTime() > startTime)
+                    return null;                
+                _curAvg = new Price();
+                Price decrementWeight = new Price();
+                if (MobileAverage(ref _curAvg, ref decrementWeight, startTime, updateTime, false, false))
+                    return _curAvg;            
             }
-            else{
-                startTime = _curavgTime;
-                var decrementUpdateTime = updateTime.AddSeconds(-_periodSeconds);
+            else
+            {
+                startTime = _curAvgTime;
+                var curCumDecayWeight = _timeDecay.CumDecayWeight;
+                var incrementAvg = new Price();
+                Price incrementWeight = new Price();
+                MobileAverage(ref incrementAvg, ref incrementWeight, startTime, updateTime);
                 var decrementAvg = new Price();
-                MobileAverage(ref decrementAvg, _decrementStartTime, decrementUpdateTime);
-                _curavg = _timeDecay.Decrement(_curavg, decrementAvg, (decimal)(decrementUpdateTime - _decrementStartTime).TotalMilliseconds / (decimal)(_periodSeconds * 1000));
-                _decrementStartTime = decrementUpdateTime;
+                Price decrementWeight = new Price();
+                MobileAverage(ref decrementAvg, ref decrementWeight, startTime.AddSeconds(-_periodSeconds), updateTime.AddSeconds(-_periodSeconds));
+                _curAvg = (_curAvg - decrementAvg * curCumDecayWeight) * _timeDecay.CurDecayWeight + incrementAvg;
             }
-            _incrementAvg = new Price();
-            MobileAverage(ref _incrementAvg, startTime, updateTime, false, updateTime.AddSeconds(-_periodSeconds));
-            _curavg += _incrementAvg;
-            _curavgTime = updateTime;
-            return _curavg;
+            _curAvgTime = updateTime;
+            return null;*/
         }
 
-        protected virtual void MobileAverage(ref Price curavg, DateTime startTime, DateTime updateTime, bool acceptMissingValues = false, DateTime? origin = null, TimeDecay decay = null)
+        static IEnumerable<KeyValuePair<T, U>> Zip<T, U>(IEnumerable<T> first, IEnumerable<U> second)
         {
-            Average(ref curavg, startTime, updateTime, acceptMissingValues, origin, decay);
-        }        
+            IEnumerator<T> firstEnumerator = first.GetEnumerator();
+            IEnumerator<U> secondEnumerator = second.GetEnumerator();
 
-        protected bool Average(ref Price curavg, DateTime startTime, DateTime updateTime, bool acceptMissingValues = false, DateTime? origin = null, TimeDecay decay = null)
-        {
+            while (firstEnumerator.MoveNext())
+            {
+                if (secondEnumerator.MoveNext())
+                {
+                    yield return new KeyValuePair<T, U>(firstEnumerator.Current, secondEnumerator.Current);
+                }
+                else
+                {
+                    yield return new KeyValuePair<T, U>(firstEnumerator.Current, default(U));
+                }
+            }
+            while (secondEnumerator.MoveNext())
+            {
+                yield return new KeyValuePair<T, U>(default(T), secondEnumerator.Current);
+            }
+        }
+
+
+        protected virtual bool MobileAverage(ref Price curavg, DateTime startTime, DateTime updateTime)
+        {       
             bool started = false;
-            //bool linear_adjusted = false;
-            TimeDecay timeDecay = decay == null ? _timeDecay : decay;
-            DateTime originTime = origin.HasValue ? origin.Value : startTime;
+            TimeDecay timeDecay = _timeDecay;
+            DateTime originTime = startTime;
             DateTime startTimePrev = DateTime.MinValue;
             IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime);
-            KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
+            KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();           
+            decimal curTimeDecayWeight = 1m;
             foreach (var endPeriodValue in generator)
-            {                
+            {
                 if (!started)
                 {
                     started = true;
                     var diffTime = (int)(startTime - endPeriodValue.Key).TotalMilliseconds;
-                    if (!acceptMissingValues && diffTime < 0)
+                    if (diffTime < 0)
                         return false;
                     startTimePrev = endPeriodValue.Key;
-                    //linear_adjusted = diffTime == 0;
                     beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, endPeriodValue.Value);
+                    _timeDecay.Update(beginPeriodValue.Key, endPeriodValue.Key, updateTime);
                     continue;
                 }
-                /*
-                else if (!linear_adjusted)
-                {
-                    linear_adjusted = true;
-                    beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, beginPeriodValue.Value + (decimal)((startTime - startTimePrev).TotalMilliseconds / (endPeriodValue.Key - startTimePrev).TotalMilliseconds)
-                                                                        * (endPeriodValue.Value.Bid - beginPeriodValue.Value.Bid));
-                }*/
-                //if (linearInterpolation)
-                //curavg += ((beginPeriodValue.Value + endPeriodValue.Value) / 2m) * _timeDecay.Weight(beginPeriodValue.Key, endPeriodValue.Key, _periodMilliSeconds, originTime);
-                //else
-                curavg += beginPeriodValue.Value * timeDecay.Weight(beginPeriodValue.Key, endPeriodValue.Key, _periodMilliSeconds, originTime);
+                curTimeDecayWeight = _timeDecay.Update(beginPeriodValue.Key, endPeriodValue.Key, updateTime);
+
+                curavg += beginPeriodValue.Value * curTimeDecayWeight;
                 beginPeriodValue = endPeriodValue;
             }
-            curavg += beginPeriodValue.Value * timeDecay.Weight(beginPeriodValue.Key, updateTime, _periodMilliSeconds, originTime);
+            if (beginPeriodValue.Value != null && beginPeriodValue.Key != updateTime)
+                curavg += beginPeriodValue.Value * curTimeDecayWeight;
             return true;
-        }        
+
+            /*
+            bool started = false;
+            DateTime startTimePrev = DateTime.MinValue;
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime);
+            KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
+            var tmp = new StreamWriter(File.OpenWrite(string.Format("tmp_{0}_{1}.csv", updateTime.Minute, updateTime.Second)));
+            decimal curTimeDecayWeight = 1m;
+            if (!incremental)
+            {
+                foreach (var endPeriodValue in generator)
+                {
+                    if (!started)
+                    {
+                        started = true;
+                        var diffTime = (int)(startTime - endPeriodValue.Key).TotalMilliseconds;
+                        if (!acceptMissingValues && diffTime < 0)
+                        {
+                            tmp.Close();
+                            return false;
+                        }
+                        startTimePrev = endPeriodValue.Key;
+                        beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, endPeriodValue.Value);
+                        _timeDecay.Update(beginPeriodValue.Key, endPeriodValue.Key, updateTime);
+                        continue;
+                    }
+                    curTimeDecayWeight = _timeDecay.Update(beginPeriodValue.Key, endPeriodValue.Key, updateTime);
+                    tmp.WriteLine(string.Format("{0},{1}", beginPeriodValue.Value.Bid, curTimeDecayWeight));
+
+                    curavg += beginPeriodValue.Value * curTimeDecayWeight;
+                    beginPeriodValue = endPeriodValue;
+                }
+                if (beginPeriodValue.Value != null && beginPeriodValue.Key != updateTime)
+                    curavg += beginPeriodValue.Value * curTimeDecayWeight;
+            }
+            else
+            {
+                IEnumerable<KeyValuePair<DateTime, Price>> generatorTimeDecay = _timeDecay.TimeDecaySeries.ValueGenerator(startTime, updateTime);
+                foreach (var endPeriodValue in Zip(generator, generatorTimeDecay))
+                {
+                    if (!started)
+                    {
+                        started = true;
+                        var diffTime = (int)(startTime - endPeriodValue.Key.Key).TotalMilliseconds;
+                        if (!acceptMissingValues && diffTime < 0)
+                        {
+                            tmp.Close();
+                            return false;
+                        }
+                        startTimePrev = endPeriodValue.Key.Key;
+                        beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, endPeriodValue.Key.Value);
+                        continue;
+                    }
+                    else if (endPeriodValue.Key.Key == default(DateTime))
+                        break;
+                    if (incremental)
+                        curTimeDecayWeight = _timeDecay.Update(beginPeriodValue.Key, endPeriodValue.Key.Key, updateTime);
+                    else
+                        curTimeDecayWeight = endPeriodValue.Value.Value.Bid;
+                    tmp.WriteLine(string.Format("{0},{1}", beginPeriodValue.Value.Bid, curTimeDecayWeight));
+
+                    curavg += beginPeriodValue.Value * curTimeDecayWeight;
+                    weight += curTimeDecayWeight;
+                    beginPeriodValue = endPeriodValue.Key;
+                }
+                if (beginPeriodValue.Value != null && beginPeriodValue.Key != updateTime)
+                {
+                    curavg += beginPeriodValue.Value * _timeDecay.Update(beginPeriodValue.Key, updateTime, updateTime);
+                    weight += curTimeDecayWeight;
+                }   
+            }                     
+            tmp.Close();
+            return true;*/
+        } 
     }
 
     /// <summary>
@@ -150,50 +252,115 @@ namespace MidaxLib
     /// <summary>
     public class IndicatorVWMA : IndicatorWMA
     {
-        public IndicatorVWMA(MarketData mktData, int periodMinutes)
+        IndicatorVolume _avgVolume;
+        protected decimal _prevWeight = 1.0m;
+        
+        public IndicatorVolume AverageVolume { get { return _avgVolume; } }
+
+        public IndicatorVWMA(MarketData mktData, int periodMinutes, IndicatorVolume cumVol = null)
             : base("VWMA_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)
         {
+            _avgVolume = cumVol == null ? new IndicatorVolume(mktData, periodMinutes) : cumVol;
         }
 
-        public IndicatorVWMA(string id, MarketData mktData, int periodMinutes)
+        public IndicatorVWMA(string id, MarketData mktData, int periodMinutes, IndicatorVolume cumVol = null)
             : base(id, mktData, periodMinutes)
         {
+            _avgVolume = cumVol == null ? new IndicatorVolume(mktData, periodMinutes) : cumVol;
         }
 
         public IndicatorVWMA(IndicatorVWMA indicator)
             : base(indicator.Id, indicator.MarketData, indicator.Period / 60)
         {
+            _avgVolume = indicator.AverageVolume == null ? new IndicatorVolume(indicator.MarketData, indicator.Period / 60) : indicator.AverageVolume;
         }
 
-        protected override void MobileAverage(ref Price curavg, DateTime startTime, DateTime updateTime, bool acceptMissingValues = false, DateTime? origin = null, TimeDecay decay = null)
+        public override void Subscribe(Tick updateHandler, Tick tickerHandler)
         {
-            VolumWeightedAverage(ref curavg, startTime, updateTime, acceptMissingValues, origin, decay);
+            _avgVolume.Subscribe(updateHandler, tickerHandler);
+            base.Subscribe(updateHandler, tickerHandler);
         }
 
-        protected bool VolumWeightedAverage(ref Price curavg, DateTime startTime, DateTime updateTime, bool acceptMissingValues = false, DateTime? origin = null, TimeDecay decay = null)
+        public override void Unsubscribe(Tick updateHandler, Tick tickerHandler)
         {
+            base.Unsubscribe(updateHandler, tickerHandler);
+            _avgVolume.Unsubscribe(updateHandler, tickerHandler);
+        }
+
+        /*
+        protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime)
+        {
+            DateTime startTime;
+            if (_curAvg == null)
+            {
+                startTime = updateTime.AddSeconds(-_periodSeconds);
+                if (MarketData.TimeSeries.Count == 0)
+                    return null;
+                if (MarketData.TimeSeries.StartTime() > startTime)
+                    return null;
+                if (_avgVolume.TimeSeries.Count == 0)
+                    return null;
+                if (_avgVolume.TimeSeries.StartTime() > updateTime)
+                    return null;
+                _decrementStartTime = startTime;
+                _curAvg = new Price();
+                MobileVolumeWeightedPrice(ref _curAvg, startTime, updateTime, updateTime.AddSeconds(-_periodSeconds));
+                _prevWeight = _avgVolume.TimeSeries[updateTime].Value.Value.Volume.Value;
+                _curAvg /= _prevWeight;
+                _prevWeight = 1m / _prevWeight;
+            }
+            else
+            {
+                startTime = _curAvgTime;
+                var curCumDecayWeight = _timeDecay.CumDecayWeight;
+                var decrementUpdateTime = updateTime.AddSeconds(-_periodSeconds);
+                var incrementAvg = new Price();
+                MobileVolumeWeightedPrice(ref incrementAvg, startTime, updateTime, updateTime.AddSeconds(-_periodSeconds));
+                var decrementAvg = new Price();
+                MobileVolumeWeightedPrice(ref decrementAvg, _decrementStartTime, decrementUpdateTime);
+                var curWeight = 1m / _avgVolume.TimeSeries[updateTime].Value.Value.Volume.Value; // 1m - (decimal)(updateTime - startTime).TotalMilliseconds / (decimal)(_periodSeconds * 1000);
+                //_curAvg = _timeDecay.Update(updateTime - startTime, updateTime, _curAvg, incrementAvg, decrementAvg, _prevWeight, curWeight);
+                _curAvg = (_curAvg - decrementAvg * curCumDecayWeight * _prevWeight) * _timeDecay.CurDecayWeight + incrementAvg * curWeight;
+                _decrementStartTime = decrementUpdateTime;
+                _prevWeight = curWeight;
+            }
+            _curAvgTime = updateTime;
+            return _curAvg;
+        }*/
+
+        protected override bool MobileAverage(ref Price volPriceOut, DateTime startTime, DateTime updateTime)
+        {            
             bool started = false;
-            TimeDecay timeDecay = decay == null ? _timeDecay : decay;
-            DateTime originTime = origin.HasValue ? origin.Value : startTime;
             DateTime startTimePrev = DateTime.MinValue;
             IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
+            var curVolPrice = 0m;
+            var curTimeDecayWeight = 1m;
             foreach (var endPeriodValue in generator)
             {
                 if (!started)
                 {
                     started = true;
                     var diffTime = (int)(startTime - endPeriodValue.Key).TotalMilliseconds;
-                    if (!acceptMissingValues && diffTime < 0)
-                        return false;
+                    if (diffTime < 0)
+                        return false;                    
                     startTimePrev = endPeriodValue.Key;
+                    curVolPrice = endPeriodValue.Value.Bid * Math.Abs(endPeriodValue.Value.Volume.Value); 
                     beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, endPeriodValue.Value);
                     continue;
                 }
-                curavg += beginPeriodValue.Value * timeDecay.Weight(beginPeriodValue.Key, endPeriodValue.Key, _periodMilliSeconds, originTime);
+                if (!beginPeriodValue.Value.Volume.HasValue)
+                    return false;
+                if (beginPeriodValue.Value.Volume.Value == 0m)
+                    return false;
+                curTimeDecayWeight = _timeDecay.Update(beginPeriodValue.Key, endPeriodValue.Key, updateTime);
+                volPriceOut += curVolPrice * curTimeDecayWeight;
+                curVolPrice = endPeriodValue.Value.Bid * Math.Abs(endPeriodValue.Value.Volume.Value);
                 beginPeriodValue = endPeriodValue;
             }
-            curavg += beginPeriodValue.Value * timeDecay.Weight(beginPeriodValue.Key, updateTime, _periodMilliSeconds, originTime);
+            if (beginPeriodValue.Value != null && beginPeriodValue.Key != updateTime)
+                volPriceOut += curVolPrice * curTimeDecayWeight;
+            volPriceOut /= _avgVolume.TimeSeries[updateTime].Value.Value.Volume.Value;
             return true;
         } 
     }
@@ -212,18 +379,16 @@ namespace MidaxLib
             _avg = avg;
         }
 
-        protected override void MobileAverage(ref Price curVolAvg, DateTime startTime, DateTime updateTime, bool acceptMissingValues = false, DateTime? origin = null, TimeDecay decay = null)
+        protected override bool MobileAverage(ref Price curVolAvg, DateTime startTime, DateTime updateTime)
         {
             Price var = new Price();
             if (_avg.TimeSeries.TotalMinutes(updateTime) < (double)_periodSeconds / 60.0)
             {
                 curVolAvg = var;
-                return;
+                return false;
             }
 
             bool started = false;
-            TimeDecay timeDecay = decay == null ? _timeDecay : decay;
-            DateTime originTime = origin.HasValue ? origin.Value : startTime;
             var avg = _avg.TimeSeries[updateTime];
 
             IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime);
@@ -233,17 +398,18 @@ namespace MidaxLib
                 if (!started)
                 {
                     started = true;
-                    if (!acceptMissingValues && Math.Max(0, (int)(endPeriodValue.Key - startTime).TotalMilliseconds) != 0)
-                        return;
+                    if (Math.Max(0, (int)(endPeriodValue.Key - startTime).TotalMilliseconds) != 0)
+                        return false;
                     beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, endPeriodValue.Value);
                     continue;
                 }
-                curVolAvg += (beginPeriodValue.Value - avg.Value.Value).Abs() * timeDecay.Weight(beginPeriodValue.Key, endPeriodValue.Key, _periodMilliSeconds, originTime);
+                curVolAvg += (beginPeriodValue.Value - avg.Value.Value).Abs() * _timeDecay.Update(beginPeriodValue.Key, endPeriodValue.Key, updateTime);
                 beginPeriodValue = endPeriodValue;
             }
             if (beginPeriodValue.Value == null)
-                return;
-            curVolAvg += (beginPeriodValue.Value - avg.Value.Value).Abs() * timeDecay.Weight(beginPeriodValue.Key, updateTime, _periodMilliSeconds, originTime);
+                return false;
+            curVolAvg += (beginPeriodValue.Value - avg.Value.Value).Abs() * _timeDecay.Update(beginPeriodValue.Key, updateTime, updateTime);
+            return true;
         }
     }
 

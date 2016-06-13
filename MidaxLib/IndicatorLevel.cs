@@ -150,13 +150,13 @@ namespace MidaxLib
                 Log.Instance.WriteEntry("Cannot publish level mean indicator: no market data available", EventLogEntryType.Warning);
                 return;
             }
-            Price avg = Average(updateTime, true);
+            Price avg = Average(updateTime);
             Publish(updateTime, avg.MidPrice());            
         }
 
         public Price Average()
         {
-            return Average(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]), true);
+            return Average(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
         }
     }
 

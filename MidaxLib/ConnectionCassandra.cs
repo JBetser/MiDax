@@ -13,7 +13,7 @@ namespace MidaxLib
     public class CqlQuote
     {
         public string s;
-        public DateTimeOffset t;
+        public DateTime t;
         public decimal? b;
         public string n;
         public decimal? o;
@@ -24,7 +24,7 @@ namespace MidaxLib
         public CqlQuote(Row row)
         {
             s = (string)row[0];
-            t = (DateTimeOffset)row[1];
+            t = new DateTime(((DateTimeOffset)row[1]).Ticks, DateTimeKind.Local);
             b = (decimal)row[2];
             n = (string)row[3];
             o = (decimal)row[4];
@@ -33,7 +33,7 @@ namespace MidaxLib
         public CqlQuote(string stockId, DateTimeOffset tradingTime, string stockName, decimal? bid, decimal? offer, decimal? volume)
         {
             s = stockId;
-            t = tradingTime;
+            t = new DateTime(tradingTime.Ticks, DateTimeKind.Local);
             b = bid;
             n = stockName;
             o = offer;
@@ -68,7 +68,7 @@ namespace MidaxLib
         public CqlIndicator(Row row)
         {
             s = (string)row[0];
-            t = (DateTimeOffset)row[1];
+            t = new DateTime(((DateTimeOffset)row[1]).Ticks, DateTimeKind.Local);
             b = (decimal)row[2];
             n = (string)row[0];
             o = (decimal)row[2];
@@ -77,7 +77,7 @@ namespace MidaxLib
         public CqlIndicator(string stockId, DateTimeOffset tradingTime, string stockName, decimal? value)
         {
             s = stockId;
-            t = tradingTime;
+            t = new DateTime(tradingTime.Ticks, DateTimeKind.Local);
             b = value;
             n = stockName;
             o = value;
@@ -98,7 +98,7 @@ namespace MidaxLib
         public CqlSignal(Row row)
         {
             s = (string)row[0];
-            t = (DateTimeOffset)row[1];
+            t = new DateTime(((DateTimeOffset)row[1]).Ticks, DateTimeKind.Local);
             b = Convert.ToInt32(row[4]);
             n = (string)row[0];
             o = (decimal)row[2];
@@ -107,7 +107,7 @@ namespace MidaxLib
         public CqlSignal(string stockId, DateTimeOffset tradingTime, string stockName, SIGNAL_CODE? value, decimal stockvalue)
         {
             s = stockId;
-            t = tradingTime;
+            t = new DateTime(tradingTime.Ticks, DateTimeKind.Local);
             b = Convert.ToInt32(value);
             n = stockName;
             o = stockvalue;

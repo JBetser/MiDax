@@ -52,7 +52,7 @@ namespace MidaxLib
             return Correlation(updateTime);
         }
 
-        public Price Correlation(DateTime updateTime, bool acceptMissingValues = false)
+        public Price Correlation(DateTime updateTime)
         {
             Price correl = new Price();
             bool started = false;
@@ -60,8 +60,8 @@ namespace MidaxLib
             int idxSecondStart = 0;
             DateTime startTime = updateTime.AddSeconds(-_periodSeconds);
             decimal weight = (1m / (decimal)_periodSeconds) / 2m;
-            Price avg = _wma.Average(updateTime, acceptMissingValues, true);
-            Price avgRef = _wmaRef.Average(updateTime, acceptMissingValues, true);
+            Price avg = _wma.Average(updateTime);
+            Price avgRef = _wmaRef.Average(updateTime);
             IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime);
             IEnumerable<KeyValuePair<DateTime, Price>> generatorRef = MarketDataRef.TimeSeries.ValueGenerator(startTime, updateTime);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
@@ -73,7 +73,7 @@ namespace MidaxLib
                 {
                     started = true;
                     idxSecondStart = Math.Max(0, (int)(endPeriodValue.Key - startTime).TotalSeconds);
-                    if (!acceptMissingValues && idxSecondStart != 0)
+                    if (idxSecondStart != 0)
                         return null;
                     beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, endPeriodValue.Value);
                     // find the matching period for the reference market data

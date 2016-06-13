@@ -24,11 +24,11 @@ namespace MidaxLib
                 var wmaDailyAvg = new IndicatorLevelMean(mktData);
 
                 foreach (var quote in priceData[epic])
-                    mktData.TimeSeries.Add(quote.t.UtcDateTime, new Price(quote.MidPrice()));
+                    mktData.TimeSeries.Add(quote.t, new Price(quote.MidPrice()));
                 foreach (var quote in ExpectedIndicatorData[wmaLow.Id])
-                    wmaLow.TimeSeries.Add(quote.t.UtcDateTime, new Price(quote.ScaleValue(0, 1)));
+                    wmaLow.TimeSeries.Add(quote.t, new Price(quote.ScaleValue(0, 1)));
                 foreach (var quote in ExpectedIndicatorData[wmaLow.Id])
-                    wmaLow.TimeSeries.Add(quote.t.UtcDateTime, new Price(quote.ScaleValue(0, 1)));
+                    wmaLow.TimeSeries.Add(quote.t, new Price(quote.ScaleValue(0, 1)));
                 
                 var expectations = new Dictionary<DateTime, KeyValuePair<CqlQuote, decimal>>();
                 var gainDistribution = new SortedList<int, DateTime>();
@@ -40,16 +40,16 @@ namespace MidaxLib
                 {
                     if (quote.t.TimeOfDay < Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
                         continue;
-                    var futureVal = wmaLow.Average(quote.t.UtcDateTime.AddMinutes(2));
+                    var futureVal = wmaLow.Average(quote.t.AddMinutes(2));
                     var profit = (int)Math.Round(futureVal.Mid() - quote.MidPrice());
-                    expectations.Add(quote.t.UtcDateTime, new KeyValuePair<CqlQuote, decimal>(quote, profit));
+                    expectations.Add(quote.t, new KeyValuePair<CqlQuote, decimal>(quote, profit));
                     if (gainDistribution.ContainsKey(profit))
                     {
-                        if ((quote.t.UtcDateTime - gainDistribution[profit]).Hours > 3 && (rnd.Next(100) == 0))
-                            gainDistribution[profit] = quote.t.UtcDateTime;
+                        if ((quote.t - gainDistribution[profit]).Hours > 3 && (rnd.Next(100) == 0))
+                            gainDistribution[profit] = quote.t;
                     }
                     else
-                        gainDistribution[profit] = quote.t.UtcDateTime;
+                        gainDistribution[profit] = quote.t;
                     if (profit < minProfit.Key)
                         minProfit = new KeyValuePair<int, DateTime>(profit, gainDistribution[profit]);
                     if (profit > maxProfit.Key)

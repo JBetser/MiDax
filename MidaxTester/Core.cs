@@ -76,11 +76,10 @@ namespace MidaxTester
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMA4gen.csv");
-            /*
             var macDTestVWMA = new ModelMacDVTest(index, 1, 2, 3);
             MarketDataConnection.Instance.Connect(null);
             macDTestVWMA.StartSignals();
-            macDTestVWMA.StopSignals();*/
+            macDTestVWMA.StopSignals();
             dicSettings.Remove("TIME_DECAY_FACTOR");
 
             Console.WriteLine(action + " calibration...");

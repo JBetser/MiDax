@@ -17,14 +17,16 @@ namespace MidaxLib
         MarketLevels? _marketLevels = null;
         protected DateTime _closePositionTime;
         protected bool _allPositionsClosed;
+        protected string _mktLevelsId;
         public MarketLevels? Levels { get { return _marketLevels; } set { _marketLevels = value; } }
         public bool _hasEodLevels = true;
 
         public bool HasEODLevels { get { return _hasEodLevels; } }
 
-        public MarketData(string name_id)
+        public MarketData(string name_id, string mktLevelsId = "")
         {
             _id = name_id.Split(':').Count() > 1 ? name_id.Split(':')[1] : name_id;
+            _mktLevelsId = mktLevelsId == "" ? _id : mktLevelsId;
             _name = name_id.Split(':')[0];
             _values = new TimeSeries();
             _updateHandlers = new List<Tick>();
@@ -106,16 +108,16 @@ namespace MidaxLib
                 if (PublisherConnection.Instance.Database != null)
                 {
                     var mktLevels = PublisherConnection.Instance.Database.GetMarketLevels(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]),
-                        new List<string> { _id });
+                        new List<string> { _mktLevelsId });
                     if (mktLevels.Count == 1)
                         _marketLevels = new MarketLevels(mktLevels.Values.First());
                     else
-                        Log.Instance.WriteEntry("Could not retrieve market levels for Market Data: " + _id, EventLogEntryType.Warning);
+                        Log.Instance.WriteEntry("Could not retrieve market levels for Market Data: " + _mktLevelsId, EventLogEntryType.Warning);
                 }
             }
             catch
             {
-                Log.Instance.WriteEntry("Could not retrieve market levels for Market Data: " + _id, EventLogEntryType.Warning);
+                Log.Instance.WriteEntry("Could not retrieve market levels for Market Data: " + _mktLevelsId, EventLogEntryType.Warning);
             }
         }
 
