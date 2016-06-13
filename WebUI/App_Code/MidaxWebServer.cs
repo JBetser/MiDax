@@ -34,7 +34,7 @@ namespace MidaxWebService
         Dictionary<string, decimal> _avg = new Dictionary<string, decimal>();
         Dictionary<string, decimal> _scale = new Dictionary<string, decimal>();
 
-        MidaxWebServer() 
+        MidaxWebServer()
         {
             try
             {
@@ -58,7 +58,7 @@ namespace MidaxWebService
             catch (Exception exc)
             {
                 Log.Instance.WriteEntry(exc.ToString(), System.Diagnostics.EventLogEntryType.Error);
-            } 
+            }
         }
 
         static public MidaxWebServer Instance
@@ -69,7 +69,7 @@ namespace MidaxWebService
         public bool IsStarted()
         {
             return (Config.Settings != null);
-        }  
+        }
 
         public string GetStatus(HttpSessionState userSession)
         {
@@ -98,7 +98,7 @@ namespace MidaxWebService
             bool isVolume = id.Contains(".Volume");
             id = id.Replace(".Volume", "");
             var ids = new List<string> { id };
-            var rowSets = PublisherConnection.Instance.Database.GetRows(startTime, stopTime, type, ids);            
+            var rowSets = PublisherConnection.Instance.Database.GetRows(startTime, stopTime, type, ids);
             if (rowSets == null)
                 return @"[]";
             if (rowSets.Count() == 0)
@@ -111,7 +111,7 @@ namespace MidaxWebService
             bool? trendUp = null;
             // find local minima
             List<Gap> gaps = new List<Gap>();
-            SortedList<decimal, CqlQuote> buffer = new SortedList<decimal,CqlQuote>();
+            SortedList<decimal, CqlQuote> buffer = new SortedList<decimal, CqlQuote>();
 
             decimal min = 1000000;
             decimal max = 0;
@@ -155,7 +155,7 @@ namespace MidaxWebService
             startTime = startTime > te ? startTime : ts;
             stopTime = stopTime < te ? stopTime : te;
             double intervalSeconds = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 250);
-            double intervalSecondsLarge = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 100);            
+            double intervalSecondsLarge = Math.Max(1, Math.Ceiling((stopTime - startTime).TotalSeconds) / 100);
             if (type == PublisherConnection.DATATYPE_STOCK)
             {
                 _avg[keyAvg] = (min + max) / 2m;
@@ -163,14 +163,14 @@ namespace MidaxWebService
             }
             foreach (CqlQuote cqlQuote in quotes)
             {
-                decimal quoteValue = cqlQuote.ScaleValue(_avg[keyAvg], _scale[keyAvg]);
+                decimal quoteValue = _avg.ContainsKey(keyAvg) ? cqlQuote.ScaleValue(_avg[keyAvg], _scale[keyAvg]) : cqlQuote.MidPrice();
                 if (!prevQuoteValue.HasValue)
                 {
                     filteredQuotes.Add(cqlQuote);
                     prevQuoteValue = quoteValue;
                     prevQuote = cqlQuote;
                     continue;
-                }                
+                }
                 if (!trendUp.HasValue)
                 {
                     trendUp = quoteValue > prevQuoteValue;
@@ -205,7 +205,7 @@ namespace MidaxWebService
                         }
                     }
                     else if (buffer.Count == 1)
-                        filteredQuotes.Add(buffer.First().Value);                        
+                        filteredQuotes.Add(buffer.First().Value);
                     buffer.Clear();
                     trendUp = !trendUp;
                 }
@@ -244,13 +244,13 @@ namespace MidaxWebService
             {
                 foreach (var quote in filteredQuotes)
                     quote.b = quote.o = quote.v;
-            }                                    
+            }
             string json = "[";
             foreach (var row in filteredQuotes)
             {
                 json += JsonConvert.SerializeObject(row) + ",";
             }
             return json.Substring(0, json.Length - 1) + "]";
-        } 
-    }   
+        }
+    }
 }

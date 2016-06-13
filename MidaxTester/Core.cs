@@ -58,7 +58,7 @@ namespace MidaxTester
             macDTestWMA.StartSignals();
             macDTestWMA.StopSignals();
 
-            // Test weighted moving average with time decay
+            // Test weighted moving average with linear time decay
             tests = new List<string>();
             tests.Add(@"..\..\expected_results\testWMA3.csv");
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
@@ -70,11 +70,19 @@ namespace MidaxTester
             macDTestWMA.StartSignals();
             macDTestWMA.StopSignals();
 
+            // Test volume weighted moving average with linear time decay
             tests = new List<string>();
-            tests.Add(@"..\..\expected_results\core_22_1_2016.csv");
+            tests.Add(@"..\..\expected_results\testWMA4.csv");
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             if (generate)
-                dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\coregen_22_1_2016.csv");
+                dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMA4gen.csv");
+            /*
+            var macDTestVWMA = new ModelMacDVTest(index, 1, 2, 3);
+            MarketDataConnection.Instance.Connect(null);
+            macDTestVWMA.StartSignals();
+            macDTestVWMA.StopSignals();*/
+            dicSettings.Remove("TIME_DECAY_FACTOR");
+
             Console.WriteLine(action + " calibration...");
 
             // Test a 1mn linear regression
@@ -179,11 +187,14 @@ namespace MidaxTester
             annOutputs.Add(new List<double>() {  1 });
             ann.Train(annInputs, annOutputs);
 
-            MarketDataConnection.Instance.Connect(null);
-
-            var model = new ModelMacDTest(index);
-            
             Console.WriteLine(action + " live indicators and signals...");
+            tests = new List<string>();
+            tests.Add(@"..\..\expected_results\core_22_1_2016.csv");
+            dicSettings["REPLAY_CSV"] = Config.TestList(tests);
+            if (generate)
+                dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\coregen_22_1_2016.csv");
+            MarketDataConnection.Instance.Connect(null);
+            var model = new ModelMacDTest(index); 
             model.StartSignals();
             
             Console.WriteLine(action + " daily indicators...");            

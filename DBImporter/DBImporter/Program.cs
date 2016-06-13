@@ -13,13 +13,21 @@ namespace DBImporter
         {
             DateTime start = DateTime.Parse(args[0]);
             DateTime end = DateTime.Parse(args[1]);
-
+            bool restoreDB = false;
+            bool fromDB = true;
+            if (args.Length > 2)
+            {
+                restoreDB = (args[2].ToUpper() == "-RESTOREDB");
+                fromDB = false;
+            }
+            if (args.Length > 3)
+                fromDB = (args[3].ToUpper() == "-FROMDB");
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";
-            dicSettings["REPLAY_MODE"] = "DB";
+            dicSettings["REPLAY_MODE"] = (restoreDB && !fromDB) ? "CSV" : "DB";
             dicSettings["REPLAY_POPUP"] = "1";
-            dicSettings["TRADING_MODE"] = "REPLAY";
+            dicSettings["TRADING_MODE"] = (restoreDB && fromDB) ? "REPLAY_UAT" : "REPLAY";
             Config.Settings = dicSettings;
 
             while (start <= end)
@@ -29,7 +37,14 @@ namespace DBImporter
                 Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 7, 0, 0);
                 Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 21, 0, 0);
                 Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 17, 0, 0);
-                Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year);
+                if (!restoreDB)
+                    Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year);
+                if (!fromDB)
+                {
+                    List<string> mktdataFiles = new List<string>();
+                    mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year));
+                    Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
+                }                                  
 
                 MarketDataConnection.Instance.Connect(null);
 
@@ -40,6 +55,8 @@ namespace DBImporter
                 indexCAC.Subscribe(OnUpdate, null);
                 var indexDOW = new MarketData("DOW:IX.D.DOW.DAILY.IP");
                 indexDOW.Subscribe(OnUpdate, null);
+                var indexNYSE_DOW = new MarketData("DOW:IceConnection.DOW", "IX.D.DOW.DAILY.IP");
+                //indexNYSE_DOW.Subscribe(OnUpdate, null);
                 lstIndices.Add(indexDAX);
                 lstIndices.Add(indexCAC);
                 lstIndices.Add(indexDOW);
@@ -67,11 +84,10 @@ namespace DBImporter
 
                 foreach (var indicator in lstIndicators)
                     indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
-                MarketDataConnection.Instance.StopListening();                
+                MarketDataConnection.Instance.StopListening();
 
-                indexDAX.Clear();
-                indexCAC.Clear();
-                indexDOW.Clear();
+                foreach (var indicator in lstIndices)
+                    indicator.Clear();
 
                 do
                 {

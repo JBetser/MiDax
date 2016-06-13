@@ -67,7 +67,7 @@
       <Value Profile="(Default)">06:30:00</Value>
     </Setting>
     <Setting Name="TRADING_START_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">08:00:00</Value>
+      <Value Profile="(Default)">14:30:00</Value>
     </Setting>
     <Setting Name="TRADING_STOP_TIME" Type="System.String" Scope="Application">
       <Value Profile="(Default)">21:30:00</Value>
@@ -88,10 +88,10 @@
       <Value Profile="(Default)">GBP</Value>
     </Setting>
     <Setting Name="TRADING_CLOSING_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">16:30:00</Value>
+      <Value Profile="(Default)">21:00:00</Value>
     </Setting>
     <Setting Name="TRADING_SIGNAL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">MacDCas_30_90_200_IX.D.DAX.DAILY.IP</Value>
+      <Value Profile="(Default)">MacDCas_10_30_90_200_IceConnection.DOW</Value>
     </Setting>
     <Setting Name="INDEX_CAC" Type="System.String" Scope="Application">
       <Value Profile="(Default)">CAC:IX.D.CAC.DAILY.IP</Value>

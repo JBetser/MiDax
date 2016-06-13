@@ -36,7 +36,7 @@ namespace MidaxTrader
             otherIndices.Add(new MarketData("DOW:IX.D.DOW.DAILY.IP"));
             otherIndices.Add(new MarketData("CAC:IX.D.CAC.DAILY.IP"));
             var models = new List<Model>();
-            var macD = new ModelMacD(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 10, 30, 90);
+            var macD = new ModelMacDV(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 10, 30, 90);
             models.Add(macD);
             //models.Add(new ModelANN(macD, new List<MarketData>(), new MarketData("VIX2:IN.D.VIX.MONTH2.IP"), otherIndices));
             models.Add(new ModelMacDCascade(macD));

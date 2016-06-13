@@ -145,7 +145,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("08:00:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("14:30:00")]
         public string TRADING_START_TIME {
             get {
                 return ((string)(this["TRADING_START_TIME"]));
@@ -208,7 +208,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("16:30:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("21:00:00")]
         public string TRADING_CLOSING_TIME {
             get {
                 return ((string)(this["TRADING_CLOSING_TIME"]));
@@ -217,7 +217,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("MacDCas_30_90_200_IX.D.DAX.DAILY.IP")]
+        [global::System.Configuration.DefaultSettingValueAttribute("MacDCas_10_30_90_200_IceConnection.DOW")]
         public string TRADING_SIGNAL {
             get {
                 return ((string)(this["TRADING_SIGNAL"]));

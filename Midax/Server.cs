@@ -50,18 +50,16 @@ public class Server
                 Ice.ObjectAdapter adapter = communicator().createObjectAdapter("MidaxIce");
                 Ice.Properties properties = communicator().getProperties();
                 Ice.Identity id = communicator().stringToIdentity(properties.getProperty("Identity"));
-                               
-                var index = new MarketData(dicSettings["INDEX_DAX"]);
-                List<MarketData> stocks = new List<MarketData>();
-                foreach (string stock in stockList)
-                    stocks.Add(new MarketData(stock));
+
+                var index = new MarketData(dicSettings["INDEX_ICEDOW"]);
+                var tradingIndex = new MarketData(dicSettings["INDEX_DOW"]);
                 List<MarketData> otherIndices = new List<MarketData>();
+                otherIndices.Add(new MarketData(dicSettings["INDEX_DAX"]));
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
-                otherIndices.Add(new MarketData(dicSettings["INDEX_DOW"]));
                 var models = new List<Model>();
-                var macD_10_30_90 = new ModelMacD(index, 10, 30, 90);
+                var macD_10_30_90 = new ModelMacDV(index, 10, 30, 90, tradingIndex);
                 models.Add(macD_10_30_90);
-                models.Add(new ModelANN(macD_10_30_90, stocks, new MarketData(dicSettings["VOLATILITY"]), otherIndices));
+                models.Add(new ModelANN(macD_10_30_90, new List<MarketData> { tradingIndex }, new MarketData(dicSettings["VOLATILITY"]), otherIndices));
                 models.Add(new ModelMacDCascade(macD_10_30_90));
                 //models.Add(new ModelMole(macD_10_30_90));
                 _trader = new Trader(models, communicator().shutdown);

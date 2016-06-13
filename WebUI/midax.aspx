@@ -184,10 +184,13 @@
                     var equityParams = $.extend({ "stockid": equity }, genericParams);
 
                     var requests = { "GetStockData0": equityParams };
+                    var isVolume = false;
                     if (window.document.getElementById("indicator").selectedIndex > 0) {
                         var indicatorIds = $("#indicator").val().split('#');
                         var idx = 0;
                         for (var id in indicatorIds) {
+                            if (indicatorIds[id].indexOf("Volume") != -1)
+                                isVolume = true;
                             var indicatorParams = $.extend({ "indicatorid": indicatorIds[id] + "_" + $("#equity").val() }, genericParams);
                             if (indicatorIds[id].startsWith("Low") || indicatorIds[id].startsWith("High") || indicatorIds[id].startsWith("Close")) {
                                 var prevDate = new Date((new Date(currentDate)).setDate(currentDate.getDate() - 1));
@@ -202,6 +205,8 @@
                             idx++;
                         }
                     }
+                    if (isVolume)
+                        delete requests["GetStockData0"];
                     if (window.document.getElementById("signal").selectedIndex > 0) {
                         var signalParams = $.extend({ "signalid": $("#signal").val() + "_" + $("#equity").val() }, genericParams);
                         $.extend(requests, { "GetSignalData0": signalParams });
@@ -292,8 +297,13 @@
                <option value="WMA_2#WMA_10#WMA_60">WMA 2mn/10mn/1hr</option>
                <option value="WMA_7#WMA_20#WMA_60">WMA 7mn/20mn/1hr</option>
                <option value="WMA_10#WMA_30#WMA_90">WMA 10mn/30mn/1hr30</option>
+               <option value="VWMA_10#VWMA_30#VWMA_90">VWMA 10mn/30mn/1hr30</option>
                <option value="WMVol_10">WM Vol 10mn</option>
-               <option value="WMVol_90">WM Vol 1h30</option>               
+               <option value="WMVol_90">WM Vol 1h30</option>    
+               <option value="VWMVol_10">VWM Vol 10mn</option>
+               <option value="VWMVol_90">VWM Vol 1h30</option>    
+               <option value="Volume_30">Volumes 30mn</option>  
+               <option value="Volume_90">Volumes 1h30</option>                           
              </select>   
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
