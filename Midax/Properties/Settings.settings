@@ -108,8 +108,5 @@
     <Setting Name="ASSUMPTION_TREND" Type="System.String" Scope="Application">
       <Value Profile="(Default)">BEAR</Value>
     </Setting>
-    <Setting Name="TIME_DECAY_FACTOR" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">15</Value>
-    </Setting>
   </Settings>
 </SettingsFile>

@@ -268,14 +268,5 @@ namespace Midax.Properties {
                 return ((string)(this["ASSUMPTION_TREND"]));
             }
         }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("15")]
-        public string TIME_DECAY_FACTOR {
-            get {
-                return ((string)(this["TIME_DECAY_FACTOR"]));
-            }
-        }
     }
 }

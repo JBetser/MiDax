@@ -36,6 +36,7 @@ namespace MidaxLib
             mktData.Add(index);
             _mktData = mktData;
             _index = index;
+            _tradingIndex = tradingIndex;
             _lowPeriod = lowPeriod;
             _midPeriod = midPeriod;
             _highPeriod = highPeriod;

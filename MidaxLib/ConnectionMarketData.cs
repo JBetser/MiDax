@@ -57,7 +57,7 @@ namespace MidaxLib
             get { return _apiStreamingClient; }
         }
 
-        public void SubscribeMarketData(MarketData mktData)
+        public virtual void SubscribeMarketData(MarketData mktData)
         {
             if (_mktDataListener.MarketData.Select(mktdata => mktdata.Id).Contains(mktData.Id))
                 UnsubscribeMarketData(_mktDataListener.MarketData.Where(mktdata => mktdata.Id == mktData.Id).First());
@@ -65,7 +65,7 @@ namespace MidaxLib
             Log.Instance.WriteEntry("Subscribed " + mktData.Name + " to " + mktData.Id);
         }
 
-        public void UnsubscribeMarketData(MarketData mktData)
+        public virtual void UnsubscribeMarketData(MarketData mktData)
         {
             var lstRemove = _mktDataListener.MarketData.Where(mktdata => mktdata.Id == mktData.Id).ToList();
             foreach (var selmktdata in lstRemove)

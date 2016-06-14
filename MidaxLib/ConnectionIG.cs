@@ -198,7 +198,7 @@ namespace MidaxLib
         {
             _igStreamApiClient.UnsubscribeTableKey(_igSubscribedTableKey);
         }
-
+        
         void IAbstractStreamingClient.Resume(IHandyTableListener tableListener)
         {
         }
@@ -309,6 +309,18 @@ namespace MidaxLib
             {
                 Log.Instance.WriteEntry("IGConnection error: " + ex.Message, EventLogEntryType.Error);
             }
-        }        
+        }
+
+        public override void SubscribeMarketData(MarketData mktData)
+        {
+            if (mktData.Id.StartsWith("IX"))
+                base.SubscribeMarketData(mktData);
+        }
+
+        public override void UnsubscribeMarketData(MarketData mktData)
+        {
+            if (mktData.Id.StartsWith("IX"))
+                base.UnsubscribeMarketData(mktData);
+        }
     }
 }

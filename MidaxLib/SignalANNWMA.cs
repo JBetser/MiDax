@@ -17,6 +17,8 @@ namespace MidaxLib
 
         protected override bool ComputeOutput()
         {
+            if (_asset.Levels == null)
+                return false;
             if (_startAssetPrice == null)
                 _startAssetPrice = _asset.TimeSeries.First();
             var updateTime = _indicatorLatestValues.First().Value.Key;
