@@ -26,7 +26,7 @@ namespace MidaxLib
         public MarketData(string name_id, string mktLevelsId = "")
         {
             _id = name_id.Split(':').Count() > 1 ? name_id.Split(':')[1] : name_id;
-            _mktLevelsId = mktLevelsId == "" ? _id : mktLevelsId;
+            _mktLevelsId = mktLevelsId == "" ? _id : (mktLevelsId.Split(':').Count() > 1 ? mktLevelsId.Split(':')[1] : mktLevelsId);
             _name = name_id.Split(':')[0];
             _values = new TimeSeries();
             _updateHandlers = new List<Tick>();

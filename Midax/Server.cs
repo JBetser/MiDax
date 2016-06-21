@@ -53,19 +53,19 @@ public class Server
 
                 Thread.Sleep(10000);
 
-                var index = new MarketData(dicSettings["INDEX_ICEDOW"]);
+                var index = IceStreamingMarketData.Instance;
                 var tradingIndex = new MarketData(dicSettings["INDEX_DOW"]);
                 var dax = new MarketData(dicSettings["INDEX_DAX"]);
                 List<MarketData> otherIndices = new List<MarketData>();
                 otherIndices.Add(dax);
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
                 var models = new List<Model>();
-                var macD_10_30_90_dow = new ModelMacDV(index, 10, 30, 90, tradingIndex);
-                var macD_10_30_90_dax = new ModelMacDV(dax, 10, 30, 90);
+                var macDV_10_30_90_dow = new ModelMacDV(index, 10, 30, 90, tradingIndex);
+                var macD_10_30_90_dax = new ModelMacD(dax, 10, 30, 90);
                 models.Add(macD_10_30_90_dax);
-                models.Add(macD_10_30_90_dow);
+                models.Add(macDV_10_30_90_dow);
                 models.Add(new ModelANN(macD_10_30_90_dax, null, null, otherIndices));
-                models.Add(new ModelMacDCascade(macD_10_30_90_dow));
+                models.Add(new ModelMacDCascade(macDV_10_30_90_dow));
                 //models.Add(new ModelMole(macD_10_30_90));
                 _trader = new Trader(models, communicator().shutdown);
                 adapter.add(new MidaxIceI(_trader, properties.getProperty("Ice.ProgramName")), id);                

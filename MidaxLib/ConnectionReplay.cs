@@ -528,6 +528,11 @@ namespace MidaxLib
 
         public ReplayPublisher()
         {
+            init();
+        }
+
+        void init()
+        {
             // this attaches the database handle from the publisher to our current reader (csvreader / cassandra)
             try
             {
@@ -537,13 +542,21 @@ namespace MidaxLib
             {
                 _database = null;
             }
-            _csvFile = Config.Settings["PUBLISHING_CSV"];
+            _csvFile = null;
             _csvStockStringBuilder = new StringBuilder();
             _csvIndicatorStringBuilder = new StringBuilder();
             _csvSignalStringBuilder = new StringBuilder();
             _csvTradeStringBuilder = new StringBuilder();
             _csvProfitStringBuilder = new StringBuilder();
             _csvMktDetailsStringBuilder = new StringBuilder();
+        }
+
+        void check(DateTime updateTime, string id)
+        {
+            if (_csvFile == null)
+                _csvFile = Config.Settings["PUBLISHING_CSV"];
+            if (updateTime == DateTimeOffset.MinValue || id == "")
+                throw new ApplicationException("Cannot insert a market data without id and update time");
         }
 
         string formatDateTime(DateTime dt)
@@ -554,8 +567,7 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, MarketData mktData, Price price)
         {
-            if (updateTime == DateTimeOffset.MinValue || mktData.Id == "")
-                throw new ApplicationException("Cannot insert a market data without id and update time");
+            check(updateTime, mktData.Id);
             var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6}{7}",
                 DATATYPE_STOCK, mktData.Id,
                 formatDateTime(updateTime), mktData.Name,
@@ -566,8 +578,7 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Indicator indicator, decimal value)
         {
-            if (updateTime == DateTimeOffset.MinValue || indicator.Id == "")
-                throw new ApplicationException("Cannot insert a indicator without id and update time");
+            check(updateTime, indicator.Id);
             if (indicator.Id.Contains("Low") || indicator.Id.Contains("High") ||
                 indicator.Id.Contains("CloseBid") || indicator.Id.Contains("CloseOffer")){
                 // insert end of day level
@@ -581,8 +592,7 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue)
         {
-            if (updateTime == DateTimeOffset.MinValue || signal.Id == "")
-                throw new ApplicationException("Cannot insert a signal without id and update time");
+            check(updateTime, signal.Id);
             string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
             var newLine = string.Format("{0},{1},{2},{3},{4},{5}{6}",
                 DATATYPE_SIGNAL, signal.Id,
@@ -592,7 +602,8 @@ namespace MidaxLib
 
         public override void Insert(Trade trade)
         {
-            if (trade.TradingTime == DateTimeOffset.MinValue || trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "" || trade.Id == "")
+            check(trade.TradingTime, trade.Id);
+            if (trade.ConfirmationTime == DateTimeOffset.MinValue || trade.Reference == "")
                 throw new ApplicationException("Cannot insert a trade without booking information");
             var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}{9}",
                 DATATYPE_TRADE, trade.Epic, formatDateTime(trade.ConfirmationTime), trade.Id, trade.Direction, trade.Price, trade.Size, 
@@ -635,7 +646,8 @@ namespace MidaxLib
             File.WriteAllText(_csvFile, csvContent);
             string info = "Generated results in " + _csvFile;
             Log.Instance.WriteEntry(info, EventLogEntryType.Information);
-            _instance = null;
+            Thread.Sleep(1000);            
+            init();
             return info;
         }
     }

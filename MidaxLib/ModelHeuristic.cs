@@ -20,8 +20,8 @@ namespace MidaxLib
         protected override void Init()
         {
             base.Init();
-            _macD_low = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, (IndicatorVWMA)_macD.SignalHigh.IndicatorLow, (IndicatorVWMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
-            _macD_high = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, (IndicatorVWMA)_macD.SignalHigh.IndicatorLow, (IndicatorVWMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
+            _macD_low = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, (IndicatorEMA)_macD.SignalHigh.IndicatorLow, (IndicatorEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
+            _macD_high = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, (IndicatorEMA)_macD.SignalHigh.IndicatorLow, (IndicatorEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
             _mktSignals = new List<Signal>();
             _mktSignals.Add(_macD_low);
             _mktSignals.Add(_macD_high);
@@ -88,7 +88,7 @@ namespace MidaxLib
             if (_tradingSignal != null)
             {
                 if (signal.Id == _tradingSignal)
-                    return Buy(signal, time, signal.MarketData.TimeSeries[time].Value.Value);
+                    return Buy(signal, time, signal.TradingAsset.TimeSeries[time].Value.Value);
             }
             return false;
         }
@@ -99,7 +99,7 @@ namespace MidaxLib
             {
                 if (signal.Id == _tradingSignal)
                 {
-                    signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid);
+                    signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid);
                     return Sell(signal, time, stockValue);
                 }
             }
@@ -226,7 +226,7 @@ namespace MidaxLib
                         continue;
                     trade.PlaceHolder = idxPlaceHolder;
                     BookTrade(trade);
-                    Log.Instance.WriteEntry(trade.TradingTime + "Mole Signal " + _signal.Id + ": SELL " + _signal.MarketData.Id + " " + price, EventLogEntryType.Information);
+                    Log.Instance.WriteEntry(trade.TradingTime + "Mole Signal " + _signal.Id + ": SELL " + _signal.TradingAsset.Id + " " + price, EventLogEntryType.Information);
                     return true;
                 }
             }

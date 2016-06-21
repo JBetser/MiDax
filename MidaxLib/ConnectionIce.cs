@@ -62,13 +62,13 @@ namespace MidaxLib
                 if (_instance != null)
                     return _instance;
                 else
-                    _instance = new IceStreamingDow();
+                    _instance = new IceStreamingDow(Config.Settings["INDEX_ICEDOW"], Config.Settings["INDEX_DOW"]);
                 return _instance;
             }
         }
 
-        protected IceStreamingMarketData(string name)
-            : base(name)
+        protected IceStreamingMarketData(string name, string mktLevelsId)
+            : base(name, mktLevelsId)
         {          
         }
 
@@ -134,8 +134,8 @@ namespace MidaxLib
 
     public class IceStreamingDow : IceStreamingMarketData
     {
-        public IceStreamingDow()
-            : base("DOW:IceConnection.DOW")
+        public IceStreamingDow(string name, string mktLevelsId)
+            : base(name, mktLevelsId)
         {
             _stockLastPrices = new decimal[30];
             _stockLastVolumes = new decimal[30];

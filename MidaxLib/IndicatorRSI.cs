@@ -33,7 +33,7 @@ namespace MidaxLib
             _periodSeconds = periodMinutes * 60;
         }
 
-        protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime)
+        protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
             return calcRSI(mktData, updateTime);
         }

@@ -298,6 +298,8 @@
                <option value="WMA_7#WMA_20#WMA_60">WMA 7mn/20mn/1hr</option>
                <option value="WMA_10#WMA_30#WMA_90">WMA 10mn/30mn/1hr30</option>
                <option value="VWMA_10#VWMA_30#VWMA_90">VWMA 10mn/30mn/1hr30</option>
+               <option value="EMA_1#EMA_5#EMA_10">EMA 1mn/5mn/10mn</option>
+               <option value="EMA_10#EMA_30#EMA_90">EMA 10mn/30mn/1hr30</option>
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="VWMVol_10">VWM Vol 10mn</option>
@@ -307,8 +309,8 @@
              </select>   
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
-               <option value="MacD_10_60">MacD 10mn/1h</option>
-               <option value="MacD_30_90">MacD 30mn/1h30</option>
+               <option value="MacDV_10_60">MacD 10mn/1h</option>
+               <option value="MacDV_30_90">MacD 30mn/1h30</option>
                <option value="MacDCas_10_30_90_100">MacD Cascade 10mn/30mn/1h30 1pt</option>
                <option value="MacDCas_10_30_90_200">MacD Cascade 10mn/30mn/1h30 2pts</option>
                <option value="Mole_2_10_60">Mole 2mn/10mn/1h</option>

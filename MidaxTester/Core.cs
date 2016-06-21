@@ -19,9 +19,7 @@ namespace MidaxTester
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["PUBLISHING_START_TIME"] = "2016-01-22 08:30:00";
             dicSettings["PUBLISHING_STOP_TIME"] = "2016-01-22 09:00:00";
-            if (generate_from_db)
-                dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";            
-            dicSettings["REPLAY_MODE"] = generate_from_db ? "DB" : "CSV";            
+            dicSettings["REPLAY_MODE"] = "CSV";  
             dicSettings["REPLAY_POPUP"] = "1";
             dicSettings["TRADING_START_TIME"] = "2016-01-22 08:45:00";
             dicSettings["TRADING_STOP_TIME"] = "2016-01-22 08:59:00";
@@ -189,6 +187,9 @@ namespace MidaxTester
             Console.WriteLine(action + " live indicators and signals...");
             tests = new List<string>();
             tests.Add(@"..\..\expected_results\core_22_1_2016.csv");
+            if (generate_from_db)
+                dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";            
+            dicSettings["REPLAY_MODE"] = generate_from_db ? "DB" : "CSV";  
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\coregen_22_1_2016.csv");
@@ -198,8 +199,8 @@ namespace MidaxTester
             
             Console.WriteLine(action + " daily indicators...");            
             model.StopSignals();
-            Thread.Sleep(1000);
-                
+            Thread.Sleep(1000); 
+
             if (!dicSettings.ContainsKey("PUBLISHING_CSV"))
             {
                 // the program is expected to throw exceptions in this scope, just press continue if you are debugging

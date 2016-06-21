@@ -187,7 +187,7 @@ namespace MidaxLib
             get { return _name; }
         }
         
-        public MarketData MarketData
+        public MarketData TradingAsset
         {
             get { return _tradingAsset; }
         }
@@ -211,7 +211,7 @@ namespace MidaxLib
             if (signaled)
             {
                 // send a signal
-                var stockValue = MarketData.TimeSeries[updateTime].Value.Value;
+                var stockValue = _asset.TimeSeries[updateTime].Value.Value;
                 if (tradingOrder(this, updateTime, stockValue))
                 {
                     if (_signalCode == SIGNAL_CODE.BUY)

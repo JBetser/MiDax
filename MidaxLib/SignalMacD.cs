@@ -20,10 +20,10 @@ namespace MidaxLib
         {
             if (Config.Settings.ContainsKey("ASSUMPTION_TREND"))
                 _trendAssumption = Config.Settings["ASSUMPTION_TREND"] == "BULL" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL;
-            _low = low == null ? new IndicatorWMA(asset, lowPeriod) : new IndicatorWMA(low);
+            _low = low == null ? new IndicatorEMA(asset, lowPeriod) : new IndicatorEMA(low);
             if (low != null)
                 _low.PublishingEnabled = false;
-            _high = high == null ? new IndicatorWMA(asset, highPeriod) : new IndicatorWMA(high);
+            _high = high == null ? new IndicatorEMA(asset, highPeriod) : new IndicatorEMA(high);
             if (high != null)
                 _high.PublishingEnabled = false;
             _mktIndicator.Add(_low);
@@ -64,13 +64,13 @@ namespace MidaxLib
 
     public class SignalMacDV : SignalMacD
     {
-        public SignalMacDV(MarketData asset, int lowPeriod, int highPeriod, IndicatorVWMA low = null, IndicatorVWMA high = null, MarketData tradingAsset = null)
+        public SignalMacDV(MarketData asset, int lowPeriod, int highPeriod, IndicatorEMA low = null, IndicatorEMA high = null, MarketData tradingAsset = null)
             : base("MacDV_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high, tradingAsset)
         {
-            _low = low == null ? new IndicatorVWMA(asset, lowPeriod) : new IndicatorVWMA(low);
+            _low = low == null ? new IndicatorEMA(asset, lowPeriod) : new IndicatorEMA(low);
             if (low != null)
                 _low.PublishingEnabled = false;
-            _high = high == null ? new IndicatorVWMA(asset, highPeriod) : new IndicatorVWMA(high);
+            _high = high == null ? new IndicatorEMA(asset, highPeriod) : new IndicatorEMA(high);
             if (high != null)
                 _high.PublishingEnabled = false;
             _mktIndicator = new List<Indicator>();
@@ -78,7 +78,7 @@ namespace MidaxLib
             _mktIndicator.Add(_high);
         }
 
-        public SignalMacDV(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorVWMA low = null, IndicatorVWMA high = null, MarketData tradingAsset = null)
+        public SignalMacDV(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorEMA low = null, IndicatorEMA high = null, MarketData tradingAsset = null)
             : this(asset, lowPeriod, highPeriod, low, high, tradingAsset)
         {
             _id = id;

@@ -16,9 +16,11 @@ namespace MidaxTester
             testEngine.Settings["TRADING_SIGNAL"] = "MacDCas_10_30_90_200_IceConnection.DOW";
             //testEngine.Settings["TIME_DECAY_FACTOR"] = "3";
             testEngine.Settings["ASSUMPTION_TREND"] = "BEAR";
+            testEngine.Settings["INDEX_ICEDOW"] = "DOW:IceConnection.DOW";
+            testEngine.Settings["INDEX_DOW"] = "DOW:IX.D.DOW.DAILY.IP";
             var models = new List<Model>();
-            var dow = new MarketData("DOW:IX.D.DOW.DAILY.IP");
-            var dowNSYE = new MarketData("DOW:IceConnection.DOW", "IX.D.DOW.DAILY.IP");
+            var dow = new MarketData(testEngine.Settings["INDEX_DOW"]);
+            var dowNSYE = new MarketData(testEngine.Settings["INDEX_ICEDOW"], testEngine.Settings["INDEX_DOW"]);
             models.Add(new ModelMacDTest(dow, 10, 30, 90));
             models.Add(new ModelMacDVTest(dowNSYE, 10, 30, 90, dow));
             models.Add(new ModelMoleTest((ModelMacD)models[0]));

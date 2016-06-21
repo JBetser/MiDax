@@ -15,8 +15,8 @@ namespace MidaxLib
         bool _cascading = false;
         bool _buying = false;
         bool _selling = false;
-        
-        public SignalMacDCascade(MarketData asset, int verylowPeriod, int lowPeriod, int highPeriod, decimal threshold, IndicatorVWMA low = null, IndicatorVWMA high = null, MarketData tradingIndex = null)
+
+        public SignalMacDCascade(MarketData asset, int verylowPeriod, int lowPeriod, int highPeriod, decimal threshold, IndicatorEMA low = null, IndicatorEMA high = null, MarketData tradingIndex = null)
             : base("MacDCas_" + verylowPeriod + "_" + lowPeriod + "_" + highPeriod + "_" + (int)decimal.Round(threshold * 100.0m) + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high, tradingIndex)
         {
             _threshold = threshold;
@@ -32,50 +32,53 @@ namespace MidaxLib
                     {
                         var lowVal = _low.TimeSeries[updateTime].Value.Value;
                         var prevValues = _low.TimeSeries.Values(updateTime, new TimeSpan(0, 1, 0));
-                        if (prevValues.Count >= 2)
+                        if (prevValues != null)
                         {
-                            var prevVal = prevValues[prevValues.Count - 2].Value;
-                            if (_cascading)
+                            if (prevValues.Count >= 2)
                             {
-                                if (_localMinimum > lowVal.Bid)
-                                    _localMinimum = lowVal.Bid;
-                                if (_localMaximum < lowVal.Bid)
-                                    _localMaximum = lowVal.Bid;
-                                if (_buying)
+                                var prevVal = prevValues[prevValues.Count - 2].Value;
+                                if (_cascading)
                                 {
-                                    if (lowVal.Bid < _localMaximum - _threshold)
+                                    if (_localMinimum > lowVal.Bid)
+                                        _localMinimum = lowVal.Bid;
+                                    if (_localMaximum < lowVal.Bid)
+                                        _localMaximum = lowVal.Bid;
+                                    if (_buying)
                                     {
-                                        _pivot = _localMaximum;
-                                        _localMinimum = _localMaximum;
-                                        _buying = false;
+                                        if (lowVal.Bid < _localMaximum - _threshold)
+                                        {
+                                            _pivot = _localMaximum;
+                                            _localMinimum = _localMaximum;
+                                            _buying = false;
+                                        }
+                                        else if (lowVal.Bid > _pivot + _threshold)
+                                        {
+                                            _signalCode = SIGNAL_CODE.BUY;
+                                            tradingOrder = _onBuy;
+                                        }
                                     }
-                                    else if (lowVal.Bid > _pivot - _threshold)
+                                    else
                                     {
-                                        _signalCode = SIGNAL_CODE.BUY;
-                                        tradingOrder = _onBuy;
+                                        if (lowVal.Bid > _localMinimum + _threshold)
+                                        {
+                                            _pivot = _localMinimum;
+                                            _localMaximum = _localMinimum;
+                                            _signalCode = SIGNAL_CODE.BUY;
+                                            tradingOrder = _onBuy;
+                                            _buying = true;
+                                        }
                                     }
                                 }
                                 else
                                 {
-                                    if (lowVal.Bid > _localMinimum + _threshold)
-                                    {
-                                        _pivot = _localMinimum;
-                                        _localMaximum = _localMinimum;
-                                        _signalCode = SIGNAL_CODE.BUY;
-                                        tradingOrder = _onBuy;
-                                        _buying = true;
-                                    }
+                                    _cascading = true;
+                                    _localMinimum = lowVal.Bid;
+                                    _localMaximum = lowVal.Bid;
+                                    _pivot = _localMaximum;
+                                    _buying = false;
                                 }
+                                return true;
                             }
-                            else
-                            {
-                                _cascading = true;
-                                _localMinimum = lowVal.Bid;
-                                _localMaximum = lowVal.Bid;
-                                _pivot = _localMaximum;
-                                _buying = false;
-                            }
-                            return true;
                         }
                     }
                 }
@@ -85,50 +88,53 @@ namespace MidaxLib
                     {
                         var lowVal = _low.TimeSeries[updateTime].Value.Value;
                         var prevValues = _low.TimeSeries.Values(updateTime, new TimeSpan(0, 1, 0));
-                        if (prevValues.Count >= 2)
+                        if (prevValues != null)
                         {
-                            var prevVal = prevValues[prevValues.Count - 2].Value;
-                            if (_cascading)
+                            if (prevValues.Count >= 2)
                             {
-                                if (_localMinimum > lowVal.Offer)
-                                    _localMinimum = lowVal.Offer;
-                                if (_localMaximum < lowVal.Offer)
-                                    _localMaximum = lowVal.Offer;
-                                if (_selling)
+                                var prevVal = prevValues[prevValues.Count - 2].Value;
+                                if (_cascading)
                                 {
-                                    if (lowVal.Offer > _localMinimum + _threshold)
+                                    if (_localMinimum > lowVal.Offer)
+                                        _localMinimum = lowVal.Offer;
+                                    if (_localMaximum < lowVal.Offer)
+                                        _localMaximum = lowVal.Offer;
+                                    if (_selling)
                                     {
-                                        _pivot = _localMinimum;
-                                        _localMaximum = _localMinimum;
-                                        _selling = false;
+                                        if (lowVal.Offer > _localMinimum + _threshold)
+                                        {
+                                            _pivot = _localMinimum;
+                                            _localMaximum = _localMinimum;
+                                            _selling = false;
+                                        }
+                                        else if (lowVal.Offer < _pivot - _threshold)
+                                        {
+                                            _signalCode = SIGNAL_CODE.SELL;
+                                            tradingOrder = _onSell;
+                                        }
                                     }
-                                    else if (lowVal.Offer < _pivot - _threshold)
+                                    else
                                     {
-                                        _signalCode = SIGNAL_CODE.SELL;
-                                        tradingOrder = _onSell;
+                                        if (lowVal.Offer < _localMaximum - _threshold)
+                                        {
+                                            _pivot = _localMaximum;
+                                            _localMinimum = _localMaximum;
+                                            _signalCode = SIGNAL_CODE.SELL;
+                                            tradingOrder = _onSell;
+                                            _selling = true;
+                                        }
                                     }
                                 }
                                 else
                                 {
-                                    if (lowVal.Offer < _localMaximum - _threshold)
-                                    {
-                                        _pivot = _localMaximum;
-                                        _localMinimum = _localMaximum;
-                                        _signalCode = SIGNAL_CODE.SELL;
-                                        tradingOrder = _onSell;
-                                        _selling = true;
-                                    }
+                                    _cascading = true;
+                                    _localMinimum = lowVal.Offer;
+                                    _localMaximum = lowVal.Offer;
+                                    _pivot = _localMinimum;
+                                    _selling = false;
                                 }
+                                return true;
                             }
-                            else
-                            {
-                                _cascading = true;
-                                _localMinimum = lowVal.Offer;
-                                _localMaximum = lowVal.Offer;
-                                _pivot = _localMinimum;
-                                _selling = false;
-                            }
-                            return true;
                         }
                     }
                 }

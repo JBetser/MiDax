@@ -97,7 +97,7 @@ namespace MidaxLib
                 signal.Trade.Price = stockValue.Offer;
                 _ptf.ClosePosition(signal.Trade, time);
                 string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.MarketData.Id + " " + stockValue.Offer, EventLogEntryType.Information);
+                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.TradingAsset.Id + " " + stockValue.Offer, EventLogEntryType.Information);
             }
             return true;
         }
@@ -115,7 +115,7 @@ namespace MidaxLib
                 {
                     _ptf.BookTrade(signal.Trade);
                     string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.MarketData.Id + " " + stockValue.Bid, EventLogEntryType.Information);
+                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.TradingAsset.Id + " " + stockValue.Bid, EventLogEntryType.Information);
                 }
             }
             return true;

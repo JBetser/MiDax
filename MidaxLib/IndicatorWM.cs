@@ -76,7 +76,7 @@ namespace MidaxLib
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
-            Price avgPrice = IndicatorFunc(mktData, updateTime);
+            Price avgPrice = IndicatorFunc(mktData, updateTime, value);
             if (avgPrice != null)
             {
                 base.OnUpdate(mktData, updateTime, avgPrice);
@@ -84,7 +84,7 @@ namespace MidaxLib
             }
         }
 
-        protected virtual Price IndicatorFunc(MarketData mktData, DateTime updateTime)
+        protected virtual Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
             return Average(updateTime);
             /*
@@ -421,6 +421,119 @@ namespace MidaxLib
     /// with:
     ///     t = now, y = previous, N = number of periods in EMA, k = 2/(N+1)
     /// </summary>
-    /// TODO: public class IndicatorEMA : IndicatorWMA
+    public class IndicatorEMA : IndicatorWMA
+    {
+        protected Price _curValue;
+        protected decimal? _prevEma;
+        protected decimal _timeDecayWeight = 0m;
+        protected DateTime _startTime;
 
+        public IndicatorEMA(MarketData mktData, int periodMinutes)
+            : base("EMA_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)
+        {
+            if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
+                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) * _periodMilliSeconds / 100.0m;
+        }
+
+        public IndicatorEMA(string id, MarketData mktData, int periodMinutes)
+            : base(id, mktData, periodMinutes)
+        {
+            if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
+                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) * _periodMilliSeconds / 100.0m;
+        }
+
+        public IndicatorEMA(IndicatorWMA indicator)
+            : base(indicator.Id, indicator.MarketData, indicator.Period / 60)
+        {
+            if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
+                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) * _periodMilliSeconds / 100.0m;
+        }
+
+        protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
+        {
+            var curEma = 0m;
+            if (_prevEma.HasValue)
+            {
+                var curPeriod = (decimal)(updateTime - _startTime).TotalMilliseconds;
+                if (curPeriod > _periodMilliSeconds)
+                    curPeriod = _periodMilliSeconds;
+                var k = (curPeriod + _timeDecayWeight) / _periodMilliSeconds;
+                curEma = _curValue.Bid * k + _prevEma.Value * (1m - k);
+            }
+            else
+            {                
+                curEma = value.Bid;
+            }
+            _prevEma = curEma;
+            _curValue = new Price(value.Bid);
+            _startTime = updateTime;
+            return new Price(curEma);
+        }
+    }
+
+    /// <summary>
+    /// Volume Exponential Moving Average
+    /// Like EMA but adding a weight corresponding to the relative volume increment
+    /// <summary>
+    public class IndicatorVEMA : IndicatorEMA
+    {
+        IndicatorVolume _avgVolume;
+        protected decimal _prevAvgVolume = 0m;
+
+        public IndicatorVolume AverageVolume { get { return _avgVolume; } }
+
+        public IndicatorVEMA(MarketData mktData, int periodMinutes, IndicatorVolume cumVol = null)
+            : base("VEMA_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)
+        {
+            _avgVolume = cumVol == null ? new IndicatorVolume(mktData, periodMinutes) : cumVol;
+        }
+
+        public IndicatorVEMA(string id, MarketData mktData, int periodMinutes, IndicatorVolume cumVol = null)
+            : base(id, mktData, periodMinutes)
+        {
+            _avgVolume = cumVol == null ? new IndicatorVolume(mktData, periodMinutes) : cumVol;
+        }
+
+        public IndicatorVEMA(IndicatorVEMA indicator)
+            : base(indicator.Id, indicator.MarketData, indicator.Period / 60)
+        {
+            _avgVolume = indicator.AverageVolume == null ? new IndicatorVolume(indicator.MarketData, indicator.Period / 60) : indicator.AverageVolume;
+        }
+
+        public override void Subscribe(Tick updateHandler, Tick tickerHandler)
+        {
+            _avgVolume.Subscribe(updateHandler, tickerHandler);
+            base.Subscribe(updateHandler, tickerHandler);
+        }
+
+        public override void Unsubscribe(Tick updateHandler, Tick tickerHandler)
+        {
+            base.Unsubscribe(updateHandler, tickerHandler);
+            _avgVolume.Unsubscribe(updateHandler, tickerHandler);
+        }
+
+        protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
+        {            
+            var curEma = 0m;
+            if (_prevEma.HasValue)
+            {
+                var curPeriod = (decimal)(updateTime - _startTime).TotalMilliseconds;
+                if (curPeriod > _periodMilliSeconds)
+                    curPeriod = _periodMilliSeconds;
+                var k = Math.Min(1m, (curPeriod + _timeDecayWeight) / _periodMilliSeconds + (_curValue.Volume.Value / (_curValue.Volume.Value + _prevAvgVolume)));
+                curEma = _curValue.Bid * k + _prevEma.Value * (1m - k);
+            }
+            else
+            {
+                if (_avgVolume.TimeSeries.Count == 0)
+                    return null;
+                curEma = value.Bid;
+            }
+            _prevEma = curEma;
+            _curValue = new Price(value);
+            _prevAvgVolume = _avgVolume.TimeSeries.Last().Volume.Value;
+            _startTime = updateTime;
+            return new Price(curEma);
+        }
+    }
 }

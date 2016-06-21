@@ -236,6 +236,11 @@ namespace MidaxLib
             return _series.First().First().Value;
         }
 
+        public Price Last()
+        {
+            return _series.Last().Last().Value;
+        }
+
         public DateTime StartTime()
         {
             return _series.Count == 0 ? DateTime.MaxValue : _series.First().First().Key;

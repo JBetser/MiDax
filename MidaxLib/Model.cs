@@ -45,13 +45,13 @@ namespace MidaxLib
             {
                 if (signal.Id == _tradingSignal)
                 {
-                    if (_ptf.GetPosition(signal.MarketData.Id).Quantity > 0)
+                    if (_ptf.GetPosition(signal.TradingAsset.Id).Quantity > 0)
                     {
                         Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
-                        Portfolio.Instance.CloseAllPositions(time, signal.MarketData.Id, stockValue.Bid, signal);
+                        Portfolio.Instance.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Bid, signal);
                         return false;
                     }
-                    signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.BUY, _amount, stockValue.Offer);
+                    signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.BUY, _amount, stockValue.Offer);
                     return Buy(signal, time, stockValue);
                 }
             }
@@ -64,13 +64,13 @@ namespace MidaxLib
             {
                 if (signal.Id == _tradingSignal)
                 {
-                    if (_ptf.GetPosition(signal.MarketData.Id).Quantity < 0)
+                    if (_ptf.GetPosition(signal.TradingAsset.Id).Quantity < 0)
                     {
                         Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
-                        Portfolio.Instance.CloseAllPositions(time, signal.MarketData.Id, stockValue.Offer, signal);
+                        Portfolio.Instance.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Offer, signal);
                         return false;
                     }
-                    signal.Trade = new Trade(time, signal.MarketData.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid);
+                    signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid);
                     return Sell(signal, time, stockValue);
                 }
             }

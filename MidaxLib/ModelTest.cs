@@ -19,7 +19,7 @@ namespace MidaxLib
         {
             if (base.Buy(signal, time, stockValue))
             {
-                Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + stockValue.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.TradingAsset.Id + " " + stockValue.Bid);
                 return true;
             }
             return false;
@@ -29,7 +29,7 @@ namespace MidaxLib
         {
             if (base.Sell(signal, time, stockValue))
             {
-                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + stockValue.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.TradingAsset.Id + " " + stockValue.Bid);
                 return true;
             }
             return false;
@@ -57,7 +57,7 @@ namespace MidaxLib
         {
             if (base.Buy(signal, time, stockValue))
             {
-                Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + stockValue.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.TradingAsset.Id + " " + stockValue.Bid);
                 return true;
             }
             return false;
@@ -67,7 +67,7 @@ namespace MidaxLib
         {
             if (base.Sell(signal, time, stockValue))
             {
-                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + stockValue.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.TradingAsset.Id + " " + stockValue.Bid);
                 return true;
             }
             return false;
@@ -95,7 +95,7 @@ namespace MidaxLib
         {
             if (base.Buy(signal, time, stockValue))
             {
-                Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.MarketData.Id + " " + stockValue.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " buy " + signal.TradingAsset.Id + " " + stockValue.Bid);
                 return true;
             }
             return false;
@@ -106,7 +106,7 @@ namespace MidaxLib
         {
             if (base.Sell(signal, time, stockValue))
             {
-                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + stockValue.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.TradingAsset.Id + " " + stockValue.Bid);
                 return true;
             }
             return false;
@@ -134,14 +134,14 @@ namespace MidaxLib
         protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
             if (_tradingSet.PlaceTrade(signal.Trade, stockValue.Bid))
-                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.MarketData.Id + " " + stockValue.Bid);
+                Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.TradingAsset.Id + " " + stockValue.Bid);
             return false;
         }
 
         protected override void OnUpdateIndex(MarketData mktData, DateTime updateTime, Price stockValue)
         {
             if (_tradingSet.UpdateIndex(updateTime, stockValue.Offer))
-                Console.WriteLine(updateTime + " Signal " + _signal.Id + " buy " + _signal.MarketData.Id + " " + stockValue.Offer);
+                Console.WriteLine(updateTime + " Signal " + _signal.Id + " buy " + _signal.TradingAsset.Id + " " + stockValue.Offer);
         }
 
         public override void ProcessError(string message, string expected = "")
