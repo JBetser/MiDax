@@ -71,7 +71,7 @@ namespace MidaxLib
             return (updateTime - _series.First().First().Key).TotalMinutes;
         }
         
-        public virtual IEnumerable<KeyValuePair<DateTime, Price>> ValueGenerator(DateTime timeStart, DateTime timeEnd)
+        public virtual IEnumerable<KeyValuePair<DateTime, Price>> ValueGenerator(DateTime timeStart, DateTime timeEnd, bool startAfter)
         {
             if (_series.Count == 0)
                 yield break;
@@ -79,7 +79,6 @@ namespace MidaxLib
                 yield break;
             if (timeStart < _series.First().First().Key)
                 timeStart = _series.First().First().Key;
-            DateTime curTime = DateTime.MinValue;
             int curIdx = _series.Count - 1;
             int curPos = 0;
             for (int idx = 0; idx < curIdx; idx++)
@@ -90,7 +89,8 @@ namespace MidaxLib
                     if (!start.HasValue)
                         break;
                     curPos = _series[idx].IndexOf(start.Value);
-                    curTime = start.Value.Key;                    
+                    if (startAfter && start.Value.Key <= timeStart)
+                        curPos += 1;                  
                     curIdx = idx;
                     break;
                 }
@@ -101,9 +101,10 @@ namespace MidaxLib
                 {
                     KeyValuePair<DateTime, Price>? start = ClosestValue(curIdx, timeStart);
                     if (!start.HasValue)
-                        yield break;
+                        yield break;    
                     curPos = _series[curIdx].IndexOf(start.Value);
-                    curTime = start.Value.Key;
+                    if (startAfter && start.Value.Key <= timeStart)
+                        curPos += 1;
                 }
                 else
                     yield break;
@@ -112,10 +113,10 @@ namespace MidaxLib
             {
                 while(curPos < _series[curIdx].Count)
                 {                    
-                    curTime = _series[curIdx][curPos].Key;
-                    if (curTime > timeEnd)
+                    var curElt = _series[curIdx][curPos];
+                    if (curElt.Key > timeEnd)
                         yield break;
-                    yield return _series[curIdx][curPos];
+                    yield return curElt;
                     curPos = curPos + 1;
                 }
                 curPos = 0;
@@ -209,7 +210,7 @@ namespace MidaxLib
             return PrevValue(_series.Count - 1, time);
         }
 
-        public List<KeyValuePair<DateTime, Price>> Values(DateTime endTime, TimeSpan interval)
+        public List<KeyValuePair<DateTime, Price>> Values(DateTime endTime, TimeSpan interval, bool startAfter)
         {
             if (_series.Count == 0)
                 return null;
@@ -218,7 +219,7 @@ namespace MidaxLib
             DateTime startTime = endTime - interval;
             if (startTime < _series.First().First().Key)
                 return null;
-            return ValueGenerator(startTime, endTime).ToList(); 
+            return ValueGenerator(startTime, endTime, startAfter).ToList(); 
         }
 
         public virtual KeyValuePair<DateTime, Price>? this[DateTime time]
@@ -284,7 +285,7 @@ namespace MidaxLib
             get { return new KeyValuePair<DateTime, Price>(time, _val); }
         }
 
-        public override IEnumerable<KeyValuePair<DateTime, Price>> ValueGenerator(DateTime timeStart, DateTime timeEnd)
+        public override IEnumerable<KeyValuePair<DateTime, Price>> ValueGenerator(DateTime timeStart, DateTime timeEnd, bool startAfter)
         {
             while (true)
                 yield return new KeyValuePair<DateTime, Price>(timeEnd, _val);

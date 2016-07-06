@@ -16,7 +16,7 @@ namespace MidaxLib
         bool _buying = false;
         bool _selling = false;
 
-        public SignalMacDCascade(MarketData asset, int verylowPeriod, int lowPeriod, int highPeriod, decimal threshold, IndicatorEMA low = null, IndicatorEMA high = null, MarketData tradingIndex = null)
+        public SignalMacDCascade(MarketData asset, int verylowPeriod, int lowPeriod, int highPeriod, decimal threshold, IndicatorVEMA low = null, IndicatorVEMA high = null, MarketData tradingIndex = null)
             : base("MacDCas_" + verylowPeriod + "_" + lowPeriod + "_" + highPeriod + "_" + (int)decimal.Round(threshold * 100.0m) + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high, tradingIndex)
         {
             _threshold = threshold;
@@ -31,7 +31,7 @@ namespace MidaxLib
                     if (_low.TimeSeries.Count >= 2)
                     {
                         var lowVal = _low.TimeSeries[updateTime].Value.Value;
-                        var prevValues = _low.TimeSeries.Values(updateTime, new TimeSpan(0, 1, 0));
+                        var prevValues = _low.TimeSeries.Values(updateTime, new TimeSpan(0, 1, 0), true);
                         if (prevValues != null)
                         {
                             if (prevValues.Count >= 2)
@@ -87,7 +87,7 @@ namespace MidaxLib
                     if (_low.TimeSeries.Count >= 2)
                     {
                         var lowVal = _low.TimeSeries[updateTime].Value.Value;
-                        var prevValues = _low.TimeSeries.Values(updateTime, new TimeSpan(0, 1, 0));
+                        var prevValues = _low.TimeSeries.Values(updateTime, new TimeSpan(0, 1, 0), true);
                         if (prevValues != null)
                         {
                             if (prevValues.Count >= 2)

@@ -29,8 +29,8 @@ namespace MidaxLib
                 _itemData["LOW"] = "0";
                 _itemData["CHANGE"] = "0";
                 _itemData["CHANGE_PCT"] = "0";
-                _itemData["UPDATE_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", quote.t.Year, quote.t.Month,
-                                                    quote.t.Day, quote.t.Hour, quote.t.Minute, quote.t.Second);
+                _itemData["UPDATE_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}.{6}", quote.t.Year, quote.t.Month,
+                                                    quote.t.Day, quote.t.Hour, quote.t.Minute, quote.t.Second, quote.t.Millisecond);
                 _itemData["MARKET_DELAY"] = "0";
                 _itemData["MARKET_STATE"] = "REPLAY";
                 _itemData["BID"] = quote.b.ToString();

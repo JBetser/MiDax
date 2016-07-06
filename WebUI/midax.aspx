@@ -300,6 +300,7 @@
                <option value="VWMA_10#VWMA_30#VWMA_90">VWMA 10mn/30mn/1hr30</option>
                <option value="EMA_1#EMA_5#EMA_10">EMA 1mn/5mn/10mn</option>
                <option value="EMA_10#EMA_30#EMA_90">EMA 10mn/30mn/1hr30</option>
+               <option value="VEMA_10#VEMA_30#VEMA_90">VEMA 10mn/30mn/1hr30</option>
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="VWMVol_10">VWM Vol 10mn</option>

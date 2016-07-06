@@ -19,7 +19,7 @@ namespace MidaxLib
             _interval = interval;
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
         {
             if (mktData.TimeSeries.TotalMinutes(updateTime) > _interval.TotalMinutes)
             {
@@ -27,15 +27,16 @@ namespace MidaxLib
                 if (coeff != null)
                 {
                     Price price = new Price(coeff.Value);
-                    base.OnUpdate(mktData, updateTime, price);
-                    Publish(updateTime, price);
+                    base.OnUpdate(mktData, updateTime, price, majorTick);
+                    if (majorTick)
+                        Publish(updateTime, price);
                 }
             }
         }
 
         public decimal? linearCoeff(DateTime updateTime)
         {
-            List<KeyValuePair<DateTime, Price>> values = _mktData[0].TimeSeries.Values(updateTime, _interval);
+            List<KeyValuePair<DateTime, Price>> values = _mktData[0].TimeSeries.Values(updateTime, _interval, false);
             if (values == null)
                 return null;
             if (values.Count < 2)

@@ -26,11 +26,15 @@ namespace MidaxLib
      * *********************************************************************************************************/
     public class IndicatorRSI : IndicatorWMA
     {
+        int _nbPeriods;
+        int _subPeriodSeconds;
 
-        public IndicatorRSI(MarketData mktData, int periodMinutes)
-            : base("RSI_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)
+        public IndicatorRSI(MarketData mktData, int subPeriodMinutes, int nbPeriods)
+            : base("RSI_" + subPeriodMinutes + "_" + nbPeriods + "_" + mktData.Id, mktData, nbPeriods * subPeriodMinutes)
         {
-            _periodSeconds = periodMinutes * 60;
+            _periodSeconds = nbPeriods * subPeriodMinutes * 60;
+            _subPeriodSeconds = subPeriodMinutes * 60;
+            _nbPeriods = nbPeriods;
         }
 
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
@@ -40,16 +44,11 @@ namespace MidaxLib
 
         public Price calcRSI(MarketData mktData, DateTime upDateTime)
         {
-            Price val = new Price();
-            Price gains = new Price();
             Price avgGains = new Price();
-            Price loss = new Price();
-            Price avgLoss = new Price();
-            Price prevPrice = new Price();
-            decimal rs;
+            Price avgLosses = new Price();
             bool started = false;
             DateTime startTime = upDateTime.AddSeconds(-_periodSeconds);
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, upDateTime);
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, upDateTime, false);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
             foreach (var endPeriodValue in generator)
             {
@@ -63,25 +62,26 @@ namespace MidaxLib
                 }
                 else
                 {
-                    if (endPeriodValue.Value > beginPeriodValue.Value)
+                    if ((endPeriodValue.Key - beginPeriodValue.Key).TotalSeconds > _subPeriodSeconds)
                     {
-                        gains += endPeriodValue.Value - beginPeriodValue.Value;
+                        if (endPeriodValue.Value > beginPeriodValue.Value)
+                        {
+                            avgGains += endPeriodValue.Value - beginPeriodValue.Value;
+                        }
+                        else
+                        {
+                            avgLosses += beginPeriodValue.Value - endPeriodValue.Value;
+                        }
+                        beginPeriodValue = endPeriodValue;
                     }
-                    else
-                    {
-                        loss += beginPeriodValue.Value - endPeriodValue.Value;
-                    }
-
-                    val += beginPeriodValue.Value * _timeDecay.Weight(beginPeriodValue.Key, endPeriodValue.Key, _periodMilliSeconds, startTime);
-                }
-                beginPeriodValue = endPeriodValue;
+                }                
             }
 
-            avgGains = gains / Period;
-            avgLoss = loss / Period;
-            rs = avgGains.Bid / avgLoss.Bid;
-            val.set(100 - 100 / (1 + rs));
-            return val;
+            avgGains /= (decimal)_nbPeriods;
+            avgLosses /= (decimal)_nbPeriods;
+
+            decimal rs = avgGains.Bid / avgLosses.Bid;
+            return new Price(100m - 100m / (1m + rs));
         }
     }
 }

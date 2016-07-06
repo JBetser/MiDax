@@ -16,6 +16,8 @@ namespace MidaxLib
 
         MarketLevels? _marketLevels = null;
         protected DateTime _closePositionTime;
+        protected DateTime _lastUpdateTime = DateTime.MinValue;
+        Price _lastUpdatePrice = new Price();
         protected bool _allPositionsClosed;
         protected string _mktLevelsId;
         public MarketLevels? Levels { get { return _marketLevels; } set { _marketLevels = value; } }
@@ -38,7 +40,7 @@ namespace MidaxLib
                 _replay = Config.Settings["TRADING_MODE"] == "REPLAY";
         }
 
-        public delegate void Tick(MarketData mktData, DateTime time, Price value);
+        public delegate void Tick(MarketData mktData, DateTime time, Price value, bool majorTick);
 
         public virtual void Subscribe(Tick updateHandler, Tick tickerHandler)
         {
@@ -76,14 +78,32 @@ namespace MidaxLib
 
         public void FireTick(DateTime updateTime, L1LsPriceData value)
         {
-            Price livePrice = new Price(value);
-            if (!_replay.Value || value.MarketState == "REPLAY")
-                _values.Add(updateTime, livePrice);
-            FireTick(updateTime, livePrice);
-            Publish(updateTime, livePrice);
+            FireTick(updateTime, new Price(value));
         }
 
-        public void FireTick(DateTime updateTime, Price livePrice)
+        public void FireTick(DateTime updateTime, Price value)
+        {
+            var curPeriodSec = (decimal)(updateTime - _lastUpdateTime).TotalSeconds;
+            _values.Add(updateTime, value);
+            if (curPeriodSec >= 1m)
+            {
+                FireTick(updateTime, value, true);
+                Publish(updateTime, value);
+                _lastUpdatePrice = new Price(value);
+                _lastUpdatePrice.Volume = 0m;
+                _lastUpdateTime = updateTime;
+            }
+            else
+            {
+                _lastUpdatePrice.Bid = value.Bid;
+                _lastUpdatePrice.Offer = value.Offer;
+                _lastUpdatePrice.Volume += value.Volume;
+                FireTick(updateTime, value, false);
+                Publish(updateTime, value);
+            }
+        }
+
+        public void FireTick(DateTime updateTime, Price livePrice, bool majorTick)
         {
             if (updateTime > _closePositionTime && !_allPositionsClosed)
             {
@@ -91,9 +111,9 @@ namespace MidaxLib
                 _allPositionsClosed = true;
             }
             foreach (Tick ticker in this._updateHandlers)
-                ticker(this, updateTime, livePrice);
+                ticker(this, updateTime, livePrice, majorTick);
             foreach (Tick ticker in this._tickHandlers)
-                ticker(this, updateTime, livePrice);            
+                ticker(this, updateTime, livePrice, majorTick);            
         }
 
         public virtual void Publish(DateTime updateTime, Price price)

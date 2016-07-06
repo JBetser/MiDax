@@ -103,7 +103,7 @@
       <Value Profile="(Default)">DOW:IX.D.DOW.DAILY.IP</Value>
     </Setting>
     <Setting Name="INDEX_ICEDOW" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">DOW:IceConnection.DOW</Value>
+      <Value Profile="(Default)">DOW:IceConnection.DJI</Value>
     </Setting>
     <Setting Name="ASSUMPTION_TREND" Type="System.String" Scope="Application">
       <Value Profile="(Default)">BEAR</Value>

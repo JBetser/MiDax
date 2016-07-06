@@ -33,16 +33,17 @@ namespace MidaxLib
             _wmaRef = wmaRef;
             _periodSeconds = periodMinutes * 60;
         }
-        
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
         {
             if (mktData.TimeSeries.TotalMinutes(updateTime) > (double)_periodSeconds / 60.0)
             {
                 Price avgPrice = IndicatorFunc(mktData, updateTime);
                 if (avgPrice != null)
                 {
-                    base.OnUpdate(mktData, updateTime, avgPrice);
-                    Publish(updateTime, avgPrice.MidPrice());
+                    base.OnUpdate(mktData, updateTime, avgPrice, majorTick);
+                    if (majorTick)
+                        Publish(updateTime, avgPrice.MidPrice());
                 }
             }
         }
@@ -62,8 +63,8 @@ namespace MidaxLib
             decimal weight = (1m / (decimal)_periodSeconds) / 2m;
             Price avg = _wma.Average(updateTime);
             Price avgRef = _wmaRef.Average(updateTime);
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime);
-            IEnumerable<KeyValuePair<DateTime, Price>> generatorRef = MarketDataRef.TimeSeries.ValueGenerator(startTime, updateTime);
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime, false);
+            IEnumerable<KeyValuePair<DateTime, Price>> generatorRef = MarketDataRef.TimeSeries.ValueGenerator(startTime, updateTime, false);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
             KeyValuePair<DateTime, Price> beginPeriodValueRef = new KeyValuePair<DateTime, Price>();
             KeyValuePair<DateTime, Price> endPeriodValueRef = new KeyValuePair<DateTime, Price>();

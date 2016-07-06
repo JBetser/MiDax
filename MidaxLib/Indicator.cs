@@ -46,15 +46,16 @@ namespace MidaxLib
             }
         }
 
-        protected virtual void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        protected virtual void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
         {
-            _values.Add(updateTime, value);
+            if (majorTick)
+                _values.Add(updateTime, value);
         }
 
-        public virtual void OnTick(MarketData mktData, DateTime updateTime, Price value)
+        public virtual void OnTick(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
         {
             foreach (Tick ticker in this._updateHandlers)
-                ticker(this, updateTime, value);
+                ticker(this, updateTime, value, majorTick);
         }
 
         public override void Publish(DateTime updateTime, Price price)

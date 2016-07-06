@@ -69,6 +69,7 @@ namespace MidaxTester
             macDTestWMA.StopSignals();
 
             // Test volume weighted moving average with linear time decay
+            dicSettings.Remove("TIME_DECAY_FACTOR");
             tests = new List<string>();
             tests.Add(@"..\..\expected_results\testWMA4.csv");
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
@@ -78,7 +79,7 @@ namespace MidaxTester
             MarketDataConnection.Instance.Connect(null);
             macDTestVWMA.StartSignals();
             macDTestVWMA.StopSignals();
-            dicSettings.Remove("TIME_DECAY_FACTOR");
+            //dicSettings.Remove("TIME_DECAY_FACTOR");
 
             Console.WriteLine(action + " calibration...");
 

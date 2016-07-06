@@ -42,6 +42,8 @@ namespace MidaxLib
             KeyValuePair<DateTime, Price>? timeValueHigh = _high.TimeSeries[updateTime];
             if (timeValueLow == null || timeValueHigh == null)
                 return false;
+            if (_high.TimeSeries.TotalMinutes(updateTime) < _high.Period / 60)
+                return false;
             Price lowWMA = timeValueLow.Value.Value;
             Price highWMA = timeValueHigh.Value.Value;
             var signalValue = lowWMA - highWMA;
@@ -64,13 +66,13 @@ namespace MidaxLib
 
     public class SignalMacDV : SignalMacD
     {
-        public SignalMacDV(MarketData asset, int lowPeriod, int highPeriod, IndicatorEMA low = null, IndicatorEMA high = null, MarketData tradingAsset = null)
+        public SignalMacDV(MarketData asset, int lowPeriod, int highPeriod, IndicatorVEMA low = null, IndicatorVEMA high = null, MarketData tradingAsset = null)
             : base("MacDV_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high, tradingAsset)
         {
-            _low = low == null ? new IndicatorEMA(asset, lowPeriod) : new IndicatorEMA(low);
+            _low = low == null ? new IndicatorVEMA(asset, lowPeriod) : new IndicatorVEMA(low);
             if (low != null)
                 _low.PublishingEnabled = false;
-            _high = high == null ? new IndicatorEMA(asset, highPeriod) : new IndicatorEMA(high);
+            _high = high == null ? new IndicatorVEMA(asset, highPeriod) : new IndicatorVEMA(high);
             if (high != null)
                 _high.PublishingEnabled = false;
             _mktIndicator = new List<Indicator>();
@@ -78,7 +80,7 @@ namespace MidaxLib
             _mktIndicator.Add(_high);
         }
 
-        public SignalMacDV(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorEMA low = null, IndicatorEMA high = null, MarketData tradingAsset = null)
+        public SignalMacDV(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorVEMA low = null, IndicatorVEMA high = null, MarketData tradingAsset = null)
             : this(asset, lowPeriod, highPeriod, low, high, tradingAsset)
         {
             _id = id;

@@ -66,55 +66,26 @@ namespace MidaxLib
             startTime = updateTime.AddSeconds(-_periodSeconds);
             if (MarketData.TimeSeries.Count == 0)
                 return null;
-            //if (MarketData.TimeSeries.StartTime() > startTime)
-            //    return null;
             var curAvg = new Price();
             if (!MobileAverage(ref curAvg, startTime, updateTime))
                 return null;
             return curAvg;
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
         {
             Price avgPrice = IndicatorFunc(mktData, updateTime, value);
             if (avgPrice != null)
             {
-                base.OnUpdate(mktData, updateTime, avgPrice);
-                Publish(updateTime, avgPrice.MidPrice());
+                base.OnUpdate(mktData, updateTime, avgPrice, majorTick);
+                if (majorTick)
+                    Publish(updateTime, avgPrice.MidPrice());
             }
         }
 
         protected virtual Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
             return Average(updateTime);
-            /*
-            DateTime startTime;
-            if (_curAvg == null)
-            {
-                startTime = updateTime.AddSeconds(-_periodSeconds);
-                if (MarketData.TimeSeries.Count == 0)
-                    return null;
-                if (MarketData.TimeSeries.StartTime() > startTime)
-                    return null;                
-                _curAvg = new Price();
-                Price decrementWeight = new Price();
-                if (MobileAverage(ref _curAvg, ref decrementWeight, startTime, updateTime, false, false))
-                    return _curAvg;            
-            }
-            else
-            {
-                startTime = _curAvgTime;
-                var curCumDecayWeight = _timeDecay.CumDecayWeight;
-                var incrementAvg = new Price();
-                Price incrementWeight = new Price();
-                MobileAverage(ref incrementAvg, ref incrementWeight, startTime, updateTime);
-                var decrementAvg = new Price();
-                Price decrementWeight = new Price();
-                MobileAverage(ref decrementAvg, ref decrementWeight, startTime.AddSeconds(-_periodSeconds), updateTime.AddSeconds(-_periodSeconds));
-                _curAvg = (_curAvg - decrementAvg * curCumDecayWeight) * _timeDecay.CurDecayWeight + incrementAvg;
-            }
-            _curAvgTime = updateTime;
-            return null;*/
         }
 
         static IEnumerable<KeyValuePair<T, U>> Zip<T, U>(IEnumerable<T> first, IEnumerable<U> second)
@@ -146,7 +117,7 @@ namespace MidaxLib
             TimeDecay timeDecay = _timeDecay;
             DateTime originTime = startTime;
             DateTime startTimePrev = DateTime.MinValue;
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime);
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime, false);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();           
             decimal curTimeDecayWeight = 1m;
             foreach (var endPeriodValue in generator)
@@ -163,7 +134,6 @@ namespace MidaxLib
                     continue;
                 }
                 curTimeDecayWeight = _timeDecay.Update(beginPeriodValue.Key, endPeriodValue.Key, updateTime);
-
                 curavg += beginPeriodValue.Value * curTimeDecayWeight;
                 beginPeriodValue = endPeriodValue;
             }
@@ -332,7 +302,7 @@ namespace MidaxLib
         {            
             bool started = false;
             DateTime startTimePrev = DateTime.MinValue;
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime);
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime, false);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
             var curVolPrice = 0m;
             var curTimeDecayWeight = 1m;
@@ -349,15 +319,13 @@ namespace MidaxLib
                     beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, endPeriodValue.Value);
                     continue;
                 }
-                if (!beginPeriodValue.Value.Volume.HasValue)
-                    return false;
-                if (beginPeriodValue.Value.Volume.Value == 0m)
-                    return false;
                 curTimeDecayWeight = _timeDecay.Update(beginPeriodValue.Key, endPeriodValue.Key, updateTime);
                 volPriceOut += curVolPrice * curTimeDecayWeight;
                 curVolPrice = endPeriodValue.Value.Bid * Math.Abs(endPeriodValue.Value.Volume.Value);
                 beginPeriodValue = endPeriodValue;
             }
+            if (curVolPrice == 0m)
+                return false;
             if (beginPeriodValue.Value != null && beginPeriodValue.Key != updateTime)
                 volPriceOut += curVolPrice * curTimeDecayWeight;
             volPriceOut /= _avgVolume.TimeSeries[updateTime].Value.Value.Volume.Value;
@@ -391,15 +359,16 @@ namespace MidaxLib
             bool started = false;
             var avg = _avg.TimeSeries[updateTime];
 
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime);
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime, false);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
             foreach (var endPeriodValue in generator)
             {
                 if (!started)
                 {
                     started = true;
-                    if (Math.Max(0, (int)(endPeriodValue.Key - startTime).TotalMilliseconds) != 0)
-                        return false;
+                    var diffTime = (int)(startTime - endPeriodValue.Key).TotalMilliseconds;
+                    if (diffTime < 0)
+                        return false;     
                     beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, endPeriodValue.Value);
                     continue;
                 }
@@ -432,23 +401,23 @@ namespace MidaxLib
             : base("EMA_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)
         {
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
-                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) * _periodMilliSeconds / 100.0m;
+                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 100.0m;
         }
 
         public IndicatorEMA(string id, MarketData mktData, int periodMinutes)
             : base(id, mktData, periodMinutes)
         {
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
-                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) * _periodMilliSeconds / 100.0m;
+                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 100.0m;
         }
 
         public IndicatorEMA(IndicatorWMA indicator)
             : base(indicator.Id, indicator.MarketData, indicator.Period / 60)
         {
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
-                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) * _periodMilliSeconds / 100.0m;
+                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 100.0m;
         }
-
+        
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
             var curEma = 0m;
@@ -477,39 +446,39 @@ namespace MidaxLib
     /// <summary>
     public class IndicatorVEMA : IndicatorEMA
     {
-        IndicatorVolume _avgVolume;
+        IndicatorVolume _cumVolume;
         protected decimal _prevAvgVolume = 0m;
 
-        public IndicatorVolume AverageVolume { get { return _avgVolume; } }
+        public IndicatorVolume AverageVolume { get { return _cumVolume; } }
 
         public IndicatorVEMA(MarketData mktData, int periodMinutes, IndicatorVolume cumVol = null)
             : base("VEMA_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)
         {
-            _avgVolume = cumVol == null ? new IndicatorVolume(mktData, periodMinutes) : cumVol;
+            _cumVolume = cumVol == null ? new IndicatorVolume(mktData, periodMinutes) : cumVol;
         }
 
         public IndicatorVEMA(string id, MarketData mktData, int periodMinutes, IndicatorVolume cumVol = null)
             : base(id, mktData, periodMinutes)
         {
-            _avgVolume = cumVol == null ? new IndicatorVolume(mktData, periodMinutes) : cumVol;
+            _cumVolume = cumVol == null ? new IndicatorVolume(mktData, periodMinutes) : cumVol;
         }
 
         public IndicatorVEMA(IndicatorVEMA indicator)
             : base(indicator.Id, indicator.MarketData, indicator.Period / 60)
         {
-            _avgVolume = indicator.AverageVolume == null ? new IndicatorVolume(indicator.MarketData, indicator.Period / 60) : indicator.AverageVolume;
+            _cumVolume = indicator.AverageVolume == null ? new IndicatorVolume(indicator.MarketData, indicator.Period / 60) : indicator.AverageVolume;
         }
 
         public override void Subscribe(Tick updateHandler, Tick tickerHandler)
         {
-            _avgVolume.Subscribe(updateHandler, tickerHandler);
+            _cumVolume.Subscribe(OnUpdate, null);
             base.Subscribe(updateHandler, tickerHandler);
         }
 
         public override void Unsubscribe(Tick updateHandler, Tick tickerHandler)
         {
             base.Unsubscribe(updateHandler, tickerHandler);
-            _avgVolume.Unsubscribe(updateHandler, tickerHandler);
+            _cumVolume.Unsubscribe(OnUpdate, null);
         }
 
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
@@ -517,23 +486,22 @@ namespace MidaxLib
             var curEma = 0m;
             if (_prevEma.HasValue)
             {
-                var curPeriod = (decimal)(updateTime - _startTime).TotalMilliseconds;
-                if (curPeriod > _periodMilliSeconds)
-                    curPeriod = _periodMilliSeconds;
-                var k = Math.Min(1m, (curPeriod + _timeDecayWeight) / _periodMilliSeconds + (_curValue.Volume.Value / (_curValue.Volume.Value + _prevAvgVolume)));
-                curEma = _curValue.Bid * k + _prevEma.Value * (1m - k);
+                var totalVolume = _cumVolume.Average.Bid * (_periodMilliSeconds / 1000m);
+                var curVolume = Math.Abs(value.Volume.Value);
+                var timeDecayVolume = _timeDecayWeight * (decimal)(updateTime - _startTime).TotalSeconds * _cumVolume.Average.Bid;
+                var k = Math.Min(1m, (curVolume + timeDecayVolume) / totalVolume);
+                curEma = value.Bid * k + _prevEma.Value * (1m - k);
             }
             else
             {
-                if (_avgVolume.TimeSeries.Count == 0)
+                if (_cumVolume.Average.Bid == 0m)
                     return null;
-                curEma = value.Bid;
+                curEma = value.Bid;                
             }
+            _curValue = new Price(curEma);
             _prevEma = curEma;
-            _curValue = new Price(value);
-            _prevAvgVolume = _avgVolume.TimeSeries.Last().Volume.Value;
             _startTime = updateTime;
-            return new Price(curEma);
+            return _curValue;
         }
     }
 }

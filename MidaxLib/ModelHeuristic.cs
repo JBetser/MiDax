@@ -20,8 +20,8 @@ namespace MidaxLib
         protected override void Init()
         {
             base.Init();
-            _macD_low = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, (IndicatorEMA)_macD.SignalHigh.IndicatorLow, (IndicatorEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
-            _macD_high = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, (IndicatorEMA)_macD.SignalHigh.IndicatorLow, (IndicatorEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
+            _macD_low = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, (IndicatorVEMA)_macD.SignalHigh.IndicatorLow, (IndicatorVEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
+            _macD_high = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, (IndicatorVEMA)_macD.SignalHigh.IndicatorLow, (IndicatorVEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
             _mktSignals = new List<Signal>();
             _mktSignals.Add(_macD_low);
             _mktSignals.Add(_macD_high);
@@ -129,7 +129,7 @@ namespace MidaxLib
             return false;
         }
 
-        protected virtual void OnUpdateIndex(MarketData mktData, DateTime updateTime, Price stockValue)
+        protected virtual void OnUpdateIndex(MarketData mktData, DateTime updateTime, Price stockValue, bool majorTick)
         {            
             _tradingSet.UpdateIndex(updateTime, stockValue.Offer); 
         }

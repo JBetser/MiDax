@@ -14,7 +14,7 @@ namespace MidaxTester
         {
             TestEngine testEngine = new TestEngine("heuristic", dates, generate, generate_from_db, publish_to_db, use_uat_db, fullday);
             testEngine.Settings["TRADING_SIGNAL"] = "MacDCas_10_30_90_200_IceConnection.DOW";
-            //testEngine.Settings["TIME_DECAY_FACTOR"] = "3";
+            testEngine.Settings["TIME_DECAY_FACTOR"] = "3";
             testEngine.Settings["ASSUMPTION_TREND"] = "BEAR";
             testEngine.Settings["INDEX_ICEDOW"] = "DOW:IceConnection.DOW";
             testEngine.Settings["INDEX_DOW"] = "DOW:IX.D.DOW.DAILY.IP";

@@ -53,7 +53,7 @@ namespace MidaxLib
 
         protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
-            if (_ptf.GetPosition(_index.Id).Quantity < 0)
+            if (_ptf.GetPosition(_tradingIndex.Id).Quantity < 0)
             {
                 if (time >= _closingTime)
                 {
@@ -70,7 +70,7 @@ namespace MidaxLib
                     _ptf.BookTrade(signal.Trade);
                 }
             }
-            else if (_trendAssumption != SIGNAL_CODE.SELL && _ptf.GetPosition(_index.Id).Quantity == 0)
+            else if (_trendAssumption != SIGNAL_CODE.SELL && _ptf.GetPosition(_tradingIndex.Id).Quantity == 0)
             {
                 if (time <= _closingTime)
                 {
@@ -89,7 +89,7 @@ namespace MidaxLib
 
         protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            if (_ptf.GetPosition(_index.Id).Quantity > 0)
+            if (_ptf.GetPosition(_tradingIndex.Id).Quantity > 0)
             {
                 if (time >= _closingTime)
                 {
@@ -106,7 +106,7 @@ namespace MidaxLib
                     _ptf.BookTrade(signal.Trade);
                 }
             }
-            else if (_trendAssumption != SIGNAL_CODE.BUY && _ptf.GetPosition(_index.Id).Quantity == 0)
+            else if (_trendAssumption != SIGNAL_CODE.BUY && _ptf.GetPosition(_tradingIndex.Id).Quantity == 0)
             {
                 if (time <= _closingTime)
                 {
@@ -135,7 +135,7 @@ namespace MidaxLib
         {
             base.Init();
             _macD_low = new SignalMacDV(_index, _lowPeriod, _midPeriod, null, null, _tradingIndex);
-            _macD_high = new SignalMacDV(_index, _midPeriod, _highPeriod, (IndicatorEMA)_macD_low.IndicatorHigh, null, _tradingIndex);
+            _macD_high = new SignalMacDV(_index, _midPeriod, _highPeriod, (IndicatorVEMA)_macD_low.IndicatorHigh, null, _tradingIndex);
             _mktSignals = new List<Signal>();
             _mktSignals.Add(_macD_low);
             _mktSignals.Add(_macD_high);            

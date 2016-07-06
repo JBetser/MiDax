@@ -46,10 +46,12 @@ namespace MidaxLib
     public class IceStreamingMarketData : MarketData
     {
         static IceStreamingMarketData _instance;
+        protected string _symbolId;
+        /*
         protected decimal[] _stockLastPrices = null;
         protected decimal[] _stockLastVolumes = null;
         protected decimal[] _stockWeights = null;
-        protected decimal _indexWeight = 1.0m;
+        protected decimal _indexWeight = 1.0m;*/
         DateTime? _lastTradePrice = null;
         bool _isReady = false;
 
@@ -62,27 +64,31 @@ namespace MidaxLib
                 if (_instance != null)
                     return _instance;
                 else
-                    _instance = new IceStreamingDow(Config.Settings["INDEX_ICEDOW"], Config.Settings["INDEX_DOW"]);
+                    _instance = new IceStreamingMarketData(Config.Settings["INDEX_ICEDOW"], Config.Settings["INDEX_DOW"]);
                 return _instance;
             }
         }
 
         protected IceStreamingMarketData(string name, string mktLevelsId)
             : base(name, mktLevelsId)
-        {          
+        {
+            _symbolId = name.Split('.')[1];
         }
 
-        public void OnTick(int stockId, DateTime dt, decimal price, decimal volume)
+        public void OnTick(string stockId, DateTime dt, decimal price, decimal volume)
         {
-            _stockLastPrices[stockId] = price;
-            _stockLastVolumes[stockId] = volume;            
+            if (_symbolId != stockId)
+                return;
+            //_stockLastPrices[stockId] = price;
+            //_stockLastVolumes[stockId] = volume;            
             if (_isReady)
             {
+                /*
                 var idxPriceValue = 0m;
                 for (int idx = 0; idx < 30; idx++)
                     idxPriceValue += _stockLastPrices[idx];
-                idxPriceValue *= _indexWeight;
-                var idxPrice = new Price(idxPriceValue, idxPriceValue, volume * _stockWeights[stockId]);
+                idxPriceValue *= _indexWeight;*/
+                var idxPrice = new Price(price, price, volume); // * _stockWeights[stockId]);
                 if (_lastTradePrice.HasValue)
                 {
                     if (dt > _lastTradePrice.Value)
@@ -92,12 +98,11 @@ namespace MidaxLib
                 }
                 else
                     _lastTradePrice = dt;
-                _values.Add(dt, idxPrice);
                 FireTick(dt, idxPrice);
-                Publish(dt, idxPrice);
             }
             else
             {
+                /*
                 var isReady = true;
                 foreach (var ts in _stockLastPrices)
                 {
@@ -107,9 +112,9 @@ namespace MidaxLib
                         break;
                     }
                 }
-                if (isReady)
-                    Log.Instance.WriteEntry("IceConnection: all stocks have been registered", EventLogEntryType.Information);
-                _isReady = isReady;
+                if (isReady)*/
+                Log.Instance.WriteEntry("IceConnection: " + stockId + " has been registered", EventLogEntryType.Information);
+                _isReady = true;
             }
         }
 
@@ -132,11 +137,12 @@ namespace MidaxLib
         }
     }
 
+    /*
     public class IceStreamingDow : IceStreamingMarketData
     {
         public IceStreamingDow(string name, string mktLevelsId)
             : base(name, mktLevelsId)
-        {
+        { 
             _stockLastPrices = new decimal[30];
             _stockLastVolumes = new decimal[30];
             _stockWeights = new decimal[30];
@@ -149,35 +155,35 @@ namespace MidaxLib
             _indexWeight = 1.0m / 0.14602128057775m;
 
             _stockWeights[(int)DOW_STOCK.MMM] = 0.0647m;
-            _stockWeights[(int)DOW_STOCK.GS] = 0.0612m;
             _stockWeights[(int)DOW_STOCK.IBM] = 0.0561m;
-            _stockWeights[(int)DOW_STOCK.HD] = 0.0512m;
-            _stockWeights[(int)DOW_STOCK.BA] = 0.0494m;
+            _stockWeights[(int)DOW_STOCK.GS] = 0.0612m;
             _stockWeights[(int)DOW_STOCK.UNH] = 0.0491m;
+            _stockWeights[(int)DOW_STOCK.BA] = 0.0494m;
+            _stockWeights[(int)DOW_STOCK.HD] = 0.0512m;
+            _stockWeights[(int)DOW_STOCK.JNJ] = 0.0429m;
             _stockWeights[(int)DOW_STOCK.MCD] = 0.0478m;
             _stockWeights[(int)DOW_STOCK.TRV] = 0.0447m;
-            _stockWeights[(int)DOW_STOCK.JNJ] = 0.0429m;
-            _stockWeights[(int)DOW_STOCK.AAPL] = 0.0408m;
-            _stockWeights[(int)DOW_STOCK.DIS] = 0.0395m;
-            _stockWeights[(int)DOW_STOCK.UTX] = 0.0391m;
             _stockWeights[(int)DOW_STOCK.CVX] = 0.0358m;
-            _stockWeights[(int)DOW_STOCK.PG] = 0.0335m;
+            _stockWeights[(int)DOW_STOCK.UTX] = 0.0391m;
+            _stockWeights[(int)DOW_STOCK.DIS] = 0.0395m;
+            _stockWeights[(int)DOW_STOCK.AAPL] = 0.0408m;
             _stockWeights[(int)DOW_STOCK.XOM] = 0.0334m;
+            _stockWeights[(int)DOW_STOCK.PG] = 0.0335m;
             _stockWeights[(int)DOW_STOCK.CAT] = 0.0290m;
             _stockWeights[(int)DOW_STOCK.VZ] = 0.0285m;
             _stockWeights[(int)DOW_STOCK.WMT] = 0.0275m;
             _stockWeights[(int)DOW_STOCK.DD] = 0.0256m;
-            _stockWeights[(int)DOW_STOCK.NKE] = 0.0256m;
-            _stockWeights[(int)DOW_STOCK.AXP] = 0.0241m;
             _stockWeights[(int)DOW_STOCK.JPM] = 0.0240m;
-            _stockWeights[(int)DOW_STOCK.VZ] = 0.0237m;
+            _stockWeights[(int)DOW_STOCK.AXP] = 0.0241m;
             _stockWeights[(int)DOW_STOCK.MRK] = 0.0212m;
+            _stockWeights[(int)DOW_STOCK.VZ] = 0.0237m;
+            _stockWeights[(int)DOW_STOCK.NKE] = 0.0256m;
             _stockWeights[(int)DOW_STOCK.MSFT] = 0.0212m;
             _stockWeights[(int)DOW_STOCK.KO] = 0.0209m;
+            _stockWeights[(int)DOW_STOCK.PFE] = 0.0119m;
             _stockWeights[(int)DOW_STOCK.INTC] = 0.0179m;
             _stockWeights[(int)DOW_STOCK.GE] = 0.0123m;
-            _stockWeights[(int)DOW_STOCK.PFE] = 0.0119m;
             _stockWeights[(int)DOW_STOCK.CSCO] = 0.0109m;
         }
-    }
+    }*/
 }

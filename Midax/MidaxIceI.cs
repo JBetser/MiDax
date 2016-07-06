@@ -60,9 +60,9 @@ namespace Midax
         {
             try
             {
-                var dowStockId = (DOW_STOCK)Enum.Parse(typeof(DOW_STOCK), mktDataId);
+                //var dowStockId = (DOW_STOCK)Enum.Parse(typeof(DOW_STOCK), mktDataId);
                 DateTime utcTime = TimeZoneInfo.ConvertTimeToUtc(new DateTime((int)year, (int)month, (int)day, (int)hours, (int)minutes, (int)seconds, (int)milliseconds), _est);
-                IceStreamingMarketData.Instance.OnTick((int)dowStockId, utcTime,
+                IceStreamingMarketData.Instance.OnTick(mktDataId, utcTime,
                                                     (decimal)price, (decimal)volume);
             }
             catch(Exception e)

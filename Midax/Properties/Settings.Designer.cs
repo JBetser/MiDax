@@ -253,7 +253,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("DOW:IceConnection.DOW")]
+        [global::System.Configuration.DefaultSettingValueAttribute("DOW:IceConnection.DJI")]
         public string INDEX_ICEDOW {
             get {
                 return ((string)(this["INDEX_ICEDOW"]));

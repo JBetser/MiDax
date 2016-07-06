@@ -80,10 +80,10 @@ namespace MidaxLib
         protected abstract bool Buy(Signal signal, DateTime time, Price stockValue);
         protected abstract bool Sell(Signal signal, DateTime time, Price stockValue);
 
-        protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)
+        protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
         {
         }
-        protected virtual void OnUpdateIndicator(MarketData mktData, DateTime updateTime, Price value)
+        protected virtual void OnUpdateIndicator(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
         {
         }
         

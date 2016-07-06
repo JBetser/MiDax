@@ -138,7 +138,7 @@ namespace MidaxLib
             return false;
         }
 
-        protected override void OnUpdateIndex(MarketData mktData, DateTime updateTime, Price stockValue)
+        protected override void OnUpdateIndex(MarketData mktData, DateTime updateTime, Price stockValue, bool majorTick)
         {
             if (_tradingSet.UpdateIndex(updateTime, stockValue.Offer))
                 Console.WriteLine(updateTime + " Signal " + _signal.Id + " buy " + _signal.TradingAsset.Id + " " + stockValue.Offer);
