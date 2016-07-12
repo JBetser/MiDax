@@ -494,6 +494,8 @@ namespace MidaxLib
             }
             else
             {
+                if (_cumVolume.Average == null)
+                    return null;
                 if (_cumVolume.Average.Bid == 0m)
                     return null;
                 curEma = value.Bid;                

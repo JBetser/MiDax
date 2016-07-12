@@ -284,8 +284,7 @@
              <select class="combobox input-large" id="equity">
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
                <option value="IX.D.DOW.DAILY.IP">DOW IG</option>
-               <option value="IceConnection.DOW">DOW Ice</option>
-               <option value="IceConnection.DOW.Volume">DOW Volumes</option>
+               <option value="IceConnection.DJI">DOW Ice</option>
                <option value="IX.D.CAC.DAILY.IP">CAC</option>
                <option value="IN.D.VIX.MONTH2.IP">VIX</option>
              </select>

@@ -44,6 +44,7 @@ namespace MidaxLib
 
         public virtual void Subscribe(Tick updateHandler, Tick tickerHandler)
         {
+            _lastUpdateTime = DateTime.MinValue;
             _allPositionsClosed = false;
             _closePositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
             Clear();

@@ -54,8 +54,11 @@ namespace MidaxLib
                 if (MarketData.TimeSeries.Count == 0)
                     return;
                 _decrementStartTime = startTime;
-                _curAvg = new Price();
-                MobileVolume(ref _curAvg, startTime, updateTime);
+                var curAvg = new Price();
+                MobileVolume(ref curAvg, startTime, updateTime);
+                if (curAvg == null)
+                    return;
+                _curAvg = curAvg;
             }
             else
             {
@@ -82,6 +85,11 @@ namespace MidaxLib
 
         void MobileVolume(ref Price curCumul, DateTime startTime, DateTime updateTime)
         {
+            if (MarketData.TimeSeries.StartTime() > startTime)
+            {
+                curCumul = null;
+                return;
+            }
             IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime, true);
             foreach (var endPeriodValue in generator)
                 curCumul.Volume += Math.Abs(endPeriodValue.Value.Volume.Value);
