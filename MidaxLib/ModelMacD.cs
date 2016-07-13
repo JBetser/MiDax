@@ -11,8 +11,8 @@ namespace MidaxLib
     {
         protected MarketData _index = null;
         protected MarketData _tradingIndex = null;
-        protected SignalMacD _macD_low = null;
-        protected SignalMacD _macD_high = null;
+        protected SignalMacDV _macD_low = null;
+        protected SignalMacDV _macD_high = null;
         protected SIGNAL_CODE _trendAssumption = SIGNAL_CODE.UNKNOWN;
         protected int _tradeSize = 0;
         protected int _lowPeriod = 0;
@@ -21,8 +21,8 @@ namespace MidaxLib
 
         public MarketData Index { get { return _index; } }
         public MarketData TradingIndex { get { return _tradingIndex; } }
-        public SignalMacD SignalLow { get { return _macD_low; } }
-        public SignalMacD SignalHigh { get { return _macD_high; } }
+        public SignalMacDV SignalLow { get { return _macD_low; } }
+        public SignalMacDV SignalHigh { get { return _macD_high; } }
 
         public int LowPeriod { get { return _lowPeriod; } }
         public int MidPeriod { get { return _midPeriod; } }
@@ -45,8 +45,8 @@ namespace MidaxLib
         protected override void Init()
         {
             base.Init();
-            _macD_low = new SignalMacD(_index, _lowPeriod, _midPeriod, null, null, _tradingIndex);
-            _macD_high = new SignalMacD(_index, _midPeriod, _highPeriod, _macD_low.IndicatorHigh, null, _tradingIndex);
+            _macD_low = new SignalMacDV(_index, _lowPeriod, _midPeriod, null, null, _tradingIndex);
+            _macD_high = new SignalMacDV(_index, _midPeriod, _highPeriod, (IndicatorVEMA)_macD_low.IndicatorHigh, null, _tradingIndex);
             _mktSignals.Add(_macD_low);
             _mktSignals.Add(_macD_high);
         }

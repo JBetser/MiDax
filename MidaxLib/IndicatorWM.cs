@@ -401,21 +401,21 @@ namespace MidaxLib
             : base("EMA_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)
         {
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
-                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 100.0m;
+                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 10.0m;
         }
 
         public IndicatorEMA(string id, MarketData mktData, int periodMinutes)
             : base(id, mktData, periodMinutes)
         {
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
-                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 100.0m;
+                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 10.0m;
         }
 
         public IndicatorEMA(IndicatorWMA indicator)
             : base(indicator.Id, indicator.MarketData, indicator.Period / 60)
         {
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
-                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 100.0m;
+                _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 10.0m;
         }
         
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
@@ -426,7 +426,8 @@ namespace MidaxLib
                 var curPeriod = (decimal)(updateTime - _startTime).TotalMilliseconds;
                 if (curPeriod > _periodMilliSeconds)
                     curPeriod = _periodMilliSeconds;
-                var k = (curPeriod + _timeDecayWeight) / _periodMilliSeconds;
+                var timeDecay = _timeDecayWeight * (decimal)(updateTime - _startTime).TotalSeconds;
+                var k = (curPeriod + timeDecay) / _periodMilliSeconds;
                 curEma = _curValue.Bid * k + _prevEma.Value * (1m - k);
             }
             else

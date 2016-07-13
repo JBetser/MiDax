@@ -28,6 +28,8 @@ function get_line_intersection(p0_x, p0_y, p1_x, p1_y,
     return rV;
 }
 
+var graphCount = 0;
+
 function processResponses(jsonData) {
     var margin = { top: 20, right: 80, bottom: 30, left: 50 },
         width = 960 - margin.left - margin.right,
@@ -234,14 +236,17 @@ function processResponses(jsonData) {
         .style("font-size", "16px")
         .text(keyValueMap[firstStock][0].t.getDate() + " " + monthNames[keyValueMap[firstStock][0].t.getMonth()] + " " + keyValueMap[firstStock][0].t.getFullYear() + perfSuffix);
 
+    var graphCountStr = graphCount.toString();
     svg.append("path") // this is the black vertical line to follow mouse
       .attr("class", "mouseLine")
+      .attr("id", "mouseLine" + graphCountStr)
       .style("stroke", "black")
       .style("stroke-width", "1px")
       .style("opacity", "0");
 
     var mouseCircle = quote.append("g") // for each line, add group to hold text and circle
-          .attr("class", "mouseCircle");
+          .attr("class", "mouseCircle")
+          .attr("id", "mouseCircle" + graphCountStr);
 
     mouseCircle.append("circle") // add a circle to follow along path
       .attr("r", 7)
@@ -260,28 +265,24 @@ function processResponses(jsonData) {
       .attr('fill', 'none')
       .attr('pointer-events', 'all')
       .on('mouseout', function () { // on mouse out hide line, circles and text
-          d3.select(".mouseLine")
+          d3.select("#mouseLine" + graphCountStr)
               .style("opacity", "0");
-          d3.selectAll(".mouseCircle circle")
+          d3.selectAll("#mouseCircle" + graphCountStr)
               .style("opacity", "0");
-          d3.selectAll(".mouseCircle text")
-                .style("opacity", "0");
       })
       .on('mouseover', function () { // on mouse in show line, circles and text
-          d3.select(".mouseLine")
+          d3.select("#mouseLine" + graphCountStr)
               .style("opacity", "1");
-          d3.selectAll(".mouseCircle circle")
+          d3.selectAll("#mouseCircle" + graphCountStr)
              .style("opacity", "1");
-          d3.selectAll(".mouseCircle text")
-              .style("opacity", "1");
       })
       .on('mousemove', function () { // mouse moving over canvas
-          d3.select(".mouseLine")
+          d3.select("#mouseLine" + graphCountStr)
           .attr("d", function () {
               yRange = y.range(); // range of y axis
               var xCoor = d3.mouse(this)[0]; // mouse position in x
               var xDate = x.invert(xCoor); // date corresponding to mouse x 
-              d3.selectAll('.mouseCircle') // for each circle group
+              d3.selectAll("#mouseCircle" + graphCountStr) // for each circle group
                   .each(function (d, i) {
                       var rightIdx = bisect.left(quotes[i].values, -xDate); // find date in data that right off mouse
                       var interSect = get_line_intersection(xCoor,  // get the intersection of our vertical line and the data line
@@ -305,6 +306,7 @@ function processResponses(jsonData) {
           });
       });
 
+    graphCount = graphCount + 1;
     return profit;
 }
 

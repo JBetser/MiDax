@@ -66,7 +66,7 @@ public class Server
                 models.Add(macDV_10_30_90_dow);
                 models.Add(new ModelANN(macD_10_30_90_dax, null, null, otherIndices));
                 models.Add(new ModelMacDCascade(macDV_10_30_90_dow));
-                //models.Add(new ModelMole(macD_10_30_90));
+                models.Add(new ModelMole(macDV_10_30_90_dow));
                 _trader = new Trader(models, communicator().shutdown);
                 adapter.add(new MidaxIceI(_trader, properties.getProperty("Ice.ProgramName")), id);                
                 adapter.activate();

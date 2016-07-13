@@ -147,11 +147,11 @@ namespace MidaxLib
         }
     }
 
-    public class SignalMole : SignalMacD
-    {
-        public SignalMole(MarketData asset, int lowPeriod, int midPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null)
-            : base("Mole_" + lowPeriod + "_" + midPeriod + "_" + highPeriod + "_" + asset.Id, asset, lowPeriod, midPeriod, low, high)
-        {
+    public class SignalMole : SignalMacDV
+    {    
+        public SignalMole(MarketData asset, int lowPeriod, int midPeriod, int highPeriod, IndicatorVEMA low = null, IndicatorVEMA high = null, MarketData tradingIndex = null)
+            : base("Mole_" + lowPeriod + "_" + midPeriod + "_" + highPeriod + "_" + asset.Id, asset, lowPeriod, midPeriod, low, high, tradingIndex)
+        {            
         }
     }
 }

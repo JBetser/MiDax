@@ -30,40 +30,63 @@ namespace MidaxLib
 
     public class ModelMole : Model
     {
-        ModelMacD _macD;
-        protected MarketData _daxIndex = null;
-        protected SignalMacD _signal = null;
-        protected SignalMacD _signalLong = null;
+        ModelMacDV _macD;
+        protected MarketData _index = null;
+        protected SignalMacDV _signal = null;
+        protected SignalMacDV _signalLong = null;
         protected TradingSetMole _tradingSet = null;
-        IndicatorWMA _wmaMid = null;
+        IndicatorVEMA _wmaMid = null;
         MarketLevels? _mktLevels;
+        IndicatorRSI _rsiLow;
+        IndicatorRSI _rsiHigh;
+        IndicatorEMA _wmaCorrelLowRef = null;
+        IndicatorEMA _wmaCorrelHighRef = null;
+        IndicatorCorrelation _correlLow;
+        IndicatorCorrelation _correlHigh;
+        Dictionary<string, string> _mappingCorrel = new Dictionary<string, string>();
 
-        public ModelMole(ModelMacD macD)
+        public ModelMole(ModelMacDV macD)
         {
             _macD = macD;
-            _daxIndex = macD.Index;
-            _mktLevels = _daxIndex.Levels;            
+            _index = macD.Index;
+            _mktLevels = _index.Levels;
+            _mappingCorrel[Config.Settings["INDEX_DOW"].Split(':')[1]] = Config.Settings["INDEX_DAX"];
+            _mappingCorrel[Config.Settings["INDEX_DAX"].Split(':')[1]] = Config.Settings["INDEX_DOW"];
         }
 
         protected override void Init()
         {
             base.Init();
             List<MarketData> mktData = new List<MarketData>();
-            mktData.Add(_daxIndex);
+            mktData.Add(_index);
+            _mktIndices.Add(new MarketData(_mappingCorrel[_macD.TradingIndex.Id]));
             _mktData = mktData;
-            _wmaMid = _macD.SignalLow.IndicatorHigh;
-            _signal = new SignalMole(_daxIndex, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalLow.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalLow.IndicatorLow, _macD.SignalLow.IndicatorHigh);
+            _wmaMid = (IndicatorVEMA)_macD.SignalLow.IndicatorHigh;
+            _signal = new SignalMole(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalLow.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, (IndicatorVEMA)_macD.SignalLow.IndicatorLow, (IndicatorVEMA)_macD.SignalLow.IndicatorHigh, _macD.TradingIndex);
             _mktSignals.Add(_signal);
-            _signalLong = new SignalMole(_daxIndex, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorLow, _macD.SignalHigh.IndicatorHigh);
+            _signalLong = new SignalMole(_index, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, (IndicatorVEMA)_macD.SignalHigh.IndicatorLow, (IndicatorVEMA)_macD.SignalHigh.IndicatorHigh, _macD.TradingIndex);
             _signalLong.Subscribe(new Signal.Tick(LongBuy), new Signal.Tick(LongSell));
             _tradingSet = (TradingSetMole)Portfolio.Instance.GetTradingSet(this);
-            _daxIndex.Subscribe(new MarketData.Tick(OnUpdateIndex), null);
+            _index.Subscribe(new MarketData.Tick(OnUpdateIndex), null);
 
-            var indicatorLow = new IndicatorLow(_daxIndex);
-            var indicatorHigh = new IndicatorHigh(_daxIndex);
-            var indicatorCloseBid = new IndicatorCloseBid(_daxIndex);
-            var indicatorCloseOffer = new IndicatorCloseOffer(_daxIndex);
-            _mktIndicators.Add(new IndicatorNearestLevel(_daxIndex));
+            _rsiLow = new IndicatorRSI(_index, _macD.SignalLow.IndicatorLow.Period / 600, 14);
+            _rsiHigh = new IndicatorRSI(_index, _macD.SignalLow.IndicatorHigh.Period / 600, 14);
+            _wmaCorrelLowRef = new IndicatorEMA(_mktIndices[0], _macD.SignalLow.IndicatorLow.Period / 60);
+            _wmaCorrelHighRef = new IndicatorEMA(_mktIndices[0], _macD.SignalLow.IndicatorHigh.Period / 60);
+            _correlLow = new IndicatorCorrelation(_macD.SignalLow.IndicatorLow, _wmaCorrelLowRef);
+            _correlHigh = new IndicatorCorrelation(_macD.SignalLow.IndicatorHigh, _wmaCorrelHighRef);
+            _mktIndicators.Add(_rsiLow);
+            _mktIndicators.Add(_rsiHigh);
+            _mktIndicators.Add(_wmaCorrelLowRef);
+            _mktIndicators.Add(_wmaCorrelHighRef);
+            _mktIndicators.Add(_correlLow);
+            _mktIndicators.Add(_correlHigh);
+
+            var indicatorLow = new IndicatorLow(_index);
+            var indicatorHigh = new IndicatorHigh(_index);
+            var indicatorCloseBid = new IndicatorCloseBid(_index);
+            var indicatorCloseOffer = new IndicatorCloseOffer(_index);
+            _mktIndicators.Add(new IndicatorNearestLevel(_index));
             _mktIndicators.Add(indicatorLow);
             _mktIndicators.Add(indicatorHigh);
             _mktIndicators.Add(indicatorCloseBid);
@@ -72,15 +95,15 @@ namespace MidaxLib
             _mktEODIndicators.Add(indicatorHigh);
             _mktEODIndicators.Add(indicatorCloseBid);
             _mktEODIndicators.Add(indicatorCloseOffer);
-            _mktEODIndicators.Add(new IndicatorLevelPivot(_daxIndex));
-            _mktEODIndicators.Add(new IndicatorLevelR1(_daxIndex));
-            _mktEODIndicators.Add(new IndicatorLevelR2(_daxIndex));
-            _mktEODIndicators.Add(new IndicatorLevelR3(_daxIndex));
-            _mktEODIndicators.Add(new IndicatorLevelS1(_daxIndex));
-            _mktEODIndicators.Add(new IndicatorLevelS2(_daxIndex));
-            _mktEODIndicators.Add(new IndicatorLevelS3(_daxIndex));
+            _mktEODIndicators.Add(new IndicatorLevelPivot(_index));
+            _mktEODIndicators.Add(new IndicatorLevelR1(_index));
+            _mktEODIndicators.Add(new IndicatorLevelR2(_index));
+            _mktEODIndicators.Add(new IndicatorLevelR3(_index));
+            _mktEODIndicators.Add(new IndicatorLevelS1(_index));
+            _mktEODIndicators.Add(new IndicatorLevelS2(_index));
+            _mktEODIndicators.Add(new IndicatorLevelS3(_index));
 
-            _tradingSet.Init(_daxIndex, _signal);
+            _tradingSet.Init(_index, _signal);
         }
 
         protected override bool OnBuy(Signal signal, DateTime time, Price value)

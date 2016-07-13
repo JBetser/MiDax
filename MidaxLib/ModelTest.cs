@@ -126,7 +126,7 @@ namespace MidaxLib
 
     public class ModelMoleTest : ModelMole
     {
-        public ModelMoleTest(ModelMacD macD)
+        public ModelMoleTest(ModelMacDV macD)
             : base(macD)
         {
         }

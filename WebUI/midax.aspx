@@ -184,13 +184,13 @@
                     var equityParams = $.extend({ "stockid": equity }, genericParams);
 
                     var requests = { "GetStockData0": equityParams };
-                    var isVolume = false;
+                    var noStock = false;
                     if (window.document.getElementById("indicator").selectedIndex > 0) {
                         var indicatorIds = $("#indicator").val().split('#');
                         var idx = 0;
                         for (var id in indicatorIds) {
-                            if (indicatorIds[id].indexOf("Volume") != -1)
-                                isVolume = true;
+                            if (indicatorIds[id].indexOf("Volume_") != -1 || indicatorIds[id].indexOf("RSI_") != -1 || indicatorIds[id].indexOf("Cor_") != -1)
+                                noStock = true;
                             var indicatorParams = $.extend({ "indicatorid": indicatorIds[id] + "_" + $("#equity").val() }, genericParams);
                             if (indicatorIds[id].startsWith("Low") || indicatorIds[id].startsWith("High") || indicatorIds[id].startsWith("Close")) {
                                 var prevDate = new Date((new Date(currentDate)).setDate(currentDate.getDate() - 1));
@@ -205,7 +205,7 @@
                             idx++;
                         }
                     }
-                    if (isVolume)
+                    if (noStock)
                         delete requests["GetStockData0"];
                     if (window.document.getElementById("signal").selectedIndex > 0) {
                         var signalParams = $.extend({ "signalid": $("#signal").val() + "_" + $("#equity").val() }, genericParams);
@@ -283,8 +283,8 @@
                <br />
              <select class="combobox input-large" id="equity">
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
-               <option value="IX.D.DOW.DAILY.IP">DOW IG</option>
-               <option value="IceConnection.DJI">DOW Ice</option>
+               <option value="IX.D.DOW.DAILY.IP">DOW (IG)</option>
+               <option value="IceConnection.DJI">DOW</option>
                <option value="IX.D.CAC.DAILY.IP">CAC</option>
                <option value="IN.D.VIX.MONTH2.IP">VIX</option>
              </select>
@@ -293,13 +293,10 @@
                <option value="High#Low#CloseBid">High/Low/Close D-1</option>
                <option value="LVLPivot#LVLS1#LVLR1">Levels Pivot/S1/R1</option>
                <option value="NearestLevel">Nearest Level</option>
-               <option value="WMA_2#WMA_10#WMA_60">WMA 2mn/10mn/1hr</option>
-               <option value="WMA_7#WMA_20#WMA_60">WMA 7mn/20mn/1hr</option>
-               <option value="WMA_10#WMA_30#WMA_90">WMA 10mn/30mn/1hr30</option>
-               <option value="VWMA_10#VWMA_30#VWMA_90">VWMA 10mn/30mn/1hr30</option>
-               <option value="EMA_1#EMA_5#EMA_10">EMA 1mn/5mn/10mn</option>
                <option value="EMA_10#EMA_30#EMA_90">EMA 10mn/30mn/1hr30</option>
                <option value="VEMA_10#VEMA_30#VEMA_90">VEMA 10mn/30mn/1hr30</option>
+               <option value="RSI_1_14#RSI_3_14">RSI14 1mn/3mn</option>
+               <option value="Cor_10_IX.D.DAX.DAILY.IP#Cor_30_IX.D.DAX.DAILY.IP">DAX Correlation 10mn/30mn</option>
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="VWMVol_10">VWM Vol 10mn</option>
