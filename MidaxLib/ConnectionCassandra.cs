@@ -222,8 +222,8 @@ namespace MidaxLib
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            executeQuery(string.Format("insert into staticdata.anncalibration(annid, stockid, version, insert_time, weights) values ('{0}', '{1}', {2}, {3}, {4})",
-                ann.AnnId, ann.StockId, ann.Version, ToUnixTimestamp(insertTime), JsonConvert.SerializeObject(ann.Weights)));
+            executeQuery(string.Format("insert into staticdata.anncalibration(annid, stockid, version, insert_time, weights, error, learning_rate) values ('{0}', '{1}', {2}, {3}, {4}, {5}, {6})",
+                ann.AnnId, ann.StockId, ann.Version, ToUnixTimestamp(insertTime), JsonConvert.SerializeObject(ann.Weights), ann.Error, ann.LearningRatePct));
         }
 
         /*
@@ -244,7 +244,7 @@ namespace MidaxLib
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseOffer_" + mktDetails.AssetId, ts, mktDetails.CloseOffer));
         }*/
 
-        int IStaticDataConnection.GetAnnLatestVersion(string annid, string stockid)
+        public int GetAnnLatestVersion(string annid, string stockid)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
@@ -258,7 +258,7 @@ namespace MidaxLib
             return (int)lastVersion[0];
         }
 
-        List<decimal> IStaticDataConnection.GetAnnWeights(string annid, string stockid, int version)
+        public List<decimal> GetAnnWeights(string annid, string stockid, int version)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
@@ -269,6 +269,24 @@ namespace MidaxLib
                 foreach (var weight in row)
                     weightLst.AddRange((IEnumerable<decimal>)weight);
             return weightLst;
+        }
+
+        public decimal GetAnnError(string annid, string stockid, int version)
+        {
+            if (_session == null)
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
+            RowSet error = executeQuery(string.Format("select error from staticdata.anncalibration where annid='{0}' and stockid='{1}' and version={2} ALLOW FILTERING",
+                annid, stockid, version));
+            return (decimal)error.First()[0];
+        }
+
+        public decimal GetAnnLearningRate(string annid, string stockid, int version)
+        {
+            if (_session == null)
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
+            RowSet error = executeQuery(string.Format("select learning_rate from staticdata.anncalibration where annid='{0}' and stockid='{1}' and version={2} ALLOW FILTERING",
+                annid, stockid, version));
+            return (decimal)error.First()[0];
         }
 
         Dictionary<string, RowSet> getRows(DateTime startTime, DateTime stopTime, string type, List<string> ids)

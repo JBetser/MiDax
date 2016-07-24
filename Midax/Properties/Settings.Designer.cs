@@ -136,7 +136,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("13:00:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("12:00:00")]
         public string PUBLISHING_START_TIME {
             get {
                 return ((string)(this["PUBLISHING_START_TIME"]));
@@ -266,6 +266,24 @@ namespace Midax.Properties {
         public string ASSUMPTION_TREND {
             get {
                 return ((string)(this["ASSUMPTION_TREND"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public string TIME_DECAY_FACTOR {
+            get {
+                return ((string)(this["TIME_DECAY_FACTOR"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("DB")]
+        public string REPLAY_MODE {
+            get {
+                return ((string)(this["REPLAY_MODE"]));
             }
         }
     }

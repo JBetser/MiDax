@@ -204,7 +204,7 @@ namespace MidaxLib
             return true;
         }
 
-        protected void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {            
             Signal.Tick tradingOrder = _onHold;
             bool signaled = Process(mktData, updateTime, value, ref tradingOrder);

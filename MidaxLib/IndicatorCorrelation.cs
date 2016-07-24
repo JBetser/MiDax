@@ -20,17 +20,17 @@ namespace MidaxLib
         public IndicatorWMA WMARef { get { return _wmaRef; } }
         public int Period { get { return _periodSeconds; } }
         protected decimal? _prevCorrel;
-        protected decimal? _prevVar;
-        protected decimal? _prevVarRef;
+        protected double? _prevVar;
+        protected double? _prevVarRef;
         protected Price _curValue;
         protected Price _curVarValue;
         protected Price _curVarRefValue;
         protected DateTime _startTime;
-        protected decimal _var;
-        protected decimal _varRef;
+        protected double _var;
+        protected double _varRef;
 
         public IndicatorCorrelation(IndicatorWMA wma, IndicatorWMA wmaRef)
-            : base("Cor_" + (wma.Period / 60) + "_" + wmaRef.MarketData.Id + "_" + wma.MarketData.Id, new List<MarketData> { wma.MarketData, wmaRef.MarketData })
+            : base("Cor_" + (wma.Period / 60) + "_" + wmaRef.MarketData.Id + "_" + wma.MarketData.Id, new List<MarketData> { wma.MarketData })
         {
             _wma = wma;
             _wmaRef = wmaRef;
@@ -39,9 +39,9 @@ namespace MidaxLib
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
                 _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 10.0m;
         }
-
+        
         public IndicatorCorrelation(string id, IndicatorWMA wma, IndicatorWMA wmaRef, int periodMinutes)
-            : base(id, new List<MarketData> { wma.MarketData, wmaRef.MarketData })
+            : base(id, new List<MarketData> { wma.MarketData })
         {
             _wma = wma;
             _wmaRef = wmaRef;
@@ -51,16 +51,15 @@ namespace MidaxLib
                 _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 10.0m;
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             if (mktData.TimeSeries.TotalMinutes(updateTime) > (double)_periodSeconds / 60.0)
             {
                 Price avgPrice = IndicatorFunc(mktData, updateTime, value);
                 if (avgPrice != null)
                 {
-                    base.OnUpdate(mktData, updateTime, avgPrice, majorTick);
-                    if (majorTick)
-                        Publish(updateTime, avgPrice.MidPrice());
+                    base.OnUpdate(mktData, updateTime, avgPrice);
+                    Publish(updateTime, avgPrice.MidPrice());
                 }
             }
         }
@@ -71,10 +70,17 @@ namespace MidaxLib
                 return null;            
             var curCorrel = 0m;
             var curValue = 0m;
-            var curVar = 1m;
-            var curVarRef = 1m;
+            var curVar = 0.0;
+            var curVarRef = 0.0;
+            Price priceCurCorrel = null;
             if (_prevCorrel.HasValue)
             {
+                if (_wma.TimeSeries.StartTime() > _startTime)
+                    return null;
+                if (_wmaRef.TimeSeries.StartTime() > _startTime)
+                    return null;
+                if (_wmaRef.TimeSeries.EndTime() != _wma.TimeSeries.EndTime())
+                    return null;
                 var curPeriod = (decimal)(updateTime - _startTime).TotalMilliseconds;
                 if (curPeriod > _periodMilliSeconds)
                     curPeriod = _periodMilliSeconds;
@@ -82,19 +88,28 @@ namespace MidaxLib
                 var k = (curPeriod + timeDecay) / _periodMilliSeconds;
                 var avg = _wma.TimeSeries.Last();
                 var avgRef = _wmaRef.TimeSeries.Last();
-                var curVarValue = value.Bid - avg.Bid;
-                var curVarRefValue = value.Bid - avgRef.Bid;
-                curVar = _curVarValue.Bid * k + _prevVar.Value * (1m - k);
-                curVarRef = _curVarRefValue.Bid * k + _prevVarRef.Value * (1m - k);
-                curValue = curVarValue * curVarRefValue / (curVar * curVarRef);                
-                curCorrel = _curValue.Bid * k + _prevCorrel.Value * (1m - k);                              
-                _curVarValue = new Price(curVarValue);
-                _curVarRefValue = new Price(curVarRefValue);
+                var curVarValue = Math.Pow((double)(value.Bid - avg.Bid), 2);
+                var curVarRefValue = Math.Pow((double)(_wmaRef.MarketData.TimeSeries.Last().Bid - avgRef.Bid), 2);
+                curVar = (double)(_curVarValue.Bid * k) + _prevVar.Value * (1.0 - (double)k);
+                curVarRef = (double)(_curVarRefValue.Bid * k) + _prevVarRef.Value * (1.0 - (double)k);
+                if (curVar * curVarRef == 0)
+                {
+                    if (Math.Abs(curVarValue * curVarRefValue - curVar * curVarRef) < 0.01)
+                        curValue = 1m;
+                    else
+                        curValue = 0m;
+                }
+                else
+                    curValue = (decimal)(Math.Sqrt((curVarValue * curVarRefValue) / (curVar * curVarRef)));                
+                curCorrel = _curValue.Bid * k + _prevCorrel.Value * (1m - k);
+                _curVarValue = new Price((decimal)curVarValue);
+                _curVarRefValue = new Price((decimal)curVarRefValue);
+                priceCurCorrel = new Price(curCorrel);
             }
             else
             {
-                _curVarValue = new Price(1m);
-                _curVarRefValue = new Price(1m);
+                _curVarValue = new Price(0m);
+                _curVarRefValue = new Price(0m);
                 curValue = 0m;
                 curCorrel = 0m; 
             }
@@ -103,7 +118,7 @@ namespace MidaxLib
             _prevVar = curVar;
             _prevVarRef = curVarRef; 
             _startTime = updateTime;
-            return new Price(curCorrel);
+            return priceCurCorrel;
         }     
     }
 }

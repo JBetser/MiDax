@@ -32,15 +32,14 @@ namespace MidaxLib
         {
             get
             {
-                bool cassandra = Config.Settings.ContainsKey("DB_CONTACTPOINT");
                 if (Config.ReplayEnabled)
                 {
                     if (_instance != null)
                         _instance._database = ((ReplayStreamingClient)MarketDataConnection.Instance.StreamClient).Reader;
                 }
-                return _instance == null ? 
-                    (Config.Settings.ContainsKey("PUBLISHING_CSV") ? _instance = new ReplayPublisher() :
-                                                                        (cassandra ? _instance = new CassandraConnection() : _instance = new ReplayTester()))
+                return _instance == null ?
+                    (Config.TestReplayCsvGeneratorEnabled ? _instance = new ReplayPublisher() :
+                                                                        (Config.DBPublishingEnabled ? _instance = new CassandraConnection() : _instance = new ReplayTester()))
                     : _instance; 
             }
         }

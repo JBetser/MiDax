@@ -29,7 +29,7 @@ namespace MidaxLib
             _ptf = Portfolio.Instance;
         }
 
-        protected virtual void Init()
+        public virtual void Init()
         {
             _closingTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
             if (Config.Settings.ContainsKey("TRADING_SIGNAL"))
@@ -80,10 +80,10 @@ namespace MidaxLib
         protected abstract bool Buy(Signal signal, DateTime time, Price stockValue);
         protected abstract bool Sell(Signal signal, DateTime time, Price stockValue);
 
-        protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)
         {
         }
-        protected virtual void OnUpdateIndicator(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected virtual void OnUpdateIndicator(MarketData mktData, DateTime updateTime, Price value)
         {
         }
         

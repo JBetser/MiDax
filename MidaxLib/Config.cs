@@ -49,13 +49,31 @@ namespace MidaxLib
             }
         }
 
+        public static bool ReplayDBEnabled
+        {
+            get
+            {
+                if (!_settings.ContainsKey("REPLAY_MODE"))
+                    return false;
+                return _settings["REPLAY_MODE"] == "DB";
+            }
+        }
+        
         public static bool TestReplayEnabled
         {
             get
             {
-                if (!Config.Settings.ContainsKey("REPLAY_MODE"))
+                if (!_settings.ContainsKey("REPLAY_MODE"))
                     return false;
-                return ReplayEnabled && (!Config.Settings.ContainsKey("PUBLISHING_CSV") && !Config.Settings.ContainsKey("DB_CONTACTPOINT"));
+                return ReplayEnabled && (!_settings.ContainsKey("PUBLISHING_CSV") && !ReplayDBEnabled);
+            }
+        }
+
+        public static bool DBPublishingEnabled
+        {
+            get
+            {
+                return Config.ReplayDBEnabled || Config.TradingEnabled || Config.CalibratorEnabled;
             }
         }
 
@@ -63,7 +81,15 @@ namespace MidaxLib
         {
             get
             {
-                return ReplayEnabled && Config.Settings.ContainsKey("PUBLISHING_CSV");
+                return ReplayEnabled && (_settings.ContainsKey("PUBLISHING_CSV") || ReplayDBEnabled);
+            }
+        }
+
+        public static bool TestReplayCsvGeneratorEnabled
+        {
+            get
+            {
+                return TestReplayGeneratorEnabled && _settings.ContainsKey("PUBLISHING_CSV");
             }
         }
 
@@ -71,7 +97,7 @@ namespace MidaxLib
         {
             get
             {
-                return Config.Settings["TRADING_MODE"] == "REPLAY_UAT";
+                return _settings["TRADING_MODE"] == "REPLAY_UAT";
             }
         }
 

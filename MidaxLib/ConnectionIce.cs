@@ -52,10 +52,7 @@ namespace MidaxLib
         protected decimal[] _stockLastVolumes = null;
         protected decimal[] _stockWeights = null;
         protected decimal _indexWeight = 1.0m;*/
-        DateTime? _lastTradePrice = null;
-        bool _isReady = false;
-
-        public bool Ready { get { return _isReady; } }
+        DateTime? _lastTradePrice = null;     
 
         static public IceStreamingMarketData Instance
         {
@@ -87,8 +84,9 @@ namespace MidaxLib
                 var idxPriceValue = 0m;
                 for (int idx = 0; idx < 30; idx++)
                     idxPriceValue += _stockLastPrices[idx];
-                idxPriceValue *= _indexWeight;*/
+                idxPriceValue *= _indexWeight;
                 var idxPrice = new Price(price, price, volume); // * _stockWeights[stockId]);
+
                 if (_lastTradePrice.HasValue)
                 {
                     if (dt > _lastTradePrice.Value)
@@ -97,8 +95,8 @@ namespace MidaxLib
                         dt = _lastTradePrice.Value;                        
                 }
                 else
-                    _lastTradePrice = dt;
-                FireTick(dt, idxPrice);
+                    _lastTradePrice = dt;*/
+                FireTick(dt, new Price(price, price, volume));
             }
             else
             {

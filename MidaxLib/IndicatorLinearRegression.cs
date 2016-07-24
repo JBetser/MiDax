@@ -19,7 +19,7 @@ namespace MidaxLib
             _interval = interval;
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             if (mktData.TimeSeries.TotalMinutes(updateTime) > _interval.TotalMinutes)
             {
@@ -27,9 +27,8 @@ namespace MidaxLib
                 if (coeff != null)
                 {
                     Price price = new Price(coeff.Value);
-                    base.OnUpdate(mktData, updateTime, price, majorTick);
-                    if (majorTick)
-                        Publish(updateTime, price);
+                    base.OnUpdate(mktData, updateTime, price);
+                    Publish(updateTime, price);
                 }
             }
         }

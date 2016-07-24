@@ -20,11 +20,14 @@ namespace MidaxLib
         public bool Updated = false;
         public List<Value> Deltas = new List<Value>();
         private const double _activationCoeff = 1.7159;
+        private string _label;
+        public string Label { get { return _label; } set { _label = value; } }
 
-        public Neuron(NeuralLayer children, NeuralLayer parentLayer)
+        public Neuron(NeuralLayer children, NeuralLayer parentLayer, string label = "hidden")
         {
             _parents = parentLayer;
             _children = children;
+            _label = label;
             int size = children.Size;
             while (size--> 0)
                 Weights.Add(new Value());
@@ -84,8 +87,8 @@ namespace MidaxLib
 
     public class NeuronInput : Neuron
     {
-        public NeuronInput(NeuralLayer firstInnerLayer)
-            : base(new NeuralLayer(0), firstInnerLayer)
+        public NeuronInput(NeuralLayer firstInnerLayer, string label)
+            : base(new NeuralLayer(0), firstInnerLayer, label)
         {
         }
 
@@ -97,8 +100,8 @@ namespace MidaxLib
 
     public class NeuronOutput : Neuron
     {
-        public NeuronOutput(NeuralLayer outputLayer)
-            : base(outputLayer, new NeuralLayer(0))
+        public NeuronOutput(NeuralLayer outputLayer, string label)
+            : base(outputLayer, new NeuralLayer(0), label)
         {
         }
         
@@ -115,7 +118,7 @@ namespace MidaxLib
     public class NeuronBias : NeuronInput
     {
         public NeuronBias(NeuralLayer nextLayer)
-            : base(nextLayer)
+            : base(nextLayer, "bias")
         {
             Value.X = 1.0;
         }
@@ -187,33 +190,34 @@ namespace MidaxLib
         public double LearningRatePct { get { return _learningRate * 100.0; } }
         public List<decimal> Weights { get { return getModelParams().Select(param => (decimal)param.X).ToList(); } }
 
-        public NeuralNetwork(int nbInputs, int nbOuputs, List<int> innerLayerSizes)
+        public NeuralNetwork(int nbInputs, int nbOuputs, List<int> innerLayerDescr)
         {
             _inputs = new NeuralLayer(nbInputs);
             _outputs = new NeuralLayer(nbOuputs);
 
-            for (int idxLayer = 0; idxLayer < innerLayerSizes.Count; idxLayer++)
-                _innerLayers.Add(new NeuralLayer(innerLayerSizes[idxLayer]));
+            for (int idxLayer = 0; idxLayer < innerLayerDescr.Count; idxLayer++)
+                _innerLayers.Add(new NeuralLayer(innerLayerDescr[idxLayer]));
              
             NeuralLayer prevLayer = _outputs;
-            for (int idxLayer = innerLayerSizes.Count - 1; idxLayer >= 0 ; idxLayer--)
+            for (int idxLayer = innerLayerDescr.Count - 1; idxLayer >= 0; idxLayer--)
             {
                 NeuralLayer postLayer = idxLayer > 0 ? _innerLayers[idxLayer - 1] : _inputs;
-                for (int idxNeuron = 0; idxNeuron < innerLayerSizes[idxLayer]; idxNeuron++)
+                for (int idxNeuron = 0; idxNeuron < innerLayerDescr[idxLayer]; idxNeuron++)
                     _innerLayers[idxLayer].Neurons.Add(new Neuron(postLayer, prevLayer));
                 _innerLayers[idxLayer].SetBias(new NeuronBias(prevLayer));
                 prevLayer = _innerLayers[idxLayer];
             }
 
             for (int idxInput = 0; idxInput < nbInputs; idxInput++)
-                _inputs.Neurons.Add(new NeuronInput(prevLayer));
+                _inputs.Neurons.Add(new NeuronInput(prevLayer, ""));
             _inputs.SetBias(new NeuronBias(prevLayer));
 
             for (int idxOutput = 0; idxOutput < nbOuputs; idxOutput++)
-                _outputs.Neurons.Add(new NeuronOutput(_innerLayers.Last()));    
+                _outputs.Neurons.Add(new NeuronOutput(_innerLayers.Last(), ""));    
         }
 
-        public NeuralNetwork(int nbInputs, int nbOuputs, List<int> innerLayerSizes, List<decimal> weights) : this(nbInputs, nbOuputs, innerLayerSizes)
+        public NeuralNetwork(int nbInputs, int nbOuputs, List<int> innerLayerDescr, List<decimal> weights)
+            : this(nbInputs, nbOuputs, innerLayerDescr)
         {
             var modelParams = getModelParams();
             if (modelParams.Count != weights.Count)
@@ -389,6 +393,10 @@ namespace MidaxLib
                     optimizerOpt = optimizer;
                     _learningRate = Math.Max(_learningRate, (optimizerOpt.StartError - optimizerOpt.Error) / optimizerOpt.StartError);
                 }
+                var rnd = new Random(rnd_seed);
+                rnd_seed = (int)(rnd.NextDouble() * 100.0);
+                for (int idxParam = 0; idxParam < modelParams.Count; idxParam++)
+                    modelParams[idxParam].X = rnd.NextDouble() - 0.5;
             }
             if (optimizerOpt.Error > max_error)
                 throw new StallException();

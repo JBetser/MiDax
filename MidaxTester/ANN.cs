@@ -18,9 +18,8 @@ namespace MidaxTester
             var models = new List<Model>();
             models.Add(new ModelMacDTest(new MarketData("DAX:IX.D.DAX.DAILY.IP"), 10, 30, 90));
             List<MarketData> otherIndices = new List<MarketData>();
-            otherIndices.Add(new MarketData("DOW:IX.D.DOW.DAILY.IP"));
             otherIndices.Add(new MarketData("CAC:IX.D.CAC.DAILY.IP"));
-            models.Add(new ModelANN((ModelMacD)models[0], new List<MarketData>(), new MarketData(testEngine.Settings["VOLATILITY"]), otherIndices));
+            models.Add(new ModelANN((ModelMacD)models[0], null, null, otherIndices));
             testEngine.Run(models);
         }
     }

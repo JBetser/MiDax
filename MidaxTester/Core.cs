@@ -69,17 +69,41 @@ namespace MidaxTester
             macDTestWMA.StopSignals();
 
             // Test volume weighted moving average with linear time decay
-            dicSettings.Remove("TIME_DECAY_FACTOR");
             tests = new List<string>();
             tests.Add(@"..\..\expected_results\testWMA4.csv");
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMA4gen.csv");
-            var macDTestVWMA = new ModelMacDVTest(index, 1, 2, 3);
+            var macDVTest = new ModelMacDVTest(index, 1, 2, 3);
             MarketDataConnection.Instance.Connect(null);
-            macDTestVWMA.StartSignals();
-            macDTestVWMA.StopSignals();
-            //dicSettings.Remove("TIME_DECAY_FACTOR");
+            macDVTest.StartSignals();
+            macDVTest.StopSignals();
+            dicSettings.Remove("TIME_DECAY_FACTOR");
+
+            // Test RSI and Correlation indicators
+            tests = new List<string>();
+            tests.Add(@"..\..\expected_results\testRsiCorrel.csv");
+            dicSettings["INDEX_ICEDOW"] = "DOW:IceConnection_DOW";
+            dicSettings["INDEX_DOW"] = "DOW:IX.D.DOW.DAILY.IP";
+            dicSettings["INDEX_DAX"] = "DAX:IX.D.DAX.DAILY.IP";
+            dicSettings["REPLAY_CSV"] = Config.TestList(tests);
+            if (generate)
+                dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testRsiCorrelgen.csv");
+            var dax = new MarketData(dicSettings["INDEX_DAX"]);
+            var iceindex = new MarketData(dicSettings["INDEX_ICEDOW"]);
+            index = new MarketData(dicSettings["INDEX_DOW"]);
+            var macD = new ModelMacDTest(dax, 1, 2, 3);
+            var macDV = new ModelMacDVTest(iceindex, 1, 2, 3, index);
+            var moleTest = new ModelMoleTest(macDV);
+            MarketDataConnection.Instance.Connect(null);
+            macD.StartSignals(false);
+            macDV.StartSignals(false);
+            moleTest.StartSignals(false);
+            MarketDataConnection.Instance.StartListening();
+            moleTest.StopSignals(false);
+            macDV.StartSignals(false);
+            macD.StopSignals(false);
+            MarketDataConnection.Instance.StopListening();
 
             Console.WriteLine(action + " calibration...");
 

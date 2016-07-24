@@ -53,8 +53,8 @@ namespace MidaxLib
                 }
                 if (updateTime > _latest)
                     _latest = updateTime;
-                else
-                    updateTime = _latest;
+                //else
+                //    updateTime = _latest;
                 _series.Last().Add(new KeyValuePair<DateTime, Price>(updateTime, price));
             }
         }

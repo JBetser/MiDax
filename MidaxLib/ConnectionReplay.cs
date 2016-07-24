@@ -290,7 +290,7 @@ namespace MidaxLib
                         epicsToDelete.Add(epicQuotes.Key);
                     else
                     {
-                        if (epicQuotes.Value[0].t <= minNextTime)
+                        if (epicQuotes.Value[0].t < minNextTime)
                         {
                             minNextTime = epicQuotes.Value[0].t;
                             nextUpdate = new ReplayUpdateInfo(epicQuotes.Value[0]);

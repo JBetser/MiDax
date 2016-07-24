@@ -301,6 +301,7 @@
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="VWMVol_10">VWM Vol 10mn</option>
                <option value="VWMVol_90">VWM Vol 1h30</option>    
+               <option value="Volume_10">Volumes 10mn</option>  
                <option value="Volume_30">Volumes 30mn</option>  
                <option value="Volume_90">Volumes 1h30</option>                           
              </select>   

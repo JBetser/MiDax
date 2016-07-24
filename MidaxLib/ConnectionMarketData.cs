@@ -80,6 +80,8 @@ namespace MidaxLib
             if (_refCount++ == 0)
             {
                 Portfolio.Instance.Subscribe();
+                foreach (MarketData mktData in _mktDataListener.MarketData)
+                    mktData.Ready = true;
                 _mktDataListener.StartListening();
             }
         }
@@ -123,7 +125,8 @@ namespace MidaxLib
             string[] epics = (from MarketData mktData in MarketData select mktData.Id).ToArray();
             string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray()).TrimEnd(new char[] { ',', ' ' });
             Log.Instance.WriteEntry("Subscribing to market data: " + epicsMsg + "...", System.Diagnostics.EventLogEntryType.Information);
-            MarketDataConnection.Instance.StreamClient.Subscribe(epics, this);
+            if (epics.Length > 0)
+                MarketDataConnection.Instance.StreamClient.Subscribe(epics, this);
         }
 
         public void StopListening()
@@ -131,7 +134,8 @@ namespace MidaxLib
             string[] epics = (from MarketData mktData in MarketData select mktData.Id).ToArray();
             string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray());
             Log.Instance.WriteEntry("Unsubscribing to market data: " + epicsMsg + "...", System.Diagnostics.EventLogEntryType.Information);
-            MarketDataConnection.Instance.StreamClient.Unsubscribe();            
+            if (epics.Length > 0)
+                MarketDataConnection.Instance.StreamClient.Unsubscribe();            
         }
 
         public void Resume()

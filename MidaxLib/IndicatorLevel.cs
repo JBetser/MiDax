@@ -22,7 +22,7 @@ namespace MidaxLib
             _levelMktData = mktData;
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
         }
 
@@ -48,7 +48,7 @@ namespace MidaxLib
         {            
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             if (_low > value.Bid)
                 _low = value.Bid;
@@ -71,7 +71,7 @@ namespace MidaxLib
         {
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             if (_high < value.Offer)
                 _high = value.Offer;
@@ -94,7 +94,7 @@ namespace MidaxLib
         {
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             _closeBid = value.Bid;
         }
@@ -116,7 +116,7 @@ namespace MidaxLib
         {
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             _closeOffer = value.Offer;
         }
@@ -139,7 +139,7 @@ namespace MidaxLib
             _periodSeconds = (timeDiff.Hours * 60 + timeDiff.Minutes) * 60 + timeDiff.Seconds;
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
         }
 
@@ -284,7 +284,7 @@ namespace MidaxLib
             return referenceLevel;
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             if (!mktData.Levels.HasValue)
                 return;

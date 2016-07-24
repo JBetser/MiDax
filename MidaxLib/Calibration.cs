@@ -91,7 +91,7 @@ namespace MidaxLib
     public class NeuralNetworkForCalibration : NeuralNetwork
     {
         protected List<List<double>> _annInputs = new List<List<double>>();
-        protected List<List<double>> _annOutputs = new List<List<double>>();
+        protected List<List<double>> _annOutputs = new List<List<double>>();        
 
         string _annid;
         public string AnnId
@@ -119,9 +119,10 @@ namespace MidaxLib
             _version = version;
         }
 
-        public void Train(double max_error, int rnd_seed)
+        public void Train(double max_error = 1e-5, int rnd_seed = 0)
         {
-            base.Train(_annInputs, _annOutputs, (double)_annInputs.Count * 0.01, max_error, rnd_seed);
+            var objError = (double)_annInputs.Count * 0.01;
+            base.Train(_annInputs, _annOutputs, objError, Math.Max(max_error, objError), rnd_seed);
         }
     }
 }

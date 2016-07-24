@@ -10,10 +10,13 @@ namespace Calibrator
 {
     class Program
     {
+        public enum PROBLEM { PARITY, WMA };
+
         static void Main(string[] args)
         {
             DateTime start = Config.ParseDateTimeLocal(args[0]);
             DateTime end = Config.ParseDateTimeLocal(args[1]);
+            PROBLEM pb = (PROBLEM)Enum.Parse(typeof(PROBLEM), args[2]);
 
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
@@ -68,7 +71,7 @@ namespace Calibrator
                 {
                     if (!profitData.ContainsKey(keyVal.Key.Key))
                         profitData[keyVal.Key.Key] = new List<double>();
-                    profitData[keyVal.Key.Key].Add(keyVal.Value);                        
+                    profitData[keyVal.Key.Key].Add(keyVal.Value);
                 }
 
                 // process next day
@@ -79,25 +82,44 @@ namespace Calibrator
                 while (start.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday);
             }
 
-            var error = 100.0;
-            int trials = 10;
-            NeuralNetworkWMA_5_2 ann = null;
-            var rndSeed = new Random();
-            while (trials-- > 0)
+            NeuralNetworkForCalibration ann = null;
+            var maxError = 1e-5;
+            switch (pb)
             {
-                var annTest = new NeuralNetworkWMA_5_2(ids[0], marketData, indicatorData, profitData);
-                annTest.Train(5.0, rndSeed.Next(1000));
-                if (annTest.Error < error)
+                case PROBLEM.PARITY:
+                    ann = new NeuralNetworkParity("Parity-3");
+                    ann.Train();
+                    break;
+                case PROBLEM.WMA:
+                    ann = new NeuralNetworkWMA_5_2(ids[0], marketData, indicatorData, profitData);
+                    maxError = 5.0;
+                    break;
+            }
+            if (ann == null)
+                MessageBox.Show("Could not instanciate the Neural Network", "Error");
+            else
+            {
+                using (AnnVisualizer visualizer = new AnnVisualizer(ann))
                 {
-                    error = annTest.Error;
-                    ann = annTest;
+                    ann.Train(maxError);
+                    CassandraConnection DBconnection = (CassandraConnection)PublisherConnection.Instance.Database;
+                    if (ann.Version > 0)
+                    {
+                        var prevError = DBconnection.GetAnnError(ann.AnnId, ann.StockId, ann.Version - 1);
+                        var prevLearningRate = DBconnection.GetAnnLearningRate(ann.AnnId, ann.StockId, ann.Version - 1);
+                        DialogResult dialogResult = MessageBox.Show(string.Format("The calibration error is {0} (Previously was {1}).\n The learning rate is {2}% (Previously was {3}).\n Would you like to publish the weights to production DB?",
+                            ann.Error, prevError, ann.LearningRatePct, prevLearningRate), ann.GetType().ToString(), MessageBoxButtons.YesNo);
+                        if (dialogResult == DialogResult.Yes)
+                            PublisherConnection.Instance.Insert(DateTime.Now, ann);
+                    }
+                    else{
+                        DialogResult dialogResult = MessageBox.Show(string.Format("The calibration error is {0}.\n The learning rate is {1}%.\n Would you like to publish the weights to production DB?",
+                            ann.Error, ann.LearningRatePct), ann.GetType().ToString(), MessageBoxButtons.YesNo);
+                        if (dialogResult == DialogResult.Yes)
+                            PublisherConnection.Instance.Insert(DateTime.Now, ann);
+                    }
                 }
             }
-
-            DialogResult dialogResult = MessageBox.Show(string.Format("The calibration error is {0}.\n The learning rate is {1}%.\n Would you like to publish the weights to production DB?",
-                ann.Error, ann.LearningRatePct), ann.GetType().ToString(), MessageBoxButtons.YesNo);
-            if (dialogResult == DialogResult.Yes)
-                PublisherConnection.Instance.Insert(DateTime.Now, ann);
         }
 
         static void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)

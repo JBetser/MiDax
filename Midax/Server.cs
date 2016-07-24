@@ -57,7 +57,6 @@ public class Server
                 var tradingIndex = new MarketData(dicSettings["INDEX_DOW"]);
                 var dax = new MarketData(dicSettings["INDEX_DAX"]);
                 List<MarketData> otherIndices = new List<MarketData>();
-                otherIndices.Add(dax);
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
                 var models = new List<Model>();
                 var macDV_10_30_90_dow = new ModelMacDV(index, 10, 30, 90, tradingIndex);

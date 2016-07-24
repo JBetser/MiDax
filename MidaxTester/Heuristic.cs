@@ -19,12 +19,14 @@ namespace MidaxTester
             testEngine.Settings["INDEX_ICEDOW"] = "DOW:IceConnection.DJI";
             testEngine.Settings["INDEX_DOW"] = "DOW:IX.D.DOW.DAILY.IP";
             testEngine.Settings["INDEX_DAX"] = "DAX:IX.D.DAX.DAILY.IP";
-            var models = new List<Model>();
+            testEngine.Settings["INDEX_CAC"] = "CAC:IX.D.CAC.DAILY.IP";
+
+            var models = new List<Model>();            
             var dow = new MarketData(testEngine.Settings["INDEX_ICEDOW"], testEngine.Settings["INDEX_DOW"]);
             var dowIG = new MarketData(testEngine.Settings["INDEX_DOW"]);
             models.Add(new ModelMacDVTest(dow, 10, 30, 90, dowIG));
-            models.Add(new ModelMoleTest((ModelMacDV)models[0]));
-            models.Add(new ModelMacDCascadeTest((ModelMacDV)models[0]));
+            models.Add(new ModelMacDCascadeTest((ModelMacDV)models[1]));
+            models.Add(new ModelMoleTest((ModelMacDV)models[1]));
             testEngine.Run(models);          
         }
     }

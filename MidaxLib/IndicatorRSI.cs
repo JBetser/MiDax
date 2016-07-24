@@ -28,6 +28,7 @@ namespace MidaxLib
     {
         int _nbPeriods;
         int _subPeriodSeconds;
+        DateTime _nextRsiTime = DateTime.MinValue;
 
         public IndicatorRSI(MarketData mktData, int subPeriodMinutes, int nbPeriods)
             : base("RSI_" + subPeriodMinutes + "_" + nbPeriods + "_" + mktData.Id, mktData, nbPeriods * subPeriodMinutes)
@@ -38,7 +39,7 @@ namespace MidaxLib
         }
 
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
-        {
+        {            
             return calcRSI(mktData, updateTime);
         }
 
@@ -46,8 +47,14 @@ namespace MidaxLib
         {
             Price avgGains = new Price();
             Price avgLosses = new Price();
+            Price curGains = new Price();
+            Price curLosses = new Price();
             bool started = false;
             DateTime startTime = upDateTime.AddSeconds(-_periodSeconds);
+            if (MarketData.TimeSeries.StartTime() > startTime)
+                return null;
+            if ((upDateTime - _nextRsiTime).TotalMilliseconds > _subPeriodSeconds * 1000)
+                _nextRsiTime = upDateTime;
             IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, upDateTime, false);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
             foreach (var endPeriodValue in generator)
@@ -66,11 +73,15 @@ namespace MidaxLib
                     {
                         if (endPeriodValue.Value > beginPeriodValue.Value)
                         {
-                            avgGains += endPeriodValue.Value - beginPeriodValue.Value;
+                            curGains = endPeriodValue.Value - beginPeriodValue.Value;
+                            curLosses = new Price(0m);
+                            avgGains += curGains;
                         }
                         else
                         {
-                            avgLosses += beginPeriodValue.Value - endPeriodValue.Value;
+                            curLosses = beginPeriodValue.Value - endPeriodValue.Value;
+                            curGains = new Price(0m);
+                            avgLosses += curLosses;
                         }
                         beginPeriodValue = endPeriodValue;
                     }
@@ -80,8 +91,18 @@ namespace MidaxLib
             avgGains /= (decimal)_nbPeriods;
             avgLosses /= (decimal)_nbPeriods;
 
-            decimal rs = avgGains.Bid / avgLosses.Bid;
+            decimal rs = avgLosses.Bid == 0 ? 1m : (avgGains.Bid * (_nbPeriods - 1) + curGains.Bid) / (avgLosses.Bid * (_nbPeriods - 1) + curLosses.Bid);
             return new Price(100m - 100m / (1m + rs));
+        }
+
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            Price avgPrice = IndicatorFunc(mktData, updateTime, value);
+            if (avgPrice != null)
+            {
+                base.OnUpdate(mktData, updateTime, avgPrice);
+                Publish(_nextRsiTime, avgPrice.MidPrice());
+            }
         }
     }
 }

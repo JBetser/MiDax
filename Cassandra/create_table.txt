@@ -109,6 +109,8 @@ CREATE TABLE staticdata.anncalibration (
   stockid text,
   weights list<decimal>,
   insert_time timestamp,
+  error decimal,
+  learning_rate decimal,
   PRIMARY KEY (annid, stockid, version)
 )
 WITH CLUSTERING ORDER BY (stockid ASC, version ASC);

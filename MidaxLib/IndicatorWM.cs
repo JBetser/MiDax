@@ -72,14 +72,13 @@ namespace MidaxLib
             return curAvg;
         }
 
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value, bool majorTick)
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             Price avgPrice = IndicatorFunc(mktData, updateTime, value);
             if (avgPrice != null)
             {
-                base.OnUpdate(mktData, updateTime, avgPrice, majorTick);
-                if (majorTick)
-                    Publish(updateTime, avgPrice.MidPrice());
+                base.OnUpdate(mktData, updateTime, avgPrice);
+                Publish(updateTime, avgPrice.MidPrice());
             }
         }
 
@@ -340,45 +339,41 @@ namespace MidaxLib
     public class IndicatorWMVol : IndicatorWMA
     {
         IndicatorWMA _avg;
+        DateTime _nextWMVolTime = DateTime.MinValue;
 
-        public IndicatorWMVol(MarketData mktData, IndicatorWMA avg)
-            : base("WMVol_" + (avg.Period / 60) + "_" + mktData.Id, mktData, avg.Period / 60)
+        public IndicatorWMVol(MarketData mktData, int periodMn)
+            : base("WMVol_" + periodMn + "_" + mktData.Id, mktData, periodMn)
         {
-            _avg = avg;
         }
 
         protected override bool MobileAverage(ref Price curVolAvg, DateTime startTime, DateTime updateTime)
         {
-            Price var = new Price();
-            if (_avg.TimeSeries.TotalMinutes(updateTime) < (double)_periodSeconds / 60.0)
-            {
-                curVolAvg = var;
+            if ((updateTime - _nextWMVolTime).TotalMilliseconds > _periodSeconds * 1000)
+                _nextWMVolTime = updateTime;
+            if (_nextWMVolTime == DateTime.MinValue)
                 return false;
-            }
-
-            bool started = false;
-            var avg = _avg.TimeSeries[updateTime];
-
+            decimal min = decimal.MaxValue;
+            decimal max = decimal.MinValue;
             IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime, false);
-            KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
             foreach (var endPeriodValue in generator)
             {
-                if (!started)
-                {
-                    started = true;
-                    var diffTime = (int)(startTime - endPeriodValue.Key).TotalMilliseconds;
-                    if (diffTime < 0)
-                        return false;     
-                    beginPeriodValue = new KeyValuePair<DateTime, Price>(startTime, endPeriodValue.Value);
-                    continue;
-                }
-                curVolAvg += (beginPeriodValue.Value - avg.Value.Value).Abs() * _timeDecay.Update(beginPeriodValue.Key, endPeriodValue.Key, updateTime);
-                beginPeriodValue = endPeriodValue;
+                if (endPeriodValue.Value.Mid() > max)
+                    max = endPeriodValue.Value.Mid();
+                if (endPeriodValue.Value.Mid() < min)
+                    min = endPeriodValue.Value.Mid();
             }
-            if (beginPeriodValue.Value == null)
-                return false;
-            curVolAvg += (beginPeriodValue.Value - avg.Value.Value).Abs() * _timeDecay.Update(beginPeriodValue.Key, updateTime, updateTime);
+            curVolAvg = new Price(max - min);
             return true;
+        }
+
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            Price avgPrice = IndicatorFunc(mktData, updateTime, value);
+            if (avgPrice != null)
+            {
+                base.OnUpdate(mktData, updateTime, avgPrice);
+                Publish(_nextWMVolTime, avgPrice.MidPrice());
+            }
         }
     }
 

@@ -17,7 +17,7 @@ namespace MidaxLib
             _macD = macD;
         }
 
-        protected override void Init()
+        public override void Init()
         {
             base.Init();
             _macD_low = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, (IndicatorVEMA)_macD.SignalHigh.IndicatorLow, (IndicatorVEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
@@ -54,12 +54,14 @@ namespace MidaxLib
             _mappingCorrel[Config.Settings["INDEX_DAX"].Split(':')[1]] = Config.Settings["INDEX_DOW"];
         }
 
-        protected override void Init()
+        public override void Init()
         {
             base.Init();
             List<MarketData> mktData = new List<MarketData>();
             mktData.Add(_index);
-            _mktIndices.Add(new MarketData(_mappingCorrel[_macD.TradingIndex.Id]));
+            var refIndex = new MarketData(_mappingCorrel[_macD.TradingIndex.Id]);
+            _mktIndices.Add(refIndex);
+            _mktIndices.Add(_index);
             _mktData = mktData;
             _wmaMid = (IndicatorVEMA)_macD.SignalLow.IndicatorHigh;
             _signal = new SignalMole(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalLow.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, (IndicatorVEMA)_macD.SignalLow.IndicatorLow, (IndicatorVEMA)_macD.SignalLow.IndicatorHigh, _macD.TradingIndex);
@@ -67,12 +69,11 @@ namespace MidaxLib
             _signalLong = new SignalMole(_index, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, (IndicatorVEMA)_macD.SignalHigh.IndicatorLow, (IndicatorVEMA)_macD.SignalHigh.IndicatorHigh, _macD.TradingIndex);
             _signalLong.Subscribe(new Signal.Tick(LongBuy), new Signal.Tick(LongSell));
             _tradingSet = (TradingSetMole)Portfolio.Instance.GetTradingSet(this);
-            _index.Subscribe(new MarketData.Tick(OnUpdateIndex), null);
 
-            _rsiLow = new IndicatorRSI(_index, _macD.SignalLow.IndicatorLow.Period / 600, 14);
-            _rsiHigh = new IndicatorRSI(_index, _macD.SignalLow.IndicatorHigh.Period / 600, 14);
-            _wmaCorrelLowRef = new IndicatorEMA(_mktIndices[0], _macD.SignalLow.IndicatorLow.Period / 60);
-            _wmaCorrelHighRef = new IndicatorEMA(_mktIndices[0], _macD.SignalLow.IndicatorHigh.Period / 60);
+            _rsiLow = new IndicatorRSI(_index, Math.Max(1,_macD.SignalLow.IndicatorLow.Period / 600), 14);
+            _rsiHigh = new IndicatorRSI(_index, Math.Max(2,_macD.SignalLow.IndicatorHigh.Period / 600), 14);
+            _wmaCorrelLowRef = new IndicatorEMA(refIndex, _macD.SignalLow.IndicatorLow.Period / 60);
+            _wmaCorrelHighRef = new IndicatorEMA(refIndex, _macD.SignalLow.IndicatorHigh.Period / 60);
             _correlLow = new IndicatorCorrelation(_macD.SignalLow.IndicatorLow, _wmaCorrelLowRef);
             _correlHigh = new IndicatorCorrelation(_macD.SignalLow.IndicatorHigh, _wmaCorrelHighRef);
             _mktIndicators.Add(_rsiLow);
@@ -152,7 +153,7 @@ namespace MidaxLib
             return false;
         }
 
-        protected virtual void OnUpdateIndex(MarketData mktData, DateTime updateTime, Price stockValue, bool majorTick)
+        protected virtual void OnUpdateIndex(MarketData mktData, DateTime updateTime, Price stockValue)
         {            
             _tradingSet.UpdateIndex(updateTime, stockValue.Offer); 
         }
