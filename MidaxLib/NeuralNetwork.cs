@@ -22,6 +22,10 @@ namespace MidaxLib
         private const double _activationCoeff = 1.7159;
         private string _label;
         public string Label { get { return _label; } set { _label = value; } }
+        private double _firstInputValue = double.NaN;
+        public double FirstInputValue { get { return _firstInputValue; } set { _firstInputValue = value; } }
+        private double _inputValue = double.NaN;
+        public double InputValue { get { return _inputValue; } set { _inputValue = value; } }
 
         public Neuron(NeuralLayer children, NeuralLayer parentLayer, string label = "hidden")
         {
@@ -41,8 +45,13 @@ namespace MidaxLib
         public virtual double Activation()
         {
             if (!Updated)
-                Value.X = _activationCoeff * Math.Tanh(2.0 * (from neuron in _children.Neurons select Weights[_children.Neurons.IndexOf(neuron)].X * neuron.Activation()).Sum() / 3.0);
-            Updated = true;
+            {
+                _inputValue = (from neuron in _children.Neurons select Weights[_children.Neurons.IndexOf(neuron)].X * neuron.Activation()).Sum();
+                Value.X = _activationCoeff * Math.Tanh(2.0 * _inputValue / 3.0);
+                if (double.IsNaN(_firstInputValue))
+                    _firstInputValue = _inputValue;
+                Updated = true;
+            } 
             return Value.X;
         }
 

@@ -9,13 +9,22 @@ using NLapack.Numbers;
 
 namespace MidaxLib
 {
-    public class Value
+    public class Value : IComparable
     {
         public double X = 0.0;
 
         public Value(double val = 0.0)
         {
             X = val;
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (Math.Abs(X) > Math.Abs(((Value)obj).X))
+                return 1;
+            else if (Math.Abs(X) < Math.Abs(((Value)obj).X))
+                return -1;
+            return 0;
         }
     }
 
