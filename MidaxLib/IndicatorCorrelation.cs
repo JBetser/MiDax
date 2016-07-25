@@ -13,6 +13,7 @@ namespace MidaxLib
         protected IndicatorWMA _wma = null;
         protected IndicatorWMA _wmaRef = null;
         protected decimal _timeDecayWeight = 0m;
+        DateTime _nextCorrelTime = DateTime.MinValue;
         
         public MarketData MarketData { get { return _mktData[0]; } }
         public MarketData MarketDataRef { get { return _mktData[1]; } }
@@ -30,7 +31,7 @@ namespace MidaxLib
         protected double _varRef;
 
         public IndicatorCorrelation(IndicatorWMA wma, IndicatorWMA wmaRef)
-            : base("Cor_" + (wma.Period / 60) + "_" + wmaRef.MarketData.Id + "_" + wma.MarketData.Id, new List<MarketData> { wma.MarketData })
+            : base("Cor_" + (wma.Period / 60) + "_" + wmaRef.SignalStock.Id + "_" + wma.SignalStock.Id, new List<MarketData> { wma.SignalStock })
         {
             _wma = wma;
             _wmaRef = wmaRef;
@@ -41,7 +42,7 @@ namespace MidaxLib
         }
         
         public IndicatorCorrelation(string id, IndicatorWMA wma, IndicatorWMA wmaRef, int periodMinutes)
-            : base(id, new List<MarketData> { wma.MarketData })
+            : base(id, new List<MarketData> { wma.SignalStock })
         {
             _wma = wma;
             _wmaRef = wmaRef;
@@ -53,21 +54,17 @@ namespace MidaxLib
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
-            if (mktData.TimeSeries.TotalMinutes(updateTime) > (double)_periodSeconds / 60.0)
-            {
-                Price avgPrice = IndicatorFunc(mktData, updateTime, value);
-                if (avgPrice != null)
-                {
-                    base.OnUpdate(mktData, updateTime, avgPrice);
-                    Publish(updateTime, avgPrice.MidPrice());
-                }
-            }
+            Price avgPrice = IndicatorFunc(mktData, updateTime, value);
+            if (avgPrice != null)
+                Publish(_nextCorrelTime, avgPrice.MidPrice());
         }
 
         protected Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
             if (_wma.TimeSeries.Count == 0 || _wmaRef.TimeSeries.Count == 0)
-                return null;            
+                return null;
+            if (updateTime > _nextCorrelTime)
+                _nextCorrelTime = (_nextCorrelTime == DateTime.MinValue ? updateTime : _nextCorrelTime).AddSeconds(_periodSeconds);
             var curCorrel = 0m;
             var curValue = 0m;
             var curVar = 0.0;
@@ -89,7 +86,7 @@ namespace MidaxLib
                 var avg = _wma.TimeSeries.Last();
                 var avgRef = _wmaRef.TimeSeries.Last();
                 var curVarValue = Math.Pow((double)(value.Bid - avg.Bid), 2);
-                var curVarRefValue = Math.Pow((double)(_wmaRef.MarketData.TimeSeries.Last().Bid - avgRef.Bid), 2);
+                var curVarRefValue = Math.Pow((double)(_wmaRef.SignalStock.TimeSeries.Last().Bid - avgRef.Bid), 2);
                 curVar = (double)(_curVarValue.Bid * k) + _prevVar.Value * (1.0 - (double)k);
                 curVarRef = (double)(_curVarRefValue.Bid * k) + _prevVarRef.Value * (1.0 - (double)k);
                 if (curVar * curVarRef == 0)

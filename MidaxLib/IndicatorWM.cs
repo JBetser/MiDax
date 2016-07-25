@@ -25,7 +25,6 @@ namespace MidaxLib
         protected DateTime _decrementStartTime = DateTime.MinValue;
         protected Price _incrementAvg = null;
 
-        public MarketData MarketData { get { return _mktData[0]; } }
         public int Period { get { return _periodSeconds; } }
         public TimeDecay TimeDecay { get { return _timeDecay; } }
 
@@ -53,7 +52,7 @@ namespace MidaxLib
         }
 
         public IndicatorWMA(IndicatorWMA indicator)
-            : base(indicator.Id, new List<MarketData> { indicator.MarketData })
+            : base(indicator.Id, new List<MarketData> { indicator.SignalStock })
         {
             _periodSeconds = indicator.Period;
             _periodMilliSeconds = _periodSeconds * 1000m;
@@ -64,7 +63,7 @@ namespace MidaxLib
         {
             DateTime startTime;
             startTime = updateTime.AddSeconds(-_periodSeconds);
-            if (MarketData.TimeSeries.Count == 0)
+            if (SignalStock.TimeSeries.Count == 0)
                 return null;
             var curAvg = new Price();
             if (!MobileAverage(ref curAvg, startTime, updateTime))
@@ -116,7 +115,7 @@ namespace MidaxLib
             TimeDecay timeDecay = _timeDecay;
             DateTime originTime = startTime;
             DateTime startTimePrev = DateTime.MinValue;
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime, false);
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = SignalStock.TimeSeries.ValueGenerator(startTime, updateTime, false);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();           
             decimal curTimeDecayWeight = 1m;
             foreach (var endPeriodValue in generator)
@@ -239,9 +238,9 @@ namespace MidaxLib
         }
 
         public IndicatorVWMA(IndicatorVWMA indicator)
-            : base(indicator.Id, indicator.MarketData, indicator.Period / 60)
+            : base(indicator.Id, indicator.SignalStock, indicator.Period / 60)
         {
-            _avgVolume = indicator.AverageVolume == null ? new IndicatorVolume(indicator.MarketData, indicator.Period / 60) : indicator.AverageVolume;
+            _avgVolume = indicator.AverageVolume == null ? new IndicatorVolume(indicator.SignalStock, indicator.Period / 60) : indicator.AverageVolume;
         }
 
         public override void Subscribe(Tick updateHandler, Tick tickerHandler)
@@ -301,7 +300,7 @@ namespace MidaxLib
         {            
             bool started = false;
             DateTime startTimePrev = DateTime.MinValue;
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime, false);
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = SignalStock.TimeSeries.ValueGenerator(startTime, updateTime, false);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
             var curVolPrice = 0m;
             var curTimeDecayWeight = 1m;
@@ -354,7 +353,7 @@ namespace MidaxLib
                 return false;
             decimal min = decimal.MaxValue;
             decimal max = decimal.MinValue;
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, updateTime, false);
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = SignalStock.TimeSeries.ValueGenerator(startTime, updateTime, false);
             foreach (var endPeriodValue in generator)
             {
                 if (endPeriodValue.Value.Mid() > max)
@@ -390,7 +389,7 @@ namespace MidaxLib
         protected Price _curValue;
         protected decimal? _prevEma;
         protected decimal _timeDecayWeight = 0m;
-        protected DateTime _startTime;
+        protected DateTime _startTime = DateTime.MinValue;
 
         public IndicatorEMA(MarketData mktData, int periodMinutes)
             : base("EMA_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)
@@ -407,7 +406,7 @@ namespace MidaxLib
         }
 
         public IndicatorEMA(IndicatorWMA indicator)
-            : base(indicator.Id, indicator.MarketData, indicator.Period / 60)
+            : base(indicator.Id, indicator.SignalStock, indicator.Period / 60)
         {
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
                 _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 10.0m;
@@ -460,9 +459,9 @@ namespace MidaxLib
         }
 
         public IndicatorVEMA(IndicatorVEMA indicator)
-            : base(indicator.Id, indicator.MarketData, indicator.Period / 60)
+            : base(indicator.Id, indicator.SignalStock, indicator.Period / 60)
         {
-            _cumVolume = indicator.AverageVolume == null ? new IndicatorVolume(indicator.MarketData, indicator.Period / 60) : indicator.AverageVolume;
+            _cumVolume = indicator.AverageVolume == null ? new IndicatorVolume(indicator.SignalStock, indicator.Period / 60) : indicator.AverageVolume;
         }
 
         public override void Subscribe(Tick updateHandler, Tick tickerHandler)
@@ -478,7 +477,7 @@ namespace MidaxLib
         }
 
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
-        {            
+        {
             var curEma = 0m;
             if (_prevEma.HasValue)
             {

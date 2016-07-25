@@ -64,10 +64,10 @@
       <Value Profile="(Default)">10</Value>
     </Setting>
     <Setting Name="PUBLISHING_START_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">12:00:00</Value>
+      <Value Profile="(Default)">6:30:00</Value>
     </Setting>
     <Setting Name="TRADING_START_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">14:00:00</Value>
+      <Value Profile="(Default)">8:00:00</Value>
     </Setting>
     <Setting Name="TRADING_STOP_TIME" Type="System.String" Scope="Application">
       <Value Profile="(Default)">21:30:00</Value>
@@ -113,6 +113,12 @@
     </Setting>
     <Setting Name="REPLAY_MODE" Type="System.String" Scope="Application">
       <Value Profile="(Default)">DB</Value>
+    </Setting>
+    <Setting Name="FX_GBPUSD" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">GBPUSD:CS.D.GBPUSD.TODAY.IP</Value>
+    </Setting>
+    <Setting Name="FX_GBPEUR" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">GBPEUR:CS.D.GBPEUR.TODAY.IP</Value>
     </Setting>
   </Settings>
 </SettingsFile>

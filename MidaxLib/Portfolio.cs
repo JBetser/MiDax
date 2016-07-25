@@ -90,18 +90,19 @@ namespace MidaxLib
             if (pos.Quantity != 0)
             {
                 var positionClose = new Trade(time, pos.Epic, pos.Quantity > 0 ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY, Math.Abs(pos.Quantity), stockValue, idxPlaceHolder);
-                _igStreamApiClient.ClosePosition(positionClose, time, onTradeBooked, onBookingFailed);
-                Log.Instance.WriteEntry(string.Format("Forcefully closed a position, Epic: {0}, Size: {1}, Value: {2}", pos.Epic, pos.Quantity, pos.AssetValue), System.Diagnostics.EventLogEntryType.Warning);
-                if (signal != null)
-                {
-                    signal.Trade = positionClose;
-                    PublisherConnection.Instance.Insert(time, signal, pos.Quantity > 0 ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY, stockValue);
-                }
+                closePosition(positionClose, time, onTradeBooked, onBookingFailed, idxPlaceHolder, signal);
             }
         }
 
         void closePosition(Trade trade, DateTime time, TradeBookedEvent onTradeBooked, TradeBookedEvent onBookingFailed, int idxPlaceHolder = 0, Signal signal = null)
         {
+            foreach (var pos in _positions.Values){
+                if (pos.AwaitingTrade)
+                {
+                    Log.Instance.WriteEntry(string.Format("Cannot close a position as deal is already pending, Epic: {0}, Size: {1}, Value: {2}. Waiting for position {3} to be updated", trade.Epic, trade.Size, trade.Price, pos.Epic), System.Diagnostics.EventLogEntryType.Warning);
+                    return;
+                }
+            }
             _igStreamApiClient.ClosePosition(trade, time, onTradeBooked, onBookingFailed);
             Log.Instance.WriteEntry(string.Format("Forcefully closed a position, Epic: {0}, Size: {1}, Value: {2}", trade.Epic, trade.Size, trade.Price), System.Diagnostics.EventLogEntryType.Warning);
             if (signal != null)
@@ -139,6 +140,14 @@ namespace MidaxLib
                 return;
             if (Config.TradingOpen(newTrade.TradingTime))
             {
+                foreach (var pos in _positions.Values)
+                {
+                    if (pos.AwaitingTrade)
+                    {
+                        Log.Instance.WriteEntry(string.Format("Cannot book a new trade as a deal is already pending, Epic: {0}, Size: {1}, Value: {2}. Waiting for position {3} to be updated", newTrade.Epic, newTrade.Size, newTrade.Price, pos.Epic), System.Diagnostics.EventLogEntryType.Warning);
+                        return;
+                    }
+                }
                 if (!_positions.ContainsKey(newTrade.Epic))
                     _positions.Add(newTrade.Epic, new Position(newTrade.Epic));
                 _igStreamApiClient.BookTrade(newTrade, OnTradeBooked, OnBookingFailed);

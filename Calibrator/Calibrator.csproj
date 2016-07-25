@@ -91,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="NeuralNetworkParity.cs" />
+    <Compile Include="NeuralNetworkWatershed.cs" />
     <Compile Include="NeuralNetworkWMA.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

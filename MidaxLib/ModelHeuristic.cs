@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace MidaxLib
 {
-    public class ModelMacDCascade : ModelMacDV
+    public class ModelMacDCascade : ModelMacD
     {
-        ModelMacDV _macD;
+        ModelMacD _macD;
 
-        public ModelMacDCascade(ModelMacDV macD)
+        public ModelMacDCascade(ModelMacD macD)
             : base(macD.Index, macD.LowPeriod, macD.MidPeriod, macD.HighPeriod, macD.TradingIndex)
         {
             _macD = macD;
@@ -20,8 +20,8 @@ namespace MidaxLib
         public override void Init()
         {
             base.Init();
-            _macD_low = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, (IndicatorVEMA)_macD.SignalHigh.IndicatorLow, (IndicatorVEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
-            _macD_high = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, (IndicatorVEMA)_macD.SignalHigh.IndicatorLow, (IndicatorVEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
+            _macD_low = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 1.0m, (IndicatorEMA)_macD.SignalHigh.IndicatorLow, (IndicatorEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
+            _macD_high = new SignalMacDCascade(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, 2.0m, (IndicatorEMA)_macD.SignalHigh.IndicatorLow, (IndicatorEMA)_macD.SignalHigh.IndicatorHigh, _tradingIndex);
             _mktSignals = new List<Signal>();
             _mktSignals.Add(_macD_low);
             _mktSignals.Add(_macD_high);
@@ -30,12 +30,12 @@ namespace MidaxLib
 
     public class ModelMole : Model
     {
-        ModelMacDV _macD;
+        ModelMacD _macD;
         protected MarketData _index = null;
-        protected SignalMacDV _signal = null;
-        protected SignalMacDV _signalLong = null;
+        protected SignalMacD _signal = null;
+        protected SignalMacD _signalLong = null;
         protected TradingSetMole _tradingSet = null;
-        IndicatorVEMA _wmaMid = null;
+        IndicatorEMA _wmaMid = null;
         MarketLevels? _mktLevels;
         IndicatorRSI _rsiLow;
         IndicatorRSI _rsiHigh;
@@ -43,15 +43,19 @@ namespace MidaxLib
         IndicatorEMA _wmaCorrelHighRef = null;
         IndicatorCorrelation _correlLow;
         IndicatorCorrelation _correlHigh;
+        IndicatorWatershed _watershedLow = null;
+        IndicatorWatershed _watershedHigh = null;
         Dictionary<string, string> _mappingCorrel = new Dictionary<string, string>();
 
-        public ModelMole(ModelMacDV macD)
+        public ModelMole(ModelMacD macD)
         {
             _macD = macD;
             _index = macD.Index;
             _mktLevels = _index.Levels;
             _mappingCorrel[Config.Settings["INDEX_DOW"].Split(':')[1]] = Config.Settings["INDEX_DAX"];
             _mappingCorrel[Config.Settings["INDEX_DAX"].Split(':')[1]] = Config.Settings["INDEX_DOW"];
+            _mappingCorrel[Config.Settings["FX_GBPUSD"].Split(':')[1]] = Config.Settings["FX_GBPEUR"];
+            _mappingCorrel[Config.Settings["FX_GBPEUR"].Split(':')[1]] = Config.Settings["FX_GBPUSD"];
         }
 
         public override void Init()
@@ -59,14 +63,14 @@ namespace MidaxLib
             base.Init();
             List<MarketData> mktData = new List<MarketData>();
             mktData.Add(_index);
-            var refIndex = new MarketData(_mappingCorrel[_macD.TradingIndex.Id]);
+            var refIndex = new MarketData(_mappingCorrel[_macD.TradingIndex == null ? _macD.Index.Id : _macD.TradingIndex.Id]);
             _mktIndices.Add(refIndex);
             _mktIndices.Add(_index);
             _mktData = mktData;
-            _wmaMid = (IndicatorVEMA)_macD.SignalLow.IndicatorHigh;
-            _signal = new SignalMole(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalLow.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, (IndicatorVEMA)_macD.SignalLow.IndicatorLow, (IndicatorVEMA)_macD.SignalLow.IndicatorHigh, _macD.TradingIndex);
+            _wmaMid = (IndicatorEMA)_macD.SignalLow.IndicatorHigh;
+            _signal = new SignalMole(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalLow.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, (IndicatorEMA)_macD.SignalLow.IndicatorLow, (IndicatorEMA)_macD.SignalLow.IndicatorHigh, _macD.TradingIndex);
             _mktSignals.Add(_signal);
-            _signalLong = new SignalMole(_index, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, (IndicatorVEMA)_macD.SignalHigh.IndicatorLow, (IndicatorVEMA)_macD.SignalHigh.IndicatorHigh, _macD.TradingIndex);
+            _signalLong = new SignalMole(_index, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, (IndicatorEMA)_macD.SignalHigh.IndicatorLow, (IndicatorEMA)_macD.SignalHigh.IndicatorHigh, _macD.TradingIndex);
             _signalLong.Subscribe(new Signal.Tick(LongBuy), new Signal.Tick(LongSell));
             _tradingSet = (TradingSetMole)Portfolio.Instance.GetTradingSet(this);
 
@@ -76,12 +80,16 @@ namespace MidaxLib
             _wmaCorrelHighRef = new IndicatorEMA(refIndex, _macD.SignalLow.IndicatorHigh.Period / 60);
             _correlLow = new IndicatorCorrelation(_macD.SignalLow.IndicatorLow, _wmaCorrelLowRef);
             _correlHigh = new IndicatorCorrelation(_macD.SignalLow.IndicatorHigh, _wmaCorrelHighRef);
+            _watershedLow = new IndicatorWatershed(_index, 1, 15);
+            _watershedHigh = new IndicatorWatershed(_index, 3, 15);
             _mktIndicators.Add(_rsiLow);
             _mktIndicators.Add(_rsiHigh);
             _mktIndicators.Add(_wmaCorrelLowRef);
             _mktIndicators.Add(_wmaCorrelHighRef);
             _mktIndicators.Add(_correlLow);
             _mktIndicators.Add(_correlHigh);
+            _mktIndicators.Add(_watershedLow);
+            _mktIndicators.Add(_watershedHigh);
 
             var indicatorLow = new IndicatorLow(_index);
             var indicatorHigh = new IndicatorHigh(_index);

@@ -39,23 +39,23 @@ namespace MidaxLib
         }
 
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
-        {            
+        {
             return calcRSI(mktData, updateTime);
         }
 
-        public Price calcRSI(MarketData mktData, DateTime upDateTime)
+        public Price calcRSI(MarketData mktData, DateTime updateTime)
         {
             Price avgGains = new Price();
             Price avgLosses = new Price();
             Price curGains = new Price();
             Price curLosses = new Price();
             bool started = false;
-            DateTime startTime = upDateTime.AddSeconds(-_periodSeconds);
-            if (MarketData.TimeSeries.StartTime() > startTime)
-                return null;
-            if ((upDateTime - _nextRsiTime).TotalMilliseconds > _subPeriodSeconds * 1000)
-                _nextRsiTime = upDateTime;
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = MarketData.TimeSeries.ValueGenerator(startTime, upDateTime, false);
+            if (updateTime > _nextRsiTime)
+                _nextRsiTime = (_nextRsiTime == DateTime.MinValue ? updateTime : _nextRsiTime).AddSeconds(_subPeriodSeconds);
+            DateTime startTime = _nextRsiTime.AddSeconds(-_periodSeconds);
+            if (SignalStock.TimeSeries.StartTime() > startTime)
+                return null;            
+            IEnumerable<KeyValuePair<DateTime, Price>> generator = SignalStock.TimeSeries.ValueGenerator(startTime, updateTime, false);
             KeyValuePair<DateTime, Price> beginPeriodValue = new KeyValuePair<DateTime, Price>();
             foreach (var endPeriodValue in generator)
             {
@@ -99,10 +99,7 @@ namespace MidaxLib
         {
             Price avgPrice = IndicatorFunc(mktData, updateTime, value);
             if (avgPrice != null)
-            {
-                base.OnUpdate(mktData, updateTime, avgPrice);
                 Publish(_nextRsiTime, avgPrice.MidPrice());
-            }
         }
     }
 }

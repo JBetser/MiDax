@@ -8,14 +8,14 @@ namespace MidaxLib
 {
     public class SignalMacD : Signal
     {
-        protected IndicatorWMA _low = null;
-        protected IndicatorWMA _high = null;
+        protected IndicatorEMA _low = null;
+        protected IndicatorEMA _high = null;
         protected SIGNAL_CODE _trendAssumption = SIGNAL_CODE.UNKNOWN;
 
-        public IndicatorWMA IndicatorLow { get { return _low; } }
-        public IndicatorWMA IndicatorHigh { get { return _high; } }
+        public IndicatorEMA IndicatorLow { get { return _low; } }
+        public IndicatorEMA IndicatorHigh { get { return _high; } }
 
-        public SignalMacD(MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null, MarketData tradingAsset = null)
+        public SignalMacD(MarketData asset, int lowPeriod, int highPeriod, IndicatorEMA low = null, IndicatorEMA high = null, MarketData tradingAsset = null)
             : base("MacD_" + lowPeriod + "_" + highPeriod + "_" + asset.Id, asset, tradingAsset)
         {
             if (Config.Settings.ContainsKey("ASSUMPTION_TREND"))
@@ -30,7 +30,7 @@ namespace MidaxLib
             _mktIndicator.Add(_high);
         }
 
-        public SignalMacD(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorWMA low = null, IndicatorWMA high = null, MarketData tradingAsset = null)
+        public SignalMacD(string id, MarketData asset, int lowPeriod, int highPeriod, IndicatorEMA low = null, IndicatorEMA high = null, MarketData tradingAsset = null)
             : this(asset, lowPeriod, highPeriod, low, high, tradingAsset)
         {
             _id = id;

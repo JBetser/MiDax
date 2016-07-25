@@ -136,7 +136,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("12:00:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("6:30:00")]
         public string PUBLISHING_START_TIME {
             get {
                 return ((string)(this["PUBLISHING_START_TIME"]));
@@ -145,7 +145,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("14:00:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("8:00:00")]
         public string TRADING_START_TIME {
             get {
                 return ((string)(this["TRADING_START_TIME"]));
@@ -284,6 +284,24 @@ namespace Midax.Properties {
         public string REPLAY_MODE {
             get {
                 return ((string)(this["REPLAY_MODE"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("GBPUSD:CS.D.GBPUSD.TODAY.IP")]
+        public string FX_GBPUSD {
+            get {
+                return ((string)(this["FX_GBPUSD"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("GBPEUR:CS.D.GBPEUR.TODAY.IP")]
+        public string FX_GBPEUR {
+            get {
+                return ((string)(this["FX_GBPEUR"]));
             }
         }
     }

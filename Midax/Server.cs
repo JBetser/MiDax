@@ -56,22 +56,25 @@ public class Server
                 var index = IceStreamingMarketData.Instance;
                 var tradingIndex = new MarketData(dicSettings["INDEX_DOW"]);
                 var dax = new MarketData(dicSettings["INDEX_DAX"]);
+                var gbpusd = new MarketData(dicSettings["FX_GBPUSD"]);
                 List<MarketData> otherIndices = new List<MarketData>();
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
                 var models = new List<Model>();
-                var macDV_10_30_90_dow = new ModelMacDV(index, 10, 30, 90, tradingIndex);
                 var macD_10_30_90_dax = new ModelMacD(dax, 10, 30, 90);
+                var macD_10_30_90_gbpusd = new ModelMacD(gbpusd, 10, 30, 90);
+                var macDV_10_30_90_dow = new ModelMacDV(index, 10, 30, 90, tradingIndex);
                 models.Add(macD_10_30_90_dax);
+                models.Add(macD_10_30_90_gbpusd);
                 models.Add(macDV_10_30_90_dow);
                 models.Add(new ModelANN(macD_10_30_90_dax, null, null, otherIndices));
                 models.Add(new ModelMacDCascade(macDV_10_30_90_dow));
-                models.Add(new ModelMole(macDV_10_30_90_dow));
-                _trader = new Trader(models, communicator().shutdown);
-                adapter.add(new MidaxIceI(_trader, properties.getProperty("Ice.ProgramName")), id);                
-                adapter.activate();
-
+                models.Add(new ModelMole(macD_10_30_90_dax));
+                models.Add(new ModelMole(macD_10_30_90_gbpusd));
+                _trader = new Trader(models, communicator().shutdown); 
                 _trader.Init(Config.GetNow);
 
+                adapter.add(new MidaxIceI(_trader, properties.getProperty("Ice.ProgramName")), id);
+                adapter.activate();
                 communicator().waitForShutdown();
             }
             catch (SEHException exc)

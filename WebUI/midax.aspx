@@ -287,6 +287,7 @@
                <option value="IceConnection.DJI">DOW</option>
                <option value="IX.D.CAC.DAILY.IP">CAC</option>
                <option value="IN.D.VIX.MONTH2.IP">VIX</option>
+               <option value="CS.D.GBPUSD.TODAY.IP">GBPUSD</option>
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>
@@ -296,7 +297,10 @@
                <option value="EMA_10#EMA_30#EMA_90">EMA 10mn/30mn/1hr30</option>
                <option value="VEMA_10#VEMA_30#VEMA_90">VEMA 10mn/30mn/1hr30</option>
                <option value="RSI_1_14#RSI_3_14">RSI14 1mn/3mn</option>
-               <option value="Cor_10_IX.D.DAX.DAILY.IP#Cor_30_IX.D.DAX.DAILY.IP">DAX Correlation 10mn/30mn</option>
+               <option value="Water_1_15_depth0#Water_3_15_depth0">Water15 d0 1mn/3mn</option>
+               <option value="Water_1_15_valuediff0#Water_3_15_valuediff0">Water15 vd0 1mn/3mn</option>
+               <option value="Water_1_15_timediff0#Water_3_15_timediff0">Water15 td0 1mn/3mn</option>
+               <option value="Cor_10_IX.D.DOW.DAILY.IP#Cor_30_IX.D.DOW.DAILY.IP">DOW Correlation 10mn/30mn</option>
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="VWMVol_10">VWM Vol 10mn</option>

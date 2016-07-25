@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MidaxLib
 {
-    public class SignalMacDCascade : SignalMacDV
+    public class SignalMacDCascade : SignalMacD
     {
         decimal _threshold = 0.0m;
         decimal _pivot = 0.0m;
@@ -16,7 +16,7 @@ namespace MidaxLib
         bool _buying = false;
         bool _selling = false;
 
-        public SignalMacDCascade(MarketData asset, int verylowPeriod, int lowPeriod, int highPeriod, decimal threshold, IndicatorVEMA low = null, IndicatorVEMA high = null, MarketData tradingIndex = null)
+        public SignalMacDCascade(MarketData asset, int verylowPeriod, int lowPeriod, int highPeriod, decimal threshold, IndicatorEMA low = null, IndicatorEMA high = null, MarketData tradingIndex = null)
             : base("MacDCas_" + verylowPeriod + "_" + lowPeriod + "_" + highPeriod + "_" + (int)decimal.Round(threshold * 100.0m) + "_" + asset.Id, asset, lowPeriod, highPeriod, low, high, tradingIndex)
         {
             _threshold = threshold;
@@ -147,9 +147,9 @@ namespace MidaxLib
         }
     }
 
-    public class SignalMole : SignalMacDV
+    public class SignalMole : SignalMacD
     {    
-        public SignalMole(MarketData asset, int lowPeriod, int midPeriod, int highPeriod, IndicatorVEMA low = null, IndicatorVEMA high = null, MarketData tradingIndex = null)
+        public SignalMole(MarketData asset, int lowPeriod, int midPeriod, int highPeriod, IndicatorEMA low = null, IndicatorEMA high = null, MarketData tradingIndex = null)
             : base("Mole_" + lowPeriod + "_" + midPeriod + "_" + highPeriod + "_" + asset.Id, asset, lowPeriod, midPeriod, low, high, tradingIndex)
         {            
         }

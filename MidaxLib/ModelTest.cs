@@ -86,7 +86,7 @@ namespace MidaxLib
 
     public class ModelMacDCascadeTest : ModelMacDCascade
     {
-        public ModelMacDCascadeTest(ModelMacDV macD)
+        public ModelMacDCascadeTest(ModelMacD macD)
             : base(macD)
         {
         }
@@ -126,7 +126,7 @@ namespace MidaxLib
 
     public class ModelMoleTest : ModelMole
     {
-        public ModelMoleTest(ModelMacDV macD)
+        public ModelMoleTest(ModelMacD macD)
             : base(macD)
         {
         }
