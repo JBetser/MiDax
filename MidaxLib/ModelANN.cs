@@ -13,9 +13,10 @@ namespace MidaxLib
         protected List<MarketData> _daxStocks = null;
         protected List<MarketData> _otherIndices = null;
         protected MarketData _vix = null;
-        protected IndicatorWMA _wma_low = null;
-        protected IndicatorWMA _wma_mid = null;
-        protected IndicatorWMA _wma_high = null;
+        protected IndicatorEMA _wma_verylow = null;
+        protected IndicatorEMA _wma_low = null;
+        protected IndicatorEMA _wma_mid = null;
+        protected IndicatorEMA _wma_high = null;
         protected SignalANN _ann = null;
         protected List<decimal> _annWeights = null;
         ModelMacD _macD;
@@ -34,13 +35,15 @@ namespace MidaxLib
         public override void Init()
         {
             base.Init();
-            _wma_low = new IndicatorWMA(_macD.SignalLow.IndicatorLow);
+            _wma_verylow = new IndicatorEMA(_macD.Index, 2);
+            _wma_low = new IndicatorEMA(_macD.SignalLow.IndicatorLow);
             _wma_low.PublishingEnabled = false;
-            _wma_mid = new IndicatorWMA(_macD.SignalLow.IndicatorHigh);
+            _wma_mid = new IndicatorEMA(_macD.SignalLow.IndicatorHigh);
             _wma_mid.PublishingEnabled = false;
-            _wma_high = new IndicatorWMA(_macD.SignalHigh.IndicatorHigh);
+            _wma_high = new IndicatorEMA(_macD.SignalHigh.IndicatorHigh);
             _wma_high.PublishingEnabled = false;
             _mktIndices.AddRange(_otherIndices);
+            _mktIndicators.Add(_wma_low);
             _mktIndicators.Add(_wma_low);
             _mktIndicators.Add(_wma_mid);
             _mktIndicators.Add(_wma_high);
@@ -48,11 +51,12 @@ namespace MidaxLib
             _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 3));
             _mktIndicators.Add(new IndicatorNearestLevel(_daxIndex));
 
-            var annId = "WMA_4_2";
+            var annId = "WMA_5_2";
             int lastversion = StaticDataConnection.Instance.GetAnnLatestVersion(annId, _daxIndex.Id);
             _annWeights = StaticDataConnection.Instance.GetAnnWeights(annId, _daxIndex.Id, lastversion);
             var signalType = Type.GetType("MidaxLib.SignalANN" + annId);
             List<Indicator> annIndicators = new List<Indicator>();
+            annIndicators.Add(_wma_verylow);
             annIndicators.Add(_wma_low);
             annIndicators.Add(_wma_mid);
             annIndicators.Add(_wma_high);

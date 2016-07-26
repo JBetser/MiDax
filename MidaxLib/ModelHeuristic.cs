@@ -52,10 +52,14 @@ namespace MidaxLib
             _macD = macD;
             _index = macD.Index;
             _mktLevels = _index.Levels;
-            _mappingCorrel[Config.Settings["INDEX_DOW"].Split(':')[1]] = Config.Settings["INDEX_DAX"];
-            _mappingCorrel[Config.Settings["INDEX_DAX"].Split(':')[1]] = Config.Settings["INDEX_DOW"];
-            _mappingCorrel[Config.Settings["FX_GBPUSD"].Split(':')[1]] = Config.Settings["FX_GBPEUR"];
-            _mappingCorrel[Config.Settings["FX_GBPEUR"].Split(':')[1]] = Config.Settings["FX_GBPUSD"];
+            if (Config.Settings.ContainsKey("INDEX_DOW"))
+                _mappingCorrel[Config.Settings["INDEX_DOW"].Split(':')[1]] = Config.Settings["INDEX_DAX"];
+            if (Config.Settings.ContainsKey("INDEX_DAX"))
+                _mappingCorrel[Config.Settings["INDEX_DAX"].Split(':')[1]] = Config.Settings["INDEX_DOW"];
+            if (Config.Settings.ContainsKey("FX_GBPUSD"))
+                _mappingCorrel[Config.Settings["FX_GBPUSD"].Split(':')[1]] = Config.Settings["FX_GBPEUR"];
+            if (Config.Settings.ContainsKey("FX_GBPEUR"))
+                _mappingCorrel[Config.Settings["FX_GBPEUR"].Split(':')[1]] = Config.Settings["FX_GBPUSD"];
         }
 
         public override void Init()

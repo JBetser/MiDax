@@ -29,6 +29,7 @@ namespace MidaxLib
         int _nbPeriods;
         int _subPeriodSeconds;
         DateTime _nextRsiTime = DateTime.MinValue;
+        List<RsiCandle> _rsiCandles = new List<RsiCandle>();
 
         public IndicatorRSI(MarketData mktData, int subPeriodMinutes, int nbPeriods)
             : base("RSI_" + subPeriodMinutes + "_" + nbPeriods + "_" + mktData.Id, mktData, nbPeriods * subPeriodMinutes)
@@ -41,6 +42,18 @@ namespace MidaxLib
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
             return calcRSI(mktData, updateTime);
+        }
+
+        struct RsiCandle
+        {
+            public bool Gain;
+            public decimal Diff;
+
+            public RsiCandle(bool gain, decimal diff)
+            {
+                Gain = gain;
+                Diff = diff;
+            }
         }
 
         public Price calcRSI(MarketData mktData, DateTime updateTime)

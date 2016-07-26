@@ -290,7 +290,7 @@ namespace MidaxLib
                         epicsToDelete.Add(epicQuotes.Key);
                     else
                     {
-                        if (epicQuotes.Value[0].t < minNextTime)
+                        if (epicQuotes.Value[0].t <= minNextTime)
                         {
                             minNextTime = epicQuotes.Value[0].t;
                             nextUpdate = new ReplayUpdateInfo(epicQuotes.Value[0]);
@@ -642,12 +642,19 @@ namespace MidaxLib
             csvContent += Environment.NewLine;
             csvContent += _csvTradeStringBuilder.ToString();
             csvContent += Environment.NewLine;
-            csvContent += _csvProfitStringBuilder.ToString();            
-            File.WriteAllText(_csvFile, csvContent);
-            string info = "Generated results in " + _csvFile;
+            csvContent += _csvProfitStringBuilder.ToString();
+            string info = "Generated results in ";
+            if (_csvFile != null)
+            {
+                File.WriteAllText(_csvFile, csvContent);
+                info += _csvFile;
+            }
+            else
+                info = "No results to generate";
             Log.Instance.WriteEntry(info, EventLogEntryType.Information);
             Thread.Sleep(1000);            
             init();
+            _instance = null;
             return info;
         }
     }

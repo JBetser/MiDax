@@ -31,7 +31,7 @@ namespace MidaxTester
             Config.Settings = dicSettings;
 
             string action = generate ? "Generating" : "Testing";
-            var index = new MarketData("DAX:IX.D.DAX.DAILY.IP");            
+            var dax = new MarketData("DAX:IX.D.DAX.DAILY.IP");            
             List<string> tests = new List<string>();
 
             Console.WriteLine(action + " WMA...");
@@ -40,7 +40,7 @@ namespace MidaxTester
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMAgen.csv");
-            var macDTestWMA = new ModelMacDTest(index,1,2,3);
+            var macDTestWMA = new ModelMacDTest(dax, 1, 2, 3);
             MarketDataConnection.Instance.Connect(null);
             macDTestWMA.StartSignals();
             macDTestWMA.StopSignals();
@@ -51,7 +51,7 @@ namespace MidaxTester
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMA2gen.csv");
-            macDTestWMA = new ModelMacDTest(index, 1, 2, 3);
+            macDTestWMA = new ModelMacDTest(dax, 1, 2, 3);
             MarketDataConnection.Instance.Connect(null);
             macDTestWMA.StartSignals();
             macDTestWMA.StopSignals();
@@ -63,7 +63,7 @@ namespace MidaxTester
             dicSettings["TIME_DECAY_FACTOR"] = "3";
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMA3gen.csv");
-            macDTestWMA = new ModelMacDTest(index, 1, 2, 3);
+            macDTestWMA = new ModelMacDTest(dax, 1, 2, 3);
             MarketDataConnection.Instance.Connect(null);
             macDTestWMA.StartSignals();
             macDTestWMA.StopSignals();
@@ -74,7 +74,7 @@ namespace MidaxTester
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMA4gen.csv");
-            var macDVTest = new ModelMacDVTest(index, 1, 2, 3);
+            var macDVTest = new ModelMacDVTest(dax, 1, 2, 3);
             MarketDataConnection.Instance.Connect(null);
             macDVTest.StartSignals();
             macDVTest.StopSignals();
@@ -89,11 +89,10 @@ namespace MidaxTester
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testRsiCorrelgen.csv");
-            var dax = new MarketData(dicSettings["INDEX_DAX"]);
-            var iceindex = new MarketData(dicSettings["INDEX_ICEDOW"]);
-            index = new MarketData(dicSettings["INDEX_DOW"]);
+            var icedow = new MarketData(dicSettings["INDEX_ICEDOW"]);
+            var dow = new MarketData(dicSettings["INDEX_DOW"]);
             var macD = new ModelMacDTest(dax, 1, 2, 3);
-            var macDV = new ModelMacDVTest(iceindex, 1, 2, 3, index);
+            var macDV = new ModelMacDVTest(icedow, 1, 2, 3, dow);
             var moleTest = new ModelMoleTest(macDV);
             MarketDataConnection.Instance.Connect(null);
             macD.StartSignals(false);
@@ -219,7 +218,7 @@ namespace MidaxTester
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\coregen_22_1_2016.csv");
             MarketDataConnection.Instance.Connect(null);
-            var model = new ModelMacDTest(index); 
+            var model = new ModelMacDTest(dax); 
             model.StartSignals();
             
             Console.WriteLine(action + " daily indicators...");            
@@ -238,11 +237,11 @@ namespace MidaxTester
 
                 // test trade booking
                 MarketDataConnection.Instance = new ReplayConnection();
-                model = new ModelMacDTest(index);
+                model = new ModelMacDTest(dax);
                 MarketDataConnection.Instance.Connect(null);
                 Console.WriteLine(action + " trade booking...");
                 var tradeTime = Config.ParseDateTimeLocal(dicSettings["TRADING_CLOSING_TIME"]).AddSeconds(-1);
-                var tradeTest = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 10000m);
+                var tradeTest = new Trade(tradeTime, dax.Id, SIGNAL_CODE.SELL, 10, 10000m);
                 var expectedTrades = new Dictionary<KeyValuePair<string, DateTime>, Trade>();
                 expectedTrades[new KeyValuePair<string, DateTime>("###DUMMY_TRADE_REF1###", tradeTime)] = tradeTest;
                 ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null);
@@ -251,7 +250,7 @@ namespace MidaxTester
                 Thread.Sleep(1000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != -10)
                     throw new ApplicationException("SELL Trade booking error");
-                var expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.BUY, 10, 10000m);
+                var expectedTrade = new Trade(tradeTime, dax.Id, SIGNAL_CODE.BUY, 10, 10000m);
                 expectedTrade.Reference = "###CLOSE_DUMMY_TRADE_REF2###";
                 expectedTrade.Id = "###DUMMY_TRADE_ID1###";
                 expectedTrades[new KeyValuePair<string, DateTime>(expectedTrade.Reference, tradeTime)] = expectedTrade;
@@ -266,7 +265,7 @@ namespace MidaxTester
                 Thread.Sleep(1000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 10)
                     throw new ApplicationException("BUY Trade booking error");
-                expectedTrade = new Trade(tradeTime, index.Id, SIGNAL_CODE.SELL, 10, 0m);
+                expectedTrade = new Trade(tradeTime, dax.Id, SIGNAL_CODE.SELL, 10, 0m);
                 expectedTrade.Reference = "###CLOSE_DUMMY_TRADE_REF4###";
                 expectedTrade.Id = "###DUMMY_TRADE_ID2###";
                 expectedTrades[new KeyValuePair<string, DateTime>(expectedTrade.Reference, tradeTime)] = expectedTrade;
@@ -278,7 +277,7 @@ namespace MidaxTester
                 testsSync.Add(@"..\..\expected_results\sync.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
                 MarketDataConnection.Instance = new ReplayCrazySeller();
-                model = new ModelMacDTest(index);
+                model = new ModelMacDTest(dax);
                 Console.WriteLine(action + " synchronization...");
                 MarketDataConnection.Instance.Connect(null);
                 model.StartSignals();
@@ -287,7 +286,7 @@ namespace MidaxTester
                 testsSync.Add(@"..\..\expected_results\sync2.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testsSync);
                 MarketDataConnection.Instance = new ReplayCrazyBuyer();
-                model = new ModelMacDTest(index);
+                model = new ModelMacDTest(dax);
                 MarketDataConnection.Instance.Connect(null);
                 model.StartSignals();
                 model.StopSignals();
@@ -299,7 +298,7 @@ namespace MidaxTester
                 List<string> testError = new List<string>();
                 testError.Add(@"..\..\expected_results\error.csv");
                 dicSettings["REPLAY_CSV"] = Config.TestList(testError);
-                var modelErr = new ModelMacDTest(index);
+                var modelErr = new ModelMacDTest(dax);
                 string expected;
                 bool success = false;
                 try
@@ -339,7 +338,7 @@ namespace MidaxTester
                 {
                     MarketDataConnection.Instance = new ReplayConnection();
                     MarketDataConnection.Instance.Connect(null);
-                    model = new ModelMacDTest(new MarketData(index.Id));
+                    model = new ModelMacDTest(new MarketData(dax.Id));
                     model.StartSignals();
                 }
                 catch (Exception exc)

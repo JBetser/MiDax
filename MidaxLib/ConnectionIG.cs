@@ -311,15 +311,20 @@ namespace MidaxLib
             }
         }
 
+        bool isIG(MarketData mktData)        
+        {
+            return mktData.Id.StartsWith("IX.") || mktData.Id.StartsWith("CS.");
+        }
+
         public override void SubscribeMarketData(MarketData mktData)
         {
-            if (mktData.Id.StartsWith("IX"))
+            if (isIG(mktData))
                 base.SubscribeMarketData(mktData);
         }
 
         public override void UnsubscribeMarketData(MarketData mktData)
         {
-            if (mktData.Id.StartsWith("IX"))
+            if (isIG(mktData))
                 base.UnsubscribeMarketData(mktData);
         }
     }
