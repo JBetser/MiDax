@@ -56,6 +56,10 @@ namespace MidaxLib
             _mktSignals.Add(_macD_high);
         }
 
+        protected override void Reset()
+        {
+        }
+
         protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
             if (_ptf.GetPosition(_tradingIndex.Id).Quantity < 0)

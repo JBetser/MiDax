@@ -32,6 +32,10 @@ namespace MidaxLib
                 _mktIndices.Add(_vix);           
         }
 
+        protected override void Reset()
+        {
+        }
+
         public override void Init()
         {
             base.Init();
@@ -43,7 +47,7 @@ namespace MidaxLib
             _wma_high = new IndicatorEMA(_macD.SignalHigh.IndicatorHigh);
             _wma_high.PublishingEnabled = false;
             _mktIndices.AddRange(_otherIndices);
-            _mktIndicators.Add(_wma_low);
+            _mktIndicators.Add(_wma_verylow);
             _mktIndicators.Add(_wma_low);
             _mktIndicators.Add(_wma_mid);
             _mktIndicators.Add(_wma_high);

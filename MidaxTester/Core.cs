@@ -17,7 +17,7 @@ namespace MidaxTester
         {           
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
-            dicSettings["PUBLISHING_START_TIME"] = "2016-01-22 08:30:00";
+            dicSettings["PUBLISHING_START_TIME"] = "2016-01-22 08:00:00";
             dicSettings["PUBLISHING_STOP_TIME"] = "2016-01-22 09:00:00";
             dicSettings["REPLAY_MODE"] = "CSV";  
             dicSettings["REPLAY_POPUP"] = "1";

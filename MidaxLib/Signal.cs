@@ -218,6 +218,8 @@ namespace MidaxLib
                         PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Offer);
                     else if (_signalCode == SIGNAL_CODE.SELL)
                         PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Bid);
+                    else if (_signalCode == SIGNAL_CODE.FAILED)
+                        PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Bid);
                 }
             }
         }

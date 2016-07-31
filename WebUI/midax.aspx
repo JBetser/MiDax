@@ -315,9 +315,8 @@
                <option value="MacDV_30_90">MacD 30mn/1h30</option>
                <option value="MacDCas_10_30_90_100">MacD Cascade 10mn/30mn/1h30 1pt</option>
                <option value="MacDCas_10_30_90_200">MacD Cascade 10mn/30mn/1h30 2pts</option>
-               <option value="Mole_2_10_60">Mole 2mn/10mn/1h</option>
                <option value="Mole_2_10_90">Mole 2mn/10mn/1h30</option>
-               <option value="Mole_7_20_60">Mole 7mn/20mn/1h</option>
+               <option value="FXMole_1_14">FX Mole 14 1mn</option>
                <option value="ANN_WMA_4_2_1">ANN WMA</option>
              </select>          
 

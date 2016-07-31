@@ -45,13 +45,19 @@ namespace MidaxLib
             {
                 if (signal.Id == _tradingSignal)
                 {
-                    if (_ptf.GetPosition(signal.TradingAsset.Id).Quantity > 0)
+                    var pos = _ptf.GetPosition(signal.TradingAsset.Id);
+                    if (pos == null)
+                    {
+                        Reset();
+                        return false;
+                    }
+                    if (pos.Quantity > 0)
                     {
                         Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
                         Portfolio.Instance.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Bid, signal);
                         return false;
                     }
-                    signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.BUY, _amount, stockValue.Offer);
+                    signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.BUY, _amount, stockValue.Offer, 0, Reset);
                     return Buy(signal, time, stockValue);
                 }
             }
@@ -64,13 +70,19 @@ namespace MidaxLib
             {
                 if (signal.Id == _tradingSignal)
                 {
-                    if (_ptf.GetPosition(signal.TradingAsset.Id).Quantity < 0)
+                    var pos = _ptf.GetPosition(signal.TradingAsset.Id);
+                    if (pos == null)
+                    {
+                        Reset();
+                        return false;
+                    }
+                    if (pos.Quantity < 0)
                     {
                         Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
                         Portfolio.Instance.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Offer, signal);
                         return false;
                     }
-                    signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid);
+                    signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid, 0, Reset);
                     return Sell(signal, time, stockValue);
                 }
             }
@@ -79,6 +91,7 @@ namespace MidaxLib
 
         protected abstract bool Buy(Signal signal, DateTime time, Price stockValue);
         protected abstract bool Sell(Signal signal, DateTime time, Price stockValue);
+        protected abstract void Reset();
 
         protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)
         {

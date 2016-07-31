@@ -186,6 +186,14 @@ namespace MidaxLib
             return ClosestValue(_series.Count - 1, time);
         }
 
+        public KeyValuePair<DateTime, Price>? PrevValue(DateTime time)
+        {
+            var val = Value(time);
+            if (!val.HasValue)
+                return null;
+            return Prev(val.Value.Key);
+        }
+
         public KeyValuePair<DateTime, Price>? Next(DateTime time)
         {
             if (_series.Count == 0)

@@ -13,7 +13,7 @@ namespace MidaxTester
         public static void Run(List<DateTime> dates, bool generate = false, bool generate_from_db = false, bool publish_to_db = false, bool use_uat_db = false, bool fullday = false)
         {
             TestEngine testEngine = new TestEngine("heuristic", dates, generate, generate_from_db, publish_to_db, use_uat_db, fullday);
-            testEngine.Settings["TRADING_SIGNAL"] = "MacDCas_10_30_90_200_IceConnection.DJI";
+            testEngine.Settings["TRADING_SIGNAL"] = "FXMole_1_14_CS.D.GBPUSD.TODAY.IP";
             testEngine.Settings["TIME_DECAY_FACTOR"] = "3";
             testEngine.Settings["ASSUMPTION_TREND"] = "BEAR";
             testEngine.Settings["INDEX_ICEDOW"] = "DOW:IceConnection.DJI";
@@ -24,13 +24,12 @@ namespace MidaxTester
             testEngine.Settings["FX_GBPEUR"] = "GBPEUR:CS.D.GBPEUR.TODAY.IP";
 
             var models = new List<Model>();            
-            var dow = new MarketData(testEngine.Settings["INDEX_ICEDOW"], testEngine.Settings["INDEX_DOW"]);
-            var dowIG = new MarketData(testEngine.Settings["INDEX_DOW"]);
-            var dax = new MarketData(testEngine.Settings["INDEX_DAX"]);
-            models.Add(new ModelMacDVTest(dow, 10, 30, 90, dowIG));
-            models.Add(new ModelMacDTest(dax, 10, 30, 90));
-            models.Add(new ModelMacDCascadeTest((ModelMacD)models[1]));
-            models.Add(new ModelMoleTest((ModelMacD)models[1]));
+            var gbpusd = new MarketData(testEngine.Settings["FX_GBPUSD"]);
+            //var dax = new MarketData(testEngine.Settings["INDEX_DAX"]);
+            models.Add(new ModelMacD(gbpusd, 10, 30, 90));
+            models.Add(new ModelFXMole(gbpusd, (ModelMacD)models[0]));
+            //models.Add(new ModelFXMole(dax));
+            //models.Add(new ModelMacD(gbpusd, 2, 10, 30));
             testEngine.Run(models);          
         }
     }

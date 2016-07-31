@@ -140,22 +140,21 @@ namespace MidaxLib
                 return;
             if (Config.TradingOpen(newTrade.TradingTime))
             {
-                foreach (var pos in _positions.Values)
-                {
-                    if (pos.AwaitingTrade)
-                    {
-                        Log.Instance.WriteEntry(string.Format("Cannot book a new trade as a deal is already pending, Epic: {0}, Size: {1}, Value: {2}. Waiting for position {3} to be updated", newTrade.Epic, newTrade.Size, newTrade.Price, pos.Epic), System.Diagnostics.EventLogEntryType.Warning);
-                        return;
-                    }
-                }
-                if (!_positions.ContainsKey(newTrade.Epic))
-                    _positions.Add(newTrade.Epic, new Position(newTrade.Epic));
-                _igStreamApiClient.BookTrade(newTrade, OnTradeBooked, OnBookingFailed);
+                if (GetPosition(newTrade.Epic) != null)
+                    _igStreamApiClient.BookTrade(newTrade, OnTradeBooked, OnBookingFailed);
             }
         }
 
         public Position GetPosition(string epic)
         {
+            foreach (var pos in _positions.Values)
+            {
+                if (pos.AwaitingTrade)
+                {
+                    Log.Instance.WriteEntry(string.Format("Cannot book a new trade as a deal is already pending, Epic: {0}. Waiting for position to be updated", epic), System.Diagnostics.EventLogEntryType.Warning);
+                    return null;
+                }
+            }
             if (!_positions.ContainsKey(epic))
                 _positions.Add(epic, new Position(epic));
             return _positions[epic];

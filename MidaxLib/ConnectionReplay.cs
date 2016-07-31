@@ -229,7 +229,7 @@ namespace MidaxLib
                 trade.ConfirmationTime = trade.TradingTime;                
                 onTradeBooked(trade);
                 var bookingEvent = new TradeBookingEvent(trade);
-                _bookingTimers.Add(new System.Threading.Timer(onCreateTradeNotification, bookingEvent, 100, Timeout.Infinite));
+                _bookingTimers.Add(new System.Threading.Timer(onCreateTradeNotification, bookingEvent, 10, Timeout.Infinite));
             }
         }
 
@@ -250,7 +250,7 @@ namespace MidaxLib
                 closingTrade.ConfirmationTime = time;
                 onTradeBooked(closingTrade);
                 TradeBookingEvent bookingEvent = new TradeBookingEvent(closingTrade);
-                _bookingTimers.Add(new System.Threading.Timer(onClosePositionNotification, bookingEvent, 100, Timeout.Infinite));
+                _bookingTimers.Add(new System.Threading.Timer(onClosePositionNotification, bookingEvent, 10, Timeout.Infinite));
             }
         }
 
@@ -486,9 +486,8 @@ namespace MidaxLib
 
         List<decimal> IStaticDataConnection.GetAnnWeights(string annid, string stockid, int version)
         {
-            return new List<decimal> {  72.3059189398836m, 72.8785271734858m, 81.873849047948m, 71.6605471639554m, 
-                99.3678597133658m, -1.39731049606147m, -0.973839446848656m, 0.854679349838304m, 2.10407644665642m, 
-                26.6526593970665m, 0.0758744148816272m, -0.15246543443817m, 0.0886880451059489m };
+            return new List<decimal> { -0.436790026694904m, 0.498194032347851m, -0.214276598167734m, -0.141450802162965m, 0.357833455716182m, 0.32193919961431m, -0.441598332459851m, 
+                0.0140020817117775m, 0.217530195004088m, -0.373687287268083m, -0.163388582255407m, -0.433217866315142m, -0.13287454267632m, -0.219790011979542m, -0.377691165021477m };
         }
     }
 
