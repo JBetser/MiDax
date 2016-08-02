@@ -121,32 +121,30 @@ function processResponses(jsonData) {
                     else
                         nbSell++;
                 });
-                if (ASSUMPTION_TREND != "") {
-                    if (nbBuy != nbSell) {
-                        if (nbBuy > nbSell) {
-                            var buyLast = false;
-                            do {
-                                buyLast = jsonData[marketData].response[0].b == buyValue;
-                                if (buyLast) {
-                                    jsonData[marketData].response.splice(0, 1);
-                                    nbBuy--;
-                                }
-                                if (jsonData[marketData].response.length == 0)
-                                    buyLast = false;
-                            } while (buyLast);
-                        }
-                        else {
-                            var sellLast = false;
-                            do {
-                                sellLast = jsonData[marketData].response[0].b == sellValue;
-                                if (sellLast) {
-                                    jsonData[marketData].response.splice(0, 1);
-                                    nbSell--;
-                                }
-                                if (jsonData[marketData].response.length == 0)
-                                    sellLast = false;
-                            } while (sellLast);
-                        }
+                if (nbBuy != nbSell) {
+                    if (nbBuy > nbSell) {
+                        var buyLast = false;
+                        do {
+                            buyLast = jsonData[marketData].response[0].b == buyValue;
+                            if (buyLast) {
+                                jsonData[marketData].response.splice(0, 1);
+                                nbBuy--;
+                            }
+                            if (jsonData[marketData].response.length == 0)
+                                buyLast = false;
+                        } while (buyLast && nbBuy != nbSell);
+                    }
+                    else {
+                        var sellLast = false;
+                        do {
+                            sellLast = jsonData[marketData].response[0].b == sellValue;
+                            if (sellLast) {
+                                jsonData[marketData].response.splice(0, 1);
+                                nbSell--;
+                            }
+                            if (jsonData[marketData].response.length == 0)
+                                sellLast = false;
+                        } while (sellLast && nbBuy != nbSell);
                     }
                 }
                 if (nbBuy == nbSell || ASSUMPTION_TREND == "") {

@@ -59,6 +59,7 @@ public class Server
                 List<MarketData> otherIndices = new List<MarketData>();
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
                 otherIndices.Add(new MarketData(dicSettings["INDEX_DOW"]));
+                otherIndices.Add(gbpusd);
                 var models = new List<Model>();
                 var macD_10_30_90_dax = new ModelMacD(dax, 10, 30, 90);
                 var macD_10_30_90_gbpusd = new ModelMacD(gbpusd, 10, 30, 90);

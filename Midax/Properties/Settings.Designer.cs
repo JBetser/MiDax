@@ -217,7 +217,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("MacDCas_10_30_90_200_IceConnection.DOW")]
+        [global::System.Configuration.DefaultSettingValueAttribute("FXMole_1_14_CS.D.GBPUSD.TODAY.IP")]
         public string TRADING_SIGNAL {
             get {
                 return ((string)(this["TRADING_SIGNAL"]));

@@ -125,6 +125,28 @@ namespace MidaxLib
             yield break;
         }
 
+        public decimal Min(DateTime timeStart, DateTime timeEnd)
+        {
+            decimal minVal = decimal.MaxValue;
+            foreach (var val in ValueGenerator(timeStart, timeEnd, false))
+            {
+                if (val.Value.Mid() < minVal)
+                    minVal = val.Value.Mid();
+            }
+            return minVal;
+        }
+
+        public decimal Max(DateTime timeStart, DateTime timeEnd)
+        {
+            decimal maxVal = decimal.MinValue;
+            foreach (var val in ValueGenerator(timeStart, timeEnd, false))
+            {
+                if (val.Value.Mid() > maxVal)
+                    maxVal = val.Value.Mid();
+            }
+            return maxVal;
+        }
+
         class SeriesComparer : IComparer<KeyValuePair<DateTime, Price>>
         {
             int IComparer<KeyValuePair<DateTime, Price>>.Compare(KeyValuePair<DateTime, Price> x, KeyValuePair<DateTime, Price> y)
