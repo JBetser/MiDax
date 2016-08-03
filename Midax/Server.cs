@@ -56,8 +56,8 @@ public class Server
                 var index = IceStreamingMarketData.Instance;
                 var dax = new MarketData(dicSettings["INDEX_DAX"]);
                 var gbpusd = new MarketData(dicSettings["FX_GBPUSD"]);
-                var gbpeur = new MarketData(dicSettings["FX_GBPUSD"]);
-                var eurusd = new MarketData(dicSettings["FX_GBPUSD"]);
+                var gbpeur = new MarketData(dicSettings["FX_GBPEUR"]);
+                var eurusd = new MarketData(dicSettings["FX_EURUSD"]);
                 List<MarketData> otherIndices = new List<MarketData>();
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
                 otherIndices.Add(new MarketData(dicSettings["INDEX_DOW"]));
