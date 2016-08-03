@@ -145,7 +145,7 @@ namespace MidaxLib
             if (rsi != null)
             {
                 _values.Add(_nextRsiTime, rsi);
-                Publish(_nextRsiTime, rsi.Bid);
+                Publish(updateTime, rsi.Bid);
             }
         }
 

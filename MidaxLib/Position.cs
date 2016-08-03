@@ -28,17 +28,18 @@ namespace MidaxLib
         }
         public string Epic { get { return _name; } }
         public Trade Trade { get { return _lastTrade; } }
-        public void AddIncomingTrade(Trade trade) 
+        public void AddIncomingTrade(Trade trade)
         {
             lock (_incomingTrades)
             {
                 _incomingTrades.Add(trade);
             }
         }
-        
+
         public bool AwaitingTrade
         {
-            get {
+            get
+            {
                 lock (_incomingTrades)
                 {
                     return _incomingTrades.Count != 0;
@@ -48,18 +49,20 @@ namespace MidaxLib
 
         bool pullTrade(string dealReference, out Trade trade)
         {
-
-            for (int idxTrade = 0; idxTrade < _incomingTrades.Count; idxTrade++)
+            lock (_incomingTrades)
             {
-                if (_incomingTrades[idxTrade].Reference == dealReference)
+                for (int idxTrade = 0; idxTrade < _incomingTrades.Count; idxTrade++)
                 {
-                    trade = _incomingTrades[idxTrade];
-                    _incomingTrades.Remove(trade);
-                    return true;
+                    if (_incomingTrades[idxTrade].Reference == dealReference)
+                    {
+                        trade = _incomingTrades[idxTrade];
+                        _incomingTrades.Remove(trade);
+                        return true;
+                    }
                 }
+                trade = null;
+                return false;
             }
-            trade = null;
-            return false;
         }
 
         public Position(string name)
@@ -89,101 +92,100 @@ namespace MidaxLib
 
         public bool OnUpdate(IUpdateInfo update)
         {
-            lock (_incomingTrades)
+
+            if (update == null)
+                return false;
+            if (update.NumFields == 0)
+                return false;
+            JavaScriptSerializer json_serializer = new JavaScriptSerializer();
+            if ((update.ToString().Replace(" ", "") == "[(null)]") || (update.ToString().Replace(" ", "") == "[null]"))
+                return false;
+            Log.Instance.WriteEntry("Incoming position update: " + update.ToString());
+            var json = json_serializer.DeserializeObject(update.ToString());
+            if (json.GetType().ToString() == "System.Object[]")
             {
-                if (update == null)
-                    return false;
-                if (update.NumFields == 0)
-                    return false;
-                JavaScriptSerializer json_serializer = new JavaScriptSerializer();
-                if ((update.ToString().Replace(" ", "") == "[(null)]") || (update.ToString().Replace(" ", "") == "[null]"))
-                    return false;
-                Log.Instance.WriteEntry("Incoming position update: " + update.ToString());
-                var json = json_serializer.DeserializeObject(update.ToString());
-                if (json.GetType().ToString() == "System.Object[]")
+                object[] objs = (object[])json;
+                if (objs != null)
                 {
-                    object[] objs = (object[])json;
-                    if (objs != null)
+                    foreach (var obj in objs)
                     {
-                        foreach (var obj in objs)
+                        var trade_notification = (Dictionary<string, object>)obj;
+                        if (trade_notification != null)
                         {
-                            var trade_notification = (Dictionary<string, object>)obj;
-                            if (trade_notification != null)
+                            if (trade_notification["dealStatus"].ToString() == "ACCEPTED")
                             {
-                                if (trade_notification["dealStatus"].ToString() == "ACCEPTED")
+                                if (trade_notification["epic"].ToString() == _name)
                                 {
-                                    if (trade_notification["epic"].ToString() == _name)
+                                    if (trade_notification["status"].ToString() == "OPEN")
                                     {
-                                        if (trade_notification["status"].ToString() == "OPEN")
-                                        {
-                                            string dealId = trade_notification["dealId"].ToString();
-                                            if (!AwaitingTrade)
-                                                Log.Instance.WriteEntry("An unexpected trade has been booked: " + dealId, System.Diagnostics.EventLogEntryType.Error);
-                                            var reference = trade_notification["dealReference"].ToString();
-                                            var direction = trade_notification["direction"].ToString() == "SELL" ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY;
-                                            var tradeSize = int.Parse(trade_notification["size"].ToString());
-                                            Trade trade;
-                                            if (pullTrade(reference, out trade))
-                                                _lastTrade = trade;
-                                            else
-                                                return false;
-                                            if (direction == SIGNAL_CODE.SELL)
-                                                tradeSize *= -1;
-                                            _lastTrade.Id = dealId;
-                                            _assetValue = _lastTrade.Price;
-                                            _tradePositions[_lastTrade.Id] = tradeSize;
-                                            _quantity += tradeSize;
-                                            Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);
-                                            _lastTrade.Publish();
-                                            return true;
-                                        }
-                                        else if (trade_notification["status"].ToString() == "DELETED")
-                                        {
-                                            string dealId = trade_notification["dealId"].ToString();
-                                            Log.Instance.WriteEntry("Closed a position: " + dealId);
-                                            if (!AwaitingTrade || _tradePositions.Count == 0)
-                                                Log.Instance.WriteEntry("An unexpected trade has been closed: " + dealId, System.Diagnostics.EventLogEntryType.Error);
-                                            var reference = trade_notification["dealReference"].ToString();
-                                            var direction = trade_notification["direction"].ToString() == "SELL" ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY;
-                                            var tradeSize = int.Parse(trade_notification["size"].ToString());
-                                            Trade trade;
-                                            if (!pullTrade(reference, out trade))
-                                                return false;
-                                            if (direction == SIGNAL_CODE.SELL)
-                                                tradeSize *= -1;
-                                            if (_tradePositions.ContainsKey(dealId))
-                                                _tradePositions[dealId] = _tradePositions[dealId] + tradeSize;
-                                            else
-                                                _tradePositions[dealId] = tradeSize;
-                                            _quantity += tradeSize;
-                                            if (_quantity != 0)
-                                                Log.Instance.WriteEntry("Position has not been closed successfully: " + dealId, System.Diagnostics.EventLogEntryType.Error);
-                                            trade.Id = dealId;
-                                            trade.Publish();
-                                            _lastTrade = null;
-                                            return true;
-                                        }
+                                        string dealId = trade_notification["dealId"].ToString();
+                                        if (!AwaitingTrade)
+                                            Log.Instance.WriteEntry("An unexpected trade has been booked: " + dealId, System.Diagnostics.EventLogEntryType.Error);
+                                        var reference = trade_notification["dealReference"].ToString();
+                                        var direction = trade_notification["direction"].ToString() == "SELL" ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY;
+                                        var tradeSize = int.Parse(trade_notification["size"].ToString());
+                                        Trade trade;
+                                        if (pullTrade(reference, out trade))
+                                            _lastTrade = trade;
+                                        else
+                                            return false;
+                                        if (direction == SIGNAL_CODE.SELL)
+                                            tradeSize *= -1;
+                                        _lastTrade.Id = dealId;
+                                        _assetValue = _lastTrade.Price;
+                                        _tradePositions[_lastTrade.Id] = tradeSize;
+                                        _quantity += tradeSize;
+                                        Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);
+                                        _lastTrade.Publish();
+                                        return true;
+                                    }
+                                    else if (trade_notification["status"].ToString() == "DELETED")
+                                    {
+                                        string dealId = trade_notification["dealId"].ToString();
+                                        Log.Instance.WriteEntry("Closed a position: " + dealId);
+                                        if (!AwaitingTrade || _tradePositions.Count == 0)
+                                            Log.Instance.WriteEntry("An unexpected trade has been closed: " + dealId, System.Diagnostics.EventLogEntryType.Error);
+                                        var reference = trade_notification["dealReference"].ToString();
+                                        var direction = trade_notification["direction"].ToString() == "SELL" ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY;
+                                        var tradeSize = int.Parse(trade_notification["size"].ToString());
+                                        Trade trade;
+                                        if (!pullTrade(reference, out trade))
+                                            return false;
+                                        if (direction == SIGNAL_CODE.SELL)
+                                            tradeSize *= -1;
+                                        if (_tradePositions.ContainsKey(dealId))
+                                            _tradePositions[dealId] = _tradePositions[dealId] + tradeSize;
+                                        else
+                                            _tradePositions[dealId] = tradeSize;
+                                        _quantity += tradeSize;
+                                        if (_quantity != 0)
+                                            Log.Instance.WriteEntry("Position has not been closed successfully: " + dealId, System.Diagnostics.EventLogEntryType.Error);
+                                        trade.Id = dealId;
+                                        trade.Publish();
+                                        _lastTrade = null;
+                                        return true;
                                     }
                                 }
-                                else {
-                                    // deal rejected
-                                    var reference = trade_notification["dealReference"].ToString();
-                                    Log.Instance.WriteEntry("A deal has been rejected: " + reference, System.Diagnostics.EventLogEntryType.Warning);
-                                    Trade trade;
-                                    if (!pullTrade(reference, out trade))
-                                    {
-                                        Log.Instance.WriteEntry("Cannot process a rejected deal: " + reference, System.Diagnostics.EventLogEntryType.Error);
-                                        return false;
-                                    }
-                                    trade.OnRejected();
+                            }
+                            else
+                            {
+                                // deal rejected
+                                var reference = trade_notification["dealReference"].ToString();
+                                Log.Instance.WriteEntry("A deal has been rejected: " + reference, System.Diagnostics.EventLogEntryType.Warning);
+                                Trade trade;
+                                if (!pullTrade(reference, out trade))
+                                {
+                                    Log.Instance.WriteEntry("Cannot process a rejected deal: " + reference, System.Diagnostics.EventLogEntryType.Error);
+                                    return false;
                                 }
+                                trade.OnRejected(trade.ConfirmationTime, trade.Price);
                             }
                         }
                     }
                 }
-                Log.Instance.WriteEntry("Could not process an update: " + update.ToString(), System.Diagnostics.EventLogEntryType.Error);
-                return false;
             }
+            Log.Instance.WriteEntry("Could not process an update: " + update.ToString(), System.Diagnostics.EventLogEntryType.Error);
+            return false;
         }
     }
 }

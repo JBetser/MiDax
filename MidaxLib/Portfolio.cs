@@ -65,6 +65,15 @@ namespace MidaxLib
             closePosition(new Trade(trade, true, closing_time), closing_time, onTradeBooked, onBookingFailed, 0, signal);
         }
 
+        public void ClosePosition(Position pos, DateTime closing_time, TradeBookedEvent onTradeBooked = null, TradeBookedEvent onBookingFailed = null, decimal stockValue = 0m, Signal signal = null)
+        {
+            if (onTradeBooked == null)
+                onTradeBooked = new TradeBookedEvent(OnTradeBooked);
+            if (onBookingFailed == null)
+                onBookingFailed = new TradeBookedEvent(OnBookingFailed);
+            closePosition(pos, closing_time, onTradeBooked, onBookingFailed, 0, stockValue, signal);
+        }
+
         public void CloseAllPositions(DateTime time, string stockid = "", decimal stockValue = 0m, Signal signal = null)
         {
             var addms = 1;
@@ -85,7 +94,7 @@ namespace MidaxLib
                 closePosition(pos, time.AddMilliseconds(addms++), new TradeBookedEvent(set.OnTradeBooked), new TradeBookedEvent(set.OnBookingFailed), idxPos++, stockValue);
         }
 
-        void closePosition(Position pos, DateTime time, TradeBookedEvent onTradeBooked, TradeBookedEvent onBookingFailed, int idxPlaceHolder = 0, decimal stockValue = 0m, Signal signal = null)
+        public void closePosition(Position pos, DateTime time, TradeBookedEvent onTradeBooked, TradeBookedEvent onBookingFailed, int idxPlaceHolder = 0, decimal stockValue = 0m, Signal signal = null)
         {
             if (pos.Quantity != 0)
             {

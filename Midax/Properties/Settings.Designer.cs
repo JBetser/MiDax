@@ -304,5 +304,14 @@ namespace Midax.Properties {
                 return ((string)(this["FX_GBPEUR"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("EURUSD:CS.D.EURUSD.TODAY.IP")]
+        public string FX_EURUSD {
+            get {
+                return ((string)(this["FX_EURUSD"]));
+            }
+        }
     }
 }

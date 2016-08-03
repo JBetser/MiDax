@@ -25,9 +25,11 @@ namespace MidaxTester
 
             var models = new List<Model>();            
             var gbpusd = new MarketData(testEngine.Settings["FX_GBPUSD"]);
+            List<MarketData> mktData = new List<MarketData>();
+            mktData.Add(gbpusd);
             //var dax = new MarketData(testEngine.Settings["INDEX_DAX"]);
             models.Add(new ModelMacD(gbpusd, 10, 30, 90));
-            models.Add(new ModelFXMole(gbpusd, (ModelMacD)models[0]));
+            models.Add(new ModelFXMole(mktData, new List<ModelMacD>{(ModelMacD)models[0]}));
             //models.Add(new ModelFXMole(dax));
             //models.Add(new ModelMacD(gbpusd, 2, 10, 30));
             testEngine.Run(models);          

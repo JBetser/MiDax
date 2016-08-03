@@ -56,7 +56,7 @@ namespace MidaxLib
             _mktSignals.Add(_macD_high);
         }
 
-        protected override void Reset()
+        protected override void Reset(DateTime cancelTime, decimal stockValue)
         {
         }
 

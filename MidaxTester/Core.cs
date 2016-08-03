@@ -51,6 +51,7 @@ namespace MidaxTester
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMA2gen.csv");
+            dax.Clear();
             macDTestWMA = new ModelMacDTest(dax, 1, 2, 3);
             MarketDataConnection.Instance.Connect(null);
             macDTestWMA.StartSignals();
@@ -63,12 +64,14 @@ namespace MidaxTester
             dicSettings["TIME_DECAY_FACTOR"] = "3";
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testWMA3gen.csv");
+            dax.Clear();
             macDTestWMA = new ModelMacDTest(dax, 1, 2, 3);
             MarketDataConnection.Instance.Connect(null);
             macDTestWMA.StartSignals();
             macDTestWMA.StopSignals();
 
             // Test volume weighted moving average with linear time decay
+            /*
             tests = new List<string>();
             tests.Add(@"..\..\expected_results\testWMA4.csv");
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
@@ -77,7 +80,7 @@ namespace MidaxTester
             var macDVTest = new ModelMacDVTest(dax, 1, 2, 3);
             MarketDataConnection.Instance.Connect(null);
             macDVTest.StartSignals();
-            macDVTest.StopSignals();
+            macDVTest.StopSignals();*/
             dicSettings.Remove("TIME_DECAY_FACTOR");
 
             // Test RSI and Correlation indicators
@@ -89,18 +92,19 @@ namespace MidaxTester
             dicSettings["REPLAY_CSV"] = Config.TestList(tests);
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\testRsiCorrelgen.csv");
+            dax.Clear();
             var icedow = new MarketData(dicSettings["INDEX_ICEDOW"]);
             var dow = new MarketData(dicSettings["INDEX_DOW"]);
             var macD = new ModelMacDTest(dax, 1, 2, 3);
-            var macDV = new ModelMacDVTest(icedow, 1, 2, 3, dow);
-            var moleTest = new ModelMoleTest(macDV);
+            //var macDV = new ModelMacDVTest(icedow, 1, 2, 3, dow);
+            var moleTest = new ModelMoleTest(macD);
             MarketDataConnection.Instance.Connect(null);
             macD.StartSignals(false);
-            macDV.StartSignals(false);
+            //macDV.StartSignals(false);
             moleTest.StartSignals(false);
             MarketDataConnection.Instance.StartListening();
             moleTest.StopSignals(false);
-            macDV.StartSignals(false);
+            //macDV.StartSignals(false);
             macD.StopSignals(false);
             MarketDataConnection.Instance.StopListening();
 
@@ -218,6 +222,7 @@ namespace MidaxTester
             if (generate)
                 dicSettings["PUBLISHING_CSV"] = string.Format("..\\..\\expected_results\\coregen_22_1_2016.csv");
             MarketDataConnection.Instance.Connect(null);
+            dax.Clear();
             var model = new ModelMacDTest(dax); 
             model.StartSignals();
             
@@ -308,8 +313,8 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Time series do not accept values in the past";
-                    success = (exc.Message == expected);
+                    expected = "Test failed: indicator EMA_1_IX.D.DAX.DAILY.IP time 08:30 expected value 9740.300000000000000000000000 != 9739.8";
+                    success = (exc.Message.Replace(" AM", "") == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
                 }
@@ -343,8 +348,8 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Time series do not accept values in the past";
-                    success = (exc.Message == expected);
+                    expected = "Test failed: indicator EMA_1_IX.D.DAX.DAILY.IP time 08:30 expected value 9740.300000000000000000000000 != 9739.8";
+                    success = (exc.Message.Replace(" AM", "") == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
                 }
@@ -357,7 +362,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator WMA_1_IX.D.DAX.DAILY.IP time 08:31 expected value 9735.710930440771349862258972 != 9735.705972222222222222222239";
+                    expected = "Time series do not accept values in the past";
                     success = (exc.Message.Replace(" AM", "") == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);

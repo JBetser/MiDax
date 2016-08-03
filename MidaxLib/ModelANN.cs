@@ -32,7 +32,7 @@ namespace MidaxLib
                 _mktIndices.Add(_vix);           
         }
 
-        protected override void Reset()
+        protected override void Reset(DateTime cancelTime, decimal stockValue)
         {
         }
 

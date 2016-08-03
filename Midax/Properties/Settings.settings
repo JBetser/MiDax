@@ -120,5 +120,8 @@
     <Setting Name="FX_GBPEUR" Type="System.String" Scope="Application">
       <Value Profile="(Default)">GBPEUR:CS.D.GBPEUR.TODAY.IP</Value>
     </Setting>
+    <Setting Name="FX_EURUSD" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">EURUSD:CS.D.EURUSD.TODAY.IP</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

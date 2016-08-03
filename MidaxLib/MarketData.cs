@@ -49,7 +49,6 @@ namespace MidaxLib
             _lastUpdateTime = DateTime.MinValue;
             _allPositionsClosed = false;
             _closePositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
-            Clear();
             if (updateHandler != null)
                 _updateHandlers.Add(updateHandler);
             if (tickerHandler != null)
@@ -76,6 +75,8 @@ namespace MidaxLib
         public void Clear()
         {
             _values = new TimeSeries();
+            _updateHandlers.Clear();
+            _tickHandlers.Clear();
         }
 
         public void FireTick(DateTime updateTime, L1LsPriceData value)

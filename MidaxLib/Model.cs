@@ -48,7 +48,7 @@ namespace MidaxLib
                     var pos = _ptf.GetPosition(signal.TradingAsset.Id);
                     if (pos == null)
                     {
-                        Reset();
+                        Reset(time, stockValue.Mid());
                         return false;
                     }
                     if (pos.Quantity > 0)
@@ -73,7 +73,7 @@ namespace MidaxLib
                     var pos = _ptf.GetPosition(signal.TradingAsset.Id);
                     if (pos == null)
                     {
-                        Reset();
+                        Reset(time, stockValue.Mid());
                         return false;
                     }
                     if (pos.Quantity < 0)
@@ -91,7 +91,7 @@ namespace MidaxLib
 
         protected abstract bool Buy(Signal signal, DateTime time, Price stockValue);
         protected abstract bool Sell(Signal signal, DateTime time, Price stockValue);
-        protected abstract void Reset();
+        protected abstract void Reset(DateTime cancelTime, decimal stockValue);
 
         protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)
         {
@@ -124,6 +124,7 @@ namespace MidaxLib
         {
             try
             {
+                Thread.Sleep(1000); 
                 Log.Instance.WriteEntry("Publishing indicator levels...", EventLogEntryType.Information);
                 foreach (var indicator in _mktEODIndicators)
                     indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
