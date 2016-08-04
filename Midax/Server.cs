@@ -71,11 +71,9 @@ public class Server
                 var macD_10_30_90_dax = new ModelMacD(dax, 10, 30, 90);
                 var macD_10_30_90_gbpusd = new ModelMacD(gbpusd, 10, 30, 90);
                 var macD_10_30_90_gbpeur = new ModelMacD(gbpeur, 10, 30, 90);
-                var macD_10_30_90_eurusd = new ModelMacD(eurusd, 10, 30, 90);
-                var fxmole = new ModelFXMole(new List<MarketData> { gbpusd, gbpeur, eurusd }, new List<ModelMacD> { macD_10_30_90_gbpusd, macD_10_30_90_gbpeur, macD_10_30_90_eurusd }, rsiRefMapping, volcoeffs);
+                var fxmole = new ModelFXMole(new List<MarketData> { gbpusd, gbpeur }, new List<ModelMacD> { macD_10_30_90_gbpusd, macD_10_30_90_gbpeur }, rsiRefMapping, volcoeffs);
                 models.Add(macD_10_30_90_gbpusd);
                 models.Add(macD_10_30_90_gbpeur);
-                models.Add(macD_10_30_90_eurusd);
                 models.Add(fxmole);
                 models.Add(macD_10_30_90_dax);
                 models.Add(new ModelANN(macD_10_30_90_dax, null, null, otherIndices));
