@@ -47,13 +47,13 @@ namespace MidaxLib
             }
         }
 
-        bool pullTrade(string dealReference, out Trade trade)
+        bool pullTrade(string epic, out Trade trade)
         {
             lock (_incomingTrades)
             {
                 for (int idxTrade = 0; idxTrade < _incomingTrades.Count; idxTrade++)
                 {
-                    if (_incomingTrades[idxTrade].Reference == dealReference)
+                    if (_incomingTrades[idxTrade].Epic == epic)
                     {
                         trade = _incomingTrades[idxTrade];
                         _incomingTrades.Remove(trade);
@@ -125,7 +125,7 @@ namespace MidaxLib
                                         var direction = trade_notification["direction"].ToString() == "SELL" ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY;
                                         var tradeSize = int.Parse(trade_notification["size"].ToString());
                                         Trade trade;
-                                        if (pullTrade(reference, out trade))
+                                        if (pullTrade(_name, out trade))
                                             _lastTrade = trade;
                                         else
                                             return false;
@@ -147,11 +147,11 @@ namespace MidaxLib
                                             Log.Instance.WriteEntry("An unexpected trade has been closed: " + dealId, System.Diagnostics.EventLogEntryType.Error);
                                         var reference = trade_notification["dealReference"].ToString();
                                         var direction = trade_notification["direction"].ToString() == "SELL" ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY;
-                                        var tradeSize = int.Parse(trade_notification["size"].ToString());
                                         Trade trade;
-                                        if (!pullTrade(reference, out trade))
+                                        if (!pullTrade(_name, out trade))
                                             return false;
-                                        if (direction == SIGNAL_CODE.SELL)
+                                        var tradeSize = trade.Size;
+                                        if (trade.Direction == SIGNAL_CODE.SELL)
                                             tradeSize *= -1;
                                         if (_tradePositions.ContainsKey(dealId))
                                             _tradePositions[dealId] = _tradePositions[dealId] + tradeSize;

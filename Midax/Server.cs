@@ -53,6 +53,9 @@ public class Server
 
                 Thread.Sleep(10000);
 
+                List<string> rsiRefMapping = new List<string> { "CS.D.GBPEUR.TODAY.IP", "CS.D.GBPUSD.TODAY.IP" };
+                List<decimal> volcoeffs = new List<decimal> { 1m, 0.8m };
+
                 var index = IceStreamingMarketData.Instance;
                 var dax = new MarketData(dicSettings["INDEX_DAX"]);
                 var gbpusd = new MarketData(dicSettings["FX_GBPUSD"]);
@@ -69,7 +72,7 @@ public class Server
                 var macD_10_30_90_gbpusd = new ModelMacD(gbpusd, 10, 30, 90);
                 var macD_10_30_90_gbpeur = new ModelMacD(gbpeur, 10, 30, 90);
                 var macD_10_30_90_eurusd = new ModelMacD(eurusd, 10, 30, 90);
-                var fxmole = new ModelFXMole(new List<MarketData> { gbpusd, gbpeur, eurusd }, new List<ModelMacD> { macD_10_30_90_gbpusd, macD_10_30_90_gbpeur, macD_10_30_90_eurusd });
+                var fxmole = new ModelFXMole(new List<MarketData> { gbpusd, gbpeur, eurusd }, new List<ModelMacD> { macD_10_30_90_gbpusd, macD_10_30_90_gbpeur, macD_10_30_90_eurusd }, rsiRefMapping, volcoeffs);
                 models.Add(macD_10_30_90_gbpusd);
                 models.Add(macD_10_30_90_gbpeur);
                 models.Add(macD_10_30_90_eurusd);

@@ -153,5 +153,5 @@ namespace MidaxLib
             : base("Mole_" + lowPeriod + "_" + midPeriod + "_" + highPeriod + "_" + asset.Id, asset, lowPeriod, midPeriod, low, high, tradingIndex)
         {            
         }
-    }
+    }    
 }

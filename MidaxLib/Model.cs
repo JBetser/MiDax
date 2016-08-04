@@ -12,7 +12,7 @@ namespace MidaxLib
     public abstract class Model
     {
         protected DateTime _closingTime = DateTime.MinValue;
-        protected string _tradingSignal = null;
+        protected List<string> _tradingSignals = null;
         protected int _amount = 0;
         protected Portfolio _ptf = null;
         protected List<MarketData> _mktData = new List<MarketData>();
@@ -33,7 +33,7 @@ namespace MidaxLib
         {
             _closingTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
             if (Config.Settings.ContainsKey("TRADING_SIGNAL"))
-                _tradingSignal = Config.Settings["TRADING_SIGNAL"];
+                _tradingSignals = Config.Settings["TRADING_SIGNAL"].Split(',').ToList();
             if (Config.Settings.ContainsKey("REPLAY_POPUP"))
                 _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
             _amount = Config.MarketSelectorEnabled ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);            
@@ -41,9 +41,9 @@ namespace MidaxLib
 
         protected virtual bool OnBuy(Signal signal, DateTime time, Price stockValue)
         {
-            if (_tradingSignal != null)
+            if (_tradingSignals != null)
             {
-                if (signal.Id == _tradingSignal)
+                if (_tradingSignals.Contains(signal.Id))
                 {
                     var pos = _ptf.GetPosition(signal.TradingAsset.Id);
                     if (pos == null)
@@ -66,9 +66,9 @@ namespace MidaxLib
 
         protected virtual bool OnSell(Signal signal, DateTime time, Price stockValue)
         {
-            if (_tradingSignal != null)
+            if (_tradingSignals != null)
             {
-                if (signal.Id == _tradingSignal)
+                if (_tradingSignals.Contains(signal.Id))
                 {
                     var pos = _ptf.GetPosition(signal.TradingAsset.Id);
                     if (pos == null)
@@ -160,6 +160,53 @@ namespace MidaxLib
         public virtual TradingSet CreateTradingSet(IAbstractStreamingClient client)
         {
             return null;
+        }
+    }
+
+    public class ModelALaCon : Model
+    {
+        MarketData _fx;
+
+        public ModelALaCon(MarketData fx)
+        {
+            _fx = fx;
+        }
+
+        public override void Init()
+        {
+            base.Init();
+            List<MarketData> mktData = new List<MarketData>();
+            mktData.Add(_fx);
+            _mktIndices.Add(_fx);
+            _mktData = mktData;
+            _mktSignals.Add(new SignalALaCon(_fx));
+        }
+
+        protected override void Reset(DateTime cancelTime, decimal stockValue)
+        {
+            Log.Instance.WriteEntry("Aaaaaarrr", EventLogEntryType.Information);
+        }
+
+        protected override bool Buy(Signal signal, DateTime time, Price stockValue)
+        {
+            if (time <= _closingTime)
+                _ptf.BookTrade(signal.Trade);
+            else
+                return false;
+            string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+            Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.TradingAsset.Id + " " + stockValue.Bid, EventLogEntryType.Information);
+            return true;
+        }
+
+        protected override bool Sell(Signal signal, DateTime time, Price stockValue)
+        {
+            if (time <= _closingTime)
+                _ptf.BookTrade(signal.Trade);
+            else
+                return false;
+            string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+            Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.TradingAsset.Id + " " + stockValue.Offer, EventLogEntryType.Information);
+            return true;
         }
     }
 }

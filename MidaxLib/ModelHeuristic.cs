@@ -62,6 +62,10 @@ namespace MidaxLib
                 _mappingCorrel[Config.Settings["FX_GBPEUR"].Split(':')[1]] = Config.Settings["FX_GBPUSD"];
         }
 
+        protected override void Reset(DateTime cancelTime, decimal stockValue)
+        {
+        }
+
         public override void Init()
         {
             base.Init();
@@ -84,8 +88,8 @@ namespace MidaxLib
             _wmaCorrelHighRef = new IndicatorEMA(refIndex, _macD.SignalLow.IndicatorHigh.Period / 60);
             _correlLow = new IndicatorCorrelation(_macD.SignalLow.IndicatorLow, _wmaCorrelLowRef);
             _correlHigh = new IndicatorCorrelation(_macD.SignalLow.IndicatorHigh, _wmaCorrelHighRef);
-            _watershedLow = new IndicatorWatershed(_index, 1, 15);
-            _watershedHigh = new IndicatorWatershed(_index, 3, 15);
+            //_watershedLow = new IndicatorWatershed(_index, 1, 15, _rsiLow);
+            //_watershedHigh = new IndicatorWatershed(_index, 3, 15, _rsiHigh);
             _mktIndicators.Add(_rsiLow);
             _mktIndicators.Add(_rsiHigh);
             _mktIndicators.Add(_wmaCorrelLowRef);
@@ -121,9 +125,9 @@ namespace MidaxLib
 
         protected override bool OnBuy(Signal signal, DateTime time, Price value)
         {
-            if (_tradingSignal != null)
+            if (_tradingSignals != null)
             {
-                if (signal.Id == _tradingSignal)
+                if (_tradingSignals.Contains(signal.Id))
                     return Buy(signal, time, signal.TradingAsset.TimeSeries[time].Value.Value);
             }
             return false;
@@ -131,9 +135,9 @@ namespace MidaxLib
 
         protected override bool OnSell(Signal signal, DateTime time, Price stockValue)
         {
-            if (_tradingSignal != null)
+            if (_tradingSignals != null)
             {
-                if (signal.Id == _tradingSignal)
+                if (_tradingSignals.Contains(signal.Id))
                 {
                     signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid);
                     return Sell(signal, time, stockValue);
@@ -174,7 +178,7 @@ namespace MidaxLib
         {
             return new TradingSetMole(client);
         }
-    }
+    }    
 
     public class Interval
     {
@@ -190,6 +194,18 @@ namespace MidaxLib
         public bool IsInside(decimal value)
         {
             return value >= Min && value < Max;
+        }
+
+        public decimal Ratio(decimal value)
+        {
+            return (value - Min) / (Max - Min);
+        }
+
+        public decimal Value(decimal ratio)
+        {
+            if (Min == decimal.MaxValue)
+                return decimal.MaxValue;
+            return Min * (1m - ratio) + Max * ratio;
         }
     }
 

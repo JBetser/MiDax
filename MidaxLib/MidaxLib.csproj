@@ -137,6 +137,7 @@
     <Compile Include="Model.cs" />
     <Compile Include="MarketSelector.cs" />
     <Compile Include="ModelANN.cs" />
+    <Compile Include="ModelFXMole.cs" />
     <Compile Include="ModelHeuristic.cs" />
     <Compile Include="ModelMacD.cs">
       <SubType>Code</SubType>
@@ -149,6 +150,7 @@
     <Compile Include="Signal.cs" />
     <Compile Include="SignalANN.cs" />
     <Compile Include="SignalANNWMA.cs" />
+    <Compile Include="SignalFXMole.cs" />
     <Compile Include="SignalHeuristic.cs" />
     <Compile Include="SignalMacD.cs">
       <SubType>Code</SubType>

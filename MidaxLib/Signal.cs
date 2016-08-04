@@ -226,4 +226,32 @@ namespace MidaxLib
 
         protected abstract bool Process(MarketData indicator, DateTime updateTime, Price value, ref Signal.Tick tradingOrder);
     }
+
+    public class SignalALaCon : Signal
+    {
+        Signal.Tick _tradingOrder = null;
+
+        public SignalALaCon(MarketData fx)
+            : base("CON_" + fx.Id, fx)
+        {
+            _mktIndicator.Add(new IndicatorRSI(fx, 1, 14));
+        }
+
+        protected override bool Process(MarketData indicator, DateTime updateTime, Price value, ref Signal.Tick tradingOrder)
+        {
+            if (_tradingOrder == _onSell)
+            {
+                tradingOrder = _onBuy;
+                _tradingOrder = _onBuy;
+                return true;
+            }
+            else
+            {
+                tradingOrder = _onSell;
+                _tradingOrder = _onSell;
+                return true;
+            }
+            return false;
+        }
+    }
 }
