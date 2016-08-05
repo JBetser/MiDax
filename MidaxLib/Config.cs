@@ -150,8 +150,13 @@ namespace MidaxLib
                 var yrmntday = (from cmpnt in dateTimeComponents[0].Split(splitChar) select int.Parse(cmpnt)).ToArray();
                 var year = yrmntday[2] > 1900 ? yrmntday[2] : yrmntday[0];
                 var day = yrmntday[2] > 1900 ? yrmntday[0] : yrmntday[2];
-                return hrmnsec.Length == 2 ? new DateTime(year, yrmntday[1], day, hrmnsec[0], hrmnsec[1], 0)
-                    : new DateTime(year, yrmntday[1], day, hrmnsec[0], hrmnsec[1], hrmnsec[2], ms);
+                DateTime ret; 
+                if (hrmnsec.Length == 3)
+                    ret = new DateTime(year, yrmntday[1], day, hrmnsec[0], hrmnsec[1], hrmnsec[2]);
+                else
+                    ret = hrmnsec.Length == 2 ? new DateTime(year, yrmntday[1], day, hrmnsec[0], hrmnsec[1], 0)
+                        : new DateTime(year, yrmntday[1], day, hrmnsec[0], hrmnsec[1], hrmnsec[2], ms);
+                return ret;
             }
             return DateTime.Parse(dt);
         }

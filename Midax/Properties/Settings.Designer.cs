@@ -217,7 +217,8 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("FXMole_1_14_CS.D.GBPUSD.TODAY.IP")]
+        [global::System.Configuration.DefaultSettingValueAttribute("FXMole_1_14_CS.D.GBPUSD.TODAY.IP,FXMole_1_14_CS.D.GBPEUR.TODAY.IP,FXMole_1_14_CS." +
+            "D.EURUSD.TODAY.IP,FXMole_1_14_CS.D.USDJPY.TODAY.IP")]
         public string TRADING_SIGNAL {
             get {
                 return ((string)(this["TRADING_SIGNAL"]));
@@ -311,6 +312,15 @@ namespace Midax.Properties {
         public string FX_EURUSD {
             get {
                 return ((string)(this["FX_EURUSD"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("USDJPY:CS.D.USDJPY.TODAY.IP")]
+        public string FX_USDJPY {
+            get {
+                return ((string)(this["FX_USDJPY"]));
             }
         }
     }

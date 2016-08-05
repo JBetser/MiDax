@@ -288,6 +288,7 @@
                <option value="CS.D.GBPUSD.TODAY.IP">GBP/USD</option>
                <option value="CS.D.GBPEUR.TODAY.IP">GBP/EUR</option>
                <option value="CS.D.EURUSD.TODAY.IP">EUR/USD</option>
+               <option value="CS.D.USDJPY.TODAY.IP">USD/JPY</option>
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>

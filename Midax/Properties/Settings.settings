@@ -91,7 +91,7 @@
       <Value Profile="(Default)">21:00:00</Value>
     </Setting>
     <Setting Name="TRADING_SIGNAL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">FXMole_1_14_CS.D.GBPUSD.TODAY.IP</Value>
+      <Value Profile="(Default)">FXMole_1_14_CS.D.GBPUSD.TODAY.IP,FXMole_1_14_CS.D.GBPEUR.TODAY.IP,FXMole_1_14_CS.D.EURUSD.TODAY.IP,FXMole_1_14_CS.D.USDJPY.TODAY.IP</Value>
     </Setting>
     <Setting Name="INDEX_CAC" Type="System.String" Scope="Application">
       <Value Profile="(Default)">CAC:IX.D.CAC.DAILY.IP</Value>
@@ -122,6 +122,9 @@
     </Setting>
     <Setting Name="FX_EURUSD" Type="System.String" Scope="Application">
       <Value Profile="(Default)">EURUSD:CS.D.EURUSD.TODAY.IP</Value>
+    </Setting>
+    <Setting Name="FX_USDJPY" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">USDJPY:CS.D.USDJPY.TODAY.IP</Value>
     </Setting>
   </Settings>
 </SettingsFile>
