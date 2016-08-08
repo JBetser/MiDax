@@ -62,7 +62,7 @@ namespace MidaxLib
                 _mappingCorrel[Config.Settings["FX_GBPEUR"].Split(':')[1]] = Config.Settings["FX_GBPUSD"];
         }
 
-        protected override void Reset(DateTime cancelTime, decimal stockValue)
+        protected override void Reset(DateTime cancelTime, decimal stockValue, bool openPosition)
         {
         }
 

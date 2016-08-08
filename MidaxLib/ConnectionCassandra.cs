@@ -30,12 +30,12 @@ namespace MidaxLib
             o = (decimal)row[4];
             v = (decimal?)row[5];
         }
-        public CqlQuote(string stockId, DateTimeOffset tradingTime, string stockName, decimal? bid, decimal? offer, decimal? volume)
+        public CqlQuote(string mktdataId, DateTimeOffset tradingTime, string mktdataName, decimal? bid, decimal? offer, decimal? volume)
         {
-            s = stockId;
+            s = mktdataId;
             t = new DateTime(tradingTime.Ticks, DateTimeKind.Local);
             b = bid;
-            n = stockName;
+            n = mktdataName;
             o = offer;
             v = volume;
         }
@@ -74,12 +74,12 @@ namespace MidaxLib
             o = (decimal)row[2];
             v = 0m;
         }
-        public CqlIndicator(string stockId, DateTimeOffset tradingTime, string stockName, decimal? value)
+        public CqlIndicator(string mktdataId, DateTimeOffset tradingTime, string mktdataName, decimal? value)
         {
-            s = stockId;
+            s = mktdataId;
             t = new DateTime(tradingTime.Ticks, DateTimeKind.Local);
             b = value;
-            n = stockName;
+            n = mktdataName;
             o = value;
             v = 0m;
         }
@@ -104,13 +104,13 @@ namespace MidaxLib
             o = (decimal)row[2];
             v = 0m;
         }
-        public CqlSignal(string stockId, DateTimeOffset tradingTime, string stockName, SIGNAL_CODE? value, decimal stockvalue)
+        public CqlSignal(string mktdataId, DateTimeOffset tradingTime, string mktdataName, SIGNAL_CODE? value, decimal mktdatavalue)
         {
-            s = stockId;
+            s = mktdataId;
             t = new DateTime(tradingTime.Ticks, DateTimeKind.Local);
             b = Convert.ToInt32(value);
-            n = stockName;
-            o = stockvalue;
+            n = mktdataName;
+            o = mktdatavalue;
             v = 0m;
         }
         public override decimal ScaleValue(decimal avg, decimal scale)
@@ -151,7 +151,7 @@ namespace MidaxLib
         const string DB_BUSINESSDATA = "business";
         const string DB_HISTORICALDATA = "historical";
         const string EXCEPTION_CONNECTION_CLOSED = "Cassandra session is closed";
-        static string DB_INSERTION = "insert into {0}data." + (Config.ReplayEnabled ? "dummy" : "") + "{1} ";
+        static string DB_INSERTION = "insert into {0}data." + ((Config.ReplayEnabled && !(Config.ImportEnabled && !Config.ImportUATEnabled)) ? "dummy" : "") + "{1} ";
         static string DB_SELECTION = "select * from {0}data." + (Config.UATSourceDB ? "dummy" : "") + "{1} ";
 
         public CassandraConnection()
@@ -181,7 +181,7 @@ namespace MidaxLib
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            executeQuery(string.Format(DB_INSERTION + "(stockid, trading_time,  name,  bid,  offer,  volume) values ('{2}', {3}, '{4}', {5}, {6}, {7})",
+            executeQuery(string.Format(DB_INSERTION + "(mktdataid, trading_time,  name,  bid,  offer,  volume) values ('{2}', {3}, '{4}', {5}, {6}, {7})",
                 DB_HISTORICALDATA, DATATYPE_STOCK, mktData.Id, ToUnixTimestamp(updateTime), mktData.Name, price.Bid, price.Offer, price.Volume));
         }
 
@@ -193,13 +193,13 @@ namespace MidaxLib
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
         }
 
-        public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue)
+        public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal mktdatavalue)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             string tradeRef = signal.Trade == null ? null : " " + signal.Trade.Reference;
-            executeQuery(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value, stockvalue) values ('{2}', {3}, '{4}', {5}, {6})",
-                DB_HISTORICALDATA, DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), tradeRef, Convert.ToInt32(code), stockvalue));
+            executeQuery(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value, mktdatavalue) values ('{2}', {3}, '{4}', {5}, {6})",
+                DB_HISTORICALDATA, DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), tradeRef, Convert.ToInt32(code), mktdatavalue));
         }
 
         public override void Insert(Trade trade)
@@ -208,12 +208,12 @@ namespace MidaxLib
                 throw new ApplicationException("Cannot insert a trade without booking information");
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            executeQuery(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, stockid, direction, size, price, traderef) values ('{2}', {3}, {4}, '{5}', {6}, {7}, {8}, '{9}')",
+            executeQuery(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, mktdataid, direction, size, price, traderef) values ('{2}', {3}, {4}, '{5}', {6}, {7}, {8}, '{9}')",
                 DB_BUSINESSDATA, DATATYPE_TRADE, trade.Id, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic,
                 Convert.ToInt32(trade.Direction), trade.Size, trade.Price, trade.Reference));
         }
 
-        public override void Insert(DateTime updateTime, string stockid, Value profit)
+        public override void Insert(DateTime updateTime, string mktdataid, Value profit)
         {
             throw new ApplicationException("Profit insertion not implemented in Cassandra");
         }
@@ -222,7 +222,7 @@ namespace MidaxLib
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            executeQuery(string.Format("insert into staticdata.anncalibration(annid, stockid, version, insert_time, weights, error, learning_rate) values ('{0}', '{1}', {2}, {3}, {4}, {5}, {6})",
+            executeQuery(string.Format("insert into staticdata.anncalibration(annid, mktdataid, version, insert_time, weights, error, learning_rate) values ('{0}', '{1}', {2}, {3}, {4}, {5}, {6})",
                 ann.AnnId, ann.StockId, ann.Version, ToUnixTimestamp(insertTime), JsonConvert.SerializeObject(ann.Weights), ann.Error, ann.LearningRatePct));
         }
 
@@ -244,12 +244,14 @@ namespace MidaxLib
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, "LVLCloseOffer_" + mktDetails.AssetId, ts, mktDetails.CloseOffer));
         }*/
 
-        public int GetAnnLatestVersion(string annid, string stockid)
+        public int GetAnnLatestVersion(string annid, string mktdataid)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            RowSet versions = executeQuery(string.Format("select version from staticdata.anncalibration where annid='{0}' and stockid='{1}' ALLOW FILTERING",
-                annid, stockid));
+            RowSet versions = executeQuery(string.Format("select version from staticdata.anncalibration where annid='{0}' and mktdataid='{1}' ALLOW FILTERING",
+                annid, mktdataid));
+            if (versions == null)
+                return -1;
             Row lastVersion = null;
             foreach (var version in versions)
                 lastVersion = version;
@@ -258,12 +260,12 @@ namespace MidaxLib
             return (int)lastVersion[0];
         }
 
-        public List<decimal> GetAnnWeights(string annid, string stockid, int version)
+        public List<decimal> GetAnnWeights(string annid, string mktdataid, int version)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            RowSet weights = executeQuery(string.Format("select weights from staticdata.anncalibration where annid='{0}' and stockid='{1}' and version={2} ALLOW FILTERING",
-                annid, stockid, version));
+            RowSet weights = executeQuery(string.Format("select weights from staticdata.anncalibration where annid='{0}' and mktdataid='{1}' and version={2} ALLOW FILTERING",
+                annid, mktdataid, version));
             var weightLst = new List<decimal>();
             foreach (var row in weights)
                 foreach (var weight in row)
@@ -271,21 +273,21 @@ namespace MidaxLib
             return weightLst;
         }
 
-        public decimal GetAnnError(string annid, string stockid, int version)
+        public decimal GetAnnError(string annid, string mktdataid, int version)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            RowSet error = executeQuery(string.Format("select error from staticdata.anncalibration where annid='{0}' and stockid='{1}' and version={2} ALLOW FILTERING",
-                annid, stockid, version));
+            RowSet error = executeQuery(string.Format("select error from staticdata.anncalibration where annid='{0}' and mktdataid='{1}' and version={2} ALLOW FILTERING",
+                annid, mktdataid, version));
             return (decimal)error.First()[0];
         }
 
-        public decimal GetAnnLearningRate(string annid, string stockid, int version)
+        public decimal GetAnnLearningRate(string annid, string mktdataid, int version)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            RowSet error = executeQuery(string.Format("select learning_rate from staticdata.anncalibration where annid='{0}' and stockid='{1}' and version={2} ALLOW FILTERING",
-                annid, stockid, version));
+            RowSet error = executeQuery(string.Format("select learning_rate from staticdata.anncalibration where annid='{0}' and mktdataid='{1}' and version={2} ALLOW FILTERING",
+                annid, mktdataid, version));
             return (decimal)error.First()[0];
         }
 
@@ -294,6 +296,7 @@ namespace MidaxLib
             if (_session == null)
                 return null;
             var sets = new Dictionary<string, RowSet>();
+            string table = type == DATATYPE_STOCK ? DATATYPE_STOCK : type.Substring(0, type.Length - 1);
             foreach (var id in ids)
             {
                 DateTime curStartTime, curStopTime;
@@ -304,8 +307,9 @@ namespace MidaxLib
                     curStartTime = startTime;
                     curStopTime = stopTime;
                 }
+
                 sets[id] = executeQuery(string.Format(DB_SELECTION + "where {2}id='{3}' and trading_time >= {4} and trading_time <= {5}",
-                                DB_HISTORICALDATA, type, type.Substring(0, type.Length - 1), id, ToUnixTimestamp(curStartTime), ToUnixTimestamp(curStopTime)));
+                                DB_HISTORICALDATA, type, table, id, ToUnixTimestamp(curStartTime), ToUnixTimestamp(curStopTime)));
             }
             return sets;
         }
@@ -326,7 +330,7 @@ namespace MidaxLib
         }
 
 
-        Dictionary<string, List<Trade>> getTrades(DateTime startTime, DateTime stopTime, string type, List<string> stockids)
+        Dictionary<string, List<Trade>> getTrades(DateTime startTime, DateTime stopTime, string type, List<string> mktdataids)
         {
             throw new ApplicationException("Trade reading not implemented");
         }

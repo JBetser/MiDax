@@ -74,12 +74,12 @@ namespace MidaxLib
             closePosition(pos, closing_time, onTradeBooked, onBookingFailed, 0, stockValue, signal);
         }
 
-        public void CloseAllPositions(DateTime time, string stockid = "", decimal stockValue = 0m, Signal signal = null)
+        public void CloseAllPositions(DateTime time, string mktdataid = "", decimal stockValue = 0m, Signal signal = null)
         {
             var addms = 1;
             foreach (var position in Positions)
             {
-                if (stockid == "" || stockid == position.Value.Epic)
+                if (mktdataid == "" || mktdataid == position.Value.Epic)
                     closePosition(position.Value, time.AddMilliseconds(addms++), new TradeBookedEvent(OnTradeBooked), new TradeBookedEvent(OnBookingFailed), 0, stockValue, signal);
             }
             foreach (var tradingSet in _tradingSets)
@@ -143,15 +143,19 @@ namespace MidaxLib
             newTrade.Publish();
         }
         
-        public void BookTrade(Trade newTrade)
+        public bool BookTrade(Trade newTrade)
         {
             if (newTrade == null)
-                return;
+                return false;
             if (Config.TradingOpen(newTrade.TradingTime))
             {
                 if (GetPosition(newTrade.Epic) != null)
+                {
                     _igStreamApiClient.BookTrade(newTrade, OnTradeBooked, OnBookingFailed);
+                    return true;
+                }
             }
+            return false;
         }
 
         public Position GetPosition(string epic)

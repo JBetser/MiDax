@@ -48,7 +48,7 @@ namespace MidaxLib
                     var pos = _ptf.GetPosition(signal.TradingAsset.Id);
                     if (pos == null)
                     {
-                        Reset(time, stockValue.Mid());
+                        Reset(time, stockValue.Mid(), true);
                         return false;
                     }
                     if (pos.Quantity > 0)
@@ -61,7 +61,7 @@ namespace MidaxLib
                     return Buy(signal, time, stockValue);
                 }
             }
-            return true;
+            return false;
         }
 
         protected virtual bool OnSell(Signal signal, DateTime time, Price stockValue)
@@ -73,7 +73,7 @@ namespace MidaxLib
                     var pos = _ptf.GetPosition(signal.TradingAsset.Id);
                     if (pos == null)
                     {
-                        Reset(time, stockValue.Mid());
+                        Reset(time, stockValue.Mid(), true);
                         return false;
                     }
                     if (pos.Quantity < 0)
@@ -86,12 +86,12 @@ namespace MidaxLib
                     return Sell(signal, time, stockValue);
                 }
             }
-            return true;
+            return false;
         }
 
         protected abstract bool Buy(Signal signal, DateTime time, Price stockValue);
         protected abstract bool Sell(Signal signal, DateTime time, Price stockValue);
-        protected abstract void Reset(DateTime cancelTime, decimal stockValue);
+        protected abstract void Reset(DateTime cancelTime, decimal stockValue, bool openPosition);
 
         protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)
         {
@@ -182,16 +182,14 @@ namespace MidaxLib
             _mktSignals.Add(new SignalALaCon(_fx));
         }
 
-        protected override void Reset(DateTime cancelTime, decimal stockValue)
+        protected override void Reset(DateTime cancelTime, decimal stockValue, bool openPosition)
         {
             Log.Instance.WriteEntry("Aaaaaarrr", EventLogEntryType.Information);
         }
 
         protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
-            if (time <= _closingTime)
-                _ptf.BookTrade(signal.Trade);
-            else
+            if (!_ptf.BookTrade(signal.Trade))
                 return false;
             string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
             Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.TradingAsset.Id + " " + stockValue.Bid, EventLogEntryType.Information);
@@ -200,9 +198,7 @@ namespace MidaxLib
 
         protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            if (time <= _closingTime)
-                _ptf.BookTrade(signal.Trade);
-            else
+            if (!_ptf.BookTrade(signal.Trade))
                 return false;
             string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
             Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.TradingAsset.Id + " " + stockValue.Offer, EventLogEntryType.Information);

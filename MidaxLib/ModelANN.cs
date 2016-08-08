@@ -32,7 +32,7 @@ namespace MidaxLib
                 _mktIndices.Add(_vix);           
         }
 
-        protected override void Reset(DateTime cancelTime, decimal stockValue)
+        protected override void Reset(DateTime cancelTime, decimal stockValue, bool openPosition)
         {
         }
 
@@ -119,12 +119,10 @@ namespace MidaxLib
             }
             else if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
             {
-                if (time <= _closingTime)
-                {
-                    _ptf.BookTrade(signal.Trade);
-                    string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
-                    Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.TradingAsset.Id + " " + stockValue.Bid, EventLogEntryType.Information);
-                }
+                if (!_ptf.BookTrade(signal.Trade))
+                    return false;
+                string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
+                Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.TradingAsset.Id + " " + stockValue.Bid, EventLogEntryType.Information);
             }
             return true;
         }

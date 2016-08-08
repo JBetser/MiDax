@@ -52,7 +52,7 @@ CREATE TABLE historicaldata.signals (
   trading_time timestamp,
   tradeid text,
   value int,
-  stockvalue decimal,
+  mktdatavalue decimal,
   PRIMARY KEY (signalid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);
@@ -64,7 +64,7 @@ CREATE TABLE historicaldata.dummysignals (
   trading_time timestamp,
   tradeid text,
   value int,
-  stockvalue decimal,
+  mktdatavalue decimal,
   PRIMARY KEY (signalid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);
@@ -80,10 +80,10 @@ CREATE TABLE businessdata.trades (
   direction int,
   price decimal,
   size int,
-  stockid text,
+  mktdataid text,
   trading_time timestamp,
   traderef text,
-  PRIMARY KEY (tradeid,confirmation_time)
+  PRIMARY KEY (mktdataid,confirmation_time)
 );
 
 CREATE TABLE businessdata.dummytrades (
@@ -92,10 +92,10 @@ CREATE TABLE businessdata.dummytrades (
   direction int,
   price decimal,
   size int,
-  stockid text,
+  mktdataid text,
   trading_time timestamp,
   traderef text,
-  PRIMARY KEY (tradeid,confirmation_time)
+  PRIMARY KEY (mktdataid,confirmation_time)
 );
 
 ALTER TABLE businessdata.dummytrades WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
@@ -106,12 +106,12 @@ CREATE KEYSPACE staticdata
 CREATE TABLE staticdata.anncalibration (
   annid text,  
   version int,
-  stockid text,
+  mktdataid text,
   weights list<decimal>,
   insert_time timestamp,
   error decimal,
   learning_rate decimal,
-  PRIMARY KEY (annid, stockid, version)
+  PRIMARY KEY (annid, mktdataid, version)
 )
 WITH CLUSTERING ORDER BY (stockid ASC, version ASC);
 

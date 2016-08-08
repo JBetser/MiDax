@@ -17,6 +17,7 @@ namespace MidaxLib
         protected Dictionary<string, string> _itemData = new Dictionary<string, string>();
         protected string _name;
         protected string _id;
+        protected DateTime _time;
         
         public ReplayUpdateInfo(CqlQuote quote)
         {
@@ -24,6 +25,7 @@ namespace MidaxLib
             {
                 _name = quote.n;
                 _id = quote.s;
+                _time = quote.t;
                 _itemData["MID_OPEN"] = "0";
                 _itemData["HIGH"] = "0";
                 _itemData["LOW"] = "0";
@@ -41,6 +43,7 @@ namespace MidaxLib
 
         public string Name { get { return _name; } }
         public string Id { get { return _id; } }
+        public DateTime Time { get { return _time; } }
                 
         string IUpdateInfo.ItemName { get { return _name; }}
         int IUpdateInfo.ItemPos { get { return 0; } }
@@ -125,6 +128,7 @@ namespace MidaxLib
         Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;
         int _numId = 1;
         int _numRef = 1;
+        int _samplingMs = -1;
         
         bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
@@ -144,6 +148,8 @@ namespace MidaxLib
                 _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
             if (Config.Settings.ContainsKey("PUBLISHING_STOP_TIME"))
                 _stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
+            if (Config.Settings.ContainsKey("SAMPLING_MS"))
+                _samplingMs = int.Parse(Config.Settings["SAMPLING_MS"]);
             _testReplayFiles.Clear();
             if (Config.Settings["REPLAY_MODE"] == "DB")
             {
@@ -296,7 +302,7 @@ namespace MidaxLib
                             nextUpdate = new ReplayUpdateInfo(epicQuotes.Value[0]);
                         }
                     }
-                }
+                }                
                 if (nextUpdate == null)
                 {
                     foreach (var epic in epicsToDelete)
@@ -305,6 +311,12 @@ namespace MidaxLib
                 else
                 {
                     priceData[nextUpdate.Id].RemoveAt(0);
+                    if (_samplingMs != -1)
+                    {
+                        if ((nextUpdate.Time - curtime).TotalMilliseconds < _samplingMs)
+                            continue;
+                        curtime = nextUpdate.Time;
+                    }
                     tableListener.OnUpdate(0, nextUpdate.Id, nextUpdate);
                     if (_closing.Signaled)
                     {
@@ -479,12 +491,12 @@ namespace MidaxLib
             }
         }
 
-        int IStaticDataConnection.GetAnnLatestVersion(string annid, string stockid)
+        int IStaticDataConnection.GetAnnLatestVersion(string annid, string mktdataid)
         {
             return 1;
         }
 
-        List<decimal> IStaticDataConnection.GetAnnWeights(string annid, string stockid, int version)
+        List<decimal> IStaticDataConnection.GetAnnWeights(string annid, string mktdataid, int version)
         {
             return new List<decimal> { -0.436790026694904m, 0.498194032347851m, -0.214276598167734m, -0.141450802162965m, 0.357833455716182m, 0.32193919961431m, -0.441598332459851m, 
                 0.0140020817117775m, 0.217530195004088m, -0.373687287268083m, -0.163388582255407m, -0.433217866315142m, -0.13287454267632m, -0.219790011979542m, -0.377691165021477m };
@@ -611,9 +623,9 @@ namespace MidaxLib
             _csvTradeStringBuilder.Append(newLine);
         }
 
-        public override void Insert(DateTime updateTime, string stockid, Value profit)
+        public override void Insert(DateTime updateTime, string mktdataid, Value profit)
         {
-            var newLine = string.Format("{0},{1},{2}{3}", formatDateTime(updateTime), stockid, profit.X,
+            var newLine = string.Format("{0},{1},{2}{3}", formatDateTime(updateTime), mktdataid, profit.X,
                 Environment.NewLine);
             _csvProfitStringBuilder.Append(newLine);
         }
@@ -759,7 +771,7 @@ namespace MidaxLib
             }
         }
 
-        public override void Insert(DateTime updateTime, string stockid, Value profit)
+        public override void Insert(DateTime updateTime, string mktdataid, Value profit)
         {
         }
 

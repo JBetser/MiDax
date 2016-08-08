@@ -30,7 +30,7 @@ namespace MidaxLib
         public decimal Price { get { return _price; } set { _price = value; } }
         public int PlaceHolder { get { return _placeHolder; } set { _placeHolder = value; } }
 
-        public delegate void TradeCancelled(DateTime cancelTime, decimal stockValue);
+        public delegate void TradeCancelled(DateTime cancelTime, decimal stockValue, bool openPosition);
 
         public Trade(DateTime tradingTime, string epic, SIGNAL_CODE direction, int size, decimal price, int placeHolder = 0, TradeCancelled onTradeCancelled = null)
         {
@@ -81,10 +81,10 @@ namespace MidaxLib
             PublisherConnection.Instance.Insert(this);
         }
 
-        public void OnRejected(DateTime cancelTime, decimal stockValue)
+        public void OnRejected(DateTime cancelTime, decimal stockValue, bool openPosition)
         {
             if (_tradeCancelled != null)
-                _tradeCancelled(cancelTime, stockValue);
+                _tradeCancelled(cancelTime, stockValue, openPosition);
         }
     }
 }

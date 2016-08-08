@@ -109,14 +109,8 @@ namespace MidaxLib
         }
         public static int comparison(Price p1, Price p2)
         {
-            if (p1.Bid < p2.Bid || p1.Offer < p2.Offer)
-                return -1;
-            else if (p1.Bid == p2.Bid || p1.Offer == p2.Offer)
-                return 0;
-            else if (p1.Bid > p2.Bid || p1.Offer > p2.Offer)
-                return 1;
-            else
-                return 0;
+            // precision is set to 1/100 of bp
+            return (int)(100m * (p1.Mid() - p2.Mid()));
         }
         public static bool operator <=(Price p1, Price p2)
         {

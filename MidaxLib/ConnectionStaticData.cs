@@ -8,8 +8,8 @@ namespace MidaxLib
 {
     public interface IStaticDataConnection
     {
-        int GetAnnLatestVersion(string annid, string stockid);
-        List<decimal> GetAnnWeights(string annid, string stockid, int version);
+        int GetAnnLatestVersion(string annid, string mktdataid);
+        List<decimal> GetAnnWeights(string annid, string mktdataid, int version);
     }
 
     public class StaticDataConnection

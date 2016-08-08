@@ -21,7 +21,7 @@ namespace Calibrator
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["LIMIT"] = "10";
-            dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";
+            dicSettings["DB_CONTACTPOINT"] = "192.168.1.25";
             dicSettings["REPLAY_MODE"] = "CSV";
             dicSettings["TRADING_MODE"] = "CALIBRATION";
             Config.Settings = dicSettings;

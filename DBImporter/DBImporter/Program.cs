@@ -12,17 +12,23 @@ namespace DBImporter
         static void Main(string[] args)
         {
             int curArg = 0;
-            DateTime start = DateTime.Parse(args[curArg++]);
-
+            DateTime start = DateTime.MinValue;
             DateTime end = DateTime.MinValue;
             bool wholeMonth = false;
-            if (start.Hour == 0 && start.Minute == 0 && start.Second == 0 && start.Millisecond == 0)
+            if (args[0].Split('-').Length == 2)
             {
-                end = new DateTime(start.Year, start.Month, 31, 22, 0, 0);
+                var year = int.Parse(args[0].Split('-')[0]);
+                var month =  int.Parse(args[0].Split('-')[1]);
+                start = new DateTime(year, month, 1, 5, 45, 0);
+                end = new DateTime(year, month, DateTime.DaysInMonth(year, month), 22, 0, 0);
                 wholeMonth = true;
+                curArg++;
             }
             else
+            {
+                start = DateTime.Parse(args[curArg++]);
                 end = DateTime.Parse(args[curArg++]);
+            }
 
             bool restoreDB = false;
             bool fromDB = true;
@@ -35,14 +41,15 @@ namespace DBImporter
                 fromDB = (args[curArg].ToUpper() == "-FROMDB");
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
-            dicSettings["DB_CONTACTPOINT"] = "192.168.1.26";
+            dicSettings["DB_CONTACTPOINT"] = "192.168.1.25";
             dicSettings["REPLAY_MODE"] = (restoreDB && !fromDB) ? "CSV" : "DB";
             dicSettings["REPLAY_POPUP"] = "1";
-            dicSettings["TRADING_MODE"] = (restoreDB && fromDB) ? "REPLAY_UAT" : "REPLAY";
+            dicSettings["TRADING_MODE"] = (restoreDB && fromDB) ? "IMPORT_UAT" : "IMPORT";
+            dicSettings["SAMPLING_MS"] = "1000";
             dicSettings["FX_GBPUSD"] = "GBPUSD:CS.D.GBPUSD.TODAY.IP";
-            dicSettings["FX_GBPEUR"] = "GBPUSD:CS.D.GBPEUR.TODAY.IP";
-            dicSettings["FX_EURUSD"] = "GBPUSD:CS.D.EURUSD.TODAY.IP";
-            dicSettings["FX_USDJPY"] = "GBPUSD:CS.D.USDJPY.TODAY.IP";
+            dicSettings["FX_GBPEUR"] = "GBPEUR:CS.D.GBPEUR.TODAY.IP";
+            dicSettings["FX_EURUSD"] = "EURUSD:CS.D.EURUSD.TODAY.IP";
+            dicSettings["FX_USDJPY"] = "USDJPY:CS.D.USDJPY.TODAY.IP";
             Config.Settings = dicSettings;
 
             while (start <= end)
@@ -63,7 +70,7 @@ namespace DBImporter
                 {
                     List<string> mktdataFiles = new List<string>();
                     if (wholeMonth)
-                        mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}.csv", start.Month, start.Year));
+                        mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_gbpusd_{0}_{1}.csv", start.Month, start.Year));
                     else
                         mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year));
                     Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);

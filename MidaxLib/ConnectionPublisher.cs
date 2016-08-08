@@ -10,7 +10,7 @@ namespace MidaxLib
     public abstract class PublisherConnection
     {
         public const string DATATYPE_MARKETLEVELS = "marketlevels";
-        public const string DATATYPE_STOCK = "stocks";
+        public const string DATATYPE_STOCK = "mktdata";
         public const string DATATYPE_INDICATOR = "indicators";
         public const string DATATYPE_SIGNAL = "signals";
         public const string DATATYPE_TRADE = "trades";
@@ -34,7 +34,8 @@ namespace MidaxLib
             {
                 if (_instance == null)
                     _instance = (Config.TestReplayCsvGeneratorEnabled ? _instance = new ReplayPublisher() :
-                                                                        (Config.DBPublishingEnabled ? _instance = new CassandraConnection() : _instance = new ReplayTester()));
+                                                                        (Config.DBPublishingEnabled ? _instance = new CassandraConnection() :
+                                                                        (Config.ImportEnabled ? _instance = new CassandraConnection() : _instance = new ReplayTester())));
                 if (Config.ReplayEnabled)
                 {
                     if (_instance != null)
@@ -48,7 +49,7 @@ namespace MidaxLib
         public abstract void Insert(DateTime updateTime, Indicator indicator, decimal value);
         public abstract void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal stockvalue);
         public abstract void Insert(Trade trade);
-        public abstract void Insert(DateTime updateTime, string stockid, Value profit);
+        public abstract void Insert(DateTime updateTime, string mktdataid, Value profit);
         public abstract void Insert(DateTime updateTime, NeuralNetworkForCalibration calibratedNeuralNetwork);
         
         public void SetExpectedResults(Dictionary<string, List<CqlQuote>> indicatorData, Dictionary<string, List<CqlQuote>> signalData, 

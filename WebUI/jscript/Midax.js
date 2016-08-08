@@ -156,6 +156,7 @@ function processResponses(jsonData) {
                         idxSignal++;
                     });
                     profit += signalProfit;
+                    jsonData[marketData].profit = profit;
                 }
                 else  // Set an error value if the orders do not match
                     profit = 1000000;
@@ -309,6 +310,14 @@ function processResponses(jsonData) {
     return profit;
 }
 
+function calcStdDev(profits, avgProfit) {
+    var variance = 0.0;
+    for (var idxProfit = 0; idxProfit < profits.length; idxProfit++) {
+        variance += Math.pow(profits[idxProfit] - avgProfit, 2.0);
+    }
+    return Math.sqrt(variance / profits.length);
+}
+
 function internalAPI(functionName, jsonData, sync, successCallback, errorCallback) {
     if (jsonData == null)
         jsonData = {};
@@ -362,9 +371,25 @@ function recursiveAPICalls(requests, idx, sync) {
                 if (Math.abs(profit) > 1000)
                     sync['profits'] = "?";
                 sync['processedDays'] += 1;
-                if (sync['processedDays'] == sync['nbDays'] && sync['nbDays'] > 1)
-                    IG_internalAlertClient("Total profits: " + sync['profits'], false, "Model results");
-            }
+                if (!("profitList" in sync))
+                    sync['profitList'] = new Array(sync['nbDays']);
+                sync['profitList'][sync['processedDays'] - 1] = profit;
+                if (sync['processedDays'] == sync['nbDays'] && sync['nbDays'] > 1) {
+                    var leverage = 5.0 / 1000.0; // assuming 0.5% leverage
+                    var returnRates = new Array(sync['nbDays']);
+                    var avgReturnRate = 0.0;
+                    for (var idxProfit = 0; idxProfit < returnRates.length; idxProfit++) {
+                        returnRates[idxProfit] = sync['profitList'][idxProfit] * 30.5 * 12.0 * leverage;
+                        avgReturnRate += returnRates[idxProfit];
+                    }
+                    avgReturnRate /= returnRates.length;
+                    var stdDev = calcStdDev(returnRates, avgReturnRate);
+                    var sharpe = (avgReturnRate - 0.5) / stdDev; // assuming an average 0.5 treasury rate
+                    IG_internalAlertClient("Total profits(bps): " + sync['profits'] + ", return rate: " + Math.round(avgReturnRate * 100) / 100.0
+                        + ", std dev: " + Math.round(stdDev * 100) / 100.0 + ", sharpe ratio: " + Math.round(sharpe * 100) / 100.0, false, "Model results");
+                }
+
+            }            
         }
     });
 }

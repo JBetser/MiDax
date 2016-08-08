@@ -29,7 +29,7 @@ namespace MidaxLib
         {
             get
             {
-                return (_settings["TRADING_MODE"] == "REPLAY" || _settings["TRADING_MODE"] == "REPLAY_UAT");
+                return (_settings["TRADING_MODE"] == "REPLAY" || _settings["TRADING_MODE"] == "REPLAY_UAT" || ImportEnabled);
             }
         }
 
@@ -49,6 +49,22 @@ namespace MidaxLib
             }
         }
 
+        public static bool ImportEnabled
+        {
+            get
+            {
+                return _settings["TRADING_MODE"] == "IMPORT" || _settings["TRADING_MODE"] == "IMPORT_UAT";
+            }
+        }
+
+        public static bool ImportUATEnabled
+        {
+            get
+            {
+                return _settings["TRADING_MODE"] == "IMPORT_UAT";
+            }
+        }
+
         public static bool ReplayDBEnabled
         {
             get
@@ -65,7 +81,7 @@ namespace MidaxLib
             {
                 if (!_settings.ContainsKey("REPLAY_MODE"))
                     return false;
-                return ReplayEnabled && (!_settings.ContainsKey("PUBLISHING_CSV") && !ReplayDBEnabled);
+                return ReplayEnabled && (!_settings.ContainsKey("PUBLISHING_CSV") && !ReplayDBEnabled && !ImportEnabled);
             }
         }
 
@@ -81,7 +97,7 @@ namespace MidaxLib
         {
             get
             {
-                return ReplayEnabled && (_settings.ContainsKey("PUBLISHING_CSV") || ReplayDBEnabled);
+                return ReplayEnabled && (_settings.ContainsKey("PUBLISHING_CSV") || ReplayDBEnabled || ImportEnabled);
             }
         }
 
@@ -97,7 +113,7 @@ namespace MidaxLib
         {
             get
             {
-                return _settings["TRADING_MODE"] == "REPLAY_UAT";
+                return _settings["TRADING_MODE"] == "REPLAY_UAT" || _settings["TRADING_MODE"] == "IMPORT_UAT";
             }
         }
 

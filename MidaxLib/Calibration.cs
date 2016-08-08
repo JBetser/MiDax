@@ -98,10 +98,10 @@ namespace MidaxLib
         {
             get { return _annid; }
         }
-        string _stockid;
+        string _mktdataid;
         public string StockId
         {
-            get { return _stockid; }
+            get { return _mktdataid; }
         }
         int _version;
         public int Version
@@ -109,13 +109,13 @@ namespace MidaxLib
             get { return _version; }
         }
 
-        public NeuralNetworkForCalibration(string id, string stockid, int nbInputNeurons, int nbOutputNeurons, List<int> intermediaryNeuronNbs, int version = -1)
+        public NeuralNetworkForCalibration(string id, string mktdataid, int nbInputNeurons, int nbOutputNeurons, List<int> intermediaryNeuronNbs, int version = -1)
             : base(nbInputNeurons, nbOutputNeurons, intermediaryNeuronNbs)
         {
             _annid = id;
-            _stockid = stockid;
+            _mktdataid = mktdataid;
             if (version == -1)
-                version = StaticDataConnection.Instance.GetAnnLatestVersion(_annid, _stockid) + 1;
+                version = StaticDataConnection.Instance.GetAnnLatestVersion(_annid, _mktdataid) + 1;
             _version = version;
         }
 

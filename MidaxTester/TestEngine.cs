@@ -34,7 +34,7 @@ namespace MidaxTester
                 Config.Settings["TRADING_MODE"] = "REPLAY";
             Config.Settings["REPLAY_MODE"] = generate_from_db ? "DB" : "CSV";
             if (generate_from_db)
-                Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
+                Config.Settings["DB_CONTACTPOINT"] = "192.168.1.25";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
 
             _generate = generate;                     
