@@ -53,10 +53,11 @@ public class Server
 
                 Thread.Sleep(10000);
 
+                /*
                 List<string> rsiRefMappingGBP = new List<string> { dicSettings["FX_GBPEUR"], dicSettings["FX_GBPUSD"] };
                 List<string> rsiRefMappingUSD = new List<string> { dicSettings["FX_USDJPY"], dicSettings["FX_EURUSD"] };
                 List<decimal> volcoeffsGBP = new List<decimal> { 1m, 0.8m };
-                List<decimal> volcoeffsUSD = new List<decimal> { 0.75m, 0.7m };
+                List<decimal> volcoeffsUSD = new List<decimal> { 0.75m, 0.7m };*/
 
                 var index = IceStreamingMarketData.Instance;
                 var dax = new MarketData(dicSettings["INDEX_DAX"]);
@@ -74,19 +75,23 @@ public class Server
                 var models = new List<Model>();
                 var macD_10_30_90_dax = new ModelMacD(dax, 10, 30, 90);
                 var macD_10_30_90_gbpusd = new ModelMacD(gbpusd, 10, 30, 90);
-                var macD_10_30_90_gbpeur = new ModelMacD(gbpeur, 10, 30, 90);
+                //var macD_10_30_90_gbpeur = new ModelMacD(gbpeur, 10, 30, 90);
                 var macD_10_30_90_eurusd = new ModelMacD(eurusd, 10, 30, 90);
                 var macD_10_30_90_usdjpy = new ModelMacD(usdjpy, 10, 30, 90);
-                decimal volcoeffEURUSD = 0.75m;
-                var fxmole_usd = new ModelFXMole(new List<MarketData> { eurusd, gbpusd }, macD_10_30_90_eurusd, volcoeffEURUSD);
-                //var fxmole_gbp = new ModelFXMole(new List<MarketData> { gbpusd, gbpeur }, new List<ModelMacD> { macD_10_30_90_gbpusd, macD_10_30_90_gbpeur }, rsiRefMappingGBP, volcoeffsGBP);
-                //var fxmole_usd = new ModelFXMole(new List<MarketData> { eurusd, usdjpy }, new List<ModelMacD> { macD_10_30_90_eurusd, macD_10_30_90_usdjpy }, rsiRefMappingUSD, volcoeffsUSD);
-                //models.Add(macD_10_30_90_gbpusd);
+                decimal volcoeffGBPUSD = 0.85m;
+                decimal volcoeffEURUSD = 0.7m;
+                decimal volcoeffUSDJPY = 0.65m;
+                var fxmole_eur = new ModelFXMole(new List<MarketData> { eurusd, gbpusd }, macD_10_30_90_eurusd, volcoeffEURUSD);
+                var fxmole_gbp = new ModelFXMole(new List<MarketData> { gbpusd, gbpeur }, macD_10_30_90_gbpusd, volcoeffGBPUSD);
+                var fxmole_jpy = new ModelFXMole(new List<MarketData> { usdjpy, gbpusd }, macD_10_30_90_usdjpy, volcoeffUSDJPY);
+                models.Add(macD_10_30_90_gbpusd);
                 //models.Add(macD_10_30_90_gbpeur);
                 models.Add(macD_10_30_90_eurusd);
-                //models.Add(macD_10_30_90_usdjpy);
+                models.Add(macD_10_30_90_usdjpy);
                 //models.Add(fxmole_gbp);
-                models.Add(fxmole_usd);
+                models.Add(fxmole_eur);
+                models.Add(fxmole_gbp);
+                models.Add(fxmole_jpy);
                 models.Add(macD_10_30_90_dax);
                 models.Add(new ModelANN(macD_10_30_90_dax, null, null, otherIndices));
                 _trader = new Trader(models, communicator().shutdown); 

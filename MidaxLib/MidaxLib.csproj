@@ -106,6 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnnVisualizer.cs" />
+    <Compile Include="Calendar.cs" />
     <Compile Include="Calibration.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="ConnectionCassandra.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="IndicatorLevel.cs" />
     <Compile Include="IndicatorLinearRegression.cs" />
     <Compile Include="IndicatorRSI.cs" />
+    <Compile Include="IndicatorTrend.cs" />
     <Compile Include="IndicatorVolume.cs" />
     <Compile Include="IndicatorWatershed.cs" />
     <Compile Include="IndicatorWM.cs" />

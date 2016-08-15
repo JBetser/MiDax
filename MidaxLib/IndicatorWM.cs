@@ -16,7 +16,7 @@ namespace MidaxLib
     /// </summary> 
     public class IndicatorWMA : Indicator
     {
-        protected int _periodSeconds;
+        protected int _subPeriodSeconds;
         protected decimal _periodMilliSeconds;
         protected TimeSpan _periodTimeSpan;
         protected TimeDecay _timeDecay;
@@ -25,15 +25,15 @@ namespace MidaxLib
         protected DateTime _decrementStartTime = DateTime.MinValue;
         protected Price _incrementAvg = null;
 
-        public int Period { get { return _periodSeconds; } }
+        public int Period { get { return _subPeriodSeconds; } }
         public TimeDecay TimeDecay { get { return _timeDecay; } }
 
         public IndicatorWMA(MarketData mktData, int periodMinutes)
             : base("WMA_" + periodMinutes + "_" + mktData.Id, new List<MarketData> { mktData })
         {
-            _periodSeconds = periodMinutes * 60;
-            _periodMilliSeconds = _periodSeconds * 1000m;
-            _periodTimeSpan = new TimeSpan(0, 0, _periodSeconds);
+            _subPeriodSeconds = periodMinutes * 60;
+            _periodMilliSeconds = _subPeriodSeconds * 1000m;
+            _periodTimeSpan = new TimeSpan(0, 0, _subPeriodSeconds);
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
                 _timeDecay = new TimeDecayLinear(int.Parse(Config.Settings["TIME_DECAY_FACTOR"]), new TimeSpan(0, periodMinutes, 0));
             else
@@ -43,8 +43,8 @@ namespace MidaxLib
         public IndicatorWMA(string id, MarketData mktData, int periodMinutes)
             : base(id, new List<MarketData> { mktData })
         {
-            _periodSeconds = periodMinutes * 60;
-            _periodMilliSeconds = _periodSeconds * 1000m;
+            _subPeriodSeconds = periodMinutes * 60;
+            _periodMilliSeconds = _subPeriodSeconds * 1000m;
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
                 _timeDecay = new TimeDecayLinear(int.Parse(Config.Settings["TIME_DECAY_FACTOR"]), new TimeSpan(0, periodMinutes, 0));
             else
@@ -54,15 +54,15 @@ namespace MidaxLib
         public IndicatorWMA(IndicatorWMA indicator)
             : base(indicator.Id, new List<MarketData> { indicator.SignalStock })
         {
-            _periodSeconds = indicator.Period;
-            _periodMilliSeconds = _periodSeconds * 1000m;
+            _subPeriodSeconds = indicator.Period;
+            _periodMilliSeconds = _subPeriodSeconds * 1000m;
             _timeDecay = indicator.TimeDecay;
         }
 
         public Price Average(DateTime updateTime)
         {
             DateTime startTime;
-            startTime = updateTime.AddSeconds(-_periodSeconds);
+            startTime = updateTime.AddSeconds(-_subPeriodSeconds);
             if (SignalStock.TimeSeries.Count == 0)
                 return null;
             var curAvg = new Price();
@@ -335,9 +335,8 @@ namespace MidaxLib
     /// <summary>
     /// 
     /// </summary>
-    public class IndicatorWMVol : IndicatorWMA
+    public class IndicatorWMVol : IndicatorEMA
     {
-        IndicatorWMA _avg;
         DateTime _nextWMVolTime = DateTime.MinValue;
 
         public IndicatorWMVol(MarketData mktData, int periodMn)
@@ -347,7 +346,7 @@ namespace MidaxLib
 
         protected override bool MobileAverage(ref Price curVolAvg, DateTime startTime, DateTime updateTime)
         {
-            if ((updateTime - _nextWMVolTime).TotalMilliseconds > _periodSeconds * 1000)
+            if ((updateTime - _nextWMVolTime).TotalMilliseconds > _subPeriodSeconds * 1000)
                 _nextWMVolTime = updateTime;
             if (_nextWMVolTime == DateTime.MinValue)
                 return false;

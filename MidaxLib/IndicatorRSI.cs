@@ -27,9 +27,10 @@ namespace MidaxLib
     public class IndicatorRSI : IndicatorWMA
     {
         int _nbPeriods;
-        int _subPeriodSeconds;
         public int NbPeriods { get { return _nbPeriods; } }
         public int PeriodSizeMn { get { return _subPeriodSeconds / 60; } }
+        public decimal CurStdDevGain { get { return calcStdDevGain(); } }
+        public decimal CurStdDevLoss { get { return calcStdDevLoss(); } }
         DateTime _nextRsiTime = DateTime.MinValue;
         List<RsiCandle> _rsiCandles = new List<RsiCandle>();
         List<RsiCandle> _history = new List<RsiCandle>();
@@ -38,14 +39,29 @@ namespace MidaxLib
         public IndicatorRSI(MarketData mktData, int subPeriodMinutes, int nbPeriods)
             : base("RSI_" + subPeriodMinutes + "_" + nbPeriods + "_" + mktData.Id, mktData, nbPeriods * subPeriodMinutes)
         {
-            _periodSeconds = nbPeriods * subPeriodMinutes * 60;
             _subPeriodSeconds = subPeriodMinutes * 60;
             _nbPeriods = nbPeriods;
         }
 
+        decimal calcStdDevGain()
+        {            
+            if ((_mktData[0].TimeSeries.EndTime() - _rsiCandles[_rsiCandles.Count - 1].EndTime).TotalSeconds > 30)
+                return _rsiCandles[_rsiCandles.Count - 2].StdDevGain < 0.001m ? 1000m : _rsiCandles[_rsiCandles.Count - 1].StdDevGain / _rsiCandles[_rsiCandles.Count - 2].StdDevGain;
+            else
+                return _rsiCandles[_rsiCandles.Count - 3].StdDevGain < 0.001m ? 1000m : Math.Max(_rsiCandles[_rsiCandles.Count - 1].StdDevGain, _rsiCandles[_rsiCandles.Count - 2].StdDevGain) / _rsiCandles[_rsiCandles.Count - 3].StdDevGain;
+        }
+
+        decimal calcStdDevLoss()
+        {
+            if ((_mktData[0].TimeSeries.EndTime() - _rsiCandles[_rsiCandles.Count - 1].EndTime).TotalSeconds > 30)
+                return _rsiCandles[_rsiCandles.Count - 2].StdDevLoss < 0.001m ? 1000m : _rsiCandles[_rsiCandles.Count - 1].StdDevLoss / _rsiCandles[_rsiCandles.Count - 2].StdDevLoss;
+            else
+                return _rsiCandles[_rsiCandles.Count - 3].StdDevLoss < 0.001m ? 1000m : Math.Max(_rsiCandles[_rsiCandles.Count - 1].StdDevLoss, _rsiCandles[_rsiCandles.Count - 2].StdDevLoss) / _rsiCandles[_rsiCandles.Count - 3].StdDevLoss;
+        }
+
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
-            return calcRSI(mktData, updateTime);
+            return CalcRSI(mktData, updateTime);
         }
 
         class RsiCandle
@@ -56,6 +72,9 @@ namespace MidaxLib
             public decimal DiffAsset;
             public decimal StartRsiValue;
             public decimal StartAssetValue;
+            public decimal StdDevGain = 0m;
+            public decimal StdDevLoss = 0m;
+            public DateTime EndTime = DateTime.MaxValue;
 
             public RsiCandle(decimal startRsiValue, decimal starAssetValue, bool gain = false, decimal diffRsi = 0m, decimal diffAsset = 0m)
             {
@@ -68,7 +87,7 @@ namespace MidaxLib
             }
         }
 
-        Price calcRSI(MarketData mktData, DateTime updateTime)
+        public Price CalcRSI(MarketData mktData, DateTime updateTime)
         {
             if (updateTime >= _nextRsiTime)
             {
@@ -86,12 +105,13 @@ namespace MidaxLib
                 if (_history.Count == 120)
                     _history.RemoveAt(0);
                 if (_rsiCandles.Count > 0){
+                    _curCandle.EndTime = updateTime;
                     var curStartRsi = _rsiCandles[_rsiCandles.Count - 1].StartRsiValue + (_rsiCandles[_rsiCandles.Count - 1].GainRsi ? _rsiCandles[_rsiCandles.Count - 1].DiffRsi:
                                             -_rsiCandles[_rsiCandles.Count - 1].DiffRsi);
-                    _curCandle = new RsiCandle(curStartRsi, mktData.TimeSeries.Last().Bid);
+                    _curCandle = new RsiCandle(curStartRsi, mktData.TimeSeries.Last().Mid());
                 }
                 else
-                    _curCandle = new RsiCandle(50m, mktData.TimeSeries.Last().Bid);
+                    _curCandle = new RsiCandle(50m, mktData.TimeSeries.Last().Mid());
                 _rsiCandles.Add(_curCandle);
                 _history.Add(_curCandle);
             }
@@ -119,13 +139,34 @@ namespace MidaxLib
             }
             var sumGain = 0m;
             var sumLosses = 0m;
+            var nbGain = 0;
+            var nbLoss = 0;
             foreach (var candle in _rsiCandles)
             {
                 if (candle.GainAsset)
+                {
                     sumGain += candle.DiffAsset;
+                    nbGain++;
+                }
                 else
+                {
                     sumLosses += candle.DiffAsset;
+                    nbLoss++;
+                }
             }
+            var avgGain = nbGain == 0 ? 0 : sumGain / nbGain;
+            var avgLoss = nbLoss == 0 ? 0 : sumLosses / nbLoss;
+            var stdDevGain = 0m;
+            var stdDevLoss = 0m;
+            foreach (var candle in _rsiCandles)
+            {
+                if (candle.GainAsset)
+                    stdDevGain += (decimal)Math.Pow((double)(candle.DiffAsset - avgGain), 2.0);
+                else
+                    stdDevLoss += (decimal)Math.Pow((double)(candle.DiffAsset - avgLoss), 2.0);
+            }
+            _curCandle.StdDevGain = nbGain == 0 ? 0m : (decimal)Math.Sqrt((double)stdDevGain / nbGain);
+            _curCandle.StdDevLoss = nbLoss == 0 ? 0m : (decimal)Math.Sqrt((double)stdDevLoss / nbLoss);
             decimal rs = Math.Abs(sumLosses) < 0.1m ? (Math.Abs(sumGain) < 0.1m ? 1m : 1000m) : sumGain / sumLosses;
             Price rsi = new Price(100m - 100m / (1m + rs));
             if (rsi.Bid > _curCandle.StartRsiValue){
@@ -144,7 +185,7 @@ namespace MidaxLib
             Price rsi = IndicatorFunc(mktData, updateTime, value);
             if (rsi != null)
             {
-                _values.Add(_nextRsiTime, rsi);
+                _values.Add(updateTime, rsi);
                 Publish(updateTime, rsi.Bid);
             }
         }

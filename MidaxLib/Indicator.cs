@@ -32,7 +32,12 @@ namespace MidaxLib
                 foreach (MarketData mktData in _mktData)
                     mktData.Subscribe(OnUpdate, OnTick);
             }
-            this._updateHandlers.Add(updateHandler);
+            if (updateHandler != null)
+                this._updateHandlers.Add(updateHandler);
+            else
+                this._updateHandlers.Add(OnUpdate);
+            if (tickerHandler != null)
+                throw new ApplicationException("tickerHandler should not be used by indicators");
         }
 
         public override void Unsubscribe(Tick updateHandler, Tick tickerHandler)

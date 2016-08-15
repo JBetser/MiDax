@@ -95,13 +95,14 @@ namespace MidaxLib
             _itemData["dealStatus"] = dealStatus;
             _itemData["size"] = size.ToString();
             _itemData["level"] = level.ToString();
+            _itemData["channel"] = "PublicRestOTC";
             _itemData["direction"] = direction == SIGNAL_CODE.BUY ? "BUY" : (direction == SIGNAL_CODE.SELL ? "SELL" : "UNKNOWN");
         }
 
         public override string ToString()
         {
-            return string.Format("[ {{ \"timestamp\" : \"{8}\", \"epic\" : \"{0}\", \"dealId\" : \"{1}\", \"dealReference\" : \"{2}\", \"status\" : \"{3}\", \"dealStatus\" : \"{4}\", \"size\" : \"{5}\", \"level\" : \"{6}\", \"direction\" : \"{7}\" }} ]",
-                _name, _id, _itemData["dealReference"], _itemData["status"], _itemData["dealStatus"], _itemData["size"], _itemData["level"], _itemData["direction"], _itemData["timestamp"]);
+            return string.Format("[ {{ \"timestamp\" : \"{8}\", \"epic\" : \"{0}\", \"dealId\" : \"{1}\", \"dealReference\" : \"{2}\", \"status\" : \"{3}\", \"dealStatus\" : \"{4}\", \"size\" : \"{5}\", \"level\" : \"{6}\", \"direction\" : \"{7}\", \"channel\" : \"{9}\" }} ]",
+                _name, _id, _itemData["dealReference"], _itemData["status"], _itemData["dealStatus"], _itemData["size"], _itemData["level"], _itemData["direction"], _itemData["timestamp"], _itemData["channel"]);
         }
     }
 

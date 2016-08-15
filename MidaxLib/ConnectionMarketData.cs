@@ -161,7 +161,7 @@ namespace MidaxLib
             }
             catch (Exception ex)
             {
-                Log.Instance.WriteEntry("Market data update error: " + ex.Message, System.Diagnostics.EventLogEntryType.Error);
+                Log.Instance.WriteEntry("Market data update error: " + ex.ToString(), System.Diagnostics.EventLogEntryType.Error);
                 throw;
             }
         }

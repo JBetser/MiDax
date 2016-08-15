@@ -245,7 +245,6 @@ namespace MidaxLib
                 _tradingOrder = _onSell;
                 return true;
             }
-            return false;
         }
     }
 }

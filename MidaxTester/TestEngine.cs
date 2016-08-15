@@ -36,6 +36,7 @@ namespace MidaxTester
             if (generate_from_db)
                 Config.Settings["DB_CONTACTPOINT"] = "192.168.1.25";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "10";
+            Config.Settings["CALENDAR_PATH"] = @"C:\Shared\MidaxTester\Calendar";
 
             _generate = generate;                     
         }
@@ -49,13 +50,15 @@ namespace MidaxTester
                 mktdataFiles.Add(string.Format("..\\..\\..\\DBImporter\\MktData\\mktdata_{0}_{1}_{2}.csv", test.Day, test.Month, test.Year));
                 Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
                 Config.Settings["EXPECTEDRESULTS_CSV"] = string.Format("..\\..\\expected_results\\{3}_{0}_{1}_{2}.csv", test.Day, test.Month, test.Year, _testName);
+                Config.Settings["RUSH_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 13/* - 5*/, 30, 0);
+                Config.Settings["RUSH_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 15/* - 5*/, 30, 0);
                 if (_fullday)
                 {
                     Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 6, 0, 0);
                     Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 22, 45, 0);
                     Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 8, 0, 0);
-                    Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 21, 30, 0);
-                    Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 21, 0, 0);
+                    Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 21, 15, 0);
+                    Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 20, 45, 0);
                     Config.Settings["TIMESERIES_MAX_RECORD_TIME_HOURS"] = "12";
                 }
                 else

@@ -105,7 +105,9 @@ namespace MidaxLib
         void connectionLostCallback(object state)
         {
             Log.Instance.WriteEntry(": Connection lost. Reconnecting...", EventLogEntryType.Warning);
-            Start();
+            MarketDataConnection.Instance.Connect(connectionLostCallback);
+            CloseAllPositions(DateTime.Now);
+            stopSignalCallback(state);
         }
 
         void startSignalCallback(object state)

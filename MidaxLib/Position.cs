@@ -177,6 +177,11 @@ namespace MidaxLib
                         var trade_notification = (Dictionary<string, object>)obj;
                         if (trade_notification != null)
                         {
+                            if (trade_notification["channel"].ToString() != "PublicRestOTC")
+                            {
+                                Log.Instance.WriteEntry("Incoming trade from a different channel: " + trade_notification["channel"].ToString(), System.Diagnostics.EventLogEntryType.Information);
+                                return false;
+                            }
                             if (trade_notification["epic"].ToString() == _name)
                             {
                                 if (trade_notification["dealStatus"].ToString() == "ACCEPTED")

@@ -131,9 +131,13 @@ namespace MidaxLib
         }
         
         protected virtual void OnTradeBooked(Trade newTrade)
-        {
-            _trades.Add(newTrade);
-            GetPosition(newTrade.Epic).AddIncomingTrade(newTrade);
+        {            
+            var pos = GetPosition(newTrade.Epic);
+            if (pos != null)
+            {
+                _trades.Add(newTrade);
+                pos.AddIncomingTrade(newTrade);
+            }
         }
 
         protected virtual void OnBookingFailed(Trade newTrade)
@@ -162,10 +166,13 @@ namespace MidaxLib
         {
             foreach (var pos in _positions.Values)
             {
-                if (pos.AwaitingTrade)
+                if (pos.Epic == epic)
                 {
-                    Log.Instance.WriteEntry(string.Format("Cannot book a new trade as a deal is already pending, Epic: {0}. Waiting for position to be updated", epic), System.Diagnostics.EventLogEntryType.Warning);
-                    return null;
+                    if (pos.AwaitingTrade)
+                    {
+                        Log.Instance.WriteEntry(string.Format("Cannot book a new trade as a deal is already pending, Epic: {0}. Waiting for position to be updated", epic), System.Diagnostics.EventLogEntryType.Warning);
+                        return null;
+                    }
                 }
             }
             if (!_positions.ContainsKey(epic))

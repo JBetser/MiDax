@@ -189,7 +189,8 @@
                         var indicatorIds = $("#indicator").val().split('#');
                         var idx = 0;
                         for (var id in indicatorIds) {
-                            if (indicatorIds[id].indexOf("Volume_") != -1 || indicatorIds[id].indexOf("RSI_") != -1 || indicatorIds[id].indexOf("Cor_") != -1)
+                            if (indicatorIds[id].indexOf("Volume_") != -1 || indicatorIds[id].indexOf("RSI_") != -1 ||
+                                indicatorIds[id].indexOf("Cor_") != -1 || indicatorIds[id].indexOf("Trend_") != -1)
                                 noStock = true;
                             var indicatorParams = $.extend({ "indicatorid": indicatorIds[id] + "_" + $("#equity").val() }, genericParams);
                             if (indicatorIds[id].startsWith("Low") || indicatorIds[id].startsWith("High") || indicatorIds[id].startsWith("Close")) {
@@ -296,7 +297,8 @@
                <option value="LVLPivot#LVLS1#LVLR1">Levels Pivot/S1/R1</option>
                <option value="NearestLevel">Nearest Level</option>
                <option value="EMA_10#EMA_30#EMA_90">EMA 10mn/30mn/1hr30</option>
-               <option value="RSI_1_14#RSI_3_14">RSI14 1mn/3mn</option>
+               <option value="RSI_1_14#RSI_1_28">RSI 1mn 14/28</option>
+               <option value="Trend_30_14#Trend_60_14">Trend 7mn/14mn</option>
                <option value="Water_1_15_depth0#Water_3_15_depth0">Water15 d0 1mn/3mn</option>
                <option value="Water_1_15_valuediff0#Water_3_15_valuediff0">Water15 vd0 1mn/3mn</option>
                <option value="Water_1_15_timediff0#Water_3_15_timediff0">Water15 td0 1mn/3mn</option>

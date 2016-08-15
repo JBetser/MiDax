@@ -136,7 +136,7 @@ namespace MidaxLib
             : base("WMA_1D_" + mktData.Id, mktData, 0)
         {
             TimeSpan timeDiff = (Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]) - Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]));
-            _periodSeconds = (timeDiff.Hours * 60 + timeDiff.Minutes) * 60 + timeDiff.Seconds;
+            _subPeriodSeconds = (timeDiff.Hours * 60 + timeDiff.Minutes) * 60 + timeDiff.Seconds;
         }
 
         protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
