@@ -135,5 +135,11 @@
     <Setting Name="CALENDAR_PATH" Type="System.String" Scope="Application">
       <Value Profile="(Default)">C:\Midax\Calendar</Value>
     </Setting>
+    <Setting Name="FX_AUDUSD" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">AUDUSD:CS.D.AUDUSD.TODAY.IP</Value>
+    </Setting>
+    <Setting Name="TIME_GMT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

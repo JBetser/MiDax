@@ -109,8 +109,8 @@ namespace MidaxLib
         }
         public static int comparison(Price p1, Price p2)
         {
-            // precision is set to 1/100 of bp
-            return (int)(100m * (p1.Mid() - p2.Mid()));
+            // precision is set to 1/10000 of bp
+            return (int)(10000m * (p1.Mid() - p2.Mid()));
         }
         public static bool operator <=(Price p1, Price p2)
         {

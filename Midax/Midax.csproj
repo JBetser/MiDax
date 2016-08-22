@@ -128,7 +128,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties ZerocIce_Enabled="True" ZerocIce_OutputDir=".\slice" ZerocIce_Prefix="True" ZerocIce_ProjectVersion="1" />
+      <UserProperties ZerocIce_ProjectVersion="1" ZerocIce_Prefix="True" ZerocIce_OutputDir=".\slice" ZerocIce_Enabled="True" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
@@ -138,6 +138,10 @@
     </PropertyGroup>
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
   </Target>
+  <PropertyGroup>
+    <PostBuildEvent>cd $(ProjectDir)
+call $(ProjectDir)CopyCalendar.cmd</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

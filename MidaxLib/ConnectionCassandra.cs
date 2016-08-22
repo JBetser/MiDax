@@ -87,8 +87,6 @@ namespace MidaxLib
         {
             if (s.StartsWith("LR"))
                 b = o = avg + b.Value * scale * 2m;
-            else if (s.StartsWith("WMVol"))
-                b = o = avg - scale / 2m + b.Value * scale / 20m;
             return b.Value;
         }  
     }

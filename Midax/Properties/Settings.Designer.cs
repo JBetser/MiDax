@@ -350,5 +350,23 @@ namespace Midax.Properties {
                 return ((string)(this["CALENDAR_PATH"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("AUDUSD:CS.D.AUDUSD.TODAY.IP")]
+        public string FX_AUDUSD {
+            get {
+                return ((string)(this["FX_AUDUSD"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public string TIME_GMT {
+            get {
+                return ((string)(this["TIME_GMT"]));
+            }
+        }
     }
 }

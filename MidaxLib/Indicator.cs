@@ -36,8 +36,8 @@ namespace MidaxLib
                 this._updateHandlers.Add(updateHandler);
             else
                 this._updateHandlers.Add(OnUpdate);
-            if (tickerHandler != null)
-                throw new ApplicationException("tickerHandler should not be used by indicators");
+            //if (tickerHandler != null)
+            //    throw new ApplicationException("tickerHandler should not be used by indicators");
         }
 
         public override void Unsubscribe(Tick updateHandler, Tick tickerHandler)

@@ -51,8 +51,8 @@ namespace MidaxLib
             _mktIndicators.Add(_wma_low);
             _mktIndicators.Add(_wma_mid);
             _mktIndicators.Add(_wma_high);
-            _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 1));
-            _mktIndicators.Add(new IndicatorWMVol(_daxIndex, 3));
+            _mktIndicators.Add(new IndicatorWMVol(_daxIndex, _wma_low));
+            _mktIndicators.Add(new IndicatorWMVol(_daxIndex, _wma_mid));
             _mktIndicators.Add(new IndicatorNearestLevel(_daxIndex));
 
             var annId = "WMA_5_2";

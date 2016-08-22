@@ -190,7 +190,7 @@
                         var idx = 0;
                         for (var id in indicatorIds) {
                             if (indicatorIds[id].indexOf("Volume_") != -1 || indicatorIds[id].indexOf("RSI_") != -1 ||
-                                indicatorIds[id].indexOf("Cor_") != -1 || indicatorIds[id].indexOf("Trend_") != -1)
+                                indicatorIds[id].indexOf("Cor_") != -1 || indicatorIds[id].indexOf("Trend_") != -1 || indicatorIds[id].indexOf("WMVol_") != -1)
                                 noStock = true;
                             var indicatorParams = $.extend({ "indicatorid": indicatorIds[id] + "_" + $("#equity").val() }, genericParams);
                             if (indicatorIds[id].startsWith("Low") || indicatorIds[id].startsWith("High") || indicatorIds[id].startsWith("Close")) {
@@ -290,6 +290,7 @@
                <option value="CS.D.GBPEUR.TODAY.IP">GBP/EUR</option>
                <option value="CS.D.EURUSD.TODAY.IP">EUR/USD</option>
                <option value="CS.D.USDJPY.TODAY.IP">USD/JPY</option>
+               <option value="CS.D.AUDUSD.TODAY.IP">AUD/USD</option>
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>
@@ -305,6 +306,8 @@
                <option value="Cor_10_IX.D.DOW.DAILY.IP#Cor_30_IX.D.DOW.DAILY.IP">DOW Correlation 10mn/30mn</option>
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
+               <option value="Trend_5_6_WMVol_10">Vol Trend 30s</option>
+               <option value="Curve_5_WMVol_10">Vol Curve 30s</option>
                <!--option value="VWMVol_10">VWM Vol 10mn</!--option>
                <option value="VWMVol_90">VWM Vol 1h30</option>    
                <option value="Volume_10">Volumes 10mn</option>  

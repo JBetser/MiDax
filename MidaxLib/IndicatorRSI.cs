@@ -8,6 +8,29 @@ using IGPublicPcl;
 
 namespace MidaxLib
 {
+    public class RsiCandle
+    {
+        public bool GainRsi;
+        public bool GainAsset;
+        public decimal DiffRsi;
+        public decimal DiffAsset;
+        public decimal StartRsiValue;
+        public decimal StartAssetValue;
+        public decimal StdDevGain = 0m;
+        public decimal StdDevLoss = 0m;
+        public DateTime EndTime = DateTime.MaxValue;
+
+        public RsiCandle(decimal startRsiValue, decimal starAssetValue, bool gain = false, decimal diffRsi = 0m, decimal diffAsset = 0m)
+        {
+            GainAsset = gain;
+            GainRsi = false;
+            DiffRsi = diffRsi;
+            DiffAsset = diffAsset;
+            StartRsiValue = startRsiValue;
+            StartAssetValue = starAssetValue;
+        }
+    }
+
     /************************************************************************************************************
      * RSI Indicator
      * Inputs:
@@ -62,29 +85,6 @@ namespace MidaxLib
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
             return CalcRSI(mktData, updateTime);
-        }
-
-        class RsiCandle
-        {
-            public bool GainRsi;
-            public bool GainAsset;
-            public decimal DiffRsi;
-            public decimal DiffAsset;
-            public decimal StartRsiValue;
-            public decimal StartAssetValue;
-            public decimal StdDevGain = 0m;
-            public decimal StdDevLoss = 0m;
-            public DateTime EndTime = DateTime.MaxValue;
-
-            public RsiCandle(decimal startRsiValue, decimal starAssetValue, bool gain = false, decimal diffRsi = 0m, decimal diffAsset = 0m)
-            {
-                GainAsset = gain;
-                GainRsi = false;
-                DiffRsi = diffRsi;
-                DiffAsset = diffAsset;
-                StartRsiValue = startRsiValue;
-                StartAssetValue = starAssetValue;
-            }
         }
 
         public Price CalcRSI(MarketData mktData, DateTime updateTime)

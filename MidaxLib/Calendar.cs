@@ -14,6 +14,7 @@ namespace MidaxLib
         public Calendar(DateTime date)
         {
             string folder = (string)Config.Settings["CALENDAR_PATH"];
+            int time_offset = int.Parse(Config.Settings["TIME_GMT"]);
             int day = date.Day - (int)date.DayOfWeek;
             int month = date.Month;
             int year = date.Year;
@@ -60,7 +61,7 @@ namespace MidaxLib
                     eventName = line.Split(',')[2];
                 line = line.Replace(eventName, "");
                 var eventDateTime = Config.ParseDateTimeLocal(curDate.Value.Day + "-" + curDate.Value.Month + "-" + curDate.Value.Year + " " + line.Split(',')[3] + ":00");
-                eventDateTime = eventDateTime.AddHours(1); // -5                
+                eventDateTime = eventDateTime.AddHours(time_offset);           
                 _events[curCcy].Add(new KeyValuePair<DateTime, string>(eventDateTime, eventName));
             }
         }

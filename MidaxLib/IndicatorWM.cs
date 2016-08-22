@@ -331,50 +331,6 @@ namespace MidaxLib
         } 
     }
 
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public class IndicatorWMVol : IndicatorEMA
-    {
-        DateTime _nextWMVolTime = DateTime.MinValue;
-
-        public IndicatorWMVol(MarketData mktData, int periodMn)
-            : base("WMVol_" + periodMn + "_" + mktData.Id, mktData, periodMn)
-        {
-        }
-
-        protected override bool MobileAverage(ref Price curVolAvg, DateTime startTime, DateTime updateTime)
-        {
-            if ((updateTime - _nextWMVolTime).TotalMilliseconds > _subPeriodSeconds * 1000)
-                _nextWMVolTime = updateTime;
-            if (_nextWMVolTime == DateTime.MinValue)
-                return false;
-            decimal min = decimal.MaxValue;
-            decimal max = decimal.MinValue;
-            IEnumerable<KeyValuePair<DateTime, Price>> generator = SignalStock.TimeSeries.ValueGenerator(startTime, updateTime, false);
-            foreach (var endPeriodValue in generator)
-            {
-                if (endPeriodValue.Value.Mid() > max)
-                    max = endPeriodValue.Value.Mid();
-                if (endPeriodValue.Value.Mid() < min)
-                    min = endPeriodValue.Value.Mid();
-            }
-            curVolAvg = new Price(max - min);
-            return true;
-        }
-
-        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
-        {
-            Price avgPrice = IndicatorFunc(mktData, updateTime, value);
-            if (avgPrice != null)
-            {
-                base.OnUpdate(mktData, updateTime, avgPrice);
-                Publish(_nextWMVolTime, avgPrice.MidPrice());
-            }
-        }
-    }
-
     /// <summary>
     /// Exponential Moving Average
     /// it gives more weight to recent data and as a result is more volatile than SMA
@@ -385,7 +341,6 @@ namespace MidaxLib
     /// </summary>
     public class IndicatorEMA : IndicatorWMA
     {
-        protected Price _curValue;
         protected decimal? _prevEma;
         protected decimal _timeDecayWeight = 0m;
         protected DateTime _startTime = DateTime.MinValue;
@@ -421,14 +376,13 @@ namespace MidaxLib
                     curPeriod = _periodMilliSeconds;
                 var timeDecay = _timeDecayWeight * (decimal)(updateTime - _startTime).TotalSeconds;
                 var k = (curPeriod + timeDecay) / _periodMilliSeconds;
-                curEma = _curValue.Bid * k + _prevEma.Value * (1m - k);
+                curEma = value.Mid() * k + _prevEma.Value * (1m - k);
             }
             else
-            {                
-                curEma = value.Bid;
+            {
+                curEma = value.Mid();
             }
             _prevEma = curEma;
-            _curValue = new Price(value.Bid);
             _startTime = updateTime;
             return new Price(curEma);
         }
@@ -494,10 +448,9 @@ namespace MidaxLib
                     return null;
                 curEma = value.Bid;                
             }
-            _curValue = new Price(curEma);
             _prevEma = curEma;
             _startTime = updateTime;
-            return _curValue;
+            return new Price(curEma);
         }
     }
 }

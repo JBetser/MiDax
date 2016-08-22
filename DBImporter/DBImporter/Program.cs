@@ -50,6 +50,7 @@ namespace DBImporter
             dicSettings["FX_GBPEUR"] = "GBPEUR:CS.D.GBPEUR.TODAY.IP";
             dicSettings["FX_EURUSD"] = "EURUSD:CS.D.EURUSD.TODAY.IP";
             dicSettings["FX_USDJPY"] = "USDJPY:CS.D.USDJPY.TODAY.IP";
+            dicSettings["FX_AUDUSD"] = "AUDUSD:CS.D.AUDUSD.TODAY.IP";
             Config.Settings = dicSettings;
 
             while (start <= end)
@@ -70,7 +71,7 @@ namespace DBImporter
                 {
                     List<string> mktdataFiles = new List<string>();
                     if (wholeMonth)
-                        mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_gbpusd_{0}_{1}.csv", start.Month, start.Year));
+                        mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_audusd_{0}_{1}.csv", start.Month, start.Year));
                     else
                         mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year));
                     Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
@@ -83,10 +84,12 @@ namespace DBImporter
                 var gbpeur = new MarketData(dicSettings["FX_GBPEUR"]);
                 var eurusd = new MarketData(dicSettings["FX_EURUSD"]);
                 var usdjpy = new MarketData(dicSettings["FX_USDJPY"]);
+                var audusd = new MarketData(dicSettings["FX_AUDUSD"]);
                 lstIndices.Add(gbpusd);
                 lstIndices.Add(gbpeur);
                 lstIndices.Add(eurusd);
                 lstIndices.Add(usdjpy);
+                lstIndices.Add(audusd);
                 /*
                 var indexDAX = new MarketData("DAX:IX.D.DAX.DAILY.IP");
                 indexDAX.Subscribe(OnUpdate, null);

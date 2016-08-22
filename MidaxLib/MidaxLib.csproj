@@ -132,6 +132,7 @@
     <Compile Include="IndicatorVolume.cs" />
     <Compile Include="IndicatorWatershed.cs" />
     <Compile Include="IndicatorWM.cs" />
+    <Compile Include="IndicatorWMVol.cs" />
     <Compile Include="LapackLib.cs" />
     <Compile Include="LevenbergMarquardt.cs" />
     <Compile Include="Log.cs" />
