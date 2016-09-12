@@ -9,11 +9,11 @@ namespace MidaxLib
 {
     public interface IReaderConnection
     {
-        Dictionary<string,List<CqlQuote>> GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids);
-        Dictionary<string,List<CqlQuote>> GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids);
-        Dictionary<string,List<CqlQuote>> GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids);
-        Dictionary<string,List<Trade>> GetTrades(DateTime startTime, DateTime stopTime, string type, List<string> ids);
-        Dictionary<string,List<KeyValuePair<DateTime, double>>> GetProfits(DateTime startTime, DateTime stopTime, string type, List<string> ids);
+        Dictionary<string,List<CqlQuote>> GetMarketDataQuotes(DateTime startTime, DateTime stopTime, List<string> ids);
+        Dictionary<string,List<CqlQuote>> GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, List<string> ids);
+        Dictionary<string,List<CqlQuote>> GetSignalDataQuotes(DateTime startTime, DateTime stopTime, List<string> ids);
+        Dictionary<string,List<Trade>> GetTrades(DateTime startTime, DateTime stopTime, List<string> ids);
+        Dictionary<string,List<KeyValuePair<DateTime, double>>> GetProfits(DateTime startTime, DateTime stopTime, List<string> ids);
         Dictionary<string, MarketLevels> GetMarketLevels(DateTime updateTime, List<string> ids);
         Dictionary<string, List<CqlQuote>> GetRows(DateTime startTime, DateTime stopTime, string type, List<string> ids);
         void CloseConnection();        
@@ -108,13 +108,13 @@ namespace MidaxLib
         {
             var csv = new CsvReader(startTime);
             csv.GetMarketLevels(startTime, ids);
-            var mktQuotes = csv.GetMarketDataQuotes(startTime, stopTime, type, ids);
+            var mktQuotes = csv.GetMarketDataQuotes(startTime, stopTime, ids);
             if (type == PublisherConnection.DATATYPE_STOCK)
                 return mktQuotes;
-            mktQuotes = csv.GetIndicatorDataQuotes(startTime, stopTime, type, ids);
+            mktQuotes = csv.GetIndicatorDataQuotes(startTime, stopTime, ids);
             if (type == PublisherConnection.DATATYPE_INDICATOR)
                 return mktQuotes;
-            mktQuotes = csv.GetSignalDataQuotes(startTime, stopTime, type, ids);            
+            mktQuotes = csv.GetSignalDataQuotes(startTime, stopTime, ids);            
             if (type == PublisherConnection.DATATYPE_SIGNAL)
                 return mktQuotes;
             return null;
@@ -186,29 +186,29 @@ namespace MidaxLib
             return mktLevels;
         }
 
-        public Dictionary<string, List<CqlQuote>> GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        public Dictionary<string, List<CqlQuote>> GetMarketDataQuotes(DateTime startTime, DateTime stopTime, List<string> ids)
         {            
-            return getRows<CqlQuote>(startTime, stopTime, type, ids, readMarketData);
+            return getRows<CqlQuote>(startTime, stopTime, CassandraConnection.DATATYPE_STOCK, ids, readMarketData);
         }
 
-        public Dictionary<string, List<CqlQuote>> GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        public Dictionary<string, List<CqlQuote>> GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, List<string> ids)
         {
-            return getRows<CqlQuote>(startTime, stopTime, type, ids, readIndicatorData);
+            return getRows<CqlQuote>(startTime, stopTime, CassandraConnection.DATATYPE_INDICATOR, ids, readIndicatorData);
         }
 
-        public Dictionary<string, List<CqlQuote>> GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        public Dictionary<string, List<CqlQuote>> GetSignalDataQuotes(DateTime startTime, DateTime stopTime, List<string> ids)
         {
-            return getRows<CqlQuote>(startTime, stopTime, type, ids, readSignalData);
+            return getRows<CqlQuote>(startTime, stopTime, CassandraConnection.DATATYPE_SIGNAL, ids, readSignalData);
         }
 
-        Dictionary<string, List<Trade>> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        Dictionary<string, List<Trade>> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, List<string> ids)
         {
-            return getRows<Trade>(startTime, stopTime, type, ids, readTradeData);
+            return getRows<Trade>(startTime, stopTime, CassandraConnection.DATATYPE_TRADE, ids, readTradeData);
         }
 
-        Dictionary<string, List<KeyValuePair<DateTime, double>>> IReaderConnection.GetProfits(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        Dictionary<string, List<KeyValuePair<DateTime, double>>> IReaderConnection.GetProfits(DateTime startTime, DateTime stopTime, List<string> ids)
         {
-            return getRows<KeyValuePair<DateTime, double>>(startTime, stopTime, type, ids, readProfitData, 0);
+            return getRows<KeyValuePair<DateTime, double>>(startTime, stopTime, CassandraConnection.DATATYPE_PROFIT, ids, readProfitData, 0);
         }
 
         void IReaderConnection.CloseConnection()

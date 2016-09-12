@@ -130,11 +130,13 @@ namespace MidaxLib
         int _numId = 1;
         int _numRef = 1;
         int _samplingMs = -1;
+        bool _deleteDB = false;
         
         bool _hasExpectedResults = false;
         List<string> _testReplayFiles = new List<string>();
         Dictionary<string, List<CqlQuote>> _priceData;
         ClosingWaitHandle _closing = new ClosingWaitHandle();
+        CassandraConnection _deleter = null;
 
         public IReaderConnection Reader { get { return _reader; } }
         
@@ -152,33 +154,45 @@ namespace MidaxLib
             if (Config.Settings.ContainsKey("SAMPLING_MS"))
                 _samplingMs = int.Parse(Config.Settings["SAMPLING_MS"]);
             _testReplayFiles.Clear();
-            if (Config.Settings["REPLAY_MODE"] == "DB")
+            if (Config.Settings.ContainsKey("DELETEDB"))
             {
+                _deleteDB = true;
                 _testReplayFiles.Add(null); // Add a fake element to trigger the replay from db
-                _reader = new CassandraConnection();
-            }
-            else if (Config.Settings["REPLAY_MODE"] == "CSV")
-            {
-                if (Config.Settings.ContainsKey("REPLAY_CSV"))
-                {
-                    _testReplayFiles = Config.Settings["REPLAY_CSV"].Split(';').ToList();
-                    if (_reader != null)
-                        _reader.CloseConnection();
-                    _reader = new CsvReader(_testReplayFiles[0]);
-                }
-                else
-                    _reader = new CsvReader(null);
+                _deleter = new CassandraConnection();
+                _reader = _deleter;
+                _readerExpectedResults = _deleter;
+                _hasExpectedResults = true;
             }
             else
-                _reader = null;
-            _hasExpectedResults = Config.TestReplayEnabled || Config.MarketSelectorEnabled || Config.CalibratorEnabled;
-            if (_hasExpectedResults)
             {
-                if (Config.Settings.ContainsKey("EXPECTEDRESULTS_CSV"))
-                    _readerExpectedResults = new CsvReader(Config.Settings["EXPECTEDRESULTS_CSV"]);
+                if (Config.Settings["REPLAY_MODE"] == "DB")
+                {
+                    _testReplayFiles.Add(null); // Add a fake element to trigger the replay from db
+                    _reader = new CassandraConnection();
+                }
+                else if (Config.Settings["REPLAY_MODE"] == "CSV")
+                {
+                    if (Config.Settings.ContainsKey("REPLAY_CSV"))
+                    {
+                        _testReplayFiles = Config.Settings["REPLAY_CSV"].Split(';').ToList();
+                        if (_reader != null)
+                            _reader.CloseConnection();
+                        _reader = new CsvReader(_testReplayFiles[0]);
+                    }
+                    else
+                        _reader = new CsvReader(null);
+                }
                 else
-                    _readerExpectedResults = new CsvReader(_testReplayFiles[0]);
-            }
+                    _reader = null;
+                _hasExpectedResults = Config.TestReplayEnabled || Config.MarketSelectorEnabled || Config.CalibratorEnabled;
+                if (_hasExpectedResults)
+                {
+                    if (Config.Settings.ContainsKey("EXPECTEDRESULTS_CSV"))
+                        _readerExpectedResults = new CsvReader(Config.Settings["EXPECTEDRESULTS_CSV"]);
+                    else
+                        _readerExpectedResults = new CsvReader(_testReplayFiles[0]);
+                }
+            }            
             _numId = 1;
             _numRef = 1;
         }
@@ -193,7 +207,10 @@ namespace MidaxLib
             while (_testReplayFiles.Count > 0)
             {
                 _priceData = GetReplayData(epics);
-                replay(_priceData, tableListener);
+                if (_deleteDB)
+                    delete(_priceData);
+                else
+                    replay(_priceData, tableListener);
                 _testReplayFiles.RemoveAt(0);
             }
         }
@@ -328,6 +345,35 @@ namespace MidaxLib
             }
         }
 
+        protected void delete(Dictionary<string, List<CqlQuote>> priceData)
+        {
+            var epicLst = priceData.Keys.ToList();
+            foreach (var epicQuotes in priceData)
+            {
+                foreach (var epicQuote in epicQuotes.Value)
+                    _deleter.DeleteMktData(epicQuote.t, epicQuote.s);
+            }
+            /* The below would really take forever*/
+            var indicatorData = _readerExpectedResults.GetIndicatorDataQuotes(_startTime, _stopTime, epicLst);
+            foreach (var epicQuotes in indicatorData)
+            {
+                foreach (var epicQuote in epicQuotes.Value)
+                    _deleter.DeleteIndicator(epicQuote.t, epicQuote.s);
+            }
+            var signalData = _readerExpectedResults.GetSignalDataQuotes(_startTime, _stopTime, epicLst);
+            foreach (var epicQuotes in signalData)
+            {
+                foreach (var epicQuote in epicQuotes.Value)
+                    _deleter.DeleteSignal(epicQuote.t, epicQuote.s);
+            }
+            var tradeData = _readerExpectedResults.GetTrades(_startTime, _stopTime, epicLst);
+            foreach (var trades in tradeData)
+            {
+                foreach (var trade in trades.Value)
+                    _deleter.DeleteTrade(trade.TradingTime, trade.Id);
+            }
+        }
+
         public Dictionary<string, List<CqlQuote>> GetReplayData(string[] epics)
         {
             var epicLst = epics.ToList();
@@ -337,17 +383,14 @@ namespace MidaxLib
             else
                 stockEpics = epicLst;
             var mktLevelsData = _reader.GetMarketLevels(_stopTime, stockEpics);
-            var priceData = _reader.GetMarketDataQuotes(_startTime, _stopTime,
-                                        CassandraConnection.DATATYPE_STOCK, epicLst);
+            var priceData = _reader.GetMarketDataQuotes(_startTime, _stopTime, epicLst);
             if (_hasExpectedResults)
             {
                 _readerExpectedResults.GetMarketLevels(_stopTime, stockEpics);
-                _readerExpectedResults.GetMarketDataQuotes(_startTime, _stopTime,
-                                            CassandraConnection.DATATYPE_STOCK, epicLst);
+                _readerExpectedResults.GetMarketDataQuotes(_startTime, _stopTime, epicLst);
 
                 _expectedIndicatorData = new Dictionary<string, List<CqlQuote>>();
-                var quotes = _readerExpectedResults.GetIndicatorDataQuotes(_startTime, _stopTime,
-                        CassandraConnection.DATATYPE_INDICATOR, epicLst);
+                var quotes = _readerExpectedResults.GetIndicatorDataQuotes(_startTime, _stopTime, epicLst);
                 foreach (var epicQuotes in quotes)
                 {
                     Dictionary<string, List<CqlQuote>> indicatorData = (from quote in epicQuotes.Value
@@ -356,8 +399,7 @@ namespace MidaxLib
                     indicatorData.Aggregate(_expectedIndicatorData, (agg, keyVal) => { agg.Add(keyVal.Key, keyVal.Value); return agg; });
                 }
                 _expectedSignalData = new Dictionary<string, List<CqlQuote>>();
-                quotes = _readerExpectedResults.GetSignalDataQuotes(_startTime, _stopTime,
-                        CassandraConnection.DATATYPE_SIGNAL, epicLst);
+                quotes = _readerExpectedResults.GetSignalDataQuotes(_startTime, _stopTime, epicLst);
                 foreach (var epicQuotes in quotes)
                 {
                     Dictionary<string, List<CqlQuote>> signalData = (from quote in epicQuotes.Value
@@ -366,23 +408,24 @@ namespace MidaxLib
                     signalData.Aggregate(_expectedSignalData, (agg, keyVal) => { agg.Add(keyVal.Key, keyVal.Value); return agg; });
                 }
                 _expectedTradeData = new Dictionary<KeyValuePair<string,DateTime>, Trade>();
-                var trades = _readerExpectedResults.GetTrades(_startTime, _stopTime,
-                                                                    CassandraConnection.DATATYPE_TRADE, epicLst);
+                var trades = _readerExpectedResults.GetTrades(_startTime, _stopTime, epicLst);
                 foreach (var epicTrades in trades)
                 {
                     foreach (Trade trade in epicTrades.Value)
                         _expectedTradeData.Add(new KeyValuePair<string, DateTime>(trade.Reference, trade.TradingTime), trade);
                 }
                 _expectedProfitData = new Dictionary<KeyValuePair<string, DateTime>, double>();
-                var profits = _readerExpectedResults.GetProfits(_startTime, _stopTime,
-                                                                    CassandraConnection.DATATYPE_PROFIT, epicLst);
-                foreach (var epicProfit in profits)
+                var profits = _readerExpectedResults.GetProfits(_startTime, _stopTime, epicLst);
+                if (profits != null)
                 {
-                    foreach (var profit in epicProfit.Value)
-                        _expectedProfitData.Add(new KeyValuePair<string, DateTime>(epicProfit.Key, profit.Key), profit.Value);
+                    foreach (var epicProfit in profits)
+                    {
+                        foreach (var profit in epicProfit.Value)
+                            _expectedProfitData.Add(new KeyValuePair<string, DateTime>(epicProfit.Key, profit.Key), profit.Value);
+                    }
+                    PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData,
+                        _expectedTradeData, _expectedProfitData);
                 }
-                PublisherConnection.Instance.SetExpectedResults(_expectedIndicatorData, _expectedSignalData,
-                    _expectedTradeData, _expectedProfitData);
             }
             return priceData;
         }

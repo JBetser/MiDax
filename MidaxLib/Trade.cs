@@ -68,12 +68,13 @@ namespace MidaxLib
         public Trade(Row row)
         {
             _id = (string)row[0];
-            _confirmationTime = (DateTime)row[1];
+            _confirmationTime = new DateTime(((DateTimeOffset)row[1]).Ticks, DateTimeKind.Local);
             _direction = (SIGNAL_CODE)(int)row[2];
-            _price = (decimal)row[3];
-            _size = (int)row[4];
-            _epic = (string)row[5];
-            _tradingTime = (DateTime)row[6]; 
+            _epic = (string)row[3];
+            _price = (decimal)row[4];
+            _size = (int)row[5];
+            _reference = (string)row[6];
+            _tradingTime = new DateTime(((DateTimeOffset)row[7]).Ticks, DateTimeKind.Local);
         }
 
         public void Publish()

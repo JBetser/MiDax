@@ -216,6 +216,26 @@ namespace MidaxLib
             throw new ApplicationException("Profit insertion not implemented in Cassandra");
         }
 
+        public void DeleteMktData(DateTime updateTime, string mktdataid)
+        {
+            executeQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_HISTORICALDATA, DATATYPE_STOCK, mktdataid, ToUnixTimestamp(updateTime)));
+        }
+
+        public void DeleteIndicator(DateTime updateTime, string mktdataid)
+        {
+            executeQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_HISTORICALDATA, DATATYPE_INDICATOR, mktdataid, ToUnixTimestamp(updateTime)));
+        }
+
+        public void DeleteSignal(DateTime updateTime, string mktdataid)
+        {
+            executeQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_HISTORICALDATA, DATATYPE_SIGNAL, mktdataid, ToUnixTimestamp(updateTime)));
+        }
+
+        public void DeleteTrade(DateTime updateTime, string mktdataid)
+        {
+            executeQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_BUSINESSDATA, DATATYPE_TRADE, mktdataid, ToUnixTimestamp(updateTime)));
+        }
+
         public override void Insert(DateTime insertTime, NeuralNetworkForCalibration ann)
         {
             if (_session == null)
@@ -330,32 +350,47 @@ namespace MidaxLib
 
         Dictionary<string, List<Trade>> getTrades(DateTime startTime, DateTime stopTime, string type, List<string> mktdataids)
         {
-            throw new ApplicationException("Trade reading not implemented");
+            var trades = new Dictionary<string, List<Trade>>();
+            foreach (var id in mktdataids)
+            {
+                if (!trades.Keys.Contains(id))
+                    trades[id] = new List<Trade>();
+                RowSet rowSet = executeQuery(string.Format(DB_SELECTION + "where confirmation_time >= {2} and confirmation_time <= {3} ALLOW FILTERING",
+                                DB_BUSINESSDATA, DATATYPE_TRADE, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
+                foreach (Row row in rowSet.GetRows())
+                {
+                    var mktdataId = (string)row[3];
+                    if (mktdataId == id)
+                        trades[id].Add(new Trade(row));
+                }
+                trades[id].Reverse();
+            }
+            return trades;
         }
 
-        Dictionary<string, List<CqlQuote>> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        Dictionary<string, List<CqlQuote>> IReaderConnection.GetMarketDataQuotes(DateTime startTime, DateTime stopTime, List<string> ids)
         {
-            return GetRows(startTime, stopTime, type, ids);
+            return GetRows(startTime, stopTime, DATATYPE_STOCK, ids);
         }
 
-        Dictionary<string, List<CqlQuote>> IReaderConnection.GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        Dictionary<string, List<CqlQuote>> IReaderConnection.GetIndicatorDataQuotes(DateTime startTime, DateTime stopTime, List<string> ids)
         {
-            return GetRows(startTime, stopTime, type, ids);
+            return GetRows(startTime, stopTime, DATATYPE_INDICATOR, ids);
         }
 
-        Dictionary<string, List<CqlQuote>> IReaderConnection.GetSignalDataQuotes(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        Dictionary<string, List<CqlQuote>> IReaderConnection.GetSignalDataQuotes(DateTime startTime, DateTime stopTime, List<string> ids)
         {
-            return GetRows(startTime, stopTime, type, ids);
+            return GetRows(startTime, stopTime, DATATYPE_SIGNAL, ids);
         }
 
-        Dictionary<string, List<Trade>> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        Dictionary<string, List<Trade>> IReaderConnection.GetTrades(DateTime startTime, DateTime stopTime, List<string> ids)
         {
-            return getTrades(startTime, stopTime, type, ids);
+            return getTrades(startTime, stopTime, DATATYPE_TRADE, ids);
         }
 
-        Dictionary<string, List<KeyValuePair<DateTime, double>>> IReaderConnection.GetProfits(DateTime startTime, DateTime stopTime, string type, List<string> ids)
+        Dictionary<string, List<KeyValuePair<DateTime, double>>> IReaderConnection.GetProfits(DateTime startTime, DateTime stopTime, List<string> ids)
         {
-            throw new ApplicationException("Profit reading not implemented");
+            return null;
         }
 
         MarketLevels? GetMarketLevels(DateTime updateTime, string epic)

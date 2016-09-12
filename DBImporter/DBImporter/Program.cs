@@ -32,13 +32,17 @@ namespace DBImporter
 
             bool restoreDB = false;
             bool fromDB = true;
+            bool deleteDB = false;
             if (args.Length > curArg)
             {
                 restoreDB = (args[curArg++].ToUpper() == "-RESTOREDB");
                 fromDB = false;
             }
             if (args.Length > curArg)
+            {
                 fromDB = (args[curArg].ToUpper() == "-FROMDB");
+                deleteDB = (args[curArg].ToUpper() == "-DELETEDB");
+            }
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["DB_CONTACTPOINT"] = "192.168.1.25";
@@ -60,22 +64,27 @@ namespace DBImporter
                 Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 7, 0, 0);
                 Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 21, 0, 0);
                 Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 17, 0, 0);
-                if (!restoreDB)
+                if (deleteDB)
+                    Config.Settings["DELETEDB"] = "1";
+                else
                 {
-                    if (wholeMonth)
-                        Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}.csv", start.Month, start.Year);
-                    else
-                        Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year);                        
-                }
-                if (!fromDB)
-                {
-                    List<string> mktdataFiles = new List<string>();
-                    if (wholeMonth)
-                        mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_audusd_{0}_{1}.csv", start.Month, start.Year));
-                    else
-                        mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year));
-                    Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
-                }                                  
+                    if (!restoreDB)
+                    {
+                        if (wholeMonth)
+                            Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}.csv", start.Month, start.Year);
+                        else
+                            Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year);
+                    }
+                    if (!fromDB)
+                    {
+                        List<string> mktdataFiles = new List<string>();
+                        if (wholeMonth)
+                            mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_audusd_{0}_{1}.csv", start.Month, start.Year));
+                        else
+                            mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year));
+                        Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
+                    }
+                }              
 
                 MarketDataConnection.Instance.Connect(null);
 
