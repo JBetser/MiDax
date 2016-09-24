@@ -306,8 +306,7 @@
                <option value="Cor_10_IX.D.DOW.DAILY.IP#Cor_30_IX.D.DOW.DAILY.IP">DOW Correlation 10mn/30mn</option>
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
-               <option value="Trend_5_6_WMVol_10">Vol Trend 30s</option>
-               <option value="Curve_5_WMVol_10">Vol Curve 30s</option>
+               <option value="Trend_30_6_WMVol_10">Vol Trend 3mn</option>
                <!--option value="VWMVol_10">VWM Vol 10mn</!--option>
                <option value="VWMVol_90">VWM Vol 1h30</option>    
                <option value="Volume_10">Volumes 10mn</option>  
