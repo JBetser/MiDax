@@ -318,7 +318,7 @@
                <option value="MacD_10_30">MacD Cascade 10mn/30mn</option>
                <option value="MacD_30_90">MacD Cascade 30mn/1h30</option>
                <option value="FXMole_1_14">FX Mole 14 1mn</option>
-               <option value="ANN_WMA_5_2_1">ANN WMA</option>
+               <option value="ANN_FX_5_2_1">ANN FX</option>
              </select>          
 
              <button type="button" id="GO" class="btn btn-primary">

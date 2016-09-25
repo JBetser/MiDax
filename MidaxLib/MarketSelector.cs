@@ -21,11 +21,19 @@ namespace MidaxLib
             return false;
         }
 
+        static bool isNearEvent(KeyValuePair<int, DateTime> keyVal, Calendar dayCalendar, string ccyPair)
+        {
+            string evtName = "";
+            return dayCalendar.IsNearEvent(ccyPair, keyVal.Value, ref evtName);
+        }
+
         public override void Subscribe(string[] epics, IHandyTableListener tableListener)
         {
             Dictionary<string, List<CqlQuote>> priceData = GetReplayData(epics);
             if (priceData.Count == 0)
                 return;
+
+            Calendar dayCalendar = new Calendar(priceData.First().Value[0].t);
 
             foreach(var epic in epics){
                 // for each quote, associate the observed gains in the near future
@@ -70,7 +78,7 @@ namespace MidaxLib
                     quote.o = (quote.o - wmaVeryHighStart.Offer) / amplitude;
                 }
                 gainDistribution = new SortedList<int,DateTime>((from elt in gainDistribution
-                                                                 where !isTooClose(elt, gainDistribution)
+                                                                 where (!isTooClose(elt, gainDistribution) && !isNearEvent(elt, dayCalendar, mktData.Name))                                                                  
                                                                  select elt).ToDictionary(keyVal => keyVal.Key, keyVal => keyVal.Value));
                 int nbPoints = 10;
                 int idxProfit = 0;

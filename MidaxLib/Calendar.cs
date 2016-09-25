@@ -67,20 +67,20 @@ namespace MidaxLib
         }
 
         public bool IsNearEvent(string ccyPair, DateTime curTime, ref string eventName)
-        {/*
+        {
             string ccy1 = ccyPair.Substring(0, 3);
             string ccy2 = ccyPair.Substring(3, 3);
             var events = new List<KeyValuePair<DateTime, string>>();
             if (_events.ContainsKey(ccy1))
                 events.AddRange(_events[ccy1]);
             if (_events.ContainsKey(ccy2))
-                events.AddRange(_events[ccy2]);*/
-            var events = new List<KeyValuePair<DateTime, string>>();
+                events.AddRange(_events[ccy2]);
+            /*var events = new List<KeyValuePair<DateTime, string>>();
             foreach (var ev in _events)
-                events.AddRange(ev.Value);
+                events.AddRange(ev.Value);*/
             foreach (var ev in events)
             {
-                if ((ev.Key >= curTime && (ev.Key - curTime).TotalSeconds < 40.0 * 60.0) || (ev.Key <= curTime && (curTime - ev.Key).TotalSeconds < 40.0 * 60.0))
+                if ((ev.Key >= curTime && (ev.Key - curTime).TotalSeconds < 40.0 * 60.0) || (ev.Key <= curTime && (curTime - ev.Key).TotalSeconds < 30.0 * 60.0))
                 {
                     eventName = ev.Value;
                     return true;
