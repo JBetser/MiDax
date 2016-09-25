@@ -90,6 +90,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NeuralNetworkFX.cs" />
     <Compile Include="NeuralNetworkParity.cs" />
     <Compile Include="NeuralNetworkWatershed.cs" />
     <Compile Include="NeuralNetworkWMA.cs" />

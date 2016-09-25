@@ -43,27 +43,17 @@ namespace MidaxLib
                 KeyValuePair<int, DateTime> minProfit = new KeyValuePair<int, DateTime>(1000000, DateTime.MinValue);
                 KeyValuePair<int, DateTime> maxProfit = new KeyValuePair<int, DateTime>(-1000000, DateTime.MinValue);
                 var rnd = new Random(155);
-                /*
-                var lowPrice = new Price(1000000.0m);
-                var highPrice = new Price(-1000000.0m);
-                foreach (var quote in priceData[epic])
-                {
-                    if (quote.t.TimeOfDay < Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]).TimeOfDay)
-                        continue;
-                    if (lowPrice.Mid() > quote.MidPrice())
-                        lowPrice = new Price(quote);
-                    if (highPrice.Mid() < quote.MidPrice())
-                        highPrice = new Price(quote);
-                }*/
                 var tradingStart = Config.ParseDateTimeLocal(Config.Settings["TRADING_START_TIME"]);
-                var wmaVeryHighStart = wmaHigh.Average(tradingStart);
+                var tradingStop = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
+                var wmaVeryHighStart = wmaVeryHigh.Average(tradingStart);
                 var amplitude = 100.0m;
                 foreach (var quote in priceData[epic])
                 {
-                    if (quote.t.TimeOfDay < tradingStart.TimeOfDay)
+                    if (quote.t.TimeOfDay < tradingStart.TimeOfDay || quote.t.TimeOfDay > tradingStop.TimeOfDay)
                         continue;
-                    var futureVal = wmaLow.Average(quote.t.AddMinutes(2));
-                    var profit = (int)Math.Round(futureVal.Mid() - quote.MidPrice());
+                    var futureVal = (mktData.TimeSeries.Max(quote.t.AddMinutes(5), quote.t.AddMinutes(20)) +
+                        mktData.TimeSeries.Min(quote.t.AddMinutes(5), quote.t.AddMinutes(20))) / 2m;
+                    var profit = (int)Math.Round(futureVal - quote.MidPrice());
                     expectations.Add(quote.t, new KeyValuePair<CqlQuote, decimal>(quote, profit));
                     if (gainDistribution.ContainsKey(profit))
                     {
@@ -109,7 +99,6 @@ namespace MidaxLib
                     PublisherConnection.Instance.Insert(dt, wmaVeryHigh, (wmaVeryHighAvg.Mid() - wmaVeryHighStart.Mid()) / amplitude);
                     PublisherConnection.Instance.Insert(dt, epic, new Value((double)selection[dt].Key / ((double)amplitude / 2.0)));                    
                 }
-                //PublisherConnection.Instance.Insert(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]), wmaDailyAvg, (wmaDailyAvg.Average().Mid() - midLevel.Mid()) / amplitude);
                 priceData[epic] = selection.Values.Select(kv => kv.Value).ToList();
             }
             replay(priceData, tableListener);

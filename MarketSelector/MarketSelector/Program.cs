@@ -18,17 +18,18 @@ namespace MarketSelector
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["TIMESERIES_MAX_RECORD_TIME_HOURS"] = "12";
             dicSettings["LIMIT"] = "10";
-            dicSettings["REPLAY_MODE"] = "CSV";
+            dicSettings["REPLAY_MODE"] = "DB";
+            dicSettings["DB_CONTACTPOINT"] = "192.168.1.25";
             dicSettings["REPLAY_POPUP"] = "1";
             dicSettings["TRADING_MODE"] = "SELECT";
             Config.Settings = dicSettings;
 
             while (start <= end)
             {
-                List<string> mktdataFiles = new List<string>();
-                mktdataFiles.Add(string.Format("..\\..\\..\\..\\DBImporter\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year));
-                Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
-                Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 6, 45, 0);
+                //List<string> mktdataFiles = new List<string>();
+                //mktdataFiles.Add(string.Format("..\\..\\..\\..\\DBImporter\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year));
+                //Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
+                Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 6, 25, 0);
                 Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 18, 0, 0);
                 Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 8, 0, 0);
                 Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 17, 0, 0);
@@ -36,7 +37,7 @@ namespace MarketSelector
                 Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\MktSelectorData\\mktselectdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year);
 
                 MarketDataConnection.Instance.Connect(null);
-                MarketData index = new MarketData("DAX:IX.D.DAX.DAILY.IP");
+                MarketData index = new MarketData("EURUSD:CS.D.EURUSD.TODAY.IP");
                 index.Subscribe(OnUpdateMktData,null);
                 MarketDataConnection.Instance.StartListening();
                 MarketDataConnection.Instance.StopListening();

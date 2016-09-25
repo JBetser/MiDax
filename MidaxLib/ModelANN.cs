@@ -9,7 +9,7 @@ namespace MidaxLib
 {
     public class ModelANN : Model
     {
-        protected MarketData _daxIndex = null;
+        protected MarketData _index = null;
         protected List<MarketData> _daxStocks = null;
         protected List<MarketData> _otherIndices = null;
         protected MarketData _vix = null;
@@ -20,11 +20,13 @@ namespace MidaxLib
         protected SignalANN _ann = null;
         protected List<decimal> _annWeights = null;
         ModelMacD _macD;
+        string _annId;
 
-        public ModelANN(ModelMacD macD, List<MarketData> daxStocks, MarketData vix, List<MarketData> otherIndices)
+        public ModelANN(string annid, ModelMacD macD, List<MarketData> daxStocks, MarketData vix, List<MarketData> otherIndices)
         {
+            _annId = annid;
             _macD = macD;
-            _daxIndex = macD.Index;
+            _index = macD.Index;
             _daxStocks = daxStocks;
             _otherIndices = otherIndices;
             _vix = vix;
@@ -51,28 +53,27 @@ namespace MidaxLib
             _mktIndicators.Add(_wma_low);
             _mktIndicators.Add(_wma_mid);
             _mktIndicators.Add(_wma_high);
-            _mktIndicators.Add(new IndicatorWMVol(_daxIndex, _wma_low, 60, 90));
-            _mktIndicators.Add(new IndicatorWMVol(_daxIndex, _wma_mid, 60, 90));
-            _mktIndicators.Add(new IndicatorNearestLevel(_daxIndex));
+            _mktIndicators.Add(new IndicatorWMVol(_index, _wma_low, 60, 90));
+            _mktIndicators.Add(new IndicatorWMVol(_index, _wma_mid, 60, 90));
+            _mktIndicators.Add(new IndicatorNearestLevel(_index));
 
-            var annId = "WMA_5_2";
-            int lastversion = StaticDataConnection.Instance.GetAnnLatestVersion(annId, _daxIndex.Id);
-            _annWeights = StaticDataConnection.Instance.GetAnnWeights(annId, _daxIndex.Id, lastversion);
-            var signalType = Type.GetType("MidaxLib.SignalANN" + annId);
+            int lastversion = StaticDataConnection.Instance.GetAnnLatestVersion(_annId, _index.Id);
+            _annWeights = StaticDataConnection.Instance.GetAnnWeights(_annId, _index.Id, lastversion);
+            var signalType = Type.GetType("MidaxLib.SignalANN" + _annId);
             List<Indicator> annIndicators = new List<Indicator>();
             annIndicators.Add(_wma_verylow);
             annIndicators.Add(_wma_low);
             annIndicators.Add(_wma_mid);
             annIndicators.Add(_wma_high);
             List<object> signalParams = new List<object>();
-            signalParams.Add(_daxIndex);
+            signalParams.Add(_index);
             signalParams.Add(annIndicators);
             signalParams.Add(_annWeights);
             this._ann = (SignalANN)Activator.CreateInstance(signalType, signalParams.ToArray());
             this._mktSignals.Add(this._ann);
 
             var allIndices = new List<MarketData>();
-            allIndices.Add(_daxIndex);
+            allIndices.Add(_index);
             allIndices.AddRange(_otherIndices);
             foreach (var index in allIndices)
             {
@@ -100,7 +101,7 @@ namespace MidaxLib
 
         protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
-            if (_ptf.GetPosition(_daxIndex.Id).Quantity < 0)
+            if (_ptf.GetPosition(_index.Id).Quantity < 0)
             {
                 signal.Trade.Price = stockValue.Offer;
                 _ptf.ClosePosition(signal.Trade, time);
@@ -112,12 +113,12 @@ namespace MidaxLib
 
         protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            if (_ptf.GetPosition(_daxIndex.Id).Quantity > 0)
+            if (_ptf.GetPosition(_index.Id).Quantity > 0)
             {
                 _ptf.BookTrade(signal.Trade);
                 Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + stockValue.Offer, EventLogEntryType.Error);
             }
-            else if (_ptf.GetPosition(_daxIndex.Id).Quantity == 0)
+            else if (_ptf.GetPosition(_index.Id).Quantity == 0)
             {
                 if (!_ptf.BookTrade(signal.Trade))
                     return false;

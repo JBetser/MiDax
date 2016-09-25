@@ -10,7 +10,7 @@ namespace Calibrator
 {
     class Program
     {
-        public enum PROBLEM { PARITY, WMA };
+        public enum PROBLEM { PARITY, WMA, FX };
 
         static void Main(string[] args)
         {
@@ -31,7 +31,7 @@ namespace Calibrator
             var indicatorData = new Dictionary<string, List<CqlQuote>>();
             var profitData = new Dictionary<string, List<double>>();
             string[] ids = new string[1];
-            ids[0] = "IX.D.DAX.DAILY.IP";
+            ids[0] = "CS.D.EURUSD.TODAY.IP";
             while (start <= end)
             {
                 List<string> mktdataFiles = new List<string>();
@@ -92,6 +92,10 @@ namespace Calibrator
                     break;
                 case PROBLEM.WMA:
                     ann = new NeuralNetworkWMA_5_2(ids[0], marketData, indicatorData, profitData);
+                    maxError = 5.0;
+                    break;
+                case PROBLEM.FX:
+                    ann = new NeuralNetworkFX(ids[0], marketData, indicatorData, profitData);
                     maxError = 5.0;
                     break;
             }

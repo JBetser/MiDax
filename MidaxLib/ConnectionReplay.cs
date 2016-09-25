@@ -184,7 +184,7 @@ namespace MidaxLib
                 }
                 else
                     _reader = null;
-                _hasExpectedResults = Config.TestReplayEnabled || Config.MarketSelectorEnabled || Config.CalibratorEnabled;
+                _hasExpectedResults = Config.TestReplayEnabled || Config.CalibratorEnabled;
                 if (_hasExpectedResults)
                 {
                     if (Config.Settings.ContainsKey("EXPECTEDRESULTS_CSV"))
