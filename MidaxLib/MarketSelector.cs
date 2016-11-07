@@ -38,13 +38,39 @@ namespace MidaxLib
             foreach(var epic in epics){
                 // for each quote, associate the observed gains in the near future
                 var mktData = new MarketData(epic);
-                var wmaLow = new IndicatorWMA(mktData, 2);
-                var wmaMid = new IndicatorWMA(mktData, 10);
-                var wmaHigh = new IndicatorWMA(mktData, 30);
-                var wmaVeryHigh = new IndicatorWMA(mktData, 90);
+                var wmaLow = new IndicatorEMA(mktData, 2);
+                var wmaMid = new IndicatorEMA(mktData, 10);
+                var wmaHigh = new IndicatorEMA(mktData, 30);
+                var wmaVeryHigh = new IndicatorEMA(mktData, 90);
+                var rsiShort = new IndicatorRSI(mktData, 1, 14);
+                var rsiLong = new IndicatorRSI(mktData, 2, 14);
+                var trendShort = new IndicatorTrend(mktData, 90, 14, false);
+                var trendLong = new IndicatorTrend(mktData, 180, 14, false);
+                var wmvolLow = new IndicatorWMVol(mktData, wmaLow, 60, 90);
+                var wmvolHigh = new IndicatorWMVol(mktData, wmaMid, 60, 90);
+                var volTrendLow = new IndicatorTrend(wmvolLow, 30, 6, true);
+                var volTrendHigh = new IndicatorTrend(wmvolHigh, 60, 6, true);
+                var allIndicators = new List<IndicatorWMA>();
+                allIndicators.Add(wmaLow);
+                allIndicators.Add(wmaMid);
+                allIndicators.Add(wmaHigh);
+                allIndicators.Add(wmaVeryHigh);
+                allIndicators.Add(rsiShort);
+                allIndicators.Add(rsiLong);
+                allIndicators.Add(trendShort);
+                allIndicators.Add(trendLong);
+                allIndicators.Add(wmvolLow);
+                allIndicators.Add(wmvolHigh);
+                allIndicators.Add(volTrendLow);
+                allIndicators.Add(volTrendHigh);
 
                 foreach (var quote in priceData[epic])
-                    mktData.TimeSeries.Add(quote.t, new Price(quote.MidPrice()));
+                {
+                    var mktDataValue = new Price(quote.MidPrice());
+                    mktData.Process(quote.t, mktDataValue);
+                    foreach (var ind in allIndicators)
+                        ind.Process(quote.t, mktDataValue);
+                }
                 
                 var expectations = new Dictionary<DateTime, KeyValuePair<CqlQuote, decimal>>();
                 var gainDistribution = new SortedList<int, DateTime>();
@@ -58,6 +84,9 @@ namespace MidaxLib
                 foreach (var quote in priceData[epic])
                 {
                     if (quote.t.TimeOfDay < tradingStart.TimeOfDay || quote.t.TimeOfDay > tradingStop.TimeOfDay)
+                        continue;
+                    string evtName = "";
+                    if (dayCalendar.IsNearEvent(mktData.Name, quote.t, ref evtName))
                         continue;
                     var futureVal = (mktData.TimeSeries.Max(quote.t.AddMinutes(5), quote.t.AddMinutes(20)) +
                         mktData.TimeSeries.Min(quote.t.AddMinutes(5), quote.t.AddMinutes(20))) / 2m;
@@ -78,7 +107,7 @@ namespace MidaxLib
                     quote.o = (quote.o - wmaVeryHighStart.Offer) / amplitude;
                 }
                 gainDistribution = new SortedList<int,DateTime>((from elt in gainDistribution
-                                                                 where (!isTooClose(elt, gainDistribution) && !isNearEvent(elt, dayCalendar, mktData.Name))                                                                  
+                                                                 where !isTooClose(elt, gainDistribution)                                                                 
                                                                  select elt).ToDictionary(keyVal => keyVal.Key, keyVal => keyVal.Value));
                 int nbPoints = 10;
                 int idxProfit = 0;
@@ -95,16 +124,29 @@ namespace MidaxLib
                 }
                 foreach (var dt in selection.Keys)
                 {
-                    var wmaLowAvg = wmaLow.Average(dt);
-                    var wmaMidAvg = wmaMid.Average(dt);
-                    var wmaHighAvg = wmaHigh.Average(dt);
-                    var wmaVeryHighAvg = wmaVeryHigh.Average(dt);
-                    if (wmaLowAvg == null || wmaMidAvg == null || wmaHighAvg == null || wmaVeryHighAvg == null)
+                    bool allValid = true;
+                    foreach (var ind in allIndicators)
+                    {
+                        if (ind.TimeSeries[dt] == null)
+                        {
+                            allValid = false;
+                            break;
+                        }
+                    }
+                    if (!allValid)
                         continue;
-                    PublisherConnection.Instance.Insert(dt, wmaLow, (wmaLowAvg.Mid() - wmaVeryHighStart.Mid()) / amplitude);
-                    PublisherConnection.Instance.Insert(dt, wmaMid, (wmaMidAvg.Mid() - wmaVeryHighStart.Mid()) / amplitude);
-                    PublisherConnection.Instance.Insert(dt, wmaHigh, (wmaHighAvg.Mid() - wmaVeryHighStart.Mid()) / amplitude);
-                    PublisherConnection.Instance.Insert(dt, wmaVeryHigh, (wmaVeryHighAvg.Mid() - wmaVeryHighStart.Mid()) / amplitude);
+                    PublisherConnection.Instance.Insert(dt, wmaLow, (wmaLow.TimeSeries[dt].Value.Value.Mid() - wmaVeryHighStart.Mid()) / amplitude);
+                    PublisherConnection.Instance.Insert(dt, wmaMid, (wmaMid.TimeSeries[dt].Value.Value.Mid() - wmaVeryHighStart.Mid()) / amplitude);
+                    PublisherConnection.Instance.Insert(dt, wmaHigh, (wmaHigh.TimeSeries[dt].Value.Value.Mid() - wmaVeryHighStart.Mid()) / amplitude);
+                    PublisherConnection.Instance.Insert(dt, wmaVeryHigh, (wmaVeryHigh.TimeSeries[dt].Value.Value.Mid() - wmaVeryHighStart.Mid()) / amplitude);
+                    PublisherConnection.Instance.Insert(dt, rsiShort, (rsiShort.TimeSeries[dt].Value.Value.Mid() - 50m) / amplitude);
+                    PublisherConnection.Instance.Insert(dt, rsiLong, (rsiLong.TimeSeries[dt].Value.Value.Mid() - 50m) / amplitude);
+                    PublisherConnection.Instance.Insert(dt, trendShort, trendShort.TimeSeries[dt].Value.Value.Mid() / 1000m);
+                    PublisherConnection.Instance.Insert(dt, trendLong, trendLong.TimeSeries[dt].Value.Value.Mid() / 1000m);
+                    PublisherConnection.Instance.Insert(dt, wmvolLow, wmvolLow.TimeSeries[dt].Value.Value.Mid() / 10m);
+                    PublisherConnection.Instance.Insert(dt, wmvolHigh, wmvolHigh.TimeSeries[dt].Value.Value.Mid() / 10m);
+                    PublisherConnection.Instance.Insert(dt, volTrendLow, volTrendLow.TimeSeries[dt].Value.Value.Mid());
+                    PublisherConnection.Instance.Insert(dt, volTrendHigh, volTrendHigh.TimeSeries[dt].Value.Value.Mid());
                     PublisherConnection.Instance.Insert(dt, epic, new Value((double)selection[dt].Key / ((double)amplitude / 2.0)));                    
                 }
                 priceData[epic] = selection.Values.Select(kv => kv.Value).ToList();

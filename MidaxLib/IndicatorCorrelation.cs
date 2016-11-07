@@ -59,7 +59,7 @@ namespace MidaxLib
                 Publish(_nextCorrelTime, avgPrice.MidPrice());
         }
 
-        protected Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
+        protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
             if (_wma.TimeSeries.Count == 0 || _wmaRef.TimeSeries.Count == 0)
                 return null;

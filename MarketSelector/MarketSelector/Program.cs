@@ -22,6 +22,8 @@ namespace MarketSelector
             dicSettings["DB_CONTACTPOINT"] = "192.168.1.25";
             dicSettings["REPLAY_POPUP"] = "1";
             dicSettings["TRADING_MODE"] = "SELECT";
+            dicSettings["CALENDAR_PATH"] = @"C:\Shared\MidaxTester\Calendar";
+            dicSettings["TIME_GMT"] = "-4"; 
             Config.Settings = dicSettings;
 
             while (start <= end)

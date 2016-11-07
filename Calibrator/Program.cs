@@ -52,7 +52,7 @@ namespace Calibrator
                     var processableMktData = new List<CqlQuote>();
                     foreach (var quote in keyVal.Value)
                     {
-                        if (client.ExpectedIndicatorData["WMA_90_" + ids[0]].Select(cqlq => cqlq.t).Contains(quote.t))
+                        if (client.ExpectedIndicatorData["EMA_90_" + ids[0]].Select(cqlq => cqlq.t).Contains(quote.t))
                             processableMktData.Add(quote);
                     }
                     if (marketData.ContainsKey(keyVal.Key))

@@ -72,6 +72,11 @@ namespace MidaxLib
             }
         }
 
+        public virtual void Process(DateTime dt, Price p)
+        {
+            TimeSeries.Add(dt, p);
+        }
+
         public void Clear()
         {
             _values = new TimeSeries();

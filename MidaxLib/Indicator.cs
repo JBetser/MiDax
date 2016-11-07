@@ -51,6 +51,17 @@ namespace MidaxLib
             }
         }
 
+        protected virtual Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
+        {
+            return null;
+        }
+
+        public override void Process(DateTime dt, Price p)
+        {
+            var newValue = IndicatorFunc(SignalStock, dt, p);
+            TimeSeries.Add(dt, newValue);
+        }
+
         protected virtual void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
             _values.Add(updateTime, value);

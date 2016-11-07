@@ -81,7 +81,7 @@ namespace MidaxLib
             }
         }
 
-        protected virtual Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
+        protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
             return Average(updateTime);
         }
@@ -365,7 +365,7 @@ namespace MidaxLib
             if (Config.Settings.ContainsKey("TIME_DECAY_FACTOR"))
                 _timeDecayWeight = decimal.Parse(Config.Settings["TIME_DECAY_FACTOR"]) / 10.0m;
         }
-        
+
         protected override Price IndicatorFunc(MarketData mktData, DateTime updateTime, Price value)
         {
             var curEma = 0m;

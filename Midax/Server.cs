@@ -97,7 +97,7 @@ public class Server
                 models.Add(fxmole_jpy);
                 models.Add(fxmole_aud);
                 models.Add(macD_10_30_90_dax);
-                models.Add(new ModelANN(macD_10_30_90_dax, null, null, otherIndices));
+                models.Add(new ModelANN("WMA_5_2", macD_10_30_90_dax, null, null, otherIndices));
                 _trader = new Trader(models, communicator().shutdown); 
                 _trader.Init(Config.GetNow);
 

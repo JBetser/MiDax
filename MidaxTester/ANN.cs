@@ -20,7 +20,7 @@ namespace MidaxTester
             models.Add(new ModelMacDTest(index, 10, 30, 90));
             List<MarketData> otherIndices = new List<MarketData>();
             otherIndices.Add(index);
-            models.Add(new ModelANN("FX_5_2", (ModelMacD)models[0], null, null, otherIndices));
+            models.Add(new ModelANN("FX_6_2", (ModelMacD)models[0], null, null, otherIndices));
             testEngine.Run(models);
         }
     }
