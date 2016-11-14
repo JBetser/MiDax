@@ -1,5 +1,5 @@
 Generate real-time trading signals from equity indices
-It books automatic trades to the global brokerage firm called "IG", which you need to open an account at,
+It books automatic trades to an IG Market account. Visit https://www.ig.com to create an account,
 or adapt the code to use a different broker api.
 
 IMPORTANT: This is for educational purposes only. Always use with a DEMO account.
