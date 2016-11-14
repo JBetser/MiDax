@@ -26,6 +26,8 @@ namespace MidaxLib
 
         protected override bool Process(MarketData indicator, DateTime updateTime, Price value, ref Signal.Tick tradingOrder)
         {
+            if (indicator.TimeSeries.Count == 0)
+                return false;
             _indicatorLatestValues[indicator.Id] = new KeyValuePair<DateTime, Price>(updateTime, indicator.TimeSeries.Last());
 
             DateTime dt = DateTime.MinValue;
