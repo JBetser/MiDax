@@ -1,5 +1,8 @@
-Generate real-time trading signals from equity indices
-It books automatic trades to an IG Market account. Visit https://www.ig.com to create an account,
+MiDax is a C# library which calculates real-time algorithmic trading signals using heuristics and neural networks
+Copyright (C) 2016 Jonathan Betser. This project is under the AGPL-3.0 license.
+
+Generate real-time trading signals from equity indices and major foreign exchange pairs. 
+It books automatic trades to an IG Market spread-betting account. Visit https://www.ig.com to create an account,
 or adapt the code to use a different broker api.
 
 IMPORTANT: This is for educational purposes only. Always use with a DEMO account.
