@@ -16,6 +16,6 @@
     <StartArguments>2015-12-03 2015-12-04</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <StartArguments>2016-08-01 2016-08-31 FX</StartArguments>
+    <StartArguments>2016-08-01 2016-08-31 PARITY</StartArguments>
   </PropertyGroup>
 </Project>
