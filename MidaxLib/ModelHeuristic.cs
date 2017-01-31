@@ -43,8 +43,8 @@ namespace MidaxLib
         IndicatorEMA _wmaCorrelHighRef = null;
         IndicatorCorrelation _correlLow;
         IndicatorCorrelation _correlHigh;
-        IndicatorWatershed _watershedLow = null;
-        IndicatorWatershed _watershedHigh = null;
+        //IndicatorWatershed _watershedLow = null;
+        //IndicatorWatershed _watershedHigh = null;
         Dictionary<string, string> _mappingCorrel = new Dictionary<string, string>();
 
         public ModelMole(ModelMacD macD)
@@ -96,8 +96,8 @@ namespace MidaxLib
             _mktIndicators.Add(_wmaCorrelHighRef);
             _mktIndicators.Add(_correlLow);
             _mktIndicators.Add(_correlHigh);
-            _mktIndicators.Add(_watershedLow);
-            _mktIndicators.Add(_watershedHigh);
+            //_mktIndicators.Add(_watershedLow);
+            //_mktIndicators.Add(_watershedHigh);
 
             var indicatorLow = new IndicatorLow(_index);
             var indicatorHigh = new IndicatorHigh(_index);

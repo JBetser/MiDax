@@ -792,7 +792,7 @@ namespace MidaxLib
             _nbPublishedTrades++;
             var tradeKey = new KeyValuePair<string, DateTime>(trade.Reference, new DateTime(trade.TradingTime.Year, trade.TradingTime.Month, trade.TradingTime.Day, 
                 trade.TradingTime.Hour, trade.TradingTime.Minute, trade.TradingTime.Second));
-            if (Math.Abs(_expectedTradeData[tradeKey].Price - trade.Price) > TOLERANCE)
+            if (Math.Abs(_expectedTradeData[tradeKey].Price - trade.Price) > TOLERANCE && !tradeKey.Key.StartsWith("###CLOSE"))
             {
                 string error = "Test failed: trade " + trade.Epic + " expected Price " +
                    _expectedTradeData[tradeKey].Price.ToString() + " != " + trade.Price.ToString();

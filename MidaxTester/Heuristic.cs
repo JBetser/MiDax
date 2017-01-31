@@ -14,7 +14,7 @@ namespace MidaxTester
         {
             TestEngine testEngine = new TestEngine("heuristic", dates, generate, generate_from_db, publish_to_db, use_uat_db, fullday);
             testEngine.Settings["TRADING_SIGNAL"] = "FXMole_1_14_CS.D.EURUSD.TODAY.IP,FXMole_1_14_CS.D.GBPUSD.TODAY.IP,FXMole_1_14_CS.D.USDJPY.TODAY.IP,FXMole_1_14_CS.D.AUDUSD.TODAY.IP";
-            testEngine.Settings["TIME_GMT"] = "-4";
+            testEngine.Settings["TIME_GMT"] = "1";
             testEngine.Settings["TIME_DECAY_FACTOR"] = "3";
             testEngine.Settings["ASSUMPTION_TREND"] = "BEAR";
             testEngine.Settings["INDEX_ICEDOW"] = "DOW:IceConnection.DJI";

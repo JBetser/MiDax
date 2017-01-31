@@ -1,2 +1,13 @@
-7252d7251
-< trades,###CLOSE_DUMMY_TRADE###,26/08/2015 08:49:19,BUY,9962.346833333333333333332933,10,IX.D.DAX.DAILY.IP,26/08/2015 08:59:01
+ MidaxTester/expected_results/core_22_1_2016.csv | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/MidaxTester/expected_results/core_22_1_2016.csv b/MidaxTester/expected_results/core_22_1_2016.csv
+index a42cc9c..e2e46e3 100644
+--- a/MidaxTester/expected_results/core_22_1_2016.csv
++++ b/MidaxTester/expected_results/core_22_1_2016.csv
+@@ -6224,4 +6224,5 @@ indicators,EMA_10_IX.D.DAX.DAILY.IP,22/1/2016 9:0:0,9743.09091084178252369282612
+ signals,MacD_1_5_IX.D.DAX.DAILY.IP,22/1/2016 8:46:42, ###DUMMY_TRADE_REF1###,2,9724.3
+ 
+ trades,IX.D.DAX.DAILY.IP,22/1/2016 8:46:42,###DUMMY_TRADE_ID1###,BUY,9724.3,10,22/1/2016 8:46:42,###DUMMY_TRADE_REF1###
++trades,IX.D.DAX.DAILY.IP,22/1/2016 8:59:1,###DUMMY_TRADE_ID1###,SELL,9724.3,10,22/1/2016 8:59:1,###CLOSE_DUMMY_TRADE_REF2###
+ 

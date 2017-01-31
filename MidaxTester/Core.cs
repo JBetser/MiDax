@@ -252,7 +252,7 @@ namespace MidaxTester
                 ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null);
                 model.PTF.Subscribe();
                 model.PTF.BookTrade(tradeTest);
-                Thread.Sleep(1000);
+                Thread.Sleep(5000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != -10)
                     throw new ApplicationException("SELL Trade booking error");
                 var expectedTrade = new Trade(tradeTime, dax.Id, SIGNAL_CODE.BUY, 10, 10000m);
@@ -260,14 +260,14 @@ namespace MidaxTester
                 expectedTrade.Id = "###DUMMY_TRADE_ID1###";
                 expectedTrades[new KeyValuePair<string, DateTime>(expectedTrade.Reference, tradeTime)] = expectedTrade;
                 model.PTF.ClosePosition(tradeTest, tradeTime);
-                Thread.Sleep(1000);
+                Thread.Sleep(5000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 0)
                     throw new ApplicationException("Trade position closing error");
                 expectedTrade.Reference = "###DUMMY_TRADE_REF3###";
                 expectedTrade.Id = "###DUMMY_TRADE_ID2###";
                 expectedTrades[new KeyValuePair<string, DateTime>(expectedTrade.Reference, tradeTime)] = expectedTrade;
                 model.PTF.BookTrade(new Trade(tradeTest, true, tradeTime));
-                Thread.Sleep(1000);
+                Thread.Sleep(5000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 10)
                     throw new ApplicationException("BUY Trade booking error");
                 expectedTrade = new Trade(tradeTime, dax.Id, SIGNAL_CODE.SELL, 10, 0m);
@@ -275,7 +275,7 @@ namespace MidaxTester
                 expectedTrade.Id = "###DUMMY_TRADE_ID2###";
                 expectedTrades[new KeyValuePair<string, DateTime>(expectedTrade.Reference, tradeTime)] = expectedTrade;
                 Portfolio.Instance.CloseAllPositions(tradeTest.TradingTime);
-                Thread.Sleep(1000);
+                Thread.Sleep(5000);
 
                 // test synchronization issues with the broker
                 List<string> testsSync = new List<string>();
@@ -313,7 +313,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator EMA_1_IX.D.DAX.DAILY.IP time 08:30 expected value 9740.300000000000000000000000 != 9739.8";
+                    expected = "Test failed: indicator EMA_1_IX.D.DAX.DAILY.IP time 08:30 expected value 9740.791666666666666666666667 != 9740.3";
                     success = (exc.Message.Replace(" AM", "") == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
@@ -348,7 +348,7 @@ namespace MidaxTester
                 }
                 catch (Exception exc)
                 {
-                    expected = "Test failed: indicator EMA_1_IX.D.DAX.DAILY.IP time 08:30 expected value 9740.300000000000000000000000 != 9739.8";
+                    expected = "Test failed: indicator EMA_1_IX.D.DAX.DAILY.IP time 08:30 expected value 9740.791666666666666666666667 != 9740.3";
                     success = (exc.Message.Replace(" AM", "") == expected);
                     if (!success)
                         model.ProcessError(exc.Message, expected);
