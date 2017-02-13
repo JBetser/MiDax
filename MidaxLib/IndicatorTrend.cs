@@ -10,32 +10,6 @@ using NLapack.Matrices;
 
 namespace MidaxLib
 {
-    public class Candle
-    {
-        public decimal Min;
-        public decimal Max;
-        public DateTime MinTime;
-        public DateTime MaxTime;
-
-        public Candle(decimal minValue, decimal maxValue, DateTime minTime, DateTime maxTime)
-        {
-            Min = minValue;
-            Max = maxValue;
-            MinTime = minTime;
-            MaxTime = maxTime;
-        }
-
-        public decimal AdjustedMax(DateTime startTime, decimal centralCoeff)
-        {
-            return Max + (decimal)(MaxTime - startTime).TotalSeconds * centralCoeff;
-        }
-
-        public decimal AdjustedMin(DateTime startTime, decimal centralCoeff)
-        {
-            return Min + (decimal)(MaxTime - startTime).TotalSeconds * centralCoeff;
-        }
-    }
-
     /************************************************************************************************************
      * Trend Indicator
      * *********************************************************************************************************/
@@ -88,28 +62,28 @@ namespace MidaxLib
             else
                 _curCandle = _candles.Last();
 
-            if (curVal > _curCandle.Max)
+            if (curVal > _curCandle.MaxValue)
             {
-                _curCandle.Max = curVal;
-                _curCandle.MaxTime = updateTime;
+                _curCandle.MaxValue = curVal;
+                _curCandle.EndTime = updateTime;
             }
-            else if (curVal < _curCandle.Min)
+            else if (curVal < _curCandle.MinValue)
             {
-                _curCandle.Min = curVal;
-                _curCandle.MinTime = updateTime;
+                _curCandle.MinValue = curVal;
+                _curCandle.StartTime = updateTime;
             }
 
             if (_candles.Count < _nbPeriods)
                 return null;
             /*
             List<KeyValuePair<DateTime, decimal>> centralValues = new List<KeyValuePair<DateTime, decimal>>();
-            var startCenter = new KeyValuePair<DateTime, decimal>(new DateTime(_candles[0].MinTime.Ticks / 2 + _candles[0].MaxTime.Ticks / 2), (_candles[0].Min + _candles[0].Max) / 2m);
+            var startCenter = new KeyValuePair<DateTime, decimal>(new DateTime(_candles[0].StartTime.Ticks / 2 + _candles[0].EndTime.Ticks / 2), (_candles[0].Min + _candles[0].Max) / 2m);
             centralValues.Add(startCenter);
-            centralValues.Add(new KeyValuePair<DateTime, decimal>(new DateTime(_candles[_candles.Count / 3].MinTime.Ticks / 2 + _candles[_candles.Count / 3].MaxTime.Ticks / 2),
+            centralValues.Add(new KeyValuePair<DateTime, decimal>(new DateTime(_candles[_candles.Count / 3].StartTime.Ticks / 2 + _candles[_candles.Count / 3].EndTime.Ticks / 2),
                                                                             (_candles[_candles.Count / 3].Min + _candles[_candles.Count / 3].Max) / 2m));
-            centralValues.Add(new KeyValuePair<DateTime, decimal>(new DateTime(_candles[_candles.Count * 2 / 3].MinTime.Ticks / 2 + _candles[_candles.Count * 2 / 3].MaxTime.Ticks / 2),
+            centralValues.Add(new KeyValuePair<DateTime, decimal>(new DateTime(_candles[_candles.Count * 2 / 3].StartTime.Ticks / 2 + _candles[_candles.Count * 2 / 3].EndTime.Ticks / 2),
                                                                             (_candles[_candles.Count * 2 / 3].Min + _candles[_candles.Count * 2 / 3].Max) / 2m));
-            centralValues.Add(new KeyValuePair<DateTime, decimal>(new DateTime(_candles[_candles.Count - 2].MinTime.Ticks / 2 + _candles[_candles.Count - 2].MaxTime.Ticks / 2),
+            centralValues.Add(new KeyValuePair<DateTime, decimal>(new DateTime(_candles[_candles.Count - 2].StartTime.Ticks / 2 + _candles[_candles.Count - 2].EndTime.Ticks / 2),
                                                                             (_candles[_candles.Count - 2].Min + _candles[_candles.Count - 2].Max) / 2m));
             decimal centralCoeff = calcDirCoeff(centralValues, updateTime) / (decimal)(updateTime - centralValues[0].Key).TotalSeconds;*/
 
@@ -120,10 +94,10 @@ namespace MidaxLib
             {
                 var first = _candles.First();
                 var last = _candles.Last();
-                decimal timeLength = (decimal)(last.MaxTime - first.MaxTime).TotalSeconds;
-                decimal topCoeff = timeLength < 1m ? 0m : (last.Max - first.Max) / (decimal)(last.MaxTime - first.MaxTime).TotalSeconds;
-                timeLength = (decimal)(last.MinTime - first.MinTime).TotalSeconds;
-                decimal bottomCoeff = timeLength < 1m ? 0m : (last.Min - first.Min) / (decimal)(last.MinTime - first.MinTime).TotalSeconds;
+                decimal timeLength = (decimal)(last.EndTime - first.EndTime).TotalSeconds;
+                decimal topCoeff = timeLength < 1m ? 0m : (last.MaxValue - first.MaxValue) / (decimal)(last.EndTime - first.EndTime).TotalSeconds;
+                timeLength = (decimal)(last.StartTime - first.StartTime).TotalSeconds;
+                decimal bottomCoeff = timeLength < 1m ? 0m : (last.MinValue - first.MinValue) / (decimal)(last.StartTime - first.StartTime).TotalSeconds;
                 if (topCoeff == 0m && bottomCoeff == 0m)
                     return null;
                 return new Price(100m * (topCoeff + bottomCoeff) / 2m);
@@ -141,8 +115,8 @@ namespace MidaxLib
                     var candidateBottomValues = new SortedDictionary<decimal, DateTime>();
                     foreach (var candle in _candles)
                     {
-                        candidateTopValues[candle.Max] = candle.MaxTime;
-                        candidateBottomValues[candle.Min] = candle.MinTime;
+                        candidateTopValues[candle.MaxValue] = candle.EndTime;
+                        candidateBottomValues[candle.MinValue] = candle.StartTime;
                     }
                     topValues = candidateTopValues;
                     bottomValues = candidateBottomValues;
@@ -160,7 +134,7 @@ namespace MidaxLib
         {
             for (int idxCandle = _candles.Count - nbPeriods; idxCandle < _candles.Count; idxCandle++)
             {
-                if (_candles[idxCandle].Max > value + tolerance)
+                if (_candles[idxCandle].MaxValue > value + tolerance)
                     return false;
             }
             return true;
@@ -170,7 +144,7 @@ namespace MidaxLib
         {
             for (int idxCandle = _candles.Count - nbPeriods; idxCandle < _candles.Count; idxCandle++)
             {
-                if (_candles[idxCandle].Min < value - tolerance)
+                if (_candles[idxCandle].MinValue < value - tolerance)
                     return false;
             }
             return true;
@@ -237,13 +211,13 @@ namespace MidaxLib
             {
                 if (curCandle != null)
                 {
-                    if (candle.Max < curCandle.Max)
+                    if (candle.MaxValue < curCandle.MaxValue)
                     {
-                        candidates[curCandle.Max] = curCandle.MaxTime;
+                        candidates[curCandle.MaxValue] = curCandle.EndTime;
                     }
                     else
                     {
-                        if (candle.Max > curMax.Max)
+                        if (candle.MaxValue > curMax.MaxValue)
                         {
                             curMax = candle;
                         }
@@ -254,10 +228,10 @@ namespace MidaxLib
                 prevCandle = curCandle;
                 curCandle = candle;
             }
-            if (curCandle.Max < prevCandle.Max)
-                candidates[prevCandle.Max] = prevCandle.MaxTime;
+            if (curCandle.MaxValue < prevCandle.MaxValue)
+                candidates[prevCandle.MaxValue] = prevCandle.EndTime;
             else
-                candidates[curCandle.Max] = curCandle.MaxTime;
+                candidates[curCandle.MaxValue] = curCandle.EndTime;
             return candidates.Reverse();
         }
 
@@ -271,13 +245,13 @@ namespace MidaxLib
             {
                 if (curCandle != null)
                 {
-                    if (candle.Min > curCandle.Min)
+                    if (candle.MinValue > curCandle.MinValue)
                     {
-                        candidates[curCandle.Min] = curCandle.MinTime;
+                        candidates[curCandle.MinValue] = curCandle.StartTime;
                     }
                     else
                     {
-                        if (candle.Min < curMin.Min)
+                        if (candle.MinValue < curMin.MinValue)
                         {
                             curMin = candle;
                         }
@@ -288,10 +262,10 @@ namespace MidaxLib
                 prevCandle = curCandle;
                 curCandle = candle;
             }
-            if (curCandle.Min > prevCandle.Min)
-                candidates[prevCandle.Min] = prevCandle.MinTime;
+            if (curCandle.MinValue > prevCandle.MinValue)
+                candidates[prevCandle.MinValue] = prevCandle.StartTime;
             else
-                candidates[curCandle.Min] = curCandle.MinTime;
+                candidates[curCandle.MinValue] = curCandle.StartTime;
             return candidates;
         }
     }
@@ -372,8 +346,8 @@ namespace MidaxLib
             var timeOrig = updateTime.AddSeconds(_periodSec * _nbCandles);
             foreach (var candle in _trend.Candles)
             {
-                topValues.Add(new KeyValuePair<decimal, decimal>((decimal)(candle.MaxTime - timeOrig).TotalSeconds, candle.Max));
-                bottomValues.Add(new KeyValuePair<decimal, decimal>((decimal)(candle.MinTime - timeOrig).TotalSeconds, candle.Min));
+                topValues.Add(new KeyValuePair<decimal, decimal>((decimal)(candle.EndTime - timeOrig).TotalSeconds, candle.Max));
+                bottomValues.Add(new KeyValuePair<decimal, decimal>((decimal)(candle.StartTime - timeOrig).TotalSeconds, candle.Min));
             }
             var topCurve = curvature(topValues[0].Key, topValues[0].Value, topValues[1].Key, topValues[1].Value, topValues[2].Key, topValues[2].Value);
             var bottomCurve = curvature(topValues[0].Key, topValues[0].Value, topValues[1].Key, topValues[1].Value, topValues[2].Key, topValues[2].Value);

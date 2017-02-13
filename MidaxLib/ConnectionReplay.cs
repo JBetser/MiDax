@@ -679,6 +679,10 @@ namespace MidaxLib
             throw new ApplicationException("ANN insertion not implemented");
         }
 
+        public override void Insert(DateTime updateTime, int timeframe_mn, IndicatorRobinHood.RobState state)
+        {
+        }
+
         public void Insert(string lvlId, decimal value)
         {
             var newLine = string.Format("marketlevels,{0},{1}{2}", lvlId, value, Environment.NewLine);
@@ -822,7 +826,11 @@ namespace MidaxLib
         public override void Insert(DateTime updateTime, NeuralNetworkForCalibration ann)
         {
         }
-        
+
+        public override void Insert(DateTime updateTime, int timeframe_mn, IndicatorRobinHood.RobState state)
+        {
+        }
+
         public override string Close()
         {
             string info = "Tests passed successfully";

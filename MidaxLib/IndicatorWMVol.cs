@@ -52,15 +52,15 @@ namespace MidaxLib
             else
                 _curCandle = _candles.Last();
 
-            if (wmvol.Bid > _curCandle.Max)
+            if (wmvol.Bid > _curCandle.MaxValue)
             {
-                _curCandle.Max = wmvol.Bid;
-                _curCandle.MaxTime = updateTime;
+                _curCandle.MaxValue = wmvol.Bid;
+                _curCandle.EndTime = updateTime;
             }
-            else if (wmvol.Bid < _curCandle.Min)
+            else if (wmvol.Bid < _curCandle.MinValue)
             {
-                _curCandle.Min = wmvol.Bid;
-                _curCandle.MinTime = updateTime;
+                _curCandle.MinValue = wmvol.Bid;
+                _curCandle.StartTime = updateTime;
             }
 
             return wmvol;
@@ -93,8 +93,8 @@ namespace MidaxLib
             decimal max = decimal.MinValue;
             for (int idxCandle = _candles.Count - _nbPeriods; idxCandle < _candles.Count; idxCandle++)
             {
-                if (_candles[idxCandle].Max > max)
-                    max = _candles[idxCandle].Max;
+                if (_candles[idxCandle].MaxValue > max)
+                    max = _candles[idxCandle].MaxValue;
             }
             return max;
         }
@@ -104,8 +104,8 @@ namespace MidaxLib
             decimal min = decimal.MaxValue;
             for (int idxCandle = _candles.Count - _nbPeriods; idxCandle < _candles.Count; idxCandle++)
             {
-                if (_candles[idxCandle].Min < min)
-                    min = _candles[idxCandle].Min;
+                if (_candles[idxCandle].MinValue < min)
+                    min = _candles[idxCandle].MinValue;
             }
             return min;
         }

@@ -63,20 +63,14 @@
     <Setting Name="TRADING_LIMIT_PER_BP" Type="System.String" Scope="Application">
       <Value Profile="(Default)">5</Value>
     </Setting>
-    <Setting Name="PUBLISHING_START_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">6:30:00</Value>
-    </Setting>
     <Setting Name="TRADING_START_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">8:00:00</Value>
+      <Value Profile="(Default)">0:20:00</Value>
     </Setting>
     <Setting Name="TRADING_STOP_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">21:15:00</Value>
+      <Value Profile="(Default)">23:50:00</Value>
     </Setting>
     <Setting Name="TRADING_MODE" Type="System.String" Scope="Application">
       <Value Profile="(Default)">PRODUCTION</Value>
-    </Setting>
-    <Setting Name="PUBLISHING_STOP_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">22:45:00</Value>
     </Setting>
     <Setting Name="DB_CONTACTPOINT" Type="System.String" Scope="Application">
       <Value Profile="(Default)">192.168.1.25</Value>
@@ -88,10 +82,10 @@
       <Value Profile="(Default)">GBP</Value>
     </Setting>
     <Setting Name="TRADING_CLOSING_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">20:45:00</Value>
+      <Value Profile="(Default)">23:55:00</Value>
     </Setting>
     <Setting Name="TRADING_SIGNAL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">FXMole_1_14_CS.D.EURUSD.TODAY.IP,FXMole_1_14_CS.D.GBPUSD.TODAY.IP,FXMole_1_14_CS.D.USDJPY.TODAY.IP</Value>
+      <Value Profile="(Default)">Rob_60_20_15_13_IX.D.DAX.DAILY.IP</Value>
     </Setting>
     <Setting Name="INDEX_CAC" Type="System.String" Scope="Application">
       <Value Profile="(Default)">CAC:IX.D.CAC.DAILY.IP</Value>
@@ -109,7 +103,7 @@
       <Value Profile="(Default)">BEAR</Value>
     </Setting>
     <Setting Name="TIME_DECAY_FACTOR" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">3</Value>
+      <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="REPLAY_MODE" Type="System.String" Scope="Application">
       <Value Profile="(Default)">DB</Value>
@@ -126,12 +120,6 @@
     <Setting Name="FX_USDJPY" Type="System.String" Scope="Application">
       <Value Profile="(Default)">USDJPY:CS.D.USDJPY.TODAY.IP</Value>
     </Setting>
-    <Setting Name="RUSH_START_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">13:30:00</Value>
-    </Setting>
-    <Setting Name="RUSH_STOP_TIME" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">15:30:00</Value>
-    </Setting>
     <Setting Name="CALENDAR_PATH" Type="System.String" Scope="Application">
       <Value Profile="(Default)">C:\Midax\Calendar</Value>
     </Setting>
@@ -140,6 +128,12 @@
     </Setting>
     <Setting Name="TIME_GMT" Type="System.String" Scope="Application">
       <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="PUBLISHING_START_TIME" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">0:15:00</Value>
+    </Setting>
+    <Setting Name="PUBLISHING_STOP_TIME" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">23:45:00</Value>
     </Setting>
   </Settings>
 </SettingsFile>

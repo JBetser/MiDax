@@ -16,10 +16,12 @@ namespace MidaxLib
         Dictionary<string,List<KeyValuePair<DateTime, double>>> GetProfits(DateTime startTime, DateTime stopTime, List<string> ids);
         Dictionary<string, MarketLevels> GetMarketLevels(DateTime updateTime, List<string> ids);
         Dictionary<string, List<CqlQuote>> GetRows(DateTime startTime, DateTime stopTime, string type, List<string> ids);
+        IndicatorRobinHood.RobState GetRobinHoodState(int nb_candles, int timeframe_mn, DateTime updateTime);
         void CloseConnection();        
     }
 
-    public class CsvReader : IReaderConnection
+    public class 
+        CsvReader : IReaderConnection
     {
         string _csvFile = null;
         StreamReader _csvReader;
@@ -209,6 +211,11 @@ namespace MidaxLib
         Dictionary<string, List<KeyValuePair<DateTime, double>>> IReaderConnection.GetProfits(DateTime startTime, DateTime stopTime, List<string> ids)
         {
             return getRows<KeyValuePair<DateTime, double>>(startTime, stopTime, CassandraConnection.DATATYPE_PROFIT, ids, readProfitData, 0);
+        }
+
+        IndicatorRobinHood.RobState IReaderConnection.GetRobinHoodState(int nb_candles, int timeframe_mn, DateTime updateTime)
+        {
+            return null;
         }
 
         void IReaderConnection.CloseConnection()

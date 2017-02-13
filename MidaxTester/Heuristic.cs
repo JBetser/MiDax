@@ -36,6 +36,7 @@ namespace MidaxTester
             var eurusd = new MarketData(testEngine.Settings["FX_EURUSD"]);
             var usdjpy = new MarketData(testEngine.Settings["FX_USDJPY"]);
             var audusd = new MarketData(testEngine.Settings["FX_AUDUSD"]);
+            var dax = new MarketData(testEngine.Settings["INDEX_DAX"]);
             var models = new List<Model>();
             var macD_10_30_90_gbpusd = new ModelMacD(gbpusd, 10, 30, 90);
             var macD_10_30_90_eurusd = new ModelMacD(eurusd, 10, 30, 90);
@@ -49,6 +50,12 @@ namespace MidaxTester
             var fxmole_gbpusd = new ModelFXMole(new List<MarketData> { gbpusd, eurusd }, macD_10_30_90_gbpusd, volcoeffGBPUSD);
             var fxmole_usdjpy = new ModelFXMole(new List<MarketData> { usdjpy, eurusd }, macD_10_30_90_usdjpy, volcoeffUSDJPY);
             var fxmole_audusd = new ModelFXMole(new List<MarketData> { audusd, eurusd }, macD_10_30_90_audusd, volcoeffAUDUSD);
+            var robinhood_gbpusd = new ModelRobinHood(gbpusd);
+            var robinhood_eurusd = new ModelRobinHood(eurusd);
+            var robinhood_usdjpy = new ModelRobinHood(usdjpy);
+            var robinhood_audusd = new ModelRobinHood(audusd);
+            var robinhood_dax = new ModelRobinHood(dax);
+            /*
             models.Add(macD_10_30_90_gbpusd);
             models.Add(macD_10_30_90_eurusd);
             models.Add(macD_10_30_90_usdjpy);
@@ -57,6 +64,11 @@ namespace MidaxTester
             models.Add(fxmole_eurusd);
             models.Add(fxmole_usdjpy);
             models.Add(fxmole_audusd);
+            models.Add(robinhood_gbpusd);
+            models.Add(robinhood_eurusd);
+            models.Add(robinhood_usdjpy);
+            models.Add(robinhood_audusd);*/
+            models.Add(robinhood_dax);
             testEngine.Run(models);          
         }
     }

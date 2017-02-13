@@ -115,3 +115,58 @@ CREATE TABLE staticdata.anncalibration (
 )
 WITH CLUSTERING ORDER BY (stockid ASC, version ASC);
 
+CREATE TABLE historicaldata.robindicator_c3 (
+  timeframe_mn int,
+  trading_time timestamp,
+  res decimal,
+  sup decimal,
+  sub_res decimal,
+  sub_sup decimal,
+  candle1_min decimal,
+  candle1_max decimal,
+  candle1_begin decimal,
+  candle1_end decimal,
+  candle2_min decimal,
+  candle2_max decimal,
+  candle2_begin decimal,
+  candle2_end decimal,
+  candle3_min decimal,
+  candle3_max decimal,
+  candle3_begin decimal,
+  candle3_end decimal,
+  minima list<decimal>,
+  maxima list<decimal>,
+  PRIMARY KEY (timeframe_mn, trading_time)
+)
+WITH CLUSTERING ORDER BY (trading_time DESC);
+
+ALTER TABLE historicaldata.robindicator_c3 WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+
+CREATE TABLE historicaldata.dummyrobindicator_c3 (
+  timeframe_mn int,
+  trading_time timestamp,
+  res decimal,
+  sup decimal,
+  sub_res decimal,
+  sub_sup decimal,
+  candle1_min decimal,
+  candle1_max decimal,
+  candle1_begin decimal,
+  candle1_end decimal,
+  candle2_min decimal,
+  candle2_max decimal,
+  candle2_begin decimal,
+  candle2_end decimal,
+  candle3_min decimal,
+  candle3_max decimal,
+  candle3_begin decimal,
+  candle3_end decimal,
+  minima list<decimal>,
+  maxima list<decimal>,
+  PRIMARY KEY (timeframe_mn, trading_time)
+)
+WITH CLUSTERING ORDER BY (trading_time DESC);
+
+ALTER TABLE historicaldata.dummyrobindicator_c3 WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+
+

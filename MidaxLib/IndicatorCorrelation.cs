@@ -27,8 +27,6 @@ namespace MidaxLib
         protected Price _curVarValue;
         protected Price _curVarRefValue;
         protected DateTime _startTime;
-        protected double _var;
-        protected double _varRef;
 
         public IndicatorCorrelation(IndicatorWMA wma, IndicatorWMA wmaRef)
             : base("Cor_" + (wma.Period / 60) + "_" + wmaRef.SignalStock.Id + "_" + wma.SignalStock.Id, new List<MarketData> { wma.SignalStock })

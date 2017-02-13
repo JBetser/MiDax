@@ -22,6 +22,7 @@ namespace MidaxLib
         protected string _mktLevelsId;
         public MarketLevels? Levels { get { return _marketLevels; } set { _marketLevels = value; } }
         public bool _hasEodLevels = true;
+        public bool _eodClosePositions = true;
         protected bool _isReady = false;
 
         public bool HasEODLevels { get { return _hasEodLevels; } }
@@ -49,6 +50,9 @@ namespace MidaxLib
             _lastUpdateTime = DateTime.MinValue;
             _allPositionsClosed = false;
             _closePositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
+            DateTime closingPositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
+            if (closingPositionTime > _closePositionTime)
+                _eodClosePositions = false;
             if (updateHandler != null)
                 _updateHandlers.Add(updateHandler);
             if (tickerHandler != null)
@@ -64,7 +68,7 @@ namespace MidaxLib
             if (this._updateHandlers.Count == 0)
             {
                 MarketDataConnection.Instance.UnsubscribeMarketData(this);
-                if (!_allPositionsClosed)
+                if (!_allPositionsClosed && _eodClosePositions)
                 {
                     Portfolio.Instance.CloseAllPositions(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
                     _allPositionsClosed = true;
@@ -104,40 +108,7 @@ namespace MidaxLib
             foreach (Tick ticker in this._tickHandlers)
                 ticker(this, updateTime, value);
             Publish(updateTime, value);
-            /*
-            var curPeriodSec = (decimal)(updateTime - _lastUpdateTime).TotalSeconds;
-            _values.Add(updateTime, value);
-            if (curPeriodSec >= 1m)
-            {
-                FireTick(updateTime, value, true);
-                Publish(updateTime, value);
-                _lastUpdatePrice = new Price(value);
-                _lastUpdatePrice.Volume = 0m;
-                _lastUpdateTime = updateTime;
-            }
-            else
-            {
-                _lastUpdatePrice.Bid = value.Bid;
-                _lastUpdatePrice.Offer = value.Offer;
-                _lastUpdatePrice.Volume += value.Volume;
-                FireTick(updateTime, value);
-                Publish(updateTime, value);
-            }*/
         }
-
-        /*
-        public void FireTick(DateTime updateTime, Price livePrice)
-        {
-            if (updateTime > _closePositionTime && !_allPositionsClosed)
-            {
-                Portfolio.Instance.CloseAllPositions(updateTime);
-                _allPositionsClosed = true;
-            }
-            foreach (Tick ticker in this._updateHandlers)
-                ticker(this, updateTime, livePrice);
-            foreach (Tick ticker in this._tickHandlers)
-                ticker(this, updateTime, livePrice);            
-        }*/
 
         public virtual void Publish(DateTime updateTime, Price price)
         {

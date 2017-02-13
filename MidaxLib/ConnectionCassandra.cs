@@ -85,7 +85,7 @@ namespace MidaxLib
         }
         public override decimal ScaleValue(decimal avg, decimal scale)
         {
-            if (s.StartsWith("LR"))
+            if (s.StartsWith("LR") || s.StartsWith("Rob_"))
                 b = o = avg + b.Value * scale * 2m;
             return b.Value;
         }  
@@ -438,6 +438,51 @@ namespace MidaxLib
                     marketLevels[id] = mktLevels.Value;
             }
             return marketLevels;
+        }
+
+        IndicatorRobinHood.RobState IReaderConnection.GetRobinHoodState(int nb_candles, int timeframe_mn, DateTime updateTime)
+        {
+            if (_session == null)
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
+            IndicatorRobinHood.RobState state = null;
+            try
+            {
+                RowSet stateRows = executeQuery(string.Format("select res, sup, sub_res, sub_sup, candle1_min, candle1_max, " +
+                          "candle1_begin, candle1_end, candle2_min, candle2_max, candle2_begin, candle2_end, candle3_min, candle3_max, candle3_begin, candle3_end, " +
+                          "minima, maxima from historicaldata.{0}robindicator_c{1} where timeframe_mn={2} and trading_time={3} ALLOW FILTERING",
+                    Config.UATSourceDB ? "dummy" : "", nb_candles, timeframe_mn, ToUnixTimestamp(updateTime)));
+                state = new IndicatorRobinHood.RobState(stateRows.First());
+            }
+            catch
+            {
+                var errorMsg = string.Format("Could not retrieve robin hood state for datetime {0}. Nb candles: {1}, Time frame: {2}mn", updateTime, nb_candles, timeframe_mn);
+                Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Warning);
+                return null;
+            }
+            return state;
+        }
+
+        public override void Insert(DateTime updateTime, int timeframe_mn, IndicatorRobinHood.RobState state)
+        {
+            if (_session == null)
+                throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
+            try
+            {
+                executeQuery(string.Format(DB_INSERTION + " (res, sup, sub_res, sub_sup, candle1_min, candle1_max, " +
+                          "candle1_begin, candle1_end, candle2_min, candle2_max, candle2_begin, candle2_end, candle3_min, candle3_max, candle3_begin, candle3_end, " +
+                          "minima, maxima, timeframe_mn, trading_time) values " +
+                          "({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21})",
+                DB_HISTORICALDATA, "robindicator_c3", state.res, state.sup, state.sub_res, state.sub_sup, state.c1.MinValue, state.c1.MaxValue, state.c1.StartValue, state.c1.EndValue,
+                state.c2.MinValue, state.c2.MaxValue, state.c2.StartValue, state.c2.EndValue, state.c3.MinValue, state.c3.MaxValue, state.c3.StartValue, state.c3.EndValue,
+                JsonConvert.SerializeObject(state.all.Select(cnd => cnd.MinValue)), JsonConvert.SerializeObject(state.all.Select(cnd => cnd.MaxValue)), 
+                timeframe_mn, ToUnixTimestamp(updateTime)));
+            }
+
+            catch
+            {
+                var errorMsg = string.Format("Could not insert robin hood state at datetime {0}", updateTime);
+                Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Warning);
+            }
         }
 
         void IReaderConnection.CloseConnection()

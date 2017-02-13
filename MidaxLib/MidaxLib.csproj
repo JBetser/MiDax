@@ -127,6 +127,7 @@
     <Compile Include="IndicatorCorrelation.cs" />
     <Compile Include="IndicatorLevel.cs" />
     <Compile Include="IndicatorLinearRegression.cs" />
+    <Compile Include="IndicatorRobinHood.cs" />
     <Compile Include="IndicatorRSI.cs" />
     <Compile Include="IndicatorTrend.cs" />
     <Compile Include="IndicatorVolume.cs" />
@@ -145,6 +146,7 @@
     <Compile Include="ModelMacD.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ModelRobinHood.cs" />
     <Compile Include="ModelTest.cs" />
     <Compile Include="NeuralNetwork.cs" />
     <Compile Include="Portfolio.cs" />
@@ -159,6 +161,7 @@
     <Compile Include="SignalMacD.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SignalRobinHood.cs" />
     <Compile Include="TimeDecay.cs" />
     <Compile Include="TimeSeries.cs" />
     <Compile Include="Trade.cs" />

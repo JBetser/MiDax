@@ -161,85 +161,92 @@ namespace MidaxWebService
                 _avg[keyAvg] = (min + max) / 2m;
                 _scale[keyAvg] = (max - min) / 2m;
             }
-            foreach (CqlQuote cqlQuote in quotes)
+            if (quotes[0].n.StartsWith("Rob") && !quotes[0].n.StartsWith("Rob_"))
             {
-                decimal quoteValue = _avg.ContainsKey(keyAvg) ? cqlQuote.ScaleValue(_avg[keyAvg], _scale[keyAvg]) : cqlQuote.MidPrice();
-                if (!prevQuoteValue.HasValue)
-                {
-                    filteredQuotes.Add(cqlQuote);
-                    prevQuoteValue = quoteValue;
-                    prevQuote = cqlQuote;
-                    continue;
-                }
-                if (!trendUp.HasValue)
-                {
-                    trendUp = quoteValue > prevQuoteValue;
-                    prevQuoteValue = quoteValue;
-                    prevQuote = cqlQuote;
-                    if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
-                        buffer.Add(quoteValue, cqlQuote);
-                    else
-                        filteredQuotes.Add(cqlQuote);
-                    continue;
-                }
-                if (((quoteValue < prevQuoteValue) && trendUp.Value) ||
-                    ((quoteValue > prevQuoteValue) && !trendUp.Value))
-                {
-                    if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
-                    {
-                        if (!buffer.ContainsKey(quoteValue))
-                            buffer.Add(quoteValue, cqlQuote);
-                        continue;
-                    }
-                    if (buffer.Count > 1)
-                    {
-                        if (buffer.First().Value.t > buffer.Last().Value.t)
-                        {
-                            filteredQuotes.Add(buffer.First().Value);
-                            filteredQuotes.Add(buffer.Last().Value);
-                        }
-                        else
-                        {
-                            filteredQuotes.Add(buffer.Last().Value);
-                            filteredQuotes.Add(buffer.First().Value);
-                        }
-                    }
-                    else if (buffer.Count == 1)
-                        filteredQuotes.Add(buffer.First().Value);
-                    buffer.Clear();
-                    trendUp = !trendUp;
-                }
-                else
-                {
-                    if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSecondsLarge)
-                    {
-                        if (!buffer.ContainsKey(quoteValue))
-                            buffer.Add(quoteValue, cqlQuote);
-                        continue;
-                    }
-                    if (buffer.Count > 1)
-                    {
-                        if (buffer.First().Value.t > buffer.Last().Value.t)
-                        {
-                            filteredQuotes.Add(buffer.First().Value);
-                            filteredQuotes.Add(buffer.Last().Value);
-                        }
-                        else
-                        {
-                            filteredQuotes.Add(buffer.Last().Value);
-                            filteredQuotes.Add(buffer.First().Value);
-                        }
-                    }
-                    else if (buffer.Count == 1)
-                        filteredQuotes.Add(buffer.First().Value);
-                    buffer.Clear();
-                }
-                buffer.Add(quoteValue, cqlQuote);
-                prevQuoteValue = quoteValue;
-                prevQuote = cqlQuote;
+                filteredQuotes = quotes;
             }
-            if (filteredQuotes.Last() != prevQuote)
-                filteredQuotes.Add(prevQuote);
+            else
+            {
+                foreach (CqlQuote cqlQuote in quotes)
+                {
+                    decimal quoteValue = _avg.ContainsKey(keyAvg) ? cqlQuote.ScaleValue(_avg[keyAvg], _scale[keyAvg]) : cqlQuote.MidPrice();
+                    if (!prevQuoteValue.HasValue)
+                    {
+                        filteredQuotes.Add(cqlQuote);
+                        prevQuoteValue = quoteValue;
+                        prevQuote = cqlQuote;
+                        continue;
+                    }
+                    if (!trendUp.HasValue)
+                    {
+                        trendUp = quoteValue > prevQuoteValue;
+                        prevQuoteValue = quoteValue;
+                        prevQuote = cqlQuote;
+                        if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
+                            buffer.Add(quoteValue, cqlQuote);
+                        else
+                            filteredQuotes.Add(cqlQuote);
+                        continue;
+                    }
+                    if (((quoteValue < prevQuoteValue) && trendUp.Value) ||
+                        ((quoteValue > prevQuoteValue) && !trendUp.Value))
+                    {
+                        if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSeconds)
+                        {
+                            if (!buffer.ContainsKey(quoteValue))
+                                buffer.Add(quoteValue, cqlQuote);
+                            continue;
+                        }
+                        if (buffer.Count > 1)
+                        {
+                            if (buffer.First().Value.t > buffer.Last().Value.t)
+                            {
+                                filteredQuotes.Add(buffer.First().Value);
+                                filteredQuotes.Add(buffer.Last().Value);
+                            }
+                            else
+                            {
+                                filteredQuotes.Add(buffer.Last().Value);
+                                filteredQuotes.Add(buffer.First().Value);
+                            }
+                        }
+                        else if (buffer.Count == 1)
+                            filteredQuotes.Add(buffer.First().Value);
+                        buffer.Clear();
+                        trendUp = !trendUp;
+                    }
+                    else
+                    {
+                        if (auto_select && (prevQuote.t - cqlQuote.t).TotalSeconds < intervalSecondsLarge)
+                        {
+                            if (!buffer.ContainsKey(quoteValue))
+                                buffer.Add(quoteValue, cqlQuote);
+                            continue;
+                        }
+                        if (buffer.Count > 1)
+                        {
+                            if (buffer.First().Value.t > buffer.Last().Value.t)
+                            {
+                                filteredQuotes.Add(buffer.First().Value);
+                                filteredQuotes.Add(buffer.Last().Value);
+                            }
+                            else
+                            {
+                                filteredQuotes.Add(buffer.Last().Value);
+                                filteredQuotes.Add(buffer.First().Value);
+                            }
+                        }
+                        else if (buffer.Count == 1)
+                            filteredQuotes.Add(buffer.First().Value);
+                        buffer.Clear();
+                    }
+                    buffer.Add(quoteValue, cqlQuote);
+                    prevQuoteValue = quoteValue;
+                    prevQuote = cqlQuote;
+                }
+                if (filteredQuotes.Last() != prevQuote)
+                    filteredQuotes.Add(prevQuote);
+            }
             if (isVolume)
             {
                 foreach (var quote in filteredQuotes)

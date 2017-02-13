@@ -307,6 +307,8 @@
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="Trend_30_6_WMVol_10">Vol Trend 3mn</option>
+               <option value="RobSup_60_20#RobRes_60_20#RobSubSup_60_13#RobSubRes_60_13#">RS 1h 20/13</option>
+               <option value="Rob_60_20_13">Rob 1h 20/13</option>
                <!--option value="VWMVol_10">VWM Vol 10mn</!--option>
                <option value="VWMVol_90">VWM Vol 1h30</option>    
                <option value="Volume_10">Volumes 10mn</option>  
@@ -319,6 +321,7 @@
                <option value="MacD_30_90">MacD Cascade 30mn/1h30</option>
                <option value="FXMole_1_14">FX Mole 14 1mn</option>
                <option value="ANN_FX_5_2_1">ANN FX</option>
+               <option value="Rob_60_20_15_3">Strat RS01</option>
              </select>          
 
              <button type="button" id="GO" class="btn btn-primary">

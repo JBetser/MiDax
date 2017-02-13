@@ -344,6 +344,8 @@ namespace MidaxLib
         protected decimal? _prevEma;
         protected decimal _timeDecayWeight = 0m;
         protected DateTime _startTime = DateTime.MinValue;
+        public decimal EMA { set { _prevEma = value; } }
+        public DateTime Time { set { _startTime = value; } }
 
         public IndicatorEMA(MarketData mktData, int periodMinutes)
             : base("EMA_" + periodMinutes + "_" + mktData.Id, mktData, periodMinutes)

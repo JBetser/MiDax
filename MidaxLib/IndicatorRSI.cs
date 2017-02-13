@@ -193,7 +193,10 @@ namespace MidaxLib
         public decimal MaxRsi(int periodMn)
         {
             decimal max = decimal.MinValue;
-            for (int idxCandle = _history.Count - periodMn; idxCandle < _history.Count; idxCandle++)
+            int nbCandles = (int)((decimal)periodMn / (decimal)PeriodSizeMn);
+            if (nbCandles > _history.Count)
+                return decimal.MaxValue;
+            for (int idxCandle = _history.Count - nbCandles; idxCandle < _history.Count; idxCandle++)
             {
                 if (_history[idxCandle].GainRsi)
                 {
@@ -212,7 +215,10 @@ namespace MidaxLib
         public decimal MinRsi(int periodMn)
         {
             decimal min = decimal.MaxValue;
-            for (int idxCandle = _history.Count - periodMn; idxCandle < _history.Count; idxCandle++)
+            int nbCandles = (int)((decimal)periodMn / (decimal)PeriodSizeMn);
+            if (nbCandles > _history.Count)
+                return decimal.MinValue;
+            for (int idxCandle = _history.Count - nbCandles; idxCandle < _history.Count; idxCandle++)
             {
                 if (_history[idxCandle].GainRsi)
                 {
@@ -231,7 +237,10 @@ namespace MidaxLib
         public decimal MaxAsset(int periodMn)
         {
             decimal max = decimal.MinValue;
-            for (int idxCandle = _history.Count - periodMn; idxCandle < _history.Count; idxCandle++)
+            int nbCandles = (int)((decimal)periodMn / (decimal)PeriodSizeMn);
+            if (nbCandles > _history.Count)
+                return decimal.MaxValue;
+            for (int idxCandle = _history.Count - nbCandles; idxCandle < _history.Count; idxCandle++)
             {
                 if (_history[idxCandle].GainAsset)
                 {
@@ -250,7 +259,10 @@ namespace MidaxLib
         public decimal MinAsset(int periodMn)
         {
             decimal min = decimal.MaxValue;
-            for (int idxCandle = _history.Count - periodMn; idxCandle < _history.Count; idxCandle++)
+            int nbCandles = (int)((decimal)periodMn / (decimal)PeriodSizeMn);
+            if (nbCandles > _history.Count)
+                return decimal.MinValue;
+            for (int idxCandle = _history.Count - nbCandles; idxCandle < _history.Count; idxCandle++)
             {
                 if (_history[idxCandle].GainAsset)
                 {

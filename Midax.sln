@@ -36,7 +36,7 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebUI", "WebUI", "{146728EF
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "38738"
+		VWDPort = "33360"
 	EndProjectSection
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebDebug", "WebDebug", "{FB8FC1FB-E3ED-4CFB-8EBE-955AA824C2D9}"

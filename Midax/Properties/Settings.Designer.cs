@@ -136,16 +136,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("6:30:00")]
-        public string PUBLISHING_START_TIME {
-            get {
-                return ((string)(this["PUBLISHING_START_TIME"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("8:00:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0:20:00")]
         public string TRADING_START_TIME {
             get {
                 return ((string)(this["TRADING_START_TIME"]));
@@ -154,7 +145,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("21:15:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("23:50:00")]
         public string TRADING_STOP_TIME {
             get {
                 return ((string)(this["TRADING_STOP_TIME"]));
@@ -167,15 +158,6 @@ namespace Midax.Properties {
         public string TRADING_MODE {
             get {
                 return ((string)(this["TRADING_MODE"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("22:45:00")]
-        public string PUBLISHING_STOP_TIME {
-            get {
-                return ((string)(this["PUBLISHING_STOP_TIME"]));
             }
         }
         
@@ -208,7 +190,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("20:45:00")]
+        [global::System.Configuration.DefaultSettingValueAttribute("23:55:00")]
         public string TRADING_CLOSING_TIME {
             get {
                 return ((string)(this["TRADING_CLOSING_TIME"]));
@@ -217,8 +199,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("FXMole_1_14_CS.D.EURUSD.TODAY.IP,FXMole_1_14_CS.D.GBPUSD.TODAY.IP,FXMole_1_14_CS." +
-            "D.USDJPY.TODAY.IP")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Rob_60_20_15_13_IX.D.DAX.DAILY.IP")]
         public string TRADING_SIGNAL {
             get {
                 return ((string)(this["TRADING_SIGNAL"]));
@@ -272,7 +253,7 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public string TIME_DECAY_FACTOR {
             get {
                 return ((string)(this["TIME_DECAY_FACTOR"]));
@@ -326,24 +307,6 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("13:30:00")]
-        public string RUSH_START_TIME {
-            get {
-                return ((string)(this["RUSH_START_TIME"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("15:30:00")]
-        public string RUSH_STOP_TIME {
-            get {
-                return ((string)(this["RUSH_STOP_TIME"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("C:\\Midax\\Calendar")]
         public string CALENDAR_PATH {
             get {
@@ -366,6 +329,24 @@ namespace Midax.Properties {
         public string TIME_GMT {
             get {
                 return ((string)(this["TIME_GMT"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0:15:00")]
+        public string PUBLISHING_START_TIME {
+            get {
+                return ((string)(this["PUBLISHING_START_TIME"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("23:45:00")]
+        public string PUBLISHING_STOP_TIME {
+            get {
+                return ((string)(this["PUBLISHING_STOP_TIME"]));
             }
         }
     }

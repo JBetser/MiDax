@@ -145,24 +145,6 @@ namespace MidaxLib
             return open;
         }
 
-        public static bool RushHour(DateTime time)
-        {
-            return (time.TimeOfDay >= Config.ParseDateTimeLocal(_settings["RUSH_START_TIME"]).TimeOfDay &&
-                time.TimeOfDay < Config.ParseDateTimeLocal(_settings["RUSH_STOP_TIME"]).TimeOfDay);
-        }
-
-        public static bool StartRushHour(DateTime time)
-        {
-            return (time.TimeOfDay >= Config.ParseDateTimeLocal(_settings["RUSH_START_TIME"]).TimeOfDay &&
-                time.TimeOfDay < Config.ParseDateTimeLocal(_settings["RUSH_START_TIME"]).AddMinutes(30).TimeOfDay);
-        }
-
-        public static bool StopRushHour(DateTime time)
-        {
-            return (time.TimeOfDay >= Config.ParseDateTimeLocal(_settings["RUSH_STOP_TIME"]).AddMinutes(-30).TimeOfDay &&
-                time.TimeOfDay < Config.ParseDateTimeLocal(_settings["RUSH_STOP_TIME"]).TimeOfDay);
-        }
-
         public static string TestList(List<string> tests)
         {
             return tests.Aggregate("", (prev, next) => prev + next + ";", res => res.Substring(0, res.Length - 1));

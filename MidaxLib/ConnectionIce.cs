@@ -51,8 +51,8 @@ namespace MidaxLib
         protected decimal[] _stockLastPrices = null;
         protected decimal[] _stockLastVolumes = null;
         protected decimal[] _stockWeights = null;
-        protected decimal _indexWeight = 1.0m;*/
-        DateTime? _lastTradePrice = null;     
+        protected decimal _indexWeight = 1.0m;
+        DateTime? _lastTradePrice = null; */    
 
         static public IceStreamingMarketData Instance
         {
