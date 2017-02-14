@@ -679,7 +679,7 @@ namespace MidaxLib
             throw new ApplicationException("ANN insertion not implemented");
         }
 
-        public override void Insert(DateTime updateTime, int timeframe_mn, IndicatorRobinHood.RobState state)
+        public override void Insert(DateTime updateTime, string mktdataid, int timeframe_mn, IndicatorRobinHood.RobState state)
         {
         }
 
@@ -827,7 +827,7 @@ namespace MidaxLib
         {
         }
 
-        public override void Insert(DateTime updateTime, int timeframe_mn, IndicatorRobinHood.RobState state)
+        public override void Insert(DateTime updateTime, string mktdataid, int timeframe_mn, IndicatorRobinHood.RobState state)
         {
         }
 

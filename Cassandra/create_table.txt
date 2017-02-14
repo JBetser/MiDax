@@ -113,9 +113,10 @@ CREATE TABLE staticdata.anncalibration (
   learning_rate decimal,
   PRIMARY KEY (annid, mktdataid, version)
 )
-WITH CLUSTERING ORDER BY (stockid ASC, version ASC);
+WITH CLUSTERING ORDER BY (mktdataid ASC, version ASC);
 
 CREATE TABLE historicaldata.robindicator_c3 (
+  mktdataid text,
   timeframe_mn int,
   trading_time timestamp,
   res decimal,
@@ -136,13 +137,14 @@ CREATE TABLE historicaldata.robindicator_c3 (
   candle3_end decimal,
   minima list<decimal>,
   maxima list<decimal>,
-  PRIMARY KEY (timeframe_mn, trading_time)
+  PRIMARY KEY (mktdataid, timeframe_mn, trading_time)
 )
-WITH CLUSTERING ORDER BY (trading_time DESC);
+WITH CLUSTERING ORDER BY (timeframe_mn DESC, trading_time DESC);
 
 ALTER TABLE historicaldata.robindicator_c3 WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
 
 CREATE TABLE historicaldata.dummyrobindicator_c3 (
+  mktdataid text,
   timeframe_mn int,
   trading_time timestamp,
   res decimal,
@@ -163,9 +165,9 @@ CREATE TABLE historicaldata.dummyrobindicator_c3 (
   candle3_end decimal,
   minima list<decimal>,
   maxima list<decimal>,
-  PRIMARY KEY (timeframe_mn, trading_time)
+  PRIMARY KEY (mktdataid, timeframe_mn, trading_time)
 )
-WITH CLUSTERING ORDER BY (trading_time DESC);
+WITH CLUSTERING ORDER BY (timeframe_mn DESC, trading_time DESC);
 
 ALTER TABLE historicaldata.dummyrobindicator_c3 WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
 

@@ -334,17 +334,17 @@ namespace MidaxLib
 
         public Dictionary<string, List<CqlQuote>> GetRows(DateTime startTime, DateTime stopTime, string type, List<string> ids)
         {
-            var epicQuotes = new Dictionary<string, List<CqlQuote>>();
+            var mktdataidQuotes = new Dictionary<string, List<CqlQuote>>();
             var rowSets = getRows(startTime, stopTime, type, ids);
             foreach (var rowSet in rowSets)
             {
-                if (!epicQuotes.ContainsKey(rowSet.Key))
-                    epicQuotes[rowSet.Key] = new List<CqlQuote>();
+                if (!mktdataidQuotes.ContainsKey(rowSet.Key))
+                    mktdataidQuotes[rowSet.Key] = new List<CqlQuote>();
                 foreach (Row row in rowSet.Value.GetRows())
-                    epicQuotes[rowSet.Key].Add(CqlQuote.CreateInstance(type, row));
-                epicQuotes[rowSet.Key].Reverse();
+                    mktdataidQuotes[rowSet.Key].Add(CqlQuote.CreateInstance(type, row));
+                mktdataidQuotes[rowSet.Key].Reverse();
             }
-            return epicQuotes;
+            return mktdataidQuotes;
         }
 
 
@@ -393,7 +393,7 @@ namespace MidaxLib
             return null;
         }
 
-        MarketLevels? GetMarketLevels(DateTime updateTime, string epic)
+        MarketLevels? GetMarketLevels(DateTime updateTime, string mktdataid)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
@@ -405,7 +405,7 @@ namespace MidaxLib
             string indicator = "";
             try
             {
-                indicator = "High_" + epic;
+                indicator = "High_" + mktdataid;
                 value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
                     Config.UATSourceDB ? "dummy" : "", indicator, ToUnixTimestamp(updateTime)));
                 high = (decimal)value.First()[0];
@@ -417,15 +417,15 @@ namespace MidaxLib
                 return null;
             }
             value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
-                Config.UATSourceDB ? "dummy" : "", "Low_" + epic, ToUnixTimestamp(updateTime)));
+                Config.UATSourceDB ? "dummy" : "", "Low_" + mktdataid, ToUnixTimestamp(updateTime)));
             decimal low = (decimal)value.First()[0];
             value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
-                Config.UATSourceDB ? "dummy" : "", "CloseBid_" + epic, ToUnixTimestamp(updateTime)));
+                Config.UATSourceDB ? "dummy" : "", "CloseBid_" + mktdataid, ToUnixTimestamp(updateTime)));
             decimal closeBid = (decimal)value.First()[0];
             value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
-                Config.UATSourceDB ? "dummy" : "", "CloseOffer_" + epic, ToUnixTimestamp(updateTime)));
+                Config.UATSourceDB ? "dummy" : "", "CloseOffer_" + mktdataid, ToUnixTimestamp(updateTime)));
             decimal closeOffer = (decimal)value.First()[0];
-            return new MarketLevels(epic, low, high, closeBid, closeOffer);
+            return new MarketLevels(mktdataid, low, high, closeBid, closeOffer);
         }
 
         Dictionary<string, MarketLevels> IReaderConnection.GetMarketLevels(DateTime updateTime, List<string> ids)
@@ -440,7 +440,7 @@ namespace MidaxLib
             return marketLevels;
         }
 
-        IndicatorRobinHood.RobState IReaderConnection.GetRobinHoodState(int nb_candles, int timeframe_mn, DateTime updateTime)
+        IndicatorRobinHood.RobState IReaderConnection.GetRobinHoodState(DateTime updateTime, string mktdataid, int nb_candles, int timeframe_mn)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
@@ -449,9 +449,9 @@ namespace MidaxLib
             {
                 RowSet stateRows = executeQuery(string.Format("select res, sup, sub_res, sub_sup, candle1_min, candle1_max, " +
                           "candle1_begin, candle1_end, candle2_min, candle2_max, candle2_begin, candle2_end, candle3_min, candle3_max, candle3_begin, candle3_end, " +
-                          "minima, maxima from historicaldata.{0}robindicator_c{1} where timeframe_mn={2} and trading_time={3} ALLOW FILTERING",
-                    Config.UATSourceDB ? "dummy" : "", nb_candles, timeframe_mn, ToUnixTimestamp(updateTime)));
-                state = new IndicatorRobinHood.RobState(stateRows.First());
+                          "minima, maxima from historicaldata.{0}robindicator_c{1} where timeframe_mn={2} and trading_time={3} and mktdataid='{4}' ALLOW FILTERING",
+                    Config.UATSourceDB ? "dummy" : "", nb_candles, timeframe_mn, ToUnixTimestamp(updateTime), mktdataid));
+                state = new IndicatorRobinHood.RobState(stateRows.First(), updateTime);
             }
             catch
             {
@@ -462,7 +462,7 @@ namespace MidaxLib
             return state;
         }
 
-        public override void Insert(DateTime updateTime, int timeframe_mn, IndicatorRobinHood.RobState state)
+        public override void Insert(DateTime updateTime, string mktdataid, int timeframe_mn, IndicatorRobinHood.RobState state)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
@@ -470,14 +470,13 @@ namespace MidaxLib
             {
                 executeQuery(string.Format(DB_INSERTION + " (res, sup, sub_res, sub_sup, candle1_min, candle1_max, " +
                           "candle1_begin, candle1_end, candle2_min, candle2_max, candle2_begin, candle2_end, candle3_min, candle3_max, candle3_begin, candle3_end, " +
-                          "minima, maxima, timeframe_mn, trading_time) values " +
-                          "({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21})",
+                          "minima, maxima, timeframe_mn, trading_time, mktdataid) values " +
+                          "({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, '{22}')",
                 DB_HISTORICALDATA, "robindicator_c3", state.res, state.sup, state.sub_res, state.sub_sup, state.c1.MinValue, state.c1.MaxValue, state.c1.StartValue, state.c1.EndValue,
                 state.c2.MinValue, state.c2.MaxValue, state.c2.StartValue, state.c2.EndValue, state.c3.MinValue, state.c3.MaxValue, state.c3.StartValue, state.c3.EndValue,
-                JsonConvert.SerializeObject(state.all.Select(cnd => cnd.MinValue)), JsonConvert.SerializeObject(state.all.Select(cnd => cnd.MaxValue)), 
-                timeframe_mn, ToUnixTimestamp(updateTime)));
+                JsonConvert.SerializeObject(state.all.Select(cnd => cnd.MinValue)), JsonConvert.SerializeObject(state.all.Select(cnd => cnd.MaxValue)),
+                timeframe_mn, ToUnixTimestamp(updateTime), mktdataid));
             }
-
             catch
             {
                 var errorMsg = string.Format("Could not insert robin hood state at datetime {0}", updateTime);

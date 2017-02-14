@@ -52,11 +52,11 @@ namespace MidaxTester
                 Config.Settings["EXPECTEDRESULTS_CSV"] = string.Format("..\\..\\expected_results\\{3}_{0}_{1}_{2}.csv", test.Day, test.Month, test.Year, _testName);
                 if (_fullday)
                 {
-                    Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 0, 15, 0);
-                    Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 23, 45, 0);
-                    Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 0, 20, 0);
+                    Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 11, 25, 0);
+                    Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 23, 55, 0);
+                    Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 0, 10, 0);
                     Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 23, 50, 0);
-                    Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 23, 55, 0);
+                    Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", test.Year, test.Month, test.Day, 23, 59, 0);
                     Config.Settings["TIMESERIES_MAX_RECORD_TIME_HOURS"] = "12";
                 }
                 else

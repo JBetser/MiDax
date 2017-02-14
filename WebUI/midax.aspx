@@ -250,8 +250,8 @@
              <tr><th><a>To date:</a>
              <input class="form-control input-medium" placeholder="" id="datepickerend"></th></tr></table>
              <select class="combobox input-medium" id="timestart" >
-               <option value="">08:00</option>
-               <option value="1">08:30</option>
+               <option value="">00:00</option>
+               <option value="1">08:00</option>
                <option value="2">09:00</option>
                <option value="3">10:00</option>
                <option value="4">11:00</option>
@@ -266,7 +266,7 @@
                <option value="13">20:00</option>
              </select>
              <select class="combobox input-medium" id="timestop">
-               <option value="">21:30</option>
+               <option value="">23:59</option>
                <option value="1">21:00</option>
                <option value="2">20:00</option>
                <option value="3">19:00</option>
@@ -307,7 +307,7 @@
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="Trend_30_6_WMVol_10">Vol Trend 3mn</option>
-               <option value="RobSup_60_20#RobRes_60_20#RobSubSup_60_13#RobSubRes_60_13#">RS 1h 20/13</option>
+               <option value="RobSup_60_20#RobRes_60_20#RobSubSup_60_13#RobSubRes_60_13#EMA_900">RS 1h 20/13</option>
                <option value="Rob_60_20_13">Rob 1h 20/13</option>
                <!--option value="VWMVol_10">VWM Vol 10mn</!--option>
                <option value="VWMVol_90">VWM Vol 1h30</option>    

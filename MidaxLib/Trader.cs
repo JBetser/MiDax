@@ -15,6 +15,7 @@ namespace MidaxLib
 
         public delegate void shutdown();
         public delegate DateTime getNow();
+        public bool _disconnectClosePositions = true;
         shutdown _onShutdown;
         DateTime _startTime;
         getNow _getNow;
@@ -41,6 +42,10 @@ namespace MidaxLib
             // Figure how much time until PUBLISHING_STOP_TIME
             _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
             DateTime stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
+            DateTime closePositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
+            DateTime closingPositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
+            if (closingPositionTime > closePositionTime)
+                _disconnectClosePositions = false;
 
             // If it's already past PUBLISHING_STOP_TIME, wait until PUBLISHING_STOP_TIME tomorrow  
             int msUntilStartTime = 10;
@@ -106,7 +111,8 @@ namespace MidaxLib
         {
             Log.Instance.WriteEntry(": Connection lost. Reconnecting...", EventLogEntryType.Warning);
             MarketDataConnection.Instance.Connect(connectionLostCallback);
-            CloseAllPositions(DateTime.Now);
+            if (_disconnectClosePositions)
+                CloseAllPositions(DateTime.Now);
             stopSignalCallback(state);
         }
 
