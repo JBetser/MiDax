@@ -12,16 +12,18 @@ namespace MidaxLib
         Dictionary<string, Position> _positions = new Dictionary<string, Position>();
         List<Trade> _trades = new List<Trade>();
         IAbstractStreamingClient _igStreamApiClient = null;
+        IGPublicPcl.IgRestApiClient _igRestApiClient = null;
         SubscribedTableKey _tradeSubscriptionStk = null;
         static Dictionary<IAbstractStreamingClient, Portfolio> _instance = null;
         Dictionary<string, TradingSet> _tradingSets = new Dictionary<string, TradingSet>();
 
         public List<Trade> Trades { get { return _trades; } }
         public Dictionary<string, Position> Positions { get { return _positions; } }
-        
-        Portfolio(IAbstractStreamingClient client)
+
+        Portfolio(IAbstractStreamingClient client, IGPublicPcl.IgRestApiClient restApiClient)
         {
             _igStreamApiClient = client;
+            _igRestApiClient = restApiClient;
         }
 
         public static Portfolio Instance
@@ -31,14 +33,14 @@ namespace MidaxLib
                 if (_instance == null)
                     _instance = new Dictionary<IAbstractStreamingClient, Portfolio>();
                 if (!_instance.ContainsKey(MarketDataConnection.Instance.StreamClient))
-                    _instance[MarketDataConnection.Instance.StreamClient] = new Portfolio(MarketDataConnection.Instance.StreamClient);
+                    _instance[MarketDataConnection.Instance.StreamClient] = new Portfolio(MarketDataConnection.Instance.StreamClient, MarketDataConnection.Instance.RestClient);
                 return _instance[MarketDataConnection.Instance.StreamClient];
             }
         }
 
         public delegate void TradeBookedEvent(Trade newTrade);
 
-        public void Subscribe()
+        public async void Subscribe()
         {
             try
             {
@@ -46,6 +48,32 @@ namespace MidaxLib
                 {
                     _tradeSubscriptionStk = _igStreamApiClient.SubscribeToPositions(this);
                     Log.Instance.WriteEntry("TradeSubscription : Subscribe");
+                    var response = await _igRestApiClient.getOTCOpenPositionsV2();
+                    foreach (var pos in response.Response.positions)
+                    {
+                        var trade = new Trade(DateTime.Parse(pos.market.updateTime), pos.market.epic,
+                            pos.position.direction == "BUY" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL, (int)pos.position.size.Value,
+                            pos.position.direction == "BUY" ? pos.market.offer.Value : pos.market.bid.Value);
+                        trade.Reference = "RECOVER_" + pos.position.dealId;
+                        trade.ConfirmationTime = trade.TradingTime;
+                        ReplayPositionUpdateInfo updateInfo = new ReplayPositionUpdateInfo(DateTime.Parse(pos.market.updateTime), pos.market.epic,
+                            pos.position.dealId, trade.Reference, "OPEN", "ACCEPTED", (int)pos.position.size.Value,
+                            pos.position.direction == "BUY" ? pos.market.offer.Value : pos.market.bid.Value,
+                            pos.position.direction == "BUY" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL);
+                        var ptfPos = GetPosition(pos.market.epic);
+                        if (ptfPos != null)
+                        {
+                            _trades.Add(trade);
+                            ptfPos.AddIncomingTrade(trade);
+                            ptfPos.OnUpdate(updateInfo);
+                        }
+                        else 
+                        {
+                            Log.Instance.WriteEntry("Trade subscription error: mktdata: " + pos.market.epic + ", direction: " + pos.position.direction + ", size: " + pos.position.size.Value +
+                                ", dealid:" + pos.position.dealId, System.Diagnostics.EventLogEntryType.Error);
+                        }
+                    }
+                                
                 }
             }
             catch (Exception ex)

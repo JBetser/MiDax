@@ -18,6 +18,7 @@ namespace MidaxLib
         static MarketDataConnection _instance = null;
         static int _refCount = 0;
         protected IAbstractStreamingClient _apiStreamingClient = null;
+        protected IgRestApiClient _igRestApiClient = null;
         protected TimerCallback _callbackConnectionClosed = null;
 
         protected MarketDataConnection() {
@@ -55,6 +56,11 @@ namespace MidaxLib
         public IAbstractStreamingClient StreamClient
         {
             get { return _apiStreamingClient; }
+        }
+
+        public IgRestApiClient RestClient
+        {
+            get { return _igRestApiClient; }
         }
 
         public virtual void SubscribeMarketData(MarketData mktData)

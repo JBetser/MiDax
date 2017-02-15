@@ -190,15 +190,6 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("23:59:00")]
-        public string TRADING_CLOSING_TIME {
-            get {
-                return ((string)(this["TRADING_CLOSING_TIME"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Rob_60_20_15_13_IX.D.DAX.DAILY.IP")]
         public string TRADING_SIGNAL {
             get {

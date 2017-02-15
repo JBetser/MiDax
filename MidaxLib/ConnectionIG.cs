@@ -46,7 +46,7 @@ namespace MidaxLib
 
     public interface IAbstractStreamingClient
     {
-        void Connect(string username, string password, string apiKey);
+        void Connect(string username, string password, string apiKey, IgRestApiClient igRestApiClient);
         void Subscribe(string[] epics, IHandyTableListener tableListener);
         void Unsubscribe();
         void Resume(IHandyTableListener tableListener);
@@ -118,12 +118,12 @@ namespace MidaxLib
         public TimerCallback ConnectionClosed = null;
 
         IGMidaxStreamingApiClient _igStreamApiClient = new IGMidaxStreamingApiClient();
-        public IgRestApiClient _igRestApiClient = new IgRestApiClient();
+        IgRestApiClient _igRestApiClient = null;
         SubscribedTableKey _igSubscribedTableKey = null;
         string _currentAccount = null;
         ClosingWaitHandle _closing = new ClosingWaitHandle();
 
-        public async void Connect(string username, string password, string apikey)
+        public async void Connect(string username, string password, string apikey, IgRestApiClient igRestApiClient)
         {
             if (String.IsNullOrEmpty(apikey) || String.IsNullOrEmpty(password) ||
                 String.IsNullOrEmpty(username))
@@ -131,6 +131,7 @@ namespace MidaxLib
                 Log.Instance.WriteEntry("Please enter API key, Password and Username", EventLogEntryType.Error);
                 return;
             }
+            _igRestApiClient = igRestApiClient;
 
             // use v1 login...
             var ar = new AuthenticationRequest();
@@ -290,11 +291,9 @@ namespace MidaxLib
 
     public class IGConnection : MarketDataConnection
     {
-        IgRestApiClient _apiRestClient = null;
-
         public IGConnection()
         {
-            _apiRestClient = new IgRestApiClient();
+            _igRestApiClient = new IgRestApiClient();
             _apiStreamingClient = new IGTradingStreamingClient();
         }
 
@@ -303,7 +302,7 @@ namespace MidaxLib
             try
             {
                 ((IGTradingStreamingClient)_apiStreamingClient).ConnectionClosed = connectionClosed;
-                _apiStreamingClient.Connect(Config.Settings["IG_USER_NAME"], Config.Settings["IG_PASSWORD"], Config.Settings["IG_KEY"]);                
+                _apiStreamingClient.Connect(Config.Settings["IG_USER_NAME"], Config.Settings["IG_PASSWORD"], Config.Settings["IG_KEY"], _igRestApiClient);                
             }
             catch (Exception ex)
             {

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Cassandra;
+using IGPublicPcl;
 using dto.endpoint.search;
 using Lightstreamer.DotNet.Client;
 
@@ -137,15 +138,16 @@ namespace MidaxLib
         Dictionary<string, List<CqlQuote>> _priceData;
         ClosingWaitHandle _closing = new ClosingWaitHandle();
         CassandraConnection _deleter = null;
-
-        public IReaderConnection Reader { get { return _reader; } }
+        IgRestApiClient _igRestApiClient = null;
         
+        public IReaderConnection Reader { get { return _reader; } }
+        public IgRestApiClient RestApiClient { get { return _igRestApiClient; } }
         public Dictionary<string, List<CqlQuote>> ExpectedIndicatorData { get { return _expectedIndicatorData; } }
         public Dictionary<string, List<CqlQuote>> ExpectedSignalData { get { return _expectedSignalData; } }
         public Dictionary<KeyValuePair<string, DateTime>, Trade> ExpectedTradeData { get { return _expectedTradeData; } }
         public Dictionary<KeyValuePair<string, DateTime>, double> ExpectedProfitData { get { return _expectedProfitData; } }
-                
-        public void Connect(string username, string password, string apiKey)
+
+        public void Connect(string username, string password, string apiKey, IgRestApiClient igRestApiClient)
         {
             if (Config.Settings.ContainsKey("PUBLISHING_START_TIME"))
                 _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
@@ -154,6 +156,7 @@ namespace MidaxLib
             if (Config.Settings.ContainsKey("SAMPLING_MS"))
                 _samplingMs = int.Parse(Config.Settings["SAMPLING_MS"]);
             _testReplayFiles.Clear();
+            _igRestApiClient = igRestApiClient;
             if (Config.Settings.ContainsKey("DELETEDB"))
             {
                 _deleteDB = true;
@@ -199,7 +202,7 @@ namespace MidaxLib
 
         public void Connect()
         {
-            Connect("A REPLAYER", "DOES NOT NEED", "A PASSWORD");
+            Connect("A REPLAYER", "DOES NOT NEED", "A PASSWORD", _igRestApiClient);
         }
 
         public virtual void Subscribe(string[] epics, IHandyTableListener tableListener)
@@ -527,7 +530,7 @@ namespace MidaxLib
         {
             try
             {
-                _apiStreamingClient.Connect("A_REPLAYER", "DOESNT_NEED_A_PWD", "NOR_A_KEY");
+                _apiStreamingClient.Connect("A_REPLAYER", "DOESNT_NEED_A_PWD", "NOR_A_KEY", _replayStreamingClient.RestApiClient);
             }
             catch (Exception ex)
             {

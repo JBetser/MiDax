@@ -19,11 +19,11 @@ namespace MidaxTrader
             Config.Settings["IG_KEY"] = "8d341413c2eae2c35bb5b47a594ef08ae18cb3b7";
             Config.Settings["IG_USER_NAME"] = "ksbitlsoftdemo";
             Config.Settings["IG_PASSWORD"] = "Kotik0483";
-            Config.Settings["DB_CONTACTPOINT"] = "192.168.1.26";
+            Config.Settings["DB_CONTACTPOINT"] = "192.168.1.25";
             var startDate = DateTime.Now;
             Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\TradingActivity\\trading_{0}_{1}_{2}.csv", startDate.Day, startDate.Month, startDate.Year);
-            Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}:{1}:{2}", 0, 0, 0);
-            Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 23, 30, 0);
+            Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}:{1}:{2}", 0, 5, 0);
+            Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 23, 55, 0);
             Config.Settings["TRADING_START_TIME"] = string.Format("{0}:{1}:{2}", 8, 0, 0);
             Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 23, 0, 0);
             Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}:{1}:{2}", 22, 45, 0);

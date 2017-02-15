@@ -472,7 +472,7 @@ namespace MidaxLib
                           "candle1_begin, candle1_end, candle2_min, candle2_max, candle2_begin, candle2_end, candle3_min, candle3_max, candle3_begin, candle3_end, " +
                           "minima, maxima, timeframe_mn, trading_time, mktdataid) values " +
                           "({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, '{22}')",
-                DB_HISTORICALDATA, "robindicator_c3", state.res, state.sup, state.sub_res, state.sub_sup, state.c1.MinValue, state.c1.MaxValue, state.c1.StartValue, state.c1.EndValue,
+                DB_HISTORICALDATA, "robindicator_c3", state.support, state.resistance, state.subSupport, state.subResistance, state.c1.MinValue, state.c1.MaxValue, state.c1.StartValue, state.c1.EndValue,
                 state.c2.MinValue, state.c2.MaxValue, state.c2.StartValue, state.c2.EndValue, state.c3.MinValue, state.c3.MaxValue, state.c3.StartValue, state.c3.EndValue,
                 JsonConvert.SerializeObject(state.all.Select(cnd => cnd.MinValue)), JsonConvert.SerializeObject(state.all.Select(cnd => cnd.MaxValue)),
                 timeframe_mn, ToUnixTimestamp(updateTime), mktdataid));
