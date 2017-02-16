@@ -440,7 +440,7 @@ namespace MidaxLib
             return marketLevels;
         }
 
-        IndicatorRobinHood.RobState IReaderConnection.GetRobinHoodState(DateTime updateTime, string mktdataid, int nb_candles, int timeframe_mn)
+        IndicatorRobinHood.RobState IReaderConnection.GetRobinHoodState(DateTime updateTime, string mktdataid, int nb_candles, int timeframe_mn, int lookbackHours)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
@@ -451,11 +451,11 @@ namespace MidaxLib
                           "candle1_begin, candle1_end, candle2_min, candle2_max, candle2_begin, candle2_end, candle3_min, candle3_max, candle3_begin, candle3_end, " +
                           "minima, maxima from historicaldata.{0}robindicator_c{1} where timeframe_mn={2} and trading_time={3} and mktdataid='{4}' ALLOW FILTERING",
                     Config.UATSourceDB ? "dummy" : "", nb_candles, timeframe_mn, ToUnixTimestamp(updateTime), mktdataid));
-                state = new IndicatorRobinHood.RobState(stateRows.First(), updateTime);
+                state = new IndicatorRobinHood.RobState(stateRows.First(), updateTime, lookbackHours);
             }
             catch
             {
-                var errorMsg = string.Format("Could not retrieve robin hood state for datetime {0}. Nb candles: {1}, Time frame: {2}mn", updateTime, nb_candles, timeframe_mn);
+                var errorMsg = string.Format("Could not retrieve robin hood state for datetime {0}. Asset: {3}, Nb candles: {1}, Time frame: {2}mn", updateTime, nb_candles, timeframe_mn, mktdataid);
                 Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Warning);
                 return null;
             }
@@ -479,7 +479,7 @@ namespace MidaxLib
             }
             catch
             {
-                var errorMsg = string.Format("Could not insert robin hood state at datetime {0}", updateTime);
+                var errorMsg = string.Format("Could not insert robin hood state at datetime {0}. Asset: {1}", updateTime, mktdataid);
                 Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Warning);
             }
         }

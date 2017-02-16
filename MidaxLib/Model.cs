@@ -11,7 +11,7 @@ namespace MidaxLib
 {
     public abstract class Model
     {
-        protected DateTime _closingTime = DateTime.MinValue;
+        protected DateTime _closingTime = DateTime.MaxValue;
         protected List<string> _tradingSignals = null;
         protected int _amount = 0;
         protected Portfolio _ptf = null;
@@ -31,7 +31,8 @@ namespace MidaxLib
 
         public virtual void Init()
         {
-            _closingTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
+            if (Config.Settings.ContainsKey("TRADING_CLOSING_TIME"))
+                _closingTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
             if (Config.Settings.ContainsKey("TRADING_SIGNAL"))
                 _tradingSignals = Config.Settings["TRADING_SIGNAL"].Split(',').ToList();
             if (Config.Settings.ContainsKey("REPLAY_POPUP"))
