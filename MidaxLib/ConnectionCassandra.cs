@@ -449,7 +449,7 @@ namespace MidaxLib
             {
                 RowSet stateRows = executeQuery(string.Format("select res, sup, sub_res, sub_sup, candle1_min, candle1_max, " +
                           "candle1_begin, candle1_end, candle2_min, candle2_max, candle2_begin, candle2_end, candle3_min, candle3_max, candle3_begin, candle3_end, " +
-                          "minima, maxima from historicaldata.{0}robindicator_c{1} where timeframe_mn={2} and trading_time={3} and mktdataid='{4}' ALLOW FILTERING",
+                          "minima, maxima, startvalues, endvalues from historicaldata.{0}robindicator_c{1} where timeframe_mn={2} and trading_time={3} and mktdataid='{4}' ALLOW FILTERING",
                     Config.UATSourceDB ? "dummy" : "", nb_candles, timeframe_mn, ToUnixTimestamp(updateTime), mktdataid));
                 state = new IndicatorRobinHood.RobState(stateRows.First(), updateTime, lookbackHours);
             }
@@ -470,11 +470,12 @@ namespace MidaxLib
             {
                 executeQuery(string.Format(DB_INSERTION + " (res, sup, sub_res, sub_sup, candle1_min, candle1_max, " +
                           "candle1_begin, candle1_end, candle2_min, candle2_max, candle2_begin, candle2_end, candle3_min, candle3_max, candle3_begin, candle3_end, " +
-                          "minima, maxima, timeframe_mn, trading_time, mktdataid) values " +
-                          "({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, '{22}')",
+                          "minima, maxima, startvalues, endvalues, timeframe_mn, trading_time, mktdataid) values " +
+                          "({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, '{24}')",
                 DB_HISTORICALDATA, "robindicator_c3", state.support, state.resistance, state.subSupport, state.subResistance, state.c1.MinValue, state.c1.MaxValue, state.c1.StartValue, state.c1.EndValue,
                 state.c2.MinValue, state.c2.MaxValue, state.c2.StartValue, state.c2.EndValue, state.c3.MinValue, state.c3.MaxValue, state.c3.StartValue, state.c3.EndValue,
                 JsonConvert.SerializeObject(state.all.Select(cnd => cnd.MinValue)), JsonConvert.SerializeObject(state.all.Select(cnd => cnd.MaxValue)),
+                JsonConvert.SerializeObject(state.all.Select(cnd => cnd.StartValue)), JsonConvert.SerializeObject(state.all.Select(cnd => cnd.EndValue)),
                 timeframe_mn, ToUnixTimestamp(updateTime), mktdataid));
             }
             catch

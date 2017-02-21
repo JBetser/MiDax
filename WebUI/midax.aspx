@@ -298,6 +298,7 @@
                <option value="LVLPivot#LVLS1#LVLR1">Levels Pivot/S1/R1</option>
                <option value="NearestLevel">Nearest Level</option>
                <option value="EMA_10#EMA_30#EMA_90">EMA 10mn/30mn/1hr30</option>
+               <option value="EMA_900">EMA 15hr</option>
                <option value="RSI_1_14#RSI_1_28">RSI 1mn 14/28</option>
                <option value="Trend_30_14#Trend_60_14">Trend 7mn/14mn</option>
                <option value="Water_1_15_depth0#Water_3_15_depth0">Water15 d0 1mn/3mn</option>
@@ -307,7 +308,7 @@
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="Trend_30_6_WMVol_10">Vol Trend 3mn</option>
-               <option value="RobSup_60_20#RobRes_60_20#RobSubSup_60_13#RobSubRes_60_13#EMA_900">RS 1h 20/13</option>
+               <option value="RobSup_60_20#RobRes_60_20#RobSubSup_60_13#RobSubRes_60_13#SMA_900">RS 1h 20/13</option>
                <option value="Rob_60_20_13">Rob 1h 20/13</option>
                <!--option value="VWMVol_10">VWM Vol 10mn</!--option>
                <option value="VWMVol_90">VWM Vol 1h30</option>    

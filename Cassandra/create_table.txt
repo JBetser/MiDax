@@ -137,6 +137,8 @@ CREATE TABLE historicaldata.robindicator_c3 (
   candle3_end decimal,
   minima list<decimal>,
   maxima list<decimal>,
+  startvalues list<decimal>,
+  endvalues list<decimal>,
   PRIMARY KEY (mktdataid, timeframe_mn, trading_time)
 )
 WITH CLUSTERING ORDER BY (timeframe_mn DESC, trading_time DESC);
@@ -165,6 +167,8 @@ CREATE TABLE historicaldata.dummyrobindicator_c3 (
   candle3_end decimal,
   minima list<decimal>,
   maxima list<decimal>,
+  startvalues list<decimal>,
+  endvalues list<decimal>,
   PRIMARY KEY (mktdataid, timeframe_mn, trading_time)
 )
 WITH CLUSTERING ORDER BY (timeframe_mn DESC, trading_time DESC);
