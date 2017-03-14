@@ -33,7 +33,7 @@ namespace MidaxTrader
             Config.Settings["TRADING_CURRENCY"] = "GBP";
 
             var models = new List<Model>();
-            models.Add(new ModelALaCon(new MarketData("GBPUSD:CS.D.GBPUSD.TODAY.IP")));
+            models.Add(new ModelRobinHood(new MarketData("GBPUSD:CS.D.GBPUSD.TODAY.IP")));
             Console.WriteLine("Starting signals...");
             var trader = new Trader(models, onShutdown);
             trader.Init(Config.GetNow);            

@@ -13,7 +13,7 @@ namespace MidaxTester
         public static void Run(List<DateTime> dates, bool generate = false, bool generate_from_db = false, bool publish_to_db = false, bool use_uat_db = false, bool fullday = false)
         {
             TestEngine testEngine = new TestEngine("heuristic", dates, generate, generate_from_db, publish_to_db, use_uat_db, fullday);
-            testEngine.Settings["TRADING_SIGNAL"] = "FXMole_1_14_CS.D.EURUSD.TODAY.IP,FXMole_1_14_CS.D.GBPUSD.TODAY.IP,FXMole_1_14_CS.D.USDJPY.TODAY.IP,FXMole_1_14_CS.D.AUDUSD.TODAY.IP";
+            testEngine.Settings["TRADING_SIGNAL"] = "Rob_1_48_20_15_IX.D.DAX.DAILY.IP,Rob_1_48_20_15_CS.D.EURUSD.TODAY.IP,Rob_1_48_20_15_CS.D.GBPUSD.TODAY.IP,Rob_1_48_20_15_CS.D.USDJPY.TODAY.IP,Rob_1_48_20_15_CS.D.AUDUSD.TODAY.IP";
             testEngine.Settings["TIME_GMT"] = "1";
             testEngine.Settings["TIME_DECAY_FACTOR"] = "3";
             testEngine.Settings["ASSUMPTION_TREND"] = "BEAR";

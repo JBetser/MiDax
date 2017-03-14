@@ -103,7 +103,7 @@ namespace MidaxLib
             if (!_isReady)
                 return;
             _values.Add(updateTime, value);
-            if (updateTime > _closePositionTime && !_allPositionsClosed)
+            if (_eodClosePositions && updateTime > _closePositionTime && !_allPositionsClosed)
             {
                 Portfolio.Instance.CloseAllPositions(updateTime);
                 _allPositionsClosed = true;

@@ -82,7 +82,7 @@
       <Value Profile="(Default)">GBP</Value>
     </Setting>
     <Setting Name="TRADING_SIGNAL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Rob_60_20_15_13_IX.D.DAX.DAILY.IP</Value>
+      <Value Profile="(Default)">Rob_1_48_20_15_IX.D.DAX.DAILY.IP,Rob_1_48_20_15_CS.D.EURUSD.TODAY.IP,Rob_1_48_20_15_CS.D.GBPUSD.TODAY.IP,Rob_1_48_20_15_CS.D.USDJPY.TODAY.IP,Rob_1_48_20_15_CS.D.AUDUSD.TODAY.IP</Value>
     </Setting>
     <Setting Name="INDEX_CAC" Type="System.String" Scope="Application">
       <Value Profile="(Default)">CAC:IX.D.CAC.DAILY.IP</Value>

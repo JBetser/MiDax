@@ -177,8 +177,60 @@
                         cd = new Date(newDate);
                     } while (cd.getDay() == 6 || cd.getDay() == 0);
                 }
-                while (currentDate <= endDate) {
-                    var genericParams = { "begin": formatDate(currentDate) + " " + $('#timestart option:selected').text(), "end": formatDate(currentDate) + " " + $('#timestop option:selected').text() };
+                var isDaily = $('#daily-check').is(":checked");
+                if (isDaily) {
+                    while (currentDate <= endDate) {
+                        var genericParams = { "begin": formatDate(currentDate) + " " + $('#timestart option:selected').text(), "end": formatDate(currentDate) + " " + $('#timestop option:selected').text() };
+
+                        var equity = $("#equity").val();
+                        var equityParams = $.extend({ "stockid": equity }, genericParams);
+
+                        var requests = { "GetStockData0": equityParams };
+                        var noStock = false;
+                        if (window.document.getElementById("indicator").selectedIndex > 0) {
+                            var indicatorIds = $("#indicator").val().split('#');
+                            var idx = 0;
+                            for (var id in indicatorIds) {
+                                if (indicatorIds[id].indexOf("Volume_") != -1 || indicatorIds[id].indexOf("RSI_") != -1 ||
+                                    indicatorIds[id].indexOf("Cor_") != -1 || indicatorIds[id].indexOf("Trend_") != -1 || indicatorIds[id].indexOf("WMVol_") != -1)
+                                    noStock = true;
+                                var indicatorParams = $.extend({ "indicatorid": indicatorIds[id] + "_" + $("#equity").val() }, genericParams);
+                                if (indicatorIds[id].startsWith("Low") || indicatorIds[id].startsWith("High") || indicatorIds[id].startsWith("Close")) {
+                                    var prevDate = new Date((new Date(currentDate)).setDate(currentDate.getDate() - 1));
+                                    indicatorParams["begin"] = formatDate(prevDate) + " " + $('#timestart option:selected').text();
+                                    indicatorParams["end"] = formatDate(prevDate) + " " + $('#timestop option:selected').text();
+                                }
+                                var key = "GetIndicatorData";
+                                key = key.concat(idx.toString());
+                                var newDict = {};
+                                newDict[key] = indicatorParams;
+                                $.extend(requests, newDict);
+                                idx++;
+                            }
+                        }
+                        if (noStock)
+                            delete requests["GetStockData0"];
+                        if (window.document.getElementById("signal").selectedIndex > 0) {
+                            var signalParams = $.extend({ "signalid": $("#signal").val() + "_" + $("#equity").val() }, genericParams);
+                            $.extend(requests, { "GetSignalData0": signalParams });
+                        }
+
+                        MidaxAPI(requests, sync);
+
+                        /*
+                        if (equity.startsWith("MARKIT:")) {
+                            equity = equity.substring(7);
+                            var markitChart = new Markit.InteractiveChartApi(equity, 14);
+                        }*/
+
+                        do {
+                            var newDate = currentDate.setDate(currentDate.getDate() + 1);
+                            currentDate = new Date(newDate);
+                        } while (currentDate.getDay() == 6 || currentDate.getDay() == 0);
+                    }
+                }
+                else {
+                    var genericParams = { "begin": formatDate(currentDate) + " " + $('#timestart option:selected').text(), "end": formatDate(endDate) + " " + $('#timestop option:selected').text() };
 
                     var equity = $("#equity").val();
                     var equityParams = $.extend({ "stockid": equity }, genericParams);
@@ -214,18 +266,7 @@
                     }
 
                     MidaxAPI(requests, sync);
-                    
-                    /*
-                    if (equity.startsWith("MARKIT:")) {
-                        equity = equity.substring(7);
-                        var markitChart = new Markit.InteractiveChartApi(equity, 14);
-                    }*/
-
-                    do {
-                        var newDate = currentDate.setDate(currentDate.getDate() + 1);
-                        currentDate = new Date(newDate);
-                    } while (currentDate.getDay() == 6 || currentDate.getDay() == 0);
-                }                    
+                }
             });
         });
     </script>
@@ -308,8 +349,7 @@
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="Trend_30_6_WMVol_10">Vol Trend 3mn</option>
-               <option value="RobSup_60_20#RobRes_60_20#RobSubSup_60_13#RobSubRes_60_13#SMA_900">RS 1h 20/13</option>
-               <option value="Rob_60_20_13">Rob 1h 20/13</option>
+               <option value="RobSup_60_48#RobRes_60_48#RobSubSup_60_15#RobSubRes_60_15#SMA_900">RS 1h 48/20/15</option>
                <!--option value="VWMVol_10">VWM Vol 10mn</!--option>
                <option value="VWMVol_90">VWM Vol 1h30</option>    
                <option value="Volume_10">Volumes 10mn</option>  
@@ -322,7 +362,7 @@
                <option value="MacD_30_90">MacD Cascade 30mn/1h30</option>
                <option value="FXMole_1_14">FX Mole 14 1mn</option>
                <option value="ANN_FX_5_2_1">ANN FX</option>
-               <option value="Rob_60_20_15_3">Strat RS01</option>
+               <option value="Rob_1_48_20_15">Strat RS01</option>
              </select>          
 
              <button type="button" id="GO" class="btn btn-primary">
@@ -331,6 +371,9 @@
                 <button type="button" id="Refresh" class="btn btn-danger btn-sm" onclick="document.location.reload();" style="float:right">
                     <span class="glyphicon glyphicon-refresh"></span>Clear!</button>
             </div>
+               <div class="checkbox">
+                  <label><input type="checkbox" id="daily-check" value="">Daily breakdown</label>
+               </div>
            </div>
         </div>  
       </div>

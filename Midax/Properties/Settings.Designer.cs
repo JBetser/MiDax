@@ -190,7 +190,9 @@ namespace Midax.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Rob_60_20_15_13_IX.D.DAX.DAILY.IP")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Rob_1_48_20_15_IX.D.DAX.DAILY.IP,Rob_1_48_20_15_CS.D.EURUSD.TODAY.IP,Rob_1_48_20_" +
+            "15_CS.D.GBPUSD.TODAY.IP,Rob_1_48_20_15_CS.D.USDJPY.TODAY.IP,Rob_1_48_20_15_CS.D." +
+            "AUDUSD.TODAY.IP")]
         public string TRADING_SIGNAL {
             get {
                 return ((string)(this["TRADING_SIGNAL"]));
