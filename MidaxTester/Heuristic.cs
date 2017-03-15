@@ -67,8 +67,9 @@ namespace MidaxTester
             models.Add(robinhood_gbpusd);
             models.Add(robinhood_eurusd);
             models.Add(robinhood_usdjpy);
-            models.Add(robinhood_audusd);*/
-            models.Add(robinhood_dax);
+            models.Add(robinhood_audusd);
+            models.Add(robinhood_dax);*/
+            models.Add(robinhood_eurusd);
             testEngine.Run(models);          
         }
     }
