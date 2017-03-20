@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ namespace MidaxLib
 {
     public class Portfolio : IHandyTableListener
     {
-        Dictionary<string, Position> _positions = new Dictionary<string, Position>();
+        ConcurrentDictionary<string, Position> _positions = new ConcurrentDictionary<string, Position>();
         List<Trade> _trades = new List<Trade>();
         IAbstractStreamingClient _igStreamApiClient = null;
         IGPublicPcl.IgRestApiClient _igRestApiClient = null;
@@ -18,7 +19,7 @@ namespace MidaxLib
         Dictionary<string, TradingSet> _tradingSets = new Dictionary<string, TradingSet>();
 
         public List<Trade> Trades { get { return _trades; } }
-        public Dictionary<string, Position> Positions { get { return _positions; } }
+        public IDictionary<string, Position> Positions { get { return _positions; } }
 
         Portfolio(IAbstractStreamingClient client, IGPublicPcl.IgRestApiClient restApiClient)
         {
@@ -204,7 +205,7 @@ namespace MidaxLib
                 }
             }
             if (!_positions.ContainsKey(epic))
-                _positions.Add(epic, new Position(epic));
+                _positions[epic] = new Position(epic);
             return _positions[epic];
         }
 

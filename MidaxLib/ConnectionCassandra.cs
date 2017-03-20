@@ -179,7 +179,7 @@ namespace MidaxLib
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            executeQuery(string.Format(DB_INSERTION + "(mktdataid, trading_time,  name,  bid,  offer,  volume) values ('{2}', {3}, '{4}', {5}, {6}, {7})",
+            executeAsyncQuery(string.Format(DB_INSERTION + "(mktdataid, trading_time,  name,  bid,  offer,  volume) values ('{2}', {3}, '{4}', {5}, {6}, {7})",
                 DB_HISTORICALDATA, DATATYPE_STOCK, mktData.Id, ToUnixTimestamp(updateTime), mktData.Name, price.Bid, price.Offer, price.Volume));
         }
 
@@ -187,7 +187,7 @@ namespace MidaxLib
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            executeQuery(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
+            executeAsyncQuery(string.Format(DB_INSERTION + "(indicatorid, trading_time, value) values ('{2}', {3}, {4})",
                 DB_HISTORICALDATA, DATATYPE_INDICATOR, indicator.Id, ToUnixTimestamp(updateTime), value));
         }
 
@@ -196,7 +196,7 @@ namespace MidaxLib
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             string tradeRef = signal.Trade == null ? null : " " + signal.Trade.Reference;
-            executeQuery(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value, mktdatavalue) values ('{2}', {3}, '{4}', {5}, {6})",
+            executeAsyncQuery(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value, mktdatavalue) values ('{2}', {3}, '{4}', {5}, {6})",
                 DB_HISTORICALDATA, DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), tradeRef, Convert.ToInt32(code), mktdatavalue));
         }
 
@@ -206,7 +206,7 @@ namespace MidaxLib
                 throw new ApplicationException("Cannot insert a trade without booking information");
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            executeQuery(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, mktdataid, direction, size, price, traderef) values ('{2}', {3}, {4}, '{5}', {6}, {7}, {8}, '{9}')",
+            executeAsyncQuery(string.Format(DB_INSERTION + "(tradeid, trading_time, confirmation_time, mktdataid, direction, size, price, traderef) values ('{2}', {3}, {4}, '{5}', {6}, {7}, {8}, '{9}')",
                 DB_BUSINESSDATA, DATATYPE_TRADE, trade.Id, ToUnixTimestamp(trade.TradingTime), ToUnixTimestamp(trade.ConfirmationTime), trade.Epic,
                 Convert.ToInt32(trade.Direction), trade.Size, trade.Price, trade.Reference));
         }
@@ -218,29 +218,29 @@ namespace MidaxLib
 
         public void DeleteMktData(DateTime updateTime, string mktdataid)
         {
-            executeQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_HISTORICALDATA, DATATYPE_STOCK, mktdataid, ToUnixTimestamp(updateTime)));
+            executeAsyncQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_HISTORICALDATA, DATATYPE_STOCK, mktdataid, ToUnixTimestamp(updateTime)));
         }
 
         public void DeleteIndicator(DateTime updateTime, string mktdataid)
         {
-            executeQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_HISTORICALDATA, DATATYPE_INDICATOR, mktdataid, ToUnixTimestamp(updateTime)));
+            executeAsyncQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_HISTORICALDATA, DATATYPE_INDICATOR, mktdataid, ToUnixTimestamp(updateTime)));
         }
 
         public void DeleteSignal(DateTime updateTime, string mktdataid)
         {
-            executeQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_HISTORICALDATA, DATATYPE_SIGNAL, mktdataid, ToUnixTimestamp(updateTime)));
+            executeAsyncQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_HISTORICALDATA, DATATYPE_SIGNAL, mktdataid, ToUnixTimestamp(updateTime)));
         }
 
         public void DeleteTrade(DateTime updateTime, string mktdataid)
         {
-            executeQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_BUSINESSDATA, DATATYPE_TRADE, mktdataid, ToUnixTimestamp(updateTime)));
+            executeAsyncQuery(string.Format("delete from {0}data.{1} where {1}id='{2}' and trading_time={3}", DB_BUSINESSDATA, DATATYPE_TRADE, mktdataid, ToUnixTimestamp(updateTime)));
         }
 
         public override void Insert(DateTime insertTime, NeuralNetworkForCalibration ann)
         {
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            executeQuery(string.Format("insert into staticdata.anncalibration(annid, mktdataid, version, insert_time, weights, error, learning_rate) values ('{0}', '{1}', {2}, {3}, {4}, {5}, {6})",
+            executeAsyncQuery(string.Format("insert into staticdata.anncalibration(annid, mktdataid, version, insert_time, weights, error, learning_rate) values ('{0}', '{1}', {2}, {3}, {4}, {5}, {6})",
                 ann.AnnId, ann.StockId, ann.Version, ToUnixTimestamp(insertTime), JsonConvert.SerializeObject(ann.Weights), ann.Error, ann.LearningRatePct));
         }
 
@@ -468,7 +468,7 @@ namespace MidaxLib
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             try
             {
-                executeQuery(string.Format(DB_INSERTION + " (res, sup, sub_res, sub_sup, candle1_min, candle1_max, " +
+                executeAsyncQuery(string.Format(DB_INSERTION + " (res, sup, sub_res, sub_sup, candle1_min, candle1_max, " +
                           "candle1_begin, candle1_end, candle2_min, candle2_max, candle2_begin, candle2_end, candle3_min, candle3_max, candle3_begin, candle3_end, " +
                           "minima, maxima, startvalues, endvalues, timeframe_mn, trading_time, mktdataid) values " +
                           "({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, '{24}')",
@@ -501,6 +501,19 @@ namespace MidaxLib
                 Log.Instance.WriteEntry("The following query: " + query + " failed with the following exception: " + exc.Message + ". source: " + exc.Source + ". Helplink: " + exc.HelpLink + ". Stack: " + exc.StackTrace + ". Infos: " + exc.ToString(), EventLogEntryType.Error);
             }
             return null;
+        }
+
+        void executeAsyncQuery(string query)
+        {
+            try
+            {
+                var statement = new SimpleStatement(query);
+                _session.ExecuteAsync(statement);
+            }
+            catch (Exception exc)
+            {
+                Log.Instance.WriteEntry("The following query: " + query + " failed with the following exception: " + exc.Message + ". source: " + exc.Source + ". Helplink: " + exc.HelpLink + ". Stack: " + exc.StackTrace + ". Infos: " + exc.ToString(), EventLogEntryType.Error);
+            }
         }
 
     }

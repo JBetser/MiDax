@@ -98,6 +98,8 @@ namespace MidaxLib
             {
                 _refCount = 0;
                 _mktDataListener.StopListening();
+                foreach (MarketData mktData in _mktDataListener.MarketData)
+                    mktData.Ready = false;
                 Portfolio.Instance.Unsubscribe();
                 PublisherConnection.Instance.Close();
             }

@@ -56,20 +56,19 @@ namespace MidaxTester
             var robinhood_audusd = new ModelRobinHood(audusd);
             var robinhood_dax = new ModelRobinHood(dax);
             /*
-            models.Add(macD_10_30_90_gbpusd);
+            models.Add(macD_10_30_90_gbpusd);*/
             models.Add(macD_10_30_90_eurusd);
-            models.Add(macD_10_30_90_usdjpy);
+            /*models.Add(macD_10_30_90_usdjpy);
             models.Add(macD_10_30_90_audusd);
-            models.Add(fxmole_gbpusd);
+            models.Add(fxmole_gbpusd);*/
             models.Add(fxmole_eurusd);
-            models.Add(fxmole_usdjpy);
+            /*models.Add(fxmole_usdjpy);
             models.Add(fxmole_audusd);
-            models.Add(robinhood_gbpusd);
+            models.Add(robinhood_gbpusd);*/
             models.Add(robinhood_eurusd);
-            models.Add(robinhood_usdjpy);
+           /* models.Add(robinhood_usdjpy);
             models.Add(robinhood_audusd);
             models.Add(robinhood_dax);*/
-            models.Add(robinhood_eurusd);
             testEngine.Run(models);          
         }
     }

@@ -178,6 +178,7 @@
                     } while (cd.getDay() == 6 || cd.getDay() == 0);
                 }
                 var isDaily = $('#daily-check').is(":checked");
+                IS_LIVE = $('#live-check').is(":checked");
                 if (isDaily) {
                     while (currentDate <= endDate) {
                         var genericParams = { "begin": formatDate(currentDate) + " " + $('#timestart option:selected').text(), "end": formatDate(currentDate) + " " + $('#timestop option:selected').text() };
@@ -349,7 +350,7 @@
                <option value="WMVol_10">WM Vol 10mn</option>
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="Trend_30_6_WMVol_10">Vol Trend 3mn</option>
-               <option value="RobSup_60_48#RobRes_60_48#RobSubSup_60_15#RobSubRes_60_15#SMA_900">RS 1h 48/20/15</option>
+               <option value="RobSup_60_48#RobRes_60_48#RobSubSup_60_15#RobSubRes_60_15#SMA_1200">RS 1h 48/20/15</option>
                <!--option value="VWMVol_10">VWM Vol 10mn</!--option>
                <option value="VWMVol_90">VWM Vol 1h30</option>    
                <option value="Volume_10">Volumes 10mn</option>  
@@ -370,11 +371,14 @@
             <div>
                 <button type="button" id="Refresh" class="btn btn-danger btn-sm" onclick="document.location.reload();" style="float:right">
                     <span class="glyphicon glyphicon-refresh"></span>Clear!</button>
-            </div>
-               <div class="checkbox">
-                  <label><input type="checkbox" id="daily-check" value="">Daily breakdown</label>
-               </div>
+            </div>               
            </div>
+           <div class="checkbox">
+              <label style="width: 100px"><input type="checkbox" id="daily-check" value="">Daily breakdown</label>               
+           </div>
+            <div class="checkbox">
+            <label style="width: 100px"><input type="checkbox" id="live-check" value="">Live</label>
+                </div>  
         </div>  
       </div>
 

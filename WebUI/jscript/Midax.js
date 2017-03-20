@@ -1,5 +1,7 @@
 var ASSUMPTION_TREND = "";
-var ALWAYS_TRADING = false;
+var ALWAYS_TRADING = true;
+var REMOVE_DUPLICATES = true;
+var IS_LIVE = false;
 
 var monthNames = [
   "Jan", "Feb", "Mar",
@@ -65,16 +67,8 @@ function processResponses(jsonData) {
     for (var marketData in jsonData) {
         jsonData[marketData].response.forEach(function (d) {
             d.t = new Date(d.t);
-            if (!keyValueMap[d.n])
-                keyValueMap[d.n] = [];
             if (d.n.startsWith("Low") || d.n.startsWith("High") || d.n.startsWith("Close"))
                 d.t.setDate(d.t.getDate() + 1);
-            keyValueMap[d.n].push({
-                t: d.t,
-                b: d.b,
-                o: d.o,
-                v: d.v
-            });
         });
         if (marketData.lastIndexOf("GetSignalData", 0) === 0) {
             if (profit == null)
@@ -93,6 +87,10 @@ function processResponses(jsonData) {
                         sellValue = d.b;
                     }
                 });
+                if (sellValue == 0)
+                    sellValue = buyValue + 200;
+                if (buyValue == 0)
+                    buyValue = sellValue - 200;
                 if (ASSUMPTION_TREND == "BEAR") {
                     var buyFirst = false;
                     do {
@@ -121,7 +119,20 @@ function processResponses(jsonData) {
                     else
                         nbSell++;
                 });
-                if (nbBuy != nbSell) {
+                var quoteKey = "GetStockData0";
+                var lastQuoteTime = new Date(jsonData[quoteKey].response[0].t);
+                if ((nbBuy > 0 || nbSell > 0) && IS_LIVE) {
+                    var val = jsonData[marketData].response[0].b == buyValue ? sellValue : buyValue;
+                    jsonData[marketData].response.unshift({
+                        t: jsonData[quoteKey].response[0].t,
+                        b: val,
+                        o: jsonData[quoteKey].response[0].o,
+                        v: jsonData[quoteKey].response[0].v,
+                        n: jsonData[marketData].response[0].n,
+                        s: jsonData[quoteKey].response[0].s
+                    });
+                }
+                else if (nbBuy != nbSell) {
                     if (nbBuy > nbSell) {
                         var buyLast = false;
                         do {
@@ -147,11 +158,34 @@ function processResponses(jsonData) {
                         } while (sellLast && nbBuy != nbSell);
                     }
                 }
+                if (REMOVE_DUPLICATES) {
+                    var signals = [];
+                    var idxSignal = 0;
+                    var lastSignal = null;
+                    nbBuy = 0;
+                    nbSell = 0;
+                    jsonData[marketData].response.slice().reverse().forEach(function (d) {
+                        var skip = false;
+                        if (idxSignal > 0 && d.b == lastSignal.b && REMOVE_DUPLICATES)
+                            skip = true;
+                        if (!skip) {
+                            signals.unshift(d);
+                            if (d.b == buyValue)
+                                nbBuy++;
+                            else
+                                nbSell++;
+                        }
+                        lastSignal = d;
+                        idxSignal++;
+                    });
+                    jsonData[marketData].response = signals;
+                }
                 if (nbBuy == nbSell || ASSUMPTION_TREND == "") {
                     var signalProfit = 0;
                     var idxSignal = 0;
                     jsonData[marketData].response.forEach(function (d) {
-                        var coeff = ((idxSignal > 0) && (idxSignal < nbBuy + nbSell - 1) && ASSUMPTION_TREND == "" && ALWAYS_TRADING) ? 2.0 : 1.0;
+                        var addExtra = IS_LIVE ? 0 : -1;
+                        var coeff = ((idxSignal > 0) && (idxSignal < nbBuy + nbSell + addExtra) && ASSUMPTION_TREND == "" && ALWAYS_TRADING) ? 2.0 : 1.0;
                         signalProfit += d.o * coeff * (d.b == buyValue ? -1 : 1);
                         idxSignal++;
                     });
@@ -162,6 +196,16 @@ function processResponses(jsonData) {
                     profit = 1000000;
             }
         }
+        jsonData[marketData].response.forEach(function (d) {
+            if (!keyValueMap[d.n])
+                keyValueMap[d.n] = [];
+            keyValueMap[d.n].push({
+                t: d.t,
+                b: d.b,
+                o: d.o,
+                v: d.v
+            });
+        });
     }
 
     var line = d3.svg.line()
