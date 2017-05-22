@@ -67,7 +67,7 @@ namespace MidaxLib
                 if (time >= _closingTime)
                 {
                     signal.Trade.Price = stockValue.Offer;
-                    _ptf.ClosePosition(signal.Trade, time, null, null, signal);
+                    _ptf.ClosePosition(signal.Trade, time, null, null);
                     string closeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
                     Log.Instance.WriteEntry(time + closeRef + " Signal close " + signal.Id + ": BUY " + signal.TradingAsset.Id + " " + stockValue.Bid, EventLogEntryType.Information);
                     return false;
@@ -103,7 +103,7 @@ namespace MidaxLib
                 if (time >= _closingTime)
                 {
                     signal.Trade.Price = stockValue.Bid;
-                    _ptf.ClosePosition(signal.Trade, time, null, null, signal);
+                    _ptf.ClosePosition(signal.Trade, time);
                     string closeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
                     Log.Instance.WriteEntry(time + closeRef + " Signal close " + signal.Id + ": SELL " + signal.TradingAsset.Id + " " + stockValue.Offer, EventLogEntryType.Information);
                     return false;

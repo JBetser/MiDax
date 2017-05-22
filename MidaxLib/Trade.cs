@@ -79,7 +79,8 @@ namespace MidaxLib
 
         public void Publish()
         {
-            PublisherConnection.Instance.Insert(this);
+            if (!_reference.StartsWith("RECOVER"))
+                PublisherConnection.Instance.Insert(this);
         }
 
         public void OnRejected(DateTime cancelTime, decimal stockValue, bool openPosition)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Lightstreamer.DotNet.Client;
 
@@ -83,7 +84,7 @@ namespace MidaxLib
             }
         }
 
-        public void ClosePosition(Trade trade, DateTime closing_time, TradeBookedEvent onTradeBooked = null, TradeBookedEvent onBookingFailed = null, Signal signal = null)
+        public void ClosePosition(Trade trade, DateTime closing_time, TradeBookedEvent onTradeBooked = null, TradeBookedEvent onBookingFailed = null)
         {
             if (trade == null)
                 return;
@@ -91,25 +92,25 @@ namespace MidaxLib
                 onTradeBooked = new TradeBookedEvent(OnTradeBooked);
             if (onBookingFailed == null)
                 onBookingFailed = new TradeBookedEvent(OnBookingFailed);
-            closePosition(new Trade(trade, true, closing_time), closing_time, onTradeBooked, onBookingFailed, 0, signal);
+            closePosition(new Trade(trade, true, closing_time), closing_time, onTradeBooked, onBookingFailed);
         }
 
-        public void ClosePosition(Position pos, DateTime closing_time, TradeBookedEvent onTradeBooked = null, TradeBookedEvent onBookingFailed = null, decimal stockValue = 0m, Signal signal = null)
+        public void ClosePosition(Position pos, DateTime closing_time, TradeBookedEvent onTradeBooked = null, TradeBookedEvent onBookingFailed = null, decimal stockValue = 0m)
         {
             if (onTradeBooked == null)
                 onTradeBooked = new TradeBookedEvent(OnTradeBooked);
             if (onBookingFailed == null)
                 onBookingFailed = new TradeBookedEvent(OnBookingFailed);
-            closePosition(pos, closing_time, onTradeBooked, onBookingFailed, 0, stockValue, signal);
+            closePosition(pos, closing_time, onTradeBooked, onBookingFailed, 0, stockValue);
         }
 
-        public void CloseAllPositions(DateTime time, string mktdataid = "", decimal stockValue = 0m, Signal signal = null)
+        public void CloseAllPositions(DateTime time, string mktdataid = "", decimal stockValue = 0m)
         {
             var addms = 1;
             foreach (var position in Positions)
             {
                 if (mktdataid == "" || mktdataid == position.Value.Epic)
-                    closePosition(position.Value, time.AddMilliseconds(addms++), new TradeBookedEvent(OnTradeBooked), new TradeBookedEvent(OnBookingFailed), 0, stockValue, signal);
+                    closePosition(position.Value, time.AddMilliseconds(addms++), new TradeBookedEvent(OnTradeBooked), new TradeBookedEvent(OnBookingFailed), 0, stockValue);
             }
             foreach (var tradingSet in _tradingSets)
                 CloseTradingSet(tradingSet.Value, time);
@@ -123,31 +124,19 @@ namespace MidaxLib
                 closePosition(pos, time.AddMilliseconds(addms++), new TradeBookedEvent(set.OnTradeBooked), new TradeBookedEvent(set.OnBookingFailed), idxPos++, stockValue);
         }
 
-        public void closePosition(Position pos, DateTime time, TradeBookedEvent onTradeBooked, TradeBookedEvent onBookingFailed, int idxPlaceHolder = 0, decimal stockValue = 0m, Signal signal = null)
+        public void closePosition(Position pos, DateTime time, TradeBookedEvent onTradeBooked, TradeBookedEvent onBookingFailed, int idxPlaceHolder = 0, decimal stockValue = 0m)
         {
             if (pos.Quantity != 0)
             {
                 var positionClose = new Trade(time, pos.Epic, pos.Quantity > 0 ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY, Math.Abs(pos.Quantity), stockValue, idxPlaceHolder);
-                closePosition(positionClose, time, onTradeBooked, onBookingFailed, idxPlaceHolder, signal);
+                closePosition(positionClose, time, onTradeBooked, onBookingFailed);
             }
         }
 
-        void closePosition(Trade trade, DateTime time, TradeBookedEvent onTradeBooked, TradeBookedEvent onBookingFailed, int idxPlaceHolder = 0, Signal signal = null)
+        void closePosition(Trade trade, DateTime time, TradeBookedEvent onTradeBooked, TradeBookedEvent onBookingFailed)
         {
-            foreach (var pos in _positions.Values){
-                if (pos.AwaitingTrade)
-                {
-                    Log.Instance.WriteEntry(string.Format("Cannot close a position as deal is already pending, Epic: {0}, Size: {1}, Value: {2}. Waiting for position {3} to be updated", trade.Epic, trade.Size, trade.Price, pos.Epic), System.Diagnostics.EventLogEntryType.Warning);
-                    return;
-                }
-            }
             _igStreamApiClient.ClosePosition(trade, time, onTradeBooked, onBookingFailed);
             Log.Instance.WriteEntry(string.Format("Forcefully closed a position, Epic: {0}, Size: {1}, Value: {2}", trade.Epic, trade.Size, trade.Price), System.Diagnostics.EventLogEntryType.Warning);
-            if (signal != null)
-            {
-                signal.Trade = trade;
-                PublisherConnection.Instance.Insert(time, signal, trade.Direction, trade.Price);
-            }
         }
 
         public void Unsubscribe()
@@ -191,22 +180,27 @@ namespace MidaxLib
             return false;
         }
 
-        public Position GetPosition(string epic)
+        public bool IsWaiting(string epic)
         {
             foreach (var pos in _positions.Values)
             {
                 if (pos.Epic == epic)
                 {
                     if (pos.AwaitingTrade)
-                    {
-                        Log.Instance.WriteEntry(string.Format("Cannot book a new trade as a deal is already pending, Epic: {0}. Waiting for position to be updated", epic), System.Diagnostics.EventLogEntryType.Warning);
-                        return null;
-                    }
+                        return true;
                 }
             }
-            if (!_positions.ContainsKey(epic))
-                _positions[epic] = new Position(epic);
-            return _positions[epic];
+            return false;
+        }
+
+        public Position GetPosition(string epic)
+        {
+            lock (_positions)
+            {
+                if (!_positions.ContainsKey(epic))
+                    _positions[epic] = new Position(epic);
+                return _positions[epic];
+            }
         }
 
         public TradingSet GetTradingSet(Model model)
@@ -333,7 +327,6 @@ namespace MidaxLib
         {
             Portfolio.Instance.Trades.Add(newTrade);
             _signal.Trade = newTrade;
-            PublisherConnection.Instance.Insert(newTrade.TradingTime, _signal, newTrade.Direction, newTrade.Price);
         }
     }
 }

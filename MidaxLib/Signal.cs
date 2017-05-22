@@ -192,10 +192,14 @@ namespace MidaxLib
             set { _lastTrade = value; }
         }
 
+        public virtual void Reset(DateTime updateTime)
+        {
+        }
+
         protected bool _onHold(Signal signal, DateTime updateTime, Price value)
         {
             // hold your position; do nothing
-            return true;
+            return false;
         }
 
         protected void OnUpdate(MarketData mktData, DateTime updateTime, Price value)

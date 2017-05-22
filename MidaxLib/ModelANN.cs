@@ -67,9 +67,9 @@ namespace MidaxLib
             _annWeights = StaticDataConnection.Instance.GetAnnWeights(_annId, _index.Id, lastversion);
             var signalType = Type.GetType("MidaxLib.SignalANN" + _annId);
             List<Indicator> annIndicators = new List<Indicator>();
-            //annIndicators.Add(_wma_verylow);
+            annIndicators.Add(_wma_verylow);
             annIndicators.Add(_wma_low);
-            //annIndicators.Add(_wma_mid);
+            annIndicators.Add(_wma_mid);
             annIndicators.Add(_wma_high);
             annIndicators.Add(rsiShort);
             annIndicators.Add(rsiLong);

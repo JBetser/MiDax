@@ -193,6 +193,13 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal mktdatavalue)
         {
+            if (Config.TradingEnabled)
+            {
+                if (signal.Trade == null)
+                    return;
+                if (signal.Trade.Reference == "")
+                    return;
+            }
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             string tradeRef = signal.Trade == null ? null : " " + signal.Trade.Reference;

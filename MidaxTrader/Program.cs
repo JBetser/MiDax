@@ -22,18 +22,18 @@ namespace MidaxTrader
             Config.Settings["DB_CONTACTPOINT"] = "192.168.1.25";
             var startDate = DateTime.Now;
             Config.Settings["PUBLISHING_CSV"] = string.Format("..\\..\\..\\TradingActivity\\trading_{0}_{1}_{2}.csv", startDate.Day, startDate.Month, startDate.Year);
-            Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}:{1}:{2}", 0, 5, 0);
-            Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 23, 55, 0);
-            Config.Settings["TRADING_START_TIME"] = string.Format("{0}:{1}:{2}", 8, 0, 0);
-            Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 23, 0, 0);
-            Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}:{1}:{2}", 22, 45, 0);
+            Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}:{1}:{2}", 0, 0, 50);
+            Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 23, 59, 59);
+            Config.Settings["TRADING_START_TIME"] = string.Format("{0}:{1}:{2}", 0, 1, 0);
+            Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 23, 59, 50);
+            Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}:{1}:{2}", 23, 59, 55);
             Config.Settings["TRADING_MODE"] = "PRODUCTION";
-            Config.Settings["TRADING_SIGNAL"] = "CON_CS.D.GBPUSD.TODAY.IP";
+            Config.Settings["TRADING_SIGNAL"] = "Rob_1_48_20_15_CS.D.USDJPY.TODAY.IP";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "2";
             Config.Settings["TRADING_CURRENCY"] = "GBP";
 
             var models = new List<Model>();
-            models.Add(new ModelRobinHood(new MarketData("GBPUSD:CS.D.GBPUSD.TODAY.IP")));
+            models.Add(new ModelRobinHood(new MarketData("USDJPY:CS.D.USDJPY.TODAY.IP")));
             Console.WriteLine("Starting signals...");
             var trader = new Trader(models, onShutdown);
             trader.Init(Config.GetNow);            

@@ -88,9 +88,9 @@ function processResponses(jsonData) {
                     }
                 });
                 if (sellValue == 0)
-                    sellValue = buyValue + 200;
+                    sellValue = buyValue + 80;
                 if (buyValue == 0)
-                    buyValue = sellValue - 200;
+                    buyValue = sellValue - 80;
                 if (ASSUMPTION_TREND == "BEAR") {
                     var buyFirst = false;
                     do {
@@ -184,8 +184,7 @@ function processResponses(jsonData) {
                     var signalProfit = 0;
                     var idxSignal = 0;
                     jsonData[marketData].response.forEach(function (d) {
-                        var addExtra = IS_LIVE ? 0 : -1;
-                        var coeff = ((idxSignal > 0) && (idxSignal < nbBuy + nbSell + addExtra) && ASSUMPTION_TREND == "" && ALWAYS_TRADING) ? 2.0 : 1.0;
+                        var coeff = ((idxSignal > 0) && (idxSignal < nbBuy + nbSell - 1) && ASSUMPTION_TREND == "" && ALWAYS_TRADING) ? 2.0 : 1.0;
                         signalProfit += d.o * coeff * (d.b == buyValue ? -1 : 1);
                         idxSignal++;
                     });

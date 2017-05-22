@@ -40,52 +40,72 @@ namespace MidaxLib
             _amount = Config.MarketSelectorEnabled ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);            
         }
 
-        protected virtual bool OnBuy(Signal signal, DateTime time, Price stockValue)
+        protected bool FilterSignal(Signal signal, DateTime time)
         {
             if (_tradingSignals != null)
             {
                 if (_tradingSignals.Contains(signal.Id))
                 {
+                    if (_ptf.IsWaiting(signal.TradingAsset.Id))
+                    {
+                        Log.Instance.WriteEntry(string.Format("Cannot book a new trade as a deal is already pending, Epic: {0}. Waiting for position to be updated", signal.TradingAsset.Id), System.Diagnostics.EventLogEntryType.Warning);
+                        return false;
+                    }
                     var pos = _ptf.GetPosition(signal.TradingAsset.Id);
-                    if (pos == null)
+                    if (pos != null)
                     {
-                        Reset(time, stockValue.Mid(), true);
-                        return false;
+                        if (pos.Rejected)
+                        {
+                            pos.Rejected = false;
+                            signal.Reset(time);
+                        }
                     }
-                    if (pos.Quantity > 0)
-                    {
-                        Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
-                        Portfolio.Instance.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Bid, signal);
-                        return false;
-                    }
-                    signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.BUY, _amount, stockValue.Offer, 0, Reset);
-                    return Buy(signal, time, stockValue);
+                    return true;
                 }
+            }
+            return false;
+        }
+
+        protected virtual bool OnBuy(Signal signal, DateTime time, Price stockValue)
+        {
+            if (FilterSignal(signal, time))
+            {
+                var pos = _ptf.GetPosition(signal.TradingAsset.Id);
+                if (pos == null)
+                {
+                    Reset(time, stockValue.Mid(), true);
+                    return false;
+                }
+                if (pos.Quantity > 0)
+                {
+                    Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
+                    Portfolio.Instance.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Bid);
+                    return false;
+                }
+                signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.BUY, _amount, stockValue.Offer, 0, Reset);
+                return Buy(signal, time, stockValue);
             }
             return false;
         }
 
         protected virtual bool OnSell(Signal signal, DateTime time, Price stockValue)
         {
-            if (_tradingSignals != null)
+            if (FilterSignal(signal, time))
             {
-                if (_tradingSignals.Contains(signal.Id))
+                var pos = _ptf.GetPosition(signal.TradingAsset.Id);
+                if (pos == null)
                 {
-                    var pos = _ptf.GetPosition(signal.TradingAsset.Id);
-                    if (pos == null)
-                    {
-                        Reset(time, stockValue.Mid(), true);
-                        return false;
-                    }
-                    if (pos.Quantity < 0)
-                    {
-                        Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
-                        Portfolio.Instance.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Offer, signal);
-                        return false;
-                    }
-                    signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid, 0, Reset);
-                    return Sell(signal, time, stockValue);
+                    Reset(time, stockValue.Mid(), true);
+                    return false;
                 }
+                if (pos.Quantity < 0)
+                {
+                    Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
+                    Portfolio.Instance.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Offer);
+                    return false;
+                }
+                signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid, 0, Reset);
+                return Sell(signal, time, stockValue);
             }
             return false;
         }
