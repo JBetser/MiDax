@@ -119,17 +119,13 @@ namespace MidaxLib
 
         static bool _tradingOpen = false;
         static bool _publishingOpen = false;
-        static DateTime? _startTime;
                 
         public static bool TradingOpen(DateTime time)
         {
-            if (!_startTime.HasValue)
-                _startTime = time;
             var endTime = Config.Settings.ContainsKey("TRADING_CLOSING_TIME") ? Config.ParseDateTimeLocal(_settings["TRADING_CLOSING_TIME"])
                                                                               : Config.ParseDateTimeLocal(_settings["TRADING_STOP_TIME"]);
             bool open = (time.TimeOfDay >= Config.ParseDateTimeLocal(_settings["TRADING_START_TIME"]).TimeOfDay &&
-                         time.TimeOfDay < endTime.TimeOfDay &&
-                         (time.TimeOfDay - _startTime.Value.TimeOfDay).Seconds > 10);
+                         time.TimeOfDay < endTime.TimeOfDay);
             if (open != _tradingOpen){
                 _tradingOpen = open;
                 Log.Instance.WriteEntry("Trading " + (_tradingOpen ? "started" : "stopped"), EventLogEntryType.Information);
@@ -141,6 +137,11 @@ namespace MidaxLib
         {
             if (ReplayEnabled || MarketSelectorEnabled)
                 return true;
+            if ((time - DateTime.Now).TotalHours > 2)
+            {
+                Log.Instance.WriteEntry("Skipped bad update: " + time, EventLogEntryType.Warning);
+                return false;
+            }
             bool open = (time.TimeOfDay >= Config.ParseDateTimeLocal(_settings["PUBLISHING_START_TIME"]).TimeOfDay &&
                 time.TimeOfDay < Config.ParseDateTimeLocal(_settings["PUBLISHING_STOP_TIME"]).TimeOfDay);
             if (open != _publishingOpen)

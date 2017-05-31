@@ -81,13 +81,19 @@ namespace MidaxLib
             }
         }
 
+        public void SetListeningState(bool state)
+        {
+            foreach (MarketData mktData in _mktDataListener.MarketData)
+                mktData.Ready = state;
+        }
+
         public virtual void StartListening()
         {
             if (_refCount++ == 0)
             {
-                Portfolio.Instance.Subscribe();
-                foreach (MarketData mktData in _mktDataListener.MarketData)
-                    mktData.Ready = true;
+                var task = Portfolio.Instance.Subscribe();
+                task.Wait();
+                SetListeningState(true);
                 _mktDataListener.StartListening();
             }
         }
@@ -98,13 +104,12 @@ namespace MidaxLib
             {
                 _refCount = 0;
                 _mktDataListener.StopListening();
-                foreach (MarketData mktData in _mktDataListener.MarketData)
-                    mktData.Ready = false;
+                SetListeningState(false);
                 Portfolio.Instance.Unsubscribe();
                 PublisherConnection.Instance.Close();
             }
         }
-
+        
         public void Resume()
         {
             _mktDataListener.Resume();

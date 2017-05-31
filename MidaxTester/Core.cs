@@ -250,7 +250,8 @@ namespace MidaxTester
                 var expectedTrades = new Dictionary<KeyValuePair<string, DateTime>, Trade>();
                 expectedTrades[new KeyValuePair<string, DateTime>("###DUMMY_TRADE_REF1###", tradeTime)] = tradeTest;
                 ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null);
-                model.PTF.Subscribe();
+                var task = model.PTF.Subscribe();
+                task.Wait();
                 model.PTF.BookTrade(tradeTest);
                 Thread.Sleep(5000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != -10)

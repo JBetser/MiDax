@@ -135,6 +135,7 @@ namespace MidaxLib
     public abstract class Signal
     {
         public delegate bool Tick(Signal signal, DateTime time, Price value);
+        public bool Enabled = false; 
 
         protected string _id = null;
         protected string _name = null;
@@ -145,6 +146,7 @@ namespace MidaxLib
         protected List<Indicator> _mktIndicator = null;
         protected SIGNAL_CODE _signalCode = SIGNAL_CODE.UNKNOWN;
         protected Trade _lastTrade = null;
+        bool _signalProcessing = false;
 
         public Signal(string id, MarketData asset, MarketData tradingAsset = null)
         {
@@ -203,21 +205,36 @@ namespace MidaxLib
         }
 
         protected void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
-        {            
-            Signal.Tick tradingOrder = _onHold;
-            bool signaled = Process(mktData, updateTime, value, ref tradingOrder);
-            if (signaled)
+        {
+            if (_signalProcessing)
+                return;
+            lock (_mktIndicator)
             {
-                // send a signal
-                var stockValue = _asset.TimeSeries[updateTime].Value.Value;
-                if (tradingOrder(this, updateTime, stockValue))
+                if (_signalProcessing)
+                    return;
+                try
                 {
-                    if (_signalCode == SIGNAL_CODE.BUY)
-                        PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Offer);
-                    else if (_signalCode == SIGNAL_CODE.SELL)
-                        PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Bid);
-                    else if (_signalCode == SIGNAL_CODE.FAILED)
-                        PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Bid);
+                    _signalProcessing = true;
+                    Signal.Tick tradingOrder = _onHold;
+                    bool signaled = Process(mktData, updateTime, value, ref tradingOrder);
+                    if (signaled)
+                    {
+                        // send a signal
+                        var stockValue = _asset.TimeSeries[updateTime].Value.Value;
+                        if (tradingOrder(this, updateTime, stockValue))
+                        {
+                            if (_signalCode == SIGNAL_CODE.BUY)
+                                PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Offer);
+                            else if (_signalCode == SIGNAL_CODE.SELL)
+                                PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Bid);
+                            else if (_signalCode == SIGNAL_CODE.FAILED)
+                                PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Bid);
+                        }
+                    }
+                }
+                finally
+                {
+                    _signalProcessing = false;
                 }
             }
         }

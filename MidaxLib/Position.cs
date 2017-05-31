@@ -17,6 +17,7 @@ namespace MidaxLib
         Trade _lastTrade = null;
         List<Trade> _incomingTrades = new List<Trade>();
         Dictionary<string, int> _tradePositions = new Dictionary<string, int>();
+        bool _manualOverride = false;
         public int Quantity
         {
             get { return _quantity; }
@@ -28,11 +29,24 @@ namespace MidaxLib
         }
         public string Epic { get { return _name; } }
         public Trade Trade { get { return _lastTrade; } }
+        public bool ManualOverride { get { return _manualOverride; } set { _manualOverride = value; } }
         public void AddIncomingTrade(Trade trade)
         {
+            if (trade.Id != null)
+            {
+                if (_incomingTrades.Select(trd => trd.Id).ToDictionary(id => id).ContainsKey(trade.Id))
+                    return;
+            }
             lock (_incomingTrades)
             {
                 _incomingTrades.Add(trade);
+            }
+        }
+        public void RemoveIncomingTrade(Trade trade)
+        {
+            lock (_incomingTrades)
+            {
+                _incomingTrades.Remove(trade);
             }
         }
 
@@ -46,9 +60,6 @@ namespace MidaxLib
                 }
             }
         }
-
-        private bool _rejected = false;
-        public bool Rejected { get { return _rejected; } set { _rejected = value; } }
 
         bool pullTrade(string epic, out Trade trade)
         {
@@ -91,31 +102,39 @@ namespace MidaxLib
             Log.Instance.WriteEntry(string.Format("Unsubscribed {0}, last position was: {1}", _name, _quantity), System.Diagnostics.EventLogEntryType.Warning);
         }
 
-        bool openTrade(Dictionary<string, object> trade_notification) 
+        bool openTrade(Dictionary<string, object> trade_notification)
         {
             lock (_incomingTrades)
             {
-                _rejected = false;
                 string dealId = trade_notification["dealId"].ToString();
-                if (!AwaitingTrade)
-                    Log.Instance.WriteEntry("An unexpected trade has been booked: " + dealId, System.Diagnostics.EventLogEntryType.Error);
+                if (_tradePositions.ContainsKey(dealId))
+                    return true;
+                Trade trade = null;
+                bool res = false;
+                if (AwaitingTrade)
+                    res = pullTrade(_name, out trade);
+                else
+                {
+                    _manualOverride = true;
+                    res = true;
+                    Log.Instance.WriteEntry("Detected a manual position opening: " + _name + ". deal: " + dealId, System.Diagnostics.EventLogEntryType.Warning);
+                }
                 var reference = trade_notification["dealReference"].ToString();
                 var direction = trade_notification["direction"].ToString() == "SELL" ? SIGNAL_CODE.SELL : SIGNAL_CODE.BUY;
                 var tradeSize = int.Parse(trade_notification["size"].ToString());
-                Trade trade;
-                if (pullTrade(_name, out trade))
-                    _lastTrade = trade;
-                else
-                    return false;
                 if (direction == SIGNAL_CODE.SELL)
                     tradeSize *= -1;
-                _lastTrade.Id = dealId;
-                _assetValue = _lastTrade.Price;
-                _tradePositions[_lastTrade.Id] = tradeSize;
+                _lastTrade = trade;
+                _tradePositions[dealId] = tradeSize;
                 _quantity += tradeSize;
-                Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);
-                _lastTrade.Publish();
-                return true;
+                if (_lastTrade != null)
+                {
+                    _lastTrade.Id = dealId;
+                    _assetValue = _lastTrade.Price;
+                    _lastTrade.Publish();
+                    Log.Instance.WriteEntry("Created a new trade: " + _lastTrade.Id);
+                }
+                return res;
             }
         }
 
@@ -123,21 +142,44 @@ namespace MidaxLib
         {
             lock (_incomingTrades)
             {
-                _rejected = false;
                 string dealId = trade_notification["dealId"].ToString();
-                Log.Instance.WriteEntry("Closed a position: " + dealId);
-                if (!AwaitingTrade || _tradePositions.Count == 0)
-                    Log.Instance.WriteEntry("An unexpected trade has been closed: " + dealId, System.Diagnostics.EventLogEntryType.Error);
-                Trade trade;
-                pullTrade(_name, out trade);
-                _quantity -= _tradePositions[dealId];
-                _tradePositions[dealId] = 0;
-                if (_quantity != 0)
-                    Log.Instance.WriteEntry("Position has not been closed completely: " + dealId + ". Position: " + _quantity, System.Diagnostics.EventLogEntryType.Warning);
-                trade.Id = dealId;
-                trade.Publish();
                 _lastTrade = null;
-                return true;
+                if (!AwaitingTrade)
+                {
+                    if (_tradePositions.ContainsKey(dealId))
+                    {
+                        if (_tradePositions[dealId] == 0)
+                            return true;
+                    }
+                    _manualOverride = true;
+                    Log.Instance.WriteEntry("Detected a manual position closing: " + _name + ". deal: " + dealId, System.Diagnostics.EventLogEntryType.Warning);
+                    _tradePositions.Clear();
+                    _tradePositions[dealId] = 0;
+                    _quantity = 0;
+                    return true;
+                }
+                Trade trade;
+                bool res = pullTrade(_name, out trade);
+                if (_tradePositions.Count == 0)
+                {
+                    Log.Instance.WriteEntry("Unexpected position closing: " + _name + ". deal: " + dealId, System.Diagnostics.EventLogEntryType.Error);
+                    _quantity = 0;
+                    return false;
+                }
+                if (_tradePositions[dealId] != 0)
+                {
+                    Log.Instance.WriteEntry("Closed a position: " + dealId);
+                    _quantity -= _tradePositions[dealId];
+                    _tradePositions[dealId] = 0;
+                }
+                if (_quantity != 0)
+                    Log.Instance.WriteEntry("Position has not been closed completely: " + dealId + ". Position: " + _quantity, System.Diagnostics.EventLogEntryType.Error);
+                if (trade != null)
+                {
+                    trade.Id = dealId;
+                    trade.Publish();
+                }
+                return res;
             }
         }
 
@@ -145,76 +187,77 @@ namespace MidaxLib
         {
             lock (_incomingTrades)
             {
-                _rejected = true;
                 var reference = trade_notification["dealReference"].ToString();
-                Log.Instance.WriteEntry("A deal has been rejected: " + reference, System.Diagnostics.EventLogEntryType.Warning);
+                Log.Instance.WriteEntry("A deal has been rejected: " + reference, System.Diagnostics.EventLogEntryType.Error);
                 Trade trade;
                 if (!pullTrade(reference, out trade))
                 {
                     Log.Instance.WriteEntry("Cannot process a rejected deal: " + reference, System.Diagnostics.EventLogEntryType.Error);
                     return false;
                 }
-                trade.OnRejected(trade.ConfirmationTime, trade.Price, trade_notification["status"].ToString() == "OPEN");
+                //trade.OnRejected(trade.ConfirmationTime, trade.Price, trade_notification["status"].ToString() == "OPEN");
                 return true;
             }
         }
 
         public bool OnUpdate(IUpdateInfo update)
         {
-
-            if (update == null)
-                return false;
-            if (update.NumFields == 0)
-                return false;
-            JavaScriptSerializer json_serializer = new JavaScriptSerializer();
-            if ((update.ToString().Replace(" ", "") == "[(null)]") || (update.ToString().Replace(" ", "") == "[null]"))
-                return false;
-            Log.Instance.WriteEntry("Incoming position update: " + update.ToString());
-            var json = json_serializer.DeserializeObject(update.ToString());
-            if (json.GetType().ToString() == "System.Object[]")
+            try
             {
-                object[] objs = (object[])json;
-                if (objs != null)
+                JavaScriptSerializer json_serializer = new JavaScriptSerializer();
+                Log.Instance.WriteEntry("Incoming position update: " + update.ToString());
+                var json = json_serializer.DeserializeObject(update.ToString());
+                if (json.GetType().ToString() == "System.Object[]")
                 {
-                    foreach (var obj in objs)
+                    object[] objs = (object[])json;
+                    if (objs != null)
                     {
-                        var trade_notification = (Dictionary<string, object>)obj;
-                        if (trade_notification != null)
+                        foreach (var obj in objs)
                         {
-                            if (trade_notification["epic"].ToString() == _name)
+                            var trade_notification = (Dictionary<string, object>)obj;
+                            if (trade_notification != null)
                             {
-                                if (trade_notification["dealStatus"].ToString() == "ACCEPTED")
+                                if (trade_notification["epic"].ToString() == _name)
                                 {
-                                    if (trade_notification["status"].ToString() == "OPEN")
+                                    if (trade_notification["dealStatus"].ToString() == "ACCEPTED")
                                     {
-                                        if (!openTrade(trade_notification))
+                                        if (trade_notification["status"].ToString() == "OPEN")
                                         {
-                                            Log.Instance.WriteEntry("Could not process an open order: " + update.ToString(), System.Diagnostics.EventLogEntryType.Error);
-                                            return false;
+                                            if (!openTrade(trade_notification))
+                                                Log.Instance.WriteEntry("Could not process an open order: " + _name, System.Diagnostics.EventLogEntryType.Error);
                                         }
-                                        return true;
+                                        else if (trade_notification["status"].ToString() == "DELETED")
+                                        {
+                                            if (!closeTrade(trade_notification))
+                                                Log.Instance.WriteEntry("Could not process an close order: " + _name, System.Diagnostics.EventLogEntryType.Error);
+                                        }
                                     }
-                                    else if (trade_notification["status"].ToString() == "DELETED")
+                                    else
                                     {
-                                        if (!closeTrade(trade_notification))
-                                        {
-                                            Log.Instance.WriteEntry("Could not process an close order: " + update.ToString(), System.Diagnostics.EventLogEntryType.Error); 
-                                            return false;
-                                        }
-                                        return true;
+                                        // deal rejected
+                                        // return rejectTrade(trade_notification);
+                                        Log.Instance.WriteEntry("A deal has been rejected: " + _name, System.Diagnostics.EventLogEntryType.Error);
                                     }
+                                    return true;
                                 }
                                 else
-                                {
-                                    // deal rejected
-                                    return rejectTrade(trade_notification);
-                                }
-                            }                            
+                                    return false;
+                            }
                         }
                     }
                 }
-            }            
-            return false;
+                Log.Instance.WriteEntry("Unable to process a position update", System.Diagnostics.EventLogEntryType.Error);
+            }
+            catch (Exception e)
+            {
+                Log.Instance.WriteEntry("Caught an exception during a position update: " + e.ToString(), System.Diagnostics.EventLogEntryType.Error);
+            }
+            if (Portfolio.Instance.ShutDownFunc != null)
+            {
+                Log.Instance.WriteEntry("Terminating...", System.Diagnostics.EventLogEntryType.Error);
+                Portfolio.Instance.ShutDownFunc();
+            }
+            return true;
         }
     }
 }

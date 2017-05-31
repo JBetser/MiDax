@@ -43,13 +43,7 @@ namespace MidaxLib
             _startTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_START_TIME"]);
             DateTime stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
             DateTime closePositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
-            if (Config.Settings.ContainsKey("TRADING_CLOSING_TIME"))
-            {
-                DateTime closingPositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
-                if (closingPositionTime > closePositionTime)
-                    _disconnectClosePositions = false;
-            }
-            else
+            if (!Config.Settings.ContainsKey("TRADING_CLOSING_TIME"))
                 _disconnectClosePositions = false;
 
             // If it's already past PUBLISHING_STOP_TIME, wait until PUBLISHING_STOP_TIME tomorrow  
@@ -81,7 +75,7 @@ namespace MidaxLib
             foreach (var model in _models)
             {
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Starting signals...", EventLogEntryType.Information);
-                model.StartSignals(false);
+                model.StartSignals(false, _onShutdown);
                 Log.Instance.WriteEntry(model.GetType().ToString() + ": Signals started", EventLogEntryType.Information);
             }
             MarketDataConnection.Instance.StartListening();
@@ -90,6 +84,7 @@ namespace MidaxLib
 
         public void Stop()
         {
+            MarketDataConnection.Instance.SetListeningState(false);
             MarketDataConnection.Instance.StreamClient.WaitForClosing();
             foreach (var model in (from m in _models select m).Reverse())
             {
@@ -114,10 +109,12 @@ namespace MidaxLib
 
         void connectionLostCallback(object state)
         {
-            Log.Instance.WriteEntry(": Connection lost. Reconnecting...", EventLogEntryType.Warning);
+            Log.Instance.WriteEntry("Connection lost. Reconnecting...", EventLogEntryType.Error);
             MarketDataConnection.Instance.Connect(connectionLostCallback);
+            Portfolio.Instance.ReSubscribe();
             if (_disconnectClosePositions)
                 CloseAllPositions(DateTime.Now);
+            Log.Instance.WriteEntry("Terminating...", EventLogEntryType.Error);
             stopSignalCallback(state);
         }
 

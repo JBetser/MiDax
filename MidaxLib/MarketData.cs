@@ -50,13 +50,7 @@ namespace MidaxLib
             _lastUpdateTime = DateTime.MinValue;
             _allPositionsClosed = false;
             _closePositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_STOP_TIME"]);
-            if (Config.Settings.ContainsKey("TRADING_CLOSING_TIME"))
-            {
-                DateTime closingPositionTime = Config.ParseDateTimeLocal(Config.Settings["TRADING_CLOSING_TIME"]);
-                if (closingPositionTime > _closePositionTime)
-                    _eodClosePositions = false;
-            }
-            else
+            if (!Config.Settings.ContainsKey("TRADING_CLOSING_TIME"))
                 _eodClosePositions = false;
             if (updateHandler != null)
                 _updateHandlers.Add(updateHandler);

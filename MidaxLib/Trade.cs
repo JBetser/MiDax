@@ -18,7 +18,6 @@ namespace MidaxLib
         DateTime _confirmationTime = DateTime.MinValue;
         decimal _price;
         int _placeHolder = 0;
-        TradeCancelled _tradeCancelled;
         
         public string Epic { get { return _epic; } }
         public SIGNAL_CODE Direction { get { return _direction; } set { _direction = value; } }
@@ -29,10 +28,8 @@ namespace MidaxLib
         public DateTime ConfirmationTime { get { return _confirmationTime; } set { _confirmationTime = value; } }
         public decimal Price { get { return _price; } set { _price = value; } }
         public int PlaceHolder { get { return _placeHolder; } set { _placeHolder = value; } }
-
-        public delegate void TradeCancelled(DateTime cancelTime, decimal stockValue, bool openPosition);
-
-        public Trade(DateTime tradingTime, string epic, SIGNAL_CODE direction, int size, decimal price, int placeHolder = 0, TradeCancelled onTradeCancelled = null)
+        
+        public Trade(DateTime tradingTime, string epic, SIGNAL_CODE direction, int size, decimal price, int placeHolder = 0)
         {
             _tradingTime = tradingTime;
             _epic = epic;
@@ -40,7 +37,6 @@ namespace MidaxLib
             _size = size;
             _price = price;
             _placeHolder = placeHolder;
-            _tradeCancelled = onTradeCancelled;
         }
 
         public Trade(Trade cpy, bool opposite = false, DateTime? trading_time = null)
@@ -62,7 +58,6 @@ namespace MidaxLib
             this._id = cpy._id;
             this._price = cpy._price;
             this._placeHolder = cpy._placeHolder;
-            this._tradeCancelled = cpy._tradeCancelled;
         }
 
         public Trade(Row row)
@@ -81,12 +76,6 @@ namespace MidaxLib
         {
             if (!_reference.StartsWith("RECOVER"))
                 PublisherConnection.Instance.Insert(this);
-        }
-
-        public void OnRejected(DateTime cancelTime, decimal stockValue, bool openPosition)
-        {
-            if (_tradeCancelled != null)
-                _tradeCancelled(cancelTime, stockValue, openPosition);
         }
     }
 }

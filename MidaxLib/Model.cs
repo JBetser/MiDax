@@ -37,27 +37,45 @@ namespace MidaxLib
                 _tradingSignals = Config.Settings["TRADING_SIGNAL"].Split(',').ToList();
             if (Config.Settings.ContainsKey("REPLAY_POPUP"))
                 _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
-            _amount = Config.MarketSelectorEnabled ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);            
+            _amount = Config.MarketSelectorEnabled ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);
+            if (_mktData[0].Name == "SIL")
+                _amount *= 6;
+            else if (_mktData[0].Name == "FTSE")
+                _amount = (int)(_amount * 1.5);
         }
 
+        const int MAX_BOOKING_ATTEMPTS = 50;
+        int _bookingRemainingAttempts = MAX_BOOKING_ATTEMPTS;
+
         protected bool FilterSignal(Signal signal, DateTime time)
-        {
+        {            
             if (_tradingSignals != null)
             {
                 if (_tradingSignals.Contains(signal.Id))
                 {
                     if (_ptf.IsWaiting(signal.TradingAsset.Id))
                     {
+                        if (--_bookingRemainingAttempts == 0)
+                        {
+                            if (Portfolio.Instance.ShutDownFunc != null)
+                            {
+                                Log.Instance.WriteEntry("Terminating...", System.Diagnostics.EventLogEntryType.Error);
+                                Portfolio.Instance.ShutDownFunc();
+                            }
+                        }
                         Log.Instance.WriteEntry(string.Format("Cannot book a new trade as a deal is already pending, Epic: {0}. Waiting for position to be updated", signal.TradingAsset.Id), System.Diagnostics.EventLogEntryType.Warning);
                         return false;
                     }
+                    _bookingRemainingAttempts = MAX_BOOKING_ATTEMPTS;
                     var pos = _ptf.GetPosition(signal.TradingAsset.Id);
                     if (pos != null)
                     {
-                        if (pos.Rejected)
+                        if (pos.ManualOverride)
                         {
-                            pos.Rejected = false;
-                            signal.Reset(time);
+                            Log.Instance.WriteEntry("Applying a signal manual override on: " + signal.Id, System.Diagnostics.EventLogEntryType.Information);
+                            pos.ManualOverride = false;
+                            signal.Enabled = false;
+                            return false;
                         }
                     }
                     return true;
@@ -79,10 +97,10 @@ namespace MidaxLib
                 if (pos.Quantity > 0)
                 {
                     Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
-                    Portfolio.Instance.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Bid);
+                    _ptf.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Bid);
                     return false;
                 }
-                signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.BUY, _amount, stockValue.Offer, 0, Reset);
+                signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.BUY, _amount, stockValue.Offer, 0);
                 return Buy(signal, time, stockValue);
             }
             return false;
@@ -101,10 +119,10 @@ namespace MidaxLib
                 if (pos.Quantity < 0)
                 {
                     Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Some trades are still open. last trade: " + signal.Trade.Id + " " + stockValue.Bid + ". Closing all positions...", EventLogEntryType.Error);
-                    Portfolio.Instance.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Offer);
+                    _ptf.CloseAllPositions(time, signal.TradingAsset.Id, stockValue.Offer);
                     return false;
                 }
-                signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid, 0, Reset);
+                signal.Trade = new Trade(time, signal.TradingAsset.Id, SIGNAL_CODE.SELL, _amount, stockValue.Bid, 0);
                 return Sell(signal, time, stockValue);
             }
             return false;
@@ -120,10 +138,12 @@ namespace MidaxLib
         protected virtual void OnUpdateIndicator(MarketData mktData, DateTime updateTime, Price value)
         {
         }
-        
-        public void StartSignals(bool startListening = true)
+
+        public void StartSignals(bool startListening = true, Trader.shutdown communicatorShutdown = null)
         {
+            _ptf.ShutDownFunc = communicatorShutdown;
             Init();
+            
             // get the level indicators for the day (low, high, close)
             foreach (MarketData mktData in _mktData)
                 mktData.GetMarketLevels();
@@ -145,7 +165,7 @@ namespace MidaxLib
         {
             try
             {
-                Thread.Sleep(1000); 
+                //Thread.Sleep(1000); 
                 Log.Instance.WriteEntry("Publishing indicator levels...", EventLogEntryType.Information);
                 foreach (var indicator in _mktEODIndicators)
                     indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));

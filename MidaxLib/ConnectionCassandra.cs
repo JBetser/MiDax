@@ -420,7 +420,7 @@ namespace MidaxLib
             catch
             {
                 var errorMsg = "Could not retrieve level indicators for previous COB date. Indicator: " + indicator;
-                Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Error);
+                Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Warning);
                 return null;
             }
             value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",

@@ -64,7 +64,7 @@ namespace MidaxLib
 
         public override void OnActivityWarning(bool warningOn)
         {
-            Log.Instance.WriteEntry("Activity warning: " + warningOn, EventLogEntryType.Warning);
+            Log.Instance.WriteEntry("Lost market data updates: " + warningOn, EventLogEntryType.Error);
             base.OnActivityWarning(warningOn);
         }
 
@@ -230,15 +230,17 @@ namespace MidaxLib
             cpr.guaranteedStop = false;
             cpr.forceOpen = false;
             cpr.currencyCode = Config.Settings["TRADING_CURRENCY"];
+
+            if (onTradeBooked != null)
+                onTradeBooked(trade);
+
             var createPositionResponse = await _igRestApiClient.createPositionV2(cpr);
 
             if (createPositionResponse && (createPositionResponse.Response != null) && (createPositionResponse.Response.dealReference != null))
             {
                 Log.Instance.WriteEntry("New trade booked successfully : " + createPositionResponse.Response.dealReference, EventLogEntryType.Information);
                 trade.Reference = createPositionResponse.Response.dealReference;
-                trade.ConfirmationTime = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
-                if (onTradeBooked != null)
-                    onTradeBooked(trade);
+                trade.ConfirmationTime = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);                
             }
             else
             {                

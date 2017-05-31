@@ -51,7 +51,7 @@ public class Server
                 Ice.Properties properties = communicator().getProperties();
                 Ice.Identity id = communicator().stringToIdentity(properties.getProperty("Identity"));
 
-                Thread.Sleep(10000);
+                //Thread.Sleep(10000);
 
                 /*
                 List<string> rsiRefMappingGBP = new List<string> { dicSettings["FX_GBPEUR"], dicSettings["FX_GBPUSD"] };
@@ -61,54 +61,41 @@ public class Server
 
                 var index = IceStreamingMarketData.Instance;
                 var dax = new MarketData(dicSettings["INDEX_DAX"]);
+                var dow = new MarketData(dicSettings["INDEX_DOW"]);
+                var cac = new MarketData(dicSettings["INDEX_CAC"]);
+                var ftse = new MarketData(dicSettings["INDEX_FTSE"]);
+                var icedow = new MarketData(dicSettings["INDEX_ICEDOW"]);
                 var gbpusd = new MarketData(dicSettings["FX_GBPUSD"]);
-                var gbpeur = new MarketData(dicSettings["FX_GBPEUR"]);
                 var eurusd = new MarketData(dicSettings["FX_EURUSD"]);
-                var usdjpy = new MarketData(dicSettings["FX_USDJPY"]);
-                var audusd = new MarketData(dicSettings["FX_AUDUSD"]);
+                var btcusd = new MarketData(dicSettings["FX_BTCUSD"]);
+                var silver = new MarketData(dicSettings["COM_SILVER"]);
+                /*
                 List<MarketData> otherIndices = new List<MarketData>();
                 otherIndices.Add(new MarketData(dicSettings["INDEX_CAC"]));
-                otherIndices.Add(new MarketData(dicSettings["INDEX_DOW"]));
+                otherIndices.Add(icedow);
                 otherIndices.Add(gbpusd);
-                otherIndices.Add(gbpeur);
                 otherIndices.Add(eurusd);
-                otherIndices.Add(usdjpy);
-                otherIndices.Add(audusd);
+                otherIndices.Add(silver);*/
                 var models = new List<Model>();
-                var macD_10_30_90_dax = new ModelMacD(dax, 10, 30, 90);
-                var macD_10_30_90_gbpusd = new ModelMacD(gbpusd, 10, 30, 90);
-                var macD_10_30_90_eurusd = new ModelMacD(eurusd, 10, 30, 90);
-                var macD_10_30_90_usdjpy = new ModelMacD(usdjpy, 10, 30, 90);
-                var macD_10_30_90_audusd = new ModelMacD(audusd, 10, 30, 90);
-                decimal volcoeffGBPUSD = 0.85m;
-                decimal volcoeffEURUSD = 0.7m;
-                decimal volcoeffUSDJPY = 0.65m;
-                decimal volcoeffAUDUSD = 0.6m;
-                var fxmole_eur = new ModelFXMole(new List<MarketData> { eurusd, gbpusd }, macD_10_30_90_eurusd, volcoeffEURUSD);
-                var fxmole_gbp = new ModelFXMole(new List<MarketData> { gbpusd, eurusd }, macD_10_30_90_gbpusd, volcoeffGBPUSD);
-                var fxmole_jpy = new ModelFXMole(new List<MarketData> { usdjpy, eurusd }, macD_10_30_90_usdjpy, volcoeffUSDJPY);
-                var fxmole_aud = new ModelFXMole(new List<MarketData> { audusd, eurusd }, macD_10_30_90_audusd, volcoeffAUDUSD);
+                //var macD_10_30_90_dax = new ModelMacD(dax, 10, 30, 90);
                 var robinhood_eurusd = new ModelRobinHood(eurusd);
                 var robinhood_gbpusd = new ModelRobinHood(gbpusd);
-                var robinhood_usdjpy = new ModelRobinHood(usdjpy);
-                var robinhood_audusd = new ModelRobinHood(audusd);
+                var robinhood_btcusd = new ModelRobinHood(btcusd);
+                var robinhood_silver = new ModelRobinHood(silver);
                 var robinhood_dax = new ModelRobinHood(dax);
-                models.Add(macD_10_30_90_gbpusd);
-                models.Add(macD_10_30_90_eurusd);
-                models.Add(macD_10_30_90_usdjpy);
-                models.Add(macD_10_30_90_audusd);
-                /*
-                models.Add(fxmole_eur);
-                models.Add(fxmole_gbp);
-                models.Add(fxmole_jpy);
-                models.Add(fxmole_aud);*/
-                models.Add(macD_10_30_90_dax);
+                var robinhood_cac = new ModelRobinHood(cac);
+                var robinhood_ftse = new ModelRobinHood(ftse);
+                var robinhood_dow = new ModelRobinHood(dow, 1, 48, 0, 20, 15, new IndicatorVolume(icedow, 60));
+                //models.Add(macD_10_30_90_dax);
                 models.Add(robinhood_eurusd);
                 models.Add(robinhood_gbpusd);
-                models.Add(robinhood_usdjpy);
-                models.Add(robinhood_audusd);
+                models.Add(robinhood_btcusd);
+                models.Add(robinhood_silver);
                 models.Add(robinhood_dax);
-                models.Add(new ModelANN("WMA_5_2", macD_10_30_90_dax, null, null, otherIndices));
+                models.Add(robinhood_cac);
+                models.Add(robinhood_dow);
+                models.Add(robinhood_ftse);
+                //models.Add(new ModelANN("WMA_5_2", macD_10_30_90_dax, null, null, otherIndices));
                 _trader = new Trader(models, communicator().shutdown); 
                 _trader.Init(Config.GetNow);
 

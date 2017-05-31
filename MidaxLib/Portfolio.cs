@@ -18,9 +18,11 @@ namespace MidaxLib
         SubscribedTableKey _tradeSubscriptionStk = null;
         static Dictionary<IAbstractStreamingClient, Portfolio> _instance = null;
         Dictionary<string, TradingSet> _tradingSets = new Dictionary<string, TradingSet>();
+        Trader.shutdown _onShutdown = null;
 
         public List<Trade> Trades { get { return _trades; } }
         public IDictionary<string, Position> Positions { get { return _positions; } }
+        public Trader.shutdown ShutDownFunc { get { return _onShutdown; } set { _onShutdown = value; } }
 
         Portfolio(IAbstractStreamingClient client, IGPublicPcl.IgRestApiClient restApiClient)
         {
@@ -40,9 +42,22 @@ namespace MidaxLib
             }
         }
 
+        /// <summary>
+        /// This is only in case we lose synchronization with the book
+        /// </summary>
+        public void ReSubscribe()
+        {
+            _positions.Clear();
+            _tradingSets.Clear();
+            _trades.Clear();
+            _positions.Clear();
+            var task = Subscribe();
+            task.Wait();
+        }
+
         public delegate void TradeBookedEvent(Trade newTrade);
 
-        public async void Subscribe()
+        public async Task Subscribe()
         {
             try
             {
@@ -52,19 +67,20 @@ namespace MidaxLib
                     Log.Instance.WriteEntry("TradeSubscription : Subscribe");
                     var response = await _igRestApiClient.getOTCOpenPositionsV2();
                     foreach (var pos in response.Response.positions)
-                    {
-                        var trade = new Trade(DateTime.Parse(pos.market.updateTime), pos.market.epic,
-                            pos.position.direction == "BUY" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL, (int)pos.position.size.Value,
-                            pos.position.direction == "BUY" ? pos.market.offer.Value : pos.market.bid.Value);
-                        trade.Reference = "RECOVER_" + pos.position.dealId;
-                        trade.ConfirmationTime = trade.TradingTime;
-                        ReplayPositionUpdateInfo updateInfo = new ReplayPositionUpdateInfo(DateTime.Parse(pos.market.updateTime), pos.market.epic,
-                            pos.position.dealId, trade.Reference, "OPEN", "ACCEPTED", (int)pos.position.size.Value,
-                            pos.position.direction == "BUY" ? pos.market.offer.Value : pos.market.bid.Value,
-                            pos.position.direction == "BUY" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL);
+                    {                        
                         var ptfPos = GetPosition(pos.market.epic);
                         if (ptfPos != null)
                         {
+                            var trade = new Trade(DateTime.Parse(pos.market.updateTime), pos.market.epic,
+                            pos.position.direction == "BUY" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL, (int)pos.position.size.Value,
+                            pos.position.direction == "BUY" ? pos.market.offer.Value : pos.market.bid.Value);
+                            trade.Id = pos.position.dealId;
+                            trade.Reference = "RECOVER_" + pos.position.dealId;
+                            trade.ConfirmationTime = trade.TradingTime;
+                            ReplayPositionUpdateInfo updateInfo = new ReplayPositionUpdateInfo(DateTime.Parse(pos.market.updateTime), pos.market.epic,
+                                pos.position.dealId, trade.Reference, "OPEN", "ACCEPTED", (int)pos.position.size.Value,
+                                pos.position.direction == "BUY" ? pos.market.offer.Value : pos.market.bid.Value,
+                                pos.position.direction == "BUY" ? SIGNAL_CODE.BUY : SIGNAL_CODE.SELL);
                             _trades.Add(trade);
                             ptfPos.AddIncomingTrade(trade);
                             ptfPos.OnUpdate(updateInfo);
@@ -81,7 +97,7 @@ namespace MidaxLib
             catch (Exception ex)
             {
                 Log.Instance.WriteEntry("Portfolio subscription error: " + ex.Message, System.Diagnostics.EventLogEntryType.Error);
-            }
+            }            
         }
 
         public void ClosePosition(Trade trade, DateTime closing_time, TradeBookedEvent onTradeBooked = null, TradeBookedEvent onBookingFailed = null)
@@ -160,6 +176,10 @@ namespace MidaxLib
 
         protected virtual void OnBookingFailed(Trade newTrade)
         {
+            _trades.Remove(newTrade);
+            var pos = GetPosition(newTrade.Epic);
+            if (pos != null)
+                pos.RemoveIncomingTrade(newTrade);
             newTrade.Direction = SIGNAL_CODE.FAILED;
             newTrade.Id = newTrade.Reference;
             newTrade.Publish();
@@ -189,6 +209,16 @@ namespace MidaxLib
                     if (pos.AwaitingTrade)
                         return true;
                 }
+            }
+            return false;
+        }
+
+        public bool IsWaiting()
+        {
+            foreach (var pos in _positions.Values)
+            {
+                if (pos.AwaitingTrade)
+                    return true;
             }
             return false;
         }
@@ -255,19 +285,71 @@ namespace MidaxLib
             }
         }
 
+        DateTime? _lastUpdate = null;
+
+        void Synchronize()
+        {
+            MarketDataConnection.Instance.SetListeningState(false);
+            ReSubscribe();
+            MarketDataConnection.Instance.SetListeningState(true);
+            Log.Instance.WriteEntry("Positions synchronized", System.Diagnostics.EventLogEntryType.Information);                        
+        }
+
         void IHandyTableListener.OnUpdate(int itemPos, string itemName, IUpdateInfo update)
         {
-            foreach (var item in _positions)
-                item.Value.OnUpdate(update);
-            foreach (var tradingSet in _tradingSets)
+            if (update != null)
             {
-                foreach (var pos in tradingSet.Value.Positions)
+                if (update.NumFields != 0)
                 {
-                    if (pos.OnUpdate(update))
-                        break;
+                    if ((update.ToString().Replace(" ", "") == "[(null)]") || 
+                        (update.ToString().Replace(" ", "") == "[null]"))
+                    {
+                        if (_lastUpdate.HasValue)
+                        {
+                            if ((DateTime.Now - _lastUpdate.Value).TotalMinutes < 1)
+                            {
+                                Log.Instance.WriteEntry("Ignored null update", System.Diagnostics.EventLogEntryType.Warning);
+                                return;
+                            }
+                            _lastUpdate = DateTime.Now;
+                        }
+                        else
+                        {
+                            _lastUpdate = DateTime.Now;
+                            return;
+                        }
+                        Log.Instance.WriteEntry("Null update, synchronizing positions...", System.Diagnostics.EventLogEntryType.Warning);
+                        Synchronize();
+                        return;
+                    }
+                    bool updateProcessed = false;
+                    foreach (var item in _positions)
+                    {
+                        if (item.Value.OnUpdate(update))
+                        {
+                            updateProcessed = true;
+                            break;
+                        }
+                    }                    
+                    foreach (var tradingSet in _tradingSets)
+                    {
+                        foreach (var pos in tradingSet.Value.Positions)
+                        {
+                            if (pos.OnUpdate(update))
+                            {
+                                updateProcessed = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!updateProcessed)
+                    {
+                        Log.Instance.WriteEntry("Unexpected update, synchronizing positions... update: " + update.ToString(), System.Diagnostics.EventLogEntryType.Warning);
+                        Synchronize();
+                    }
                 }
-            }
-        }
+            }            
+        } 
     }
 
     // A trading is a set of tradable assets whose positions are independent from the portfolio

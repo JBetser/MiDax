@@ -328,11 +328,15 @@
                <option value="IX.D.DAX.DAILY.IP">DAX</option>
                <option value="IX.D.DOW.DAILY.IP">DOW</option>
                <option value="IX.D.CAC.DAILY.IP">CAC</option>
+               <option value="IX.D.FTSE.DAILY.IP">FTSE</option>                 
                <option value="CS.D.GBPUSD.TODAY.IP">GBP/USD</option>
                <option value="CS.D.GBPEUR.TODAY.IP">GBP/EUR</option>
                <option value="CS.D.EURUSD.TODAY.IP">EUR/USD</option>
                <option value="CS.D.USDJPY.TODAY.IP">USD/JPY</option>
                <option value="CS.D.AUDUSD.TODAY.IP">AUD/USD</option>
+               <option value="CS.D.BITCOIN.TODAY.IP">BITCOIN</option>
+               <option value="CS.D.USCSI.TODAY.IP">Silver</option> 
+               <option value="IceConnection.DJI">NYSE DOW</option>                
              </select>
              <select class="combobox input-large" id="indicator">
                <option value="">Choose an indicator</option>
@@ -351,11 +355,9 @@
                <option value="WMVol_90">WM Vol 1h30</option>    
                <option value="Trend_30_6_WMVol_10">Vol Trend 3mn</option>
                <option value="RobSup_60_48#RobRes_60_48#RobSubSup_60_15#RobSubRes_60_15#SMA_1200">RS 1h 48/20/15</option>
+               <option value="Volume_60">Volumes 60mn</option>  
                <!--option value="VWMVol_10">VWM Vol 10mn</!--option>
-               <option value="VWMVol_90">VWM Vol 1h30</option>    
-               <option value="Volume_10">Volumes 10mn</option>  
-               <option value="Volume_30">Volumes 30mn</option>  
-               <option value="Volume_90">Volumes 1h30</option-->                           
+               <option value="VWMVol_90">VWM Vol 1h30</option-->                           
              </select>   
              <select class="combobox input-large" id="signal">
                <option value="">Choose a signal</option>
