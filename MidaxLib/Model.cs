@@ -39,7 +39,7 @@ namespace MidaxLib
                 _replayPopup = Config.Settings["REPLAY_POPUP"] == "1";
             _amount = Config.MarketSelectorEnabled ? 0 : int.Parse(Config.Settings["TRADING_LIMIT_PER_BP"]);
             if (_mktData[0].Name == "SIL")
-                _amount *= 6;
+                _amount *= 3;
             else if (_mktData[0].Name == "FTSE")
                 _amount = (int)(_amount * 1.5);
         }
@@ -55,15 +55,13 @@ namespace MidaxLib
                 {
                     if (_ptf.IsWaiting(signal.TradingAsset.Id))
                     {
+                        if (_bookingRemainingAttempts % 5 == 0)
+                            Log.Instance.WriteEntry(string.Format("Cannot book a new trade as a deal is already pending, Epic: {0}. Waiting for position to be updated", signal.TradingAsset.Id), System.Diagnostics.EventLogEntryType.Warning);
                         if (--_bookingRemainingAttempts == 0)
                         {
-                            if (Portfolio.Instance.ShutDownFunc != null)
-                            {
-                                Log.Instance.WriteEntry("Terminating...", System.Diagnostics.EventLogEntryType.Error);
-                                Portfolio.Instance.ShutDownFunc();
-                            }
+                            Portfolio.Instance.Synchronize();
+                            _bookingRemainingAttempts = MAX_BOOKING_ATTEMPTS;
                         }
-                        Log.Instance.WriteEntry(string.Format("Cannot book a new trade as a deal is already pending, Epic: {0}. Waiting for position to be updated", signal.TradingAsset.Id), System.Diagnostics.EventLogEntryType.Warning);
                         return false;
                     }
                     _bookingRemainingAttempts = MAX_BOOKING_ATTEMPTS;

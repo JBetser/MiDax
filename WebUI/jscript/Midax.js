@@ -10,6 +10,11 @@ var monthNames = [
   "Nov", "Dec"
 ];
 
+function noStockWithIndicator(ind) {
+    return (ind.indexOf("Volume_") != -1 || ind.indexOf("RSI_") != -1 || ind.indexOf("EvtProx_") != -1 ||
+            ind.indexOf("Cor_") != -1 || ind.indexOf("Trend_") != -1 || ind.indexOf("WMVol_") != -1);
+}
+
 // from here: http://stackoverflow.com/a/1968345/16363
 function get_line_intersection(p0_x, p0_y, p1_x, p1_y,
     p2_x, p2_y, p3_x, p3_y) {

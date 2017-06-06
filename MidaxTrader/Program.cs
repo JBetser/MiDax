@@ -35,6 +35,8 @@ namespace MidaxTrader
             Config.Settings["FX_EURUSD"] = "EURUSD:CS.D.EURUSD.TODAY.IP";
             Config.Settings["FX_GBPUSD"] = "GBPUSD:CS.D.GBPUSD.TODAY.IP";
             Config.Settings["INDEX_ICEDOW"] = "DOW:IceConnection.DJI";
+            Config.Settings["CALENDAR_PATH"] = "C:\\Shared\\MidaxTester\\Calendar";
+            Config.Settings["TIME_GMT"] = "1";
 
             var index = IceStreamingMarketData.Instance;
             var models = new List<Model>();

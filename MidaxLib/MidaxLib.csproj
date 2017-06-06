@@ -125,6 +125,7 @@
     </Compile>
     <Compile Include="Indicator.cs" />
     <Compile Include="IndicatorCorrelation.cs" />
+    <Compile Include="IndicatorEventProximity.cs" />
     <Compile Include="IndicatorLevel.cs" />
     <Compile Include="IndicatorLinearRegression.cs" />
     <Compile Include="IndicatorRobinHood.cs" />

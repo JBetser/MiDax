@@ -13,7 +13,7 @@ namespace MidaxTester
         public static void Run(List<DateTime> dates, bool generate = false, bool generate_from_db = false, bool publish_to_db = false, bool use_uat_db = false, bool fullday = false)
         {
             TestEngine testEngine = new TestEngine("heuristic", dates, generate, generate_from_db, publish_to_db, use_uat_db, fullday);
-            testEngine.Settings["TRADING_SIGNAL"] = "Rob_1_48_20_15_IX.D.DAX.DAILY.IP,Rob_1_48_20_15_CS.D.EURUSD.TODAY.IP,Rob_1_48_20_15_CS.D.GBPUSD.TODAY.IP,Rob_1_48_20_15_CS.D.USDJPY.TODAY.IP,Rob_1_48_20_15_CS.D.AUDUSD.TODAY.IP";
+            testEngine.Settings["TRADING_SIGNAL"] = "Rob_1_48_20_15_IX.D.DAX.DAILY.IP,Rob_1_48_20_15_IX.D.FTSE.DAILY.IP,Rob_1_48_20_15_CS.D.EURUSD.TODAY.IP,Rob_1_48_20_15_CS.D.GBPUSD.TODAY.IP,Rob_1_48_20_15_CS.D.USCSI.TODAY.IP";
             testEngine.Settings["TIME_GMT"] = "1";
             testEngine.Settings["TIME_DECAY_FACTOR"] = "3";
             testEngine.Settings["ASSUMPTION_TREND"] = "BEAR";
@@ -21,10 +21,12 @@ namespace MidaxTester
             testEngine.Settings["INDEX_DOW"] = "DOW:IX.D.DOW.DAILY.IP";
             testEngine.Settings["INDEX_DAX"] = "DAX:IX.D.DAX.DAILY.IP";
             testEngine.Settings["INDEX_CAC"] = "CAC:IX.D.CAC.DAILY.IP";
+            testEngine.Settings["INDEX_FTSE"] = "FTSE:IX.D.FTSE.DAILY.IP";
             testEngine.Settings["FX_GBPUSD"] = "GBPUSD:CS.D.GBPUSD.TODAY.IP";
             testEngine.Settings["FX_EURUSD"] = "EURUSD:CS.D.EURUSD.TODAY.IP";
             testEngine.Settings["FX_USDJPY"] = "USDJPY:CS.D.USDJPY.TODAY.IP";
             testEngine.Settings["FX_AUDUSD"] = "AUDUSD:CS.D.AUDUSD.TODAY.IP";
+            testEngine.Settings["COM_SILVER"] = "SIL:CS.D.USCSI.TODAY.IP";
             
             //List<string> rsiRefMappingJPYGBP = new List<string> { testEngine.Settings["FX_GBPEUR"], testEngine.Settings["FX_USDJPY"] };
             //List<string> rsiRefMappingUSD = new List<string> { testEngine.Settings["FX_GBPUSD"], testEngine.Settings["FX_EURUSD"] };
@@ -32,43 +34,25 @@ namespace MidaxTester
             //List<decimal> volcoeffsUSD = new List<decimal> { 0.75m, 1.0m, 0.8m };
 
             var index = IceStreamingMarketData.Instance;
+            var dax = new MarketData(testEngine.Settings["INDEX_DAX"]);
+            var dow = new MarketData(testEngine.Settings["INDEX_DOW"]);
+            var cac = new MarketData(testEngine.Settings["INDEX_CAC"]);
+            var ftse = new MarketData(testEngine.Settings["INDEX_FTSE"]);
             var gbpusd = new MarketData(testEngine.Settings["FX_GBPUSD"]);
             var eurusd = new MarketData(testEngine.Settings["FX_EURUSD"]);
-            var usdjpy = new MarketData(testEngine.Settings["FX_USDJPY"]);
-            var audusd = new MarketData(testEngine.Settings["FX_AUDUSD"]);
-            var dax = new MarketData(testEngine.Settings["INDEX_DAX"]);
+            var silver = new MarketData(testEngine.Settings["COM_SILVER"]);
             var models = new List<Model>();
-            var macD_10_30_90_gbpusd = new ModelMacD(gbpusd, 10, 30, 90);
-            var macD_10_30_90_eurusd = new ModelMacD(eurusd, 10, 30, 90);
-            var macD_10_30_90_usdjpy = new ModelMacD(usdjpy, 10, 30, 90);
-            var macD_10_30_90_audusd = new ModelMacD(audusd, 10, 30, 90);
-            decimal volcoeffEURUSD = 0.7m;
-            decimal volcoeffGBPUSD = 0.85m;
-            decimal volcoeffUSDJPY = 0.65m;
-            decimal volcoeffAUDUSD = 0.6m;
-            var fxmole_eurusd = new ModelFXMole(new List<MarketData> { eurusd, gbpusd }, macD_10_30_90_eurusd, volcoeffEURUSD);
-            var fxmole_gbpusd = new ModelFXMole(new List<MarketData> { gbpusd, eurusd }, macD_10_30_90_gbpusd, volcoeffGBPUSD);
-            var fxmole_usdjpy = new ModelFXMole(new List<MarketData> { usdjpy, eurusd }, macD_10_30_90_usdjpy, volcoeffUSDJPY);
-            var fxmole_audusd = new ModelFXMole(new List<MarketData> { audusd, eurusd }, macD_10_30_90_audusd, volcoeffAUDUSD);
             var robinhood_gbpusd = new ModelRobinHood(gbpusd);
             var robinhood_eurusd = new ModelRobinHood(eurusd);
-            var robinhood_usdjpy = new ModelRobinHood(usdjpy);
-            var robinhood_audusd = new ModelRobinHood(audusd);
             var robinhood_dax = new ModelRobinHood(dax);
+            var robinhood_ftse = new ModelRobinHood(ftse);
+            var robinhood_sil = new ModelRobinHood(silver);
 
-            models.Add(macD_10_30_90_gbpusd);
-            models.Add(macD_10_30_90_eurusd);
-            models.Add(macD_10_30_90_usdjpy);
-            models.Add(macD_10_30_90_audusd);
-            /*models.Add(fxmole_gbpusd);
-            models.Add(fxmole_eurusd);
-            models.Add(fxmole_usdjpy);
-            models.Add(fxmole_audusd);*/
             models.Add(robinhood_gbpusd);
             models.Add(robinhood_eurusd);
-            models.Add(robinhood_usdjpy);
-            models.Add(robinhood_audusd);
             models.Add(robinhood_dax);
+            models.Add(robinhood_ftse);
+            models.Add(robinhood_sil);
             testEngine.Run(models);          
         }
     }

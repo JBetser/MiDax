@@ -205,7 +205,6 @@ namespace MidaxLib
             try
             {
                 JavaScriptSerializer json_serializer = new JavaScriptSerializer();
-                Log.Instance.WriteEntry("Incoming position update: " + update.ToString());
                 var json = json_serializer.DeserializeObject(update.ToString());
                 if (json.GetType().ToString() == "System.Object[]")
                 {

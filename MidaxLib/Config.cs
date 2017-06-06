@@ -125,7 +125,8 @@ namespace MidaxLib
             var endTime = Config.Settings.ContainsKey("TRADING_CLOSING_TIME") ? Config.ParseDateTimeLocal(_settings["TRADING_CLOSING_TIME"])
                                                                               : Config.ParseDateTimeLocal(_settings["TRADING_STOP_TIME"]);
             bool open = (time.TimeOfDay >= Config.ParseDateTimeLocal(_settings["TRADING_START_TIME"]).TimeOfDay &&
-                         time.TimeOfDay < endTime.TimeOfDay);
+                         time.TimeOfDay < endTime.TimeOfDay &&
+                         time.DayOfWeek != DayOfWeek.Saturday && time.DayOfWeek != DayOfWeek.Sunday);
             if (open != _tradingOpen){
                 _tradingOpen = open;
                 Log.Instance.WriteEntry("Trading " + (_tradingOpen ? "started" : "stopped"), EventLogEntryType.Information);

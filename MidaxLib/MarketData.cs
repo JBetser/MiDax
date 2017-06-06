@@ -124,8 +124,6 @@ namespace MidaxLib
                         new List<string> { _mktLevelsId });
                     if (mktLevels.Count == 1)
                         _marketLevels = new MarketLevels(mktLevels.Values.First());
-                    else
-                        Log.Instance.WriteEntry("Could not retrieve market levels for Market Data: " + _mktLevelsId, EventLogEntryType.Warning);
                 }
             }
             catch

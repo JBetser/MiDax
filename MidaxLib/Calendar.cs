@@ -60,7 +60,11 @@ namespace MidaxLib
                 else
                     eventName = line.Split(',')[2];
                 line = line.Replace(eventName, "");
-                var eventDateTime = Config.ParseDateTimeLocal(curDate.Value.Day + "-" + curDate.Value.Month + "-" + curDate.Value.Year + " " + line.Split(',')[3] + ":00");
+                var eventDateStr = curDate.Value.Day + "-" + curDate.Value.Month + "-" + curDate.Value.Year;
+                var eventTimeStr = line.Split(',')[3];
+                if (eventTimeStr != "")
+                    eventDateStr += " " + eventTimeStr + ":00";
+                var eventDateTime = Config.ParseDateTimeLocal(eventDateStr);                
                 eventDateTime = eventDateTime.AddHours(time_offset);           
                 _events[curCcy].Add(new KeyValuePair<DateTime, string>(eventDateTime, eventName));
             }
@@ -87,6 +91,21 @@ namespace MidaxLib
                 }
             }
             return false;
+        }
+
+        public double SecondsToEvent(DateTime curTime)
+        {
+            double secToEvt = double.MaxValue;
+            var events = new List<KeyValuePair<DateTime, string>>();
+            foreach (var ev in _events)
+                events.AddRange(ev.Value);
+            foreach (var ev in events)
+            {
+                var secToCurEvt = Math.Abs((ev.Key - curTime).TotalSeconds);
+                if (secToCurEvt < secToEvt)
+                    secToEvt = secToCurEvt;
+            }
+            return secToEvt;
         }
     }
 }

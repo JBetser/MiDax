@@ -63,7 +63,8 @@ namespace MidaxLib
             {
                 if (_igStreamApiClient != null)
                 {
-                    _tradeSubscriptionStk = _igStreamApiClient.SubscribeToPositions(this);
+                    if (_tradeSubscriptionStk == null)
+                        _tradeSubscriptionStk = _igStreamApiClient.SubscribeToPositions(this);
                     Log.Instance.WriteEntry("TradeSubscription : Subscribe");
                     var response = await _igRestApiClient.getOTCOpenPositionsV2();
                     foreach (var pos in response.Response.positions)
@@ -97,6 +98,11 @@ namespace MidaxLib
             catch (Exception ex)
             {
                 Log.Instance.WriteEntry("Portfolio subscription error: " + ex.Message, System.Diagnostics.EventLogEntryType.Error);
+                if (Portfolio.Instance.ShutDownFunc != null)
+                {
+                    Log.Instance.WriteEntry("Terminating...", System.Diagnostics.EventLogEntryType.Error);
+                    Portfolio.Instance.ShutDownFunc();
+                }
             }            
         }
 
@@ -160,6 +166,7 @@ namespace MidaxLib
             if (_tradeSubscriptionStk != null)
             {
                 _igStreamApiClient.UnsubscribeTradeSubscription(_tradeSubscriptionStk);
+                _tradeSubscriptionStk = null;
                 Log.Instance.WriteEntry("TradeSubscription : Unsubscribe");
             }
         }
@@ -287,13 +294,15 @@ namespace MidaxLib
 
         DateTime? _lastUpdate = null;
 
-        void Synchronize()
+        public void Synchronize()
         {
             MarketDataConnection.Instance.SetListeningState(false);
             ReSubscribe();
             MarketDataConnection.Instance.SetListeningState(true);
             Log.Instance.WriteEntry("Positions synchronized", System.Diagnostics.EventLogEntryType.Information);                        
         }
+
+        int _nullUpdateCount = 0;
 
         void IHandyTableListener.OnUpdate(int itemPos, string itemName, IUpdateInfo update)
         {
@@ -308,10 +317,12 @@ namespace MidaxLib
                         {
                             if ((DateTime.Now - _lastUpdate.Value).TotalMinutes < 1)
                             {
-                                Log.Instance.WriteEntry("Ignored null update", System.Diagnostics.EventLogEntryType.Warning);
+                                if (_nullUpdateCount++ % 5 == 0)
+                                    Log.Instance.WriteEntry("Ignored null update", System.Diagnostics.EventLogEntryType.Warning);
                                 return;
                             }
                             _lastUpdate = DateTime.Now;
+                            _nullUpdateCount = 0;
                         }
                         else
                         {
@@ -322,6 +333,7 @@ namespace MidaxLib
                         Synchronize();
                         return;
                     }
+                    Log.Instance.WriteEntry("Incoming position update: " + update.ToString());
                     bool updateProcessed = false;
                     foreach (var item in _positions)
                     {
