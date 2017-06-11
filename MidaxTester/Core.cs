@@ -241,7 +241,7 @@ namespace MidaxTester
                                                     ReplayTester.Instance.NbProducedTrades, ReplayTester.Instance.NbExpectedTrades));
 
                 // test trade booking
-                MarketDataConnection.Instance = new ReplayConnection();
+                MarketDataConnection.Instance = new ReplayConnection(true);
                 model = new ModelMacDTest(dax);
                 MarketDataConnection.Instance.Connect(null);
                 Console.WriteLine(action + " trade booking...");
@@ -299,7 +299,7 @@ namespace MidaxTester
                                 
                 Console.WriteLine(action + " expected exceptions...");
                 dicSettings["REPLAY_CSV"] = Config.TestList(tests);
-                MarketDataConnection.Instance = new ReplayConnection();
+                MarketDataConnection.Instance = new ReplayConnection(true);
                 MarketDataConnection.Instance.Connect(null);
                 List<string> testError = new List<string>();
                 testError.Add(@"..\..\expected_results\error.csv");
@@ -342,7 +342,7 @@ namespace MidaxTester
                 success = false;
                 try
                 {
-                    MarketDataConnection.Instance = new ReplayConnection();
+                    MarketDataConnection.Instance = new ReplayConnection(true);
                     MarketDataConnection.Instance.Connect(null);
                     model = new ModelMacDTest(new MarketData(dax.Id));
                     model.StartSignals();

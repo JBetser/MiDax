@@ -126,8 +126,13 @@ namespace MidaxLib
             return false;
         }
 
+        protected virtual bool OnHold(Signal signal, DateTime time, Price stockValue)
+        {
+            return false;
+        }
+
         protected abstract bool Buy(Signal signal, DateTime time, Price stockValue);
-        protected abstract bool Sell(Signal signal, DateTime time, Price stockValue);
+        protected abstract bool Sell(Signal signal, DateTime time, Price stockValue);        
         protected abstract void Reset(DateTime cancelTime, decimal stockValue, bool openPosition);
 
         protected virtual void OnUpdateMktData(MarketData mktData, DateTime updateTime, Price value)
@@ -154,7 +159,7 @@ namespace MidaxLib
             foreach (Indicator ind in _mktIndicators)
                 ind.Subscribe(OnUpdateIndicator, null);
             foreach (Signal sig in _mktSignals)
-                sig.Subscribe(OnBuy, OnSell);
+                sig.Subscribe(OnBuy, OnSell, OnHold);
             if (startListening)
                 MarketDataConnection.Instance.StartListening();
         }

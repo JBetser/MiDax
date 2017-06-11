@@ -38,7 +38,7 @@ namespace MidaxLib
                 if (_instance != null)
                     return _instance;
                 if (Config.ReplayEnabled)
-                    _instance = new ReplayConnection();
+                    _instance = new ReplayConnection(Config.TestReplayEnabled);
                 else if (Config.MarketSelectorEnabled)
                     _instance = new MarketSelectorConnection();
                 else if (Config.TradingEnabled)
@@ -87,6 +87,7 @@ namespace MidaxLib
         {
             if (_refCount++ == 0)
             {
+
                 var task = Portfolio.Instance.Subscribe();
                 task.Wait();
                 SetListeningState(true);

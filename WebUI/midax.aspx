@@ -364,7 +364,7 @@
                <option value="MacD_30_90">MacD Cascade 30mn/1h30</option>
                <option value="FXMole_1_14">FX Mole 14 1mn</option>
                <option value="ANN_FX_5_2_1">ANN FX</option>
-               <option value="Rob_1_48_20_15">Strat RS01</option>
+               <option value="Rob_60_48_20_15">Strat RS01</option>
              </select>          
 
              <button type="button" id="GO" class="btn btn-primary">

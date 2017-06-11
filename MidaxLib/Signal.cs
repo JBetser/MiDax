@@ -143,6 +143,7 @@ namespace MidaxLib
         protected MarketData _tradingAsset = null;
         protected Signal.Tick _onBuy = null;
         protected Signal.Tick _onSell = null;
+        protected Signal.Tick _onHold = null;
         protected List<Indicator> _mktIndicator = null;
         protected SIGNAL_CODE _signalCode = SIGNAL_CODE.UNKNOWN;
         protected Trade _lastTrade = null;
@@ -157,10 +158,11 @@ namespace MidaxLib
             this._mktIndicator = new List<Indicator>();
         }
 
-        public void Subscribe(Signal.Tick onBuy, Signal.Tick onSell)
+        public void Subscribe(Signal.Tick onBuy, Signal.Tick onSell, Signal.Tick onHold)
         {
             _onBuy = onBuy;
             _onSell = onSell;
+            _onHold = onHold == null ? OnHold : onHold;
             foreach (Indicator indicator in _mktIndicator)
                 indicator.Subscribe(OnUpdate, null);
         }
@@ -198,11 +200,13 @@ namespace MidaxLib
         {
         }
 
-        protected bool _onHold(Signal signal, DateTime updateTime, Price value)
+        protected bool OnHold(Signal signal, DateTime updateTime, Price value)
         {
             // hold your position; do nothing
             return false;
         }
+
+        SIGNAL_CODE _oldSignalCode = SIGNAL_CODE.UNKNOWN;
 
         protected void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
         {
@@ -224,11 +228,27 @@ namespace MidaxLib
                         if (tradingOrder(this, updateTime, stockValue))
                         {
                             if (_signalCode == SIGNAL_CODE.BUY)
+                            {
+                                if (_oldSignalCode == SIGNAL_CODE.SELL)
+                                    PublisherConnection.Instance.Insert(updateTime.AddSeconds(-1), this, _signalCode, stockValue.Offer);
                                 PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Offer);
+                            }
                             else if (_signalCode == SIGNAL_CODE.SELL)
+                            {
+                                if (_oldSignalCode == SIGNAL_CODE.BUY)
+                                    PublisherConnection.Instance.Insert(updateTime.AddSeconds(-1), this, _signalCode, stockValue.Bid);
                                 PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Bid);
+                            }
+                            else if (_signalCode == SIGNAL_CODE.HOLD)
+                            {
+                                if (_oldSignalCode == SIGNAL_CODE.BUY)
+                                    PublisherConnection.Instance.Insert(updateTime, this, SIGNAL_CODE.SELL, stockValue.Bid);
+                                else if (_oldSignalCode == SIGNAL_CODE.SELL)
+                                    PublisherConnection.Instance.Insert(updateTime, this, SIGNAL_CODE.BUY, stockValue.Offer);
+                            }
                             else if (_signalCode == SIGNAL_CODE.FAILED)
                                 PublisherConnection.Instance.Insert(updateTime, this, _signalCode, stockValue.Bid);
+                            _oldSignalCode = _signalCode;
                         }
                     }
                 }

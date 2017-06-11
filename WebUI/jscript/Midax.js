@@ -1,6 +1,6 @@
 var ASSUMPTION_TREND = "";
-var ALWAYS_TRADING = true;
-var REMOVE_DUPLICATES = true;
+var ALWAYS_TRADING = false;
+var REMOVE_DUPLICATES = false;
 var IS_LIVE = false;
 
 var monthNames = [

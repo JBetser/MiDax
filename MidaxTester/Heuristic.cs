@@ -13,7 +13,7 @@ namespace MidaxTester
         public static void Run(List<DateTime> dates, bool generate = false, bool generate_from_db = false, bool publish_to_db = false, bool use_uat_db = false, bool fullday = false)
         {
             TestEngine testEngine = new TestEngine("heuristic", dates, generate, generate_from_db, publish_to_db, use_uat_db, fullday);
-            testEngine.Settings["TRADING_SIGNAL"] = "Rob_1_48_20_15_IX.D.DAX.DAILY.IP,Rob_1_48_20_15_IX.D.FTSE.DAILY.IP,Rob_1_48_20_15_CS.D.EURUSD.TODAY.IP,Rob_1_48_20_15_CS.D.GBPUSD.TODAY.IP,Rob_1_48_20_15_CS.D.USCSI.TODAY.IP";
+            testEngine.Settings["TRADING_SIGNAL"] = "Rob_60_48_20_15_IX.D.DAX.DAILY.IP,Rob_60_48_20_15_IX.D.FTSE.DAILY.IP,Rob_60_48_20_15_CS.D.EURUSD.TODAY.IP,Rob_60_48_20_15_CS.D.GBPUSD.TODAY.IP,Rob_60_48_20_15_CS.D.USCSI.TODAY.IP";
             testEngine.Settings["TIME_GMT"] = "1";
             testEngine.Settings["TIME_DECAY_FACTOR"] = "3";
             testEngine.Settings["ASSUMPTION_TREND"] = "BEAR";
@@ -45,14 +45,14 @@ namespace MidaxTester
             var robinhood_gbpusd = new ModelRobinHood(gbpusd);
             var robinhood_eurusd = new ModelRobinHood(eurusd);
             var robinhood_dax = new ModelRobinHood(dax);
-            var robinhood_ftse = new ModelRobinHood(ftse);
-            var robinhood_sil = new ModelRobinHood(silver);
+            //var robinhood_ftse = new ModelRobinHood(ftse);
+            //var robinhood_sil = new ModelRobinHood(silver);
 
             models.Add(robinhood_gbpusd);
             models.Add(robinhood_eurusd);
             models.Add(robinhood_dax);
-            models.Add(robinhood_ftse);
-            models.Add(robinhood_sil);
+            //models.Add(robinhood_ftse);
+            //models.Add(robinhood_sil);
             testEngine.Run(models);          
         }
     }

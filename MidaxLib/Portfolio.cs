@@ -64,8 +64,15 @@ namespace MidaxLib
                 if (_igStreamApiClient != null)
                 {
                     if (_tradeSubscriptionStk == null)
+                    {
                         _tradeSubscriptionStk = _igStreamApiClient.SubscribeToPositions(this);
-                    Log.Instance.WriteEntry("TradeSubscription : Subscribe");
+                        Log.Instance.WriteEntry("TradeSubscription : Subscribe");
+                    }
+                    if (Config.ReplayEnabled)
+                    {
+                        await Task.Delay(0);
+                        return;
+                    }
                     var response = await _igRestApiClient.getOTCOpenPositionsV2();
                     foreach (var pos in response.Response.positions)
                     {                        
@@ -315,7 +322,7 @@ namespace MidaxLib
                     {
                         if (_lastUpdate.HasValue)
                         {
-                            if ((DateTime.Now - _lastUpdate.Value).TotalMinutes < 1)
+                            if ((DateTime.Now - _lastUpdate.Value).TotalSeconds < 10)
                             {
                                 if (_nullUpdateCount++ % 5 == 0)
                                     Log.Instance.WriteEntry("Ignored null update", System.Diagnostics.EventLogEntryType.Warning);

@@ -166,11 +166,14 @@ namespace MidaxLib
                     _quantity = 0;
                     return false;
                 }
-                if (_tradePositions[dealId] != 0)
+                if (_tradePositions.ContainsKey(dealId))
                 {
-                    Log.Instance.WriteEntry("Closed a position: " + dealId);
-                    _quantity -= _tradePositions[dealId];
-                    _tradePositions[dealId] = 0;
+                    if (_tradePositions[dealId] != 0)
+                    {
+                        Log.Instance.WriteEntry("Closed a position: " + dealId);
+                        _quantity -= _tradePositions[dealId];
+                        _tradePositions[dealId] = 0;
+                    }
                 }
                 if (_quantity != 0)
                     Log.Instance.WriteEntry("Position has not been closed completely: " + dealId + ". Position: " + _quantity, System.Diagnostics.EventLogEntryType.Error);

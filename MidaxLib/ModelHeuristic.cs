@@ -79,7 +79,7 @@ namespace MidaxLib
             _signal = new SignalMole(_index, _macD.SignalLow.IndicatorLow.Period / 60, _macD.SignalLow.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, (IndicatorEMA)_macD.SignalLow.IndicatorLow, (IndicatorEMA)_macD.SignalLow.IndicatorHigh, _macD.TradingIndex);
             _mktSignals.Add(_signal);
             _signalLong = new SignalMole(_index, _macD.SignalHigh.IndicatorLow.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, _macD.SignalHigh.IndicatorHigh.Period / 60, (IndicatorEMA)_macD.SignalHigh.IndicatorLow, (IndicatorEMA)_macD.SignalHigh.IndicatorHigh, _macD.TradingIndex);
-            _signalLong.Subscribe(new Signal.Tick(LongBuy), new Signal.Tick(LongSell));
+            _signalLong.Subscribe(new Signal.Tick(LongBuy), new Signal.Tick(LongSell), null);
             _tradingSet = (TradingSetMole)Portfolio.Instance.GetTradingSet(this);
 
             _rsiLow = new IndicatorRSI(_index, Math.Max(1,_macD.SignalLow.IndicatorLow.Period / 600), 14);

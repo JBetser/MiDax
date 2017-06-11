@@ -118,6 +118,31 @@ namespace MidaxLib
         }
     }
 
+    public class ReplayStreamingClientSync : ReplayStreamingClient
+    {
+        public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
+        {
+            if (trade != null)
+            {
+                trade.Reference = "###DUMMY_TRADE_REF" + _numRef++ + "###";
+                trade.ConfirmationTime = trade.TradingTime;
+                onTradeBooked(trade);
+                onCreateTradeNotification(trade);
+            }
+        }
+
+        public override void ClosePosition(Trade closingTrade, DateTime time, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
+        {
+            if (closingTrade != null)
+            {
+                closingTrade.Reference = "###CLOSE_DUMMY_TRADE_REF" + _numRef++ + "###";
+                closingTrade.ConfirmationTime = time;
+                onTradeBooked(closingTrade);
+                onClosePositionNotification(closingTrade);
+            }
+        }
+    }
+
     public class ReplayStreamingClient : IAbstractStreamingClient
     {
         IReaderConnection _reader = null;
@@ -129,7 +154,7 @@ namespace MidaxLib
         Dictionary<KeyValuePair<string, DateTime>, Trade> _expectedTradeData = null;
         Dictionary<KeyValuePair<string, DateTime>, double> _expectedProfitData = null;
         int _numId = 1;
-        int _numRef = 1;
+        protected int _numRef = 1;
         int _samplingMs = -1;
         bool _deleteDB = false;
         
@@ -260,16 +285,16 @@ namespace MidaxLib
             }
         }
 
-        void onCreateTradeNotification(object state)
+        protected void onCreateTradeNotification(object state)
         {
-            var trade = ((TradeBookingEvent)state).Trade;
+            var trade = state.GetType() == typeof(Trade) ? (Trade)state : ((TradeBookingEvent)state).Trade;
             trade.Id = "###DUMMY_TRADE_ID" + _numId++ + "###";
             _placeHolders[trade.PlaceHolder] = trade.Id;  
             if (_tradingEventTable != null)
                 _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.TradingTime, trade.Epic, trade.Id, trade.Reference, "OPEN", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
         }
 
-        void IAbstractStreamingClient.ClosePosition(Trade closingTrade, DateTime time, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
+        public virtual void ClosePosition(Trade closingTrade, DateTime time, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
             if (closingTrade != null)
             {
@@ -286,9 +311,9 @@ namespace MidaxLib
             _closing.WaitOne(10000);
         }
 
-        void onClosePositionNotification(object state)
+        protected void onClosePositionNotification(object state)
         {
-            var trade = ((TradeBookingEvent)state).Trade;
+            var trade = state.GetType() == typeof(Trade) ? (Trade)state : ((TradeBookingEvent)state).Trade;
             trade.Id = _placeHolders[trade.PlaceHolder];
             if (_tradingEventTable != null)
                 _tradingEventTable.OnUpdate(0, trade.Epic, new ReplayPositionUpdateInfo(trade.TradingTime, trade.Epic, trade.Id, trade.Reference, "DELETED", "ACCEPTED", trade.Size, trade.Price, trade.Direction));
@@ -438,7 +463,6 @@ namespace MidaxLib
     public class ReplayStreamingCrazySeller : ReplayStreamingClient
     {
         static int _numId = 1;
-        static int _numRef = 1;
 
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
@@ -457,7 +481,6 @@ namespace MidaxLib
     public class ReplayStreamingCrazyBuyer : ReplayStreamingClient
     {
         static int _numId = 1;
-        static int _numRef = 1;
 
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
@@ -476,7 +499,6 @@ namespace MidaxLib
     public class ReplayStreamingBrokeBuyer : ReplayStreamingClient
     {
         static int _numId = 1;
-        static int _numRef = 1;
 
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
@@ -495,7 +517,6 @@ namespace MidaxLib
     public class ReplayStreamingLoser : ReplayStreamingClient
     {
         static int _numId = 1;
-        static int _numRef = 1;
 
         public override void BookTrade(Trade trade, Portfolio.TradeBookedEvent onTradeBooked, Portfolio.TradeBookedEvent onBookingFailed)
         {
@@ -515,7 +536,8 @@ namespace MidaxLib
     {
         ReplayStreamingClient _replayStreamingClient;
 
-        public ReplayConnection() : base(new ReplayStreamingClient())
+        public ReplayConnection(bool testReplay)
+            : base(testReplay ? new ReplayStreamingClient() : new ReplayStreamingClientSync())
         {
             _replayStreamingClient = (ReplayStreamingClient)_apiStreamingClient;
         }

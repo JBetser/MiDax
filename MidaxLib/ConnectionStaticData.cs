@@ -23,7 +23,7 @@ namespace MidaxLib
                 if (_instance != null)
                     return _instance;
                 if (Config.ReplayEnabled)
-                    _instance = new ReplayConnection();
+                    _instance = new ReplayConnection(Config.TestReplayEnabled);
                 else
                     _instance = new CassandraConnection();
                 return _instance;
