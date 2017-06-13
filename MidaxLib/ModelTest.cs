@@ -133,7 +133,7 @@ namespace MidaxLib
         
         protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            if (_tradingSet.PlaceTrade(signal.Trade, stockValue.Bid))
+            if (_tradingSet.PlaceTrade(signal.Trade, stockValue.Bid, signal.TradingAsset.Name))
                 Console.WriteLine(time + " Signal " + signal.Id + " sell " + signal.TradingAsset.Id + " " + stockValue.Bid);
             return false;
         }

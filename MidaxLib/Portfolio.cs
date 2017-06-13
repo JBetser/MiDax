@@ -198,12 +198,12 @@ namespace MidaxLib
             newTrade.Id = newTrade.Reference;
             newTrade.Publish();
         }
-        
-        public bool BookTrade(Trade newTrade)
+
+        public bool BookTrade(Trade newTrade, string assetName)
         {
             if (newTrade == null)
                 return false;
-            if (Config.TradingOpen(newTrade.TradingTime))
+            if (Config.TradingOpen(newTrade.TradingTime, assetName))
             {
                 if (GetPosition(newTrade.Epic) != null)
                 {
@@ -396,11 +396,11 @@ namespace MidaxLib
             _objective = objective;
         }
 
-        protected void BookTrade(Trade newTrade)
+        protected void BookTrade(Trade newTrade, string assetName)
         {
             if (newTrade == null || _signal == null)
                 return;
-            if (Config.TradingOpen(newTrade.TradingTime))
+            if (Config.TradingOpen(newTrade.TradingTime, assetName))
                 _client.BookTrade(newTrade, OnTradeBooked, OnBookingFailed);
         }
 

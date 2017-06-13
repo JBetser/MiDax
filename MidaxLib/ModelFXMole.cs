@@ -56,7 +56,7 @@ namespace MidaxLib
 
         protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
-            if (!_ptf.BookTrade(signal.Trade))
+            if (!_ptf.BookTrade(signal.Trade, signal.TradingAsset.Name))
             {
                 Reset(time, stockValue.Mid(), true);
                 return false;
@@ -68,7 +68,7 @@ namespace MidaxLib
 
         protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            if (!_ptf.BookTrade(signal.Trade))
+            if (!_ptf.BookTrade(signal.Trade, signal.TradingAsset.Name))
             {
                 Reset(time, stockValue.Mid(), true);
                 return false;

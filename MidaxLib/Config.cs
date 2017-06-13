@@ -117,20 +117,28 @@ namespace MidaxLib
             }
         }
 
-        static bool _tradingOpen = false;
         static bool _publishingOpen = false;
                 
-        public static bool TradingOpen(DateTime time)
+        public static bool TradingOpen(DateTime time, string assetName)
         {
+            var startTime = Config.ParseDateTimeLocal(_settings["TRADING_START_TIME"]);
             var endTime = Config.Settings.ContainsKey("TRADING_CLOSING_TIME") ? Config.ParseDateTimeLocal(_settings["TRADING_CLOSING_TIME"])
                                                                               : Config.ParseDateTimeLocal(_settings["TRADING_STOP_TIME"]);
-            bool open = (time.TimeOfDay >= Config.ParseDateTimeLocal(_settings["TRADING_START_TIME"]).TimeOfDay &&
+            if (time.DayOfWeek == DayOfWeek.Monday)
+            {
+                var today9am = new DateTime(endTime.Year, endTime.Month, endTime.Day, 9, 0, 0);
+                if (startTime < today9am)
+                    startTime = today9am;
+            }
+            if (assetName == "DAX" || assetName == "DOW" || assetName == "CAC" || assetName == "FTSE")
+            {
+                var today6pm = new DateTime(endTime.Year, endTime.Month, endTime.Day, 18, 0, 0);
+                if (endTime > today6pm)
+                    endTime = today6pm;
+            }
+            bool open = (time.TimeOfDay >= startTime.TimeOfDay &&
                          time.TimeOfDay < endTime.TimeOfDay &&
                          time.DayOfWeek != DayOfWeek.Saturday && time.DayOfWeek != DayOfWeek.Sunday);
-            if (open != _tradingOpen){
-                _tradingOpen = open;
-                Log.Instance.WriteEntry("Trading " + (_tradingOpen ? "started" : "stopped"), EventLogEntryType.Information);
-            }
             return open;
         }
 

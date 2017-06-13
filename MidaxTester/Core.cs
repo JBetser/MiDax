@@ -252,7 +252,7 @@ namespace MidaxTester
                 ReplayTester.Instance.SetExpectedResults(null, null, expectedTrades, null);
                 var task = model.PTF.Subscribe();
                 task.Wait();
-                model.PTF.BookTrade(tradeTest);
+                model.PTF.BookTrade(tradeTest, dax.Name);
                 Thread.Sleep(5000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != -10)
                     throw new ApplicationException("SELL Trade booking error");
@@ -267,7 +267,7 @@ namespace MidaxTester
                 expectedTrade.Reference = "###DUMMY_TRADE_REF3###";
                 expectedTrade.Id = "###DUMMY_TRADE_ID2###";
                 expectedTrades[new KeyValuePair<string, DateTime>(expectedTrade.Reference, tradeTime)] = expectedTrade;
-                model.PTF.BookTrade(new Trade(tradeTest, true, tradeTime));
+                model.PTF.BookTrade(new Trade(tradeTest, true, tradeTime), dax.Name);
                 Thread.Sleep(5000);
                 if (model.PTF.GetPosition(tradeTest.Epic).Quantity != 10)
                     throw new ApplicationException("BUY Trade booking error");

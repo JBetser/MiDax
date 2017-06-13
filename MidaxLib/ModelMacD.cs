@@ -76,7 +76,7 @@ namespace MidaxLib
                 {
                     if (_trendAssumption != SIGNAL_CODE.SELL)
                         signal.Trade.Size = _tradeSize * 2;
-                    _ptf.BookTrade(signal.Trade);
+                    _ptf.BookTrade(signal.Trade, signal.TradingAsset.Name);
                 }
             }
             else if (_trendAssumption != SIGNAL_CODE.SELL && _ptf.GetPosition(_tradingIndex.Id).Quantity == 0)
@@ -84,7 +84,7 @@ namespace MidaxLib
                 if (time <= _closingTime)
                 {
                     _tradeSize = signal.Trade.Size;
-                    _ptf.BookTrade(signal.Trade);
+                    _ptf.BookTrade(signal.Trade, signal.TradingAsset.Name);
                 }
                 else
                     return false;
@@ -112,7 +112,7 @@ namespace MidaxLib
                 {
                     if (_trendAssumption != SIGNAL_CODE.BUY)
                         signal.Trade.Size = _tradeSize * 2;
-                    _ptf.BookTrade(signal.Trade);
+                    _ptf.BookTrade(signal.Trade, signal.TradingAsset.Name);
                 }
             }
             else if (_trendAssumption != SIGNAL_CODE.BUY && _ptf.GetPosition(_tradingIndex.Id).Quantity == 0)
@@ -120,7 +120,7 @@ namespace MidaxLib
                 if (time <= _closingTime)
                 {
                     _tradeSize = signal.Trade.Size;
-                    _ptf.BookTrade(signal.Trade);
+                    _ptf.BookTrade(signal.Trade, signal.TradingAsset.Name);
                 }
                 else
                     return false;

@@ -153,7 +153,7 @@ namespace MidaxLib
 
         protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            _tradingSet.PlaceTrade(signal.Trade, stockValue.Bid);
+            _tradingSet.PlaceTrade(signal.Trade, stockValue.Bid, signal.TradingAsset.Name);
             return false;
         }
 
@@ -262,9 +262,9 @@ namespace MidaxLib
             Portfolio.Instance.CloseTradingSet(this, time, stockValue);
         }
 
-        public bool PlaceTrade(Trade trade, decimal price)
+        public bool PlaceTrade(Trade trade, decimal price, string assetName)
         {
-            if (!_ready || !Config.TradingOpen(trade.TradingTime) || !_referenceLevel.HasValue)
+            if (!_ready || !Config.TradingOpen(trade.TradingTime, assetName) || !_referenceLevel.HasValue)
                 return false;
             int idxPlaceHolder = -1;
             foreach (var placeHolderGroup in _placeHolders)
@@ -277,7 +277,7 @@ namespace MidaxLib
                     if (placeHolder.Quantity != 0)
                         continue;
                     trade.PlaceHolder = idxPlaceHolder;
-                    BookTrade(trade);
+                    BookTrade(trade, assetName);
                     Log.Instance.WriteEntry(trade.TradingTime + "Mole Signal " + _signal.Id + ": SELL " + _signal.TradingAsset.Id + " " + price, EventLogEntryType.Information);
                     return true;
                 }

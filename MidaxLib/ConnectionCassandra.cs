@@ -193,19 +193,18 @@ namespace MidaxLib
 
         public override void Insert(DateTime updateTime, Signal signal, SIGNAL_CODE code, decimal mktdatavalue)
         {
+            if (Config.TradingEnabled)
+            {
+                if (signal.Trade == null)
+                    return;
+                if (signal.Trade.Reference == "")
+                    return;
+            }
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
-            try
-            {
-                string tradeRef = signal.Trade == null ? null : " " + signal.Trade.Reference;
-                executeAsyncQuery(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value, mktdatavalue) values ('{2}', {3}, '{4}', {5}, {6})",
-                    DB_HISTORICALDATA, DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), tradeRef, Convert.ToInt32(code), mktdatavalue));
-            }
-            catch(Exception e)
-            {
-                var errorMsg = string.Format("Could not insert robin hood state at datetime {0}. Signal: {1}. Exception: " + e.ToString(), updateTime, signal.Id);
-                Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Error);
-            }
+            string tradeRef = signal.Trade == null ? null : " " + signal.Trade.Reference;
+            executeAsyncQuery(string.Format(DB_INSERTION + "(signalid, trading_time, tradeid, value, mktdatavalue) values ('{2}', {3}, '{4}', {5}, {6})",
+                DB_HISTORICALDATA, DATATYPE_SIGNAL, signal.Id, ToUnixTimestamp(updateTime), tradeRef, Convert.ToInt32(code), mktdatavalue));
         }
 
         public override void Insert(Trade trade)

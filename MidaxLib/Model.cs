@@ -233,7 +233,7 @@ namespace MidaxLib
 
         protected override bool Buy(Signal signal, DateTime time, Price stockValue)
         {
-            if (!_ptf.BookTrade(signal.Trade))
+            if (!_ptf.BookTrade(signal.Trade, signal.TradingAsset.Name))
                 return false;
             string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
             Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": BUY " + signal.TradingAsset.Id + " " + stockValue.Bid, EventLogEntryType.Information);
@@ -242,7 +242,7 @@ namespace MidaxLib
 
         protected override bool Sell(Signal signal, DateTime time, Price stockValue)
         {
-            if (!_ptf.BookTrade(signal.Trade))
+            if (!_ptf.BookTrade(signal.Trade, signal.TradingAsset.Name))
                 return false;
             string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
             Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.TradingAsset.Id + " " + stockValue.Offer, EventLogEntryType.Information);

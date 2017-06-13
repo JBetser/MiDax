@@ -124,12 +124,12 @@ namespace MidaxLib
         {
             if (_ptf.GetPosition(_index.Id).Quantity > 0)
             {
-                _ptf.BookTrade(signal.Trade);
+                _ptf.BookTrade(signal.Trade, signal.TradingAsset.Name);
                 Log.Instance.WriteEntry(time + " Signal " + signal.Id + ": Unexpected positive position. SELL " + signal.Trade.Id + " " + stockValue.Offer, EventLogEntryType.Error);
             }
             else if (_ptf.GetPosition(_index.Id).Quantity == 0)
             {
-                if (!_ptf.BookTrade(signal.Trade))
+                if (!_ptf.BookTrade(signal.Trade, signal.TradingAsset.Name))
                     return false;
                 string tradeRef = signal.Trade == null ? "" : " " + signal.Trade.Reference;
                 Log.Instance.WriteEntry(time + tradeRef + " Signal " + signal.Id + ": SELL " + signal.TradingAsset.Id + " " + stockValue.Bid, EventLogEntryType.Information);
