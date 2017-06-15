@@ -1,31 +1,31 @@
 CREATE KEYSPACE historicaldata
   WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
 
-CREATE TABLE historicaldata.stocks (
-  stockid text,
+CREATE TABLE historicaldata.mktdata (
+  mktdataid text,
   trading_time timestamp,
   name text,
   bid decimal,
   offer decimal,
   volume decimal,
-  PRIMARY KEY (stockid, trading_time)
+  PRIMARY KEY (mktdataid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);
 
-ALTER TABLE historicaldata.stocks WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+ALTER TABLE historicaldata.mktdata WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
 
-CREATE TABLE historicaldata.dummystocks (
-  stockid text,
+CREATE TABLE historicaldata.dummymktdata (
+  mktdataid text,
   trading_time timestamp,
   name text,
   bid decimal,
   offer decimal,
   volume decimal,
-  PRIMARY KEY (stockid, trading_time)
+  PRIMARY KEY (mktdataid, trading_time)
 )
 WITH CLUSTERING ORDER BY (trading_time DESC);
 
-ALTER TABLE historicaldata.dummystocks WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
+ALTER TABLE historicaldata.dummymktdata WITH compaction = {'class': 'DateTieredCompactionStrategy', 'timestamp_resolution':'MICROSECONDS', 'base_time_seconds':'3600', 'max_sstable_age_days':'31'};
 
 CREATE TABLE historicaldata.indicators (
   indicatorid text,
