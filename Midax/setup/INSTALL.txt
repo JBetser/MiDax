@@ -1,0 +1,18 @@
+- open an admin command prompt
+
+- md C:\Program Files (x86)\Midax
+- cd C:\Program Files (x86)\Midax
+
+- uninstall the previous version:
+"C:\Program Files (x86)\ZeroC\Ice-3.5.1\bin\iceserviceinstall.exe" -u icegridnode "C:\Program Files (x86)\Midax\config.grid"
+
+- delete all files in C:\Program Files (x86)\Midax
+
+- unzip all Midax files into C:\Program Files (x86)\Midax
+
+- launch DeployRegistry_node.cmd
+
+- launch DeployRegistry.cmd
+
+- install the new version (do not forget to update MidaxLib\AssemblyInfo.cs):
+"C:\Program Files (x86)\ZeroC\Ice-3.5.1\bin\iceserviceinstall.exe" icegridnode --ImagePath="C:\Program Files (x86)\ZeroC\Ice-3.5.1\bin\icegridnode.exe" "C:\Program Files (x86)\Midax\config.grid" --DisplayName="Midax Server" --EventLog=Midax --Description="The Ice grid computing service of Midax"
