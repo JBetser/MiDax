@@ -1,0 +1,7 @@
+- msvcrt 2008 x86
+- msvcrt 2010 x86
+- .NET framework 4.6
+- JVM 8
+- Python 2.7
+- Cassandra 2.2.8 64bit win32 service
+- ZeroC Ice 3.5.1
