@@ -72,7 +72,8 @@ namespace MidaxLib
                         {
                             Log.Instance.WriteEntry("Applying a signal manual override on: " + signal.Id, System.Diagnostics.EventLogEntryType.Information);
                             pos.ManualOverride = false;
-                            signal.Enabled = false;
+                            foreach(var sig in _mktSignals)
+                                sig.Override();
                             return false;
                         }
                     }

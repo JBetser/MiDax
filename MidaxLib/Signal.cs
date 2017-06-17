@@ -174,6 +174,10 @@ namespace MidaxLib
             foreach (Indicator indicator in (from i in _mktIndicator select i).Reverse())
                 indicator.Unsubscribe(OnUpdate, null);
         }
+
+        public virtual void Override()
+        {
+        }
         
         public string Id
         {
