@@ -1,1 +1,1 @@
-START "Midax server" "C:\Program Files (x86)\ZeroC\Ice-3.5.0\bin\icegridnode.exe" --Ice.Config=config_reg.grid
+START "Midax Server" "C:\Program Files (x86)\ZeroC\Ice-3.5.1\bin\icegridnode.exe" --Ice.Config=config.grid

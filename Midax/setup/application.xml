@@ -15,8 +15,8 @@
 
     <node name="nodeMidax">
 
-      <server id="MidaxServer" exe="C:\Midax\Midax.exe" activation="always">
-        <adapter name="MidaxIce" endpoints="tcp -h 192.168.1.25">
+      <server id="MidaxServer" exe="C:\Program Files (x86)\Midax\Midax.exe" activation="always">
+        <adapter name="MidaxIce" endpoints="tcp -h 127.0.0.1">
           <object identity="serverController" type="::Midax::MidaxIce" property="Identity"/>
         </adapter>
 
