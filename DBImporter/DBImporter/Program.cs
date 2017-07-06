@@ -19,8 +19,8 @@ namespace DBImporter
             {
                 var year = int.Parse(args[0].Split('-')[0]);
                 var month =  int.Parse(args[0].Split('-')[1]);
-                start = new DateTime(year, month, 1, 5, 45, 0);
-                end = new DateTime(year, month, DateTime.DaysInMonth(year, month), 22, 0, 0);
+                start = new DateTime(year, month, 1);
+                end = new DateTime(year, month, DateTime.DaysInMonth(year, month), 23, 59, 59);
                 wholeMonth = true;
                 curArg++;
             }
@@ -33,6 +33,8 @@ namespace DBImporter
             bool restoreDB = false;
             bool fromDB = true;
             bool deleteDB = false;
+            bool fromProd = false;
+            bool perHour = false;
             if (args.Length > curArg)
             {
                 restoreDB = (args[curArg++].ToUpper() == "-RESTOREDB");
@@ -42,28 +44,49 @@ namespace DBImporter
             {
                 fromDB = (args[curArg].ToUpper() == "-FROMDB");
                 deleteDB = (args[curArg].ToUpper() == "-DELETEDB");
+                if (fromDB || deleteDB)
+                    curArg++;
+            }
+            if (args.Length > curArg)
+            {
+                fromProd = (args[curArg].ToUpper() == "-PROD");
+                if (fromProd)
+                    curArg++;
+            }
+            if (args.Length > curArg)
+            {
+                perHour = (args[curArg].ToUpper() == "-PERHOUR");
+                curArg++;
             }
             Dictionary<string, string> dicSettings = new Dictionary<string, string>();
             dicSettings["APP_NAME"] = "Midax";
             dicSettings["DB_CONTACTPOINT"] = "192.168.1.25";
-            dicSettings["REPLAY_MODE"] = (restoreDB && !fromDB) ? "CSV" : "DB";
+            dicSettings["REPLAY_MODE"] = (!deleteDB && !fromDB) ? "CSV" : "DB";
             dicSettings["REPLAY_POPUP"] = "1";
-            dicSettings["TRADING_MODE"] = (restoreDB && fromDB) ? "IMPORT_UAT" : "IMPORT";
+            dicSettings["TRADING_MODE"] = fromProd ? "IMPORT" : "IMPORT_UAT";
             dicSettings["SAMPLING_MS"] = "1000";
             dicSettings["FX_GBPUSD"] = "GBPUSD:CS.D.GBPUSD.TODAY.IP";
             dicSettings["FX_GBPEUR"] = "GBPEUR:CS.D.GBPEUR.TODAY.IP";
             dicSettings["FX_EURUSD"] = "EURUSD:CS.D.EURUSD.TODAY.IP";
             dicSettings["FX_USDJPY"] = "USDJPY:CS.D.USDJPY.TODAY.IP";
             dicSettings["FX_AUDUSD"] = "AUDUSD:CS.D.AUDUSD.TODAY.IP";
+            dicSettings["TIME_GMT_MARKETDATA"] = "5";
             Config.Settings = dicSettings;
 
             while (start <= end)
             {
-                Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 5, 45, 0);
-                Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 22, 0, 0);
-                Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 7, 0, 0);
-                Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 21, 0, 0);
-                Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 17, 0, 0);
+                Config.Settings["PUBLISHING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, start.Hour, start.Minute, start.Second);
+                if (perHour)
+                {
+                    Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, start.Hour == 23 ? 23 : (start.Hour + 1), start.Hour == 23 ? 59 : start.Minute, start.Hour == 23 ? 59 : start.Second);
+                }
+                else
+                {
+                    Config.Settings["PUBLISHING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 23, 55, 0);
+                }
+                Config.Settings["TRADING_START_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 8, 0, 0);
+                Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 21, 30, 0);
+                //Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}-{1}-{2} {3}:{4}:{5}", start.Year, start.Month, start.Day, 17, 0, 0);
                 if (deleteDB)
                     Config.Settings["DELETEDB"] = "1";
                 else
@@ -79,7 +102,7 @@ namespace DBImporter
                     {
                         List<string> mktdataFiles = new List<string>();
                         if (wholeMonth)
-                            mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_audusd_{0}_{1}.csv", start.Month, start.Year));
+                            mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_eurusd_{0}_{1}.csv", start.Month, start.Year));
                         else
                             mktdataFiles.Add(string.Format("..\\..\\..\\MktData\\mktdata_{0}_{1}_{2}.csv", start.Day, start.Month, start.Year));
                         Config.Settings["REPLAY_CSV"] = Config.TestList(mktdataFiles);
@@ -94,11 +117,11 @@ namespace DBImporter
                 var eurusd = new MarketData(dicSettings["FX_EURUSD"]);
                 var usdjpy = new MarketData(dicSettings["FX_USDJPY"]);
                 var audusd = new MarketData(dicSettings["FX_AUDUSD"]);
-                lstIndices.Add(gbpusd);
-                lstIndices.Add(gbpeur);
+                //lstIndices.Add(gbpusd);
+                //lstIndices.Add(gbpeur);
                 lstIndices.Add(eurusd);
-                lstIndices.Add(usdjpy);
-                lstIndices.Add(audusd);
+                //lstIndices.Add(usdjpy);
+                //lstIndices.Add(audusd);
                 /*
                 var indexDAX = new MarketData("DAX:IX.D.DAX.DAILY.IP");
                 indexDAX.Subscribe(OnUpdate, null);
@@ -117,14 +140,7 @@ namespace DBImporter
                     lstIndicators.Add(new IndicatorLow(index));
                     lstIndicators.Add(new IndicatorHigh(index));
                     lstIndicators.Add(new IndicatorCloseBid(index));
-                    lstIndicators.Add(new IndicatorCloseOffer(index));
-                    lstIndicators.Add(new IndicatorLevelPivot(index));
-                    lstIndicators.Add(new IndicatorLevelR1(index));
-                    lstIndicators.Add(new IndicatorLevelR2(index));
-                    lstIndicators.Add(new IndicatorLevelR3(index));
-                    lstIndicators.Add(new IndicatorLevelS1(index));
-                    lstIndicators.Add(new IndicatorLevelS2(index));
-                    lstIndicators.Add(new IndicatorLevelS3(index));                    
+                    lstIndicators.Add(new IndicatorCloseOffer(index));                   
                 }
                 foreach(var indicator in lstIndicators)
                     indicator.Subscribe(OnUpdate, null);
@@ -133,8 +149,11 @@ namespace DBImporter
 
                 MarketDataConnection.Instance.StartListening();
 
-                foreach (var indicator in lstIndicators)
-                    indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
+                if (!deleteDB)
+                {
+                    foreach (var indicator in lstIndicators)
+                        indicator.Publish(Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]));
+                }
                 MarketDataConnection.Instance.StopListening();
 
                 foreach (var indicator in lstIndices)
@@ -142,7 +161,10 @@ namespace DBImporter
 
                 do
                 {
-                    start = start.AddDays(1);
+                    if (perHour)
+                        start = start.AddHours(1);
+                    else
+                        start = start.AddDays(1);
                 }
                 while (start.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday);
             }

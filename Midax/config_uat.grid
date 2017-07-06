@@ -1,0 +1,46 @@
+#
+# The IceGrid instance name.
+#
+IceGrid.InstanceName=MidaxIceGrid
+
+#
+# The IceGrid locator proxy.
+#
+Ice.Default.Locator=MidaxIceGrid/Locator:default -h 192.168.1.25 -p 5062
+
+#
+# IceGrid registry configuration.
+#
+IceGrid.Registry.Client.Endpoints=default -h 192.168.1.25 -p 5062
+IceGrid.Registry.Server.Endpoints=default -h 192.168.1.25
+IceGrid.Registry.Internal.Endpoints=default -h 192.168.1.25
+IceGrid.Registry.Data=C:\Program Files (x86)\Midax\db\registry
+IceGrid.Registry.PermissionsVerifier=MidaxIceGrid/NullPermissionsVerifier
+IceGrid.Registry.AdminPermissionsVerifier=MidaxIceGrid/NullPermissionsVerifier
+IceGrid.Registry.SSLPermissionsVerifier=MidaxIceGrid/NullSSLPermissionsVerifier
+IceGrid.Registry.AdminSSLPermissionsVerifier=MidaxIceGrid/NullSSLPermissionsVerifier
+
+#
+# IceGrid node configuration.
+#
+IceGrid.Node.Name=nodeMidax
+IceGrid.Node.Endpoints=default -h 192.168.1.25
+IceGrid.Node.Data=C:\Program Files (x86)\Midax\db\node
+IceGrid.Node.CollocateRegistry=1
+IceGrid.Node.Output=C:\Program Files (x86)\Midax\db\logs
+IceGrid.Node.RedirectErrToOut=1
+
+#
+# Trace properties.
+#
+IceGrid.Node.Trace.Activator=1
+#IceGrid.Node.Trace.Adapter=2
+#IceGrid.Node.Trace.Server=3
+
+Ice.LogFile=C:\Program Files (x86)\Midax\db\logs\logs_Midax.txt
+
+#
+# Dummy username and password for icegridadmin.
+#
+IceGridAdmin.Username=foo
+IceGridAdmin.Password=bar

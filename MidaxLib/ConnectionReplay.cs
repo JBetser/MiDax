@@ -394,11 +394,14 @@ namespace MidaxLib
                 foreach (var epicQuote in epicQuotes.Value)
                     _deleter.DeleteSignal(epicQuote.t, epicQuote.s);
             }
-            var tradeData = _readerExpectedResults.GetTrades(_startTime, _stopTime, epicLst);
-            foreach (var trades in tradeData)
+            if (Config.ImportUATEnabled)
             {
-                foreach (var trade in trades.Value)
-                    _deleter.DeleteTrade(trade.TradingTime, trade.Id);
+                var tradeData = _readerExpectedResults.GetTrades(_startTime, _stopTime, epicLst);
+                foreach (var trades in tradeData)
+                {
+                    foreach (var trade in trades.Value)
+                        _deleter.DeleteTrade(trade.TradingTime, trade.Id);
+                }
             }
         }
 

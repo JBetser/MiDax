@@ -28,7 +28,7 @@ namespace MidaxTrader
             Config.Settings["TRADING_STOP_TIME"] = string.Format("{0}:{1}:{2}", 23, 59, 50);
             Config.Settings["TRADING_CLOSING_TIME"] = string.Format("{0}:{1}:{2}", 23, 59, 55);
             Config.Settings["TRADING_MODE"] = "PRODUCTION";
-            Config.Settings["TRADING_SIGNAL"] = "Rob_15_48_20_15_CS.D.GBPUSD.TODAY.IP,Rob_15_48_20_15_CS.D.EURUSD.TODAY.IP,Rob_15_48_20_15_IX.D.DAX.DAILY.IP,Rob_15_48_20_15_IX.D.FTSE.DAILY.IP,Rob_15_48_20_15_CS.D.USCSI.TODAY.IP";
+            Config.Settings["TRADING_SIGNAL"] = "Rob_1_48_20_15_CS.D.GBPUSD.TODAY.IP,Rob_1_48_20_15_CS.D.EURUSD.TODAY.IP,Rob_60_48_20_15_IX.D.DAX.DAILY.IP,Rob_60_48_20_15_IX.D.FTSE.DAILY.IP,Rob_60_48_20_15_CS.D.USCSI.TODAY.IP";
             Config.Settings["TRADING_LIMIT_PER_BP"] = "5";
             Config.Settings["TRADING_CURRENCY"] = "GBP";
             Config.Settings["INDEX_DOW"] = "DOW:IX.D.DOW.DAILY.IP";
@@ -39,7 +39,7 @@ namespace MidaxTrader
             Config.Settings["COM_SILVER"] = "SIL:CS.D.USCSI.TODAY.IP";
             Config.Settings["INDEX_ICEDOW"] = "DOW:IceConnection.DJI";
             Config.Settings["CALENDAR_PATH"] = "C:\\Shared\\MidaxTester\\Calendar";
-            Config.Settings["TIME_GMT"] = "1";
+            Config.Settings["TIME_GMT_CALENDAR"] = "1";
 
             var index = IceStreamingMarketData.Instance;
             var models = new List<Model>();
@@ -49,16 +49,16 @@ namespace MidaxTrader
             var gbpusd = new MarketData(Config.Settings["FX_GBPUSD"]);
             var eurusd = new MarketData(Config.Settings["FX_EURUSD"]);
             var silver = new MarketData(Config.Settings["COM_SILVER"]);
-            var robinhood_eurusd = new ModelRobinHood(eurusd, 15);
-            var robinhood_gbpusd = new ModelRobinHood(gbpusd, 15);
-            var robinhood_silver = new ModelRobinHood(silver, 15);
-            var robinhood_dax = new ModelRobinHood(dax, 15);
-            var robinhood_ftse = new ModelRobinHood(ftse, 15);
+            var robinhood_eurusd = new ModelRobinHood(eurusd,1);
+            var robinhood_gbpusd = new ModelRobinHood(gbpusd,1);
+            var robinhood_silver = new ModelRobinHood(silver);
+            var robinhood_dax = new ModelRobinHood(dax);
+            var robinhood_ftse = new ModelRobinHood(ftse);
             models.Add(robinhood_eurusd);
-            models.Add(robinhood_gbpusd);
-            models.Add(robinhood_dax);
-            models.Add(robinhood_ftse);
-            models.Add(robinhood_silver);
+            //models.Add(robinhood_gbpusd);
+            //models.Add(robinhood_dax);
+            //models.Add(robinhood_ftse);
+            //models.Add(robinhood_silver);
             Console.WriteLine("Starting signals...");
             var trader = new Trader(models, onShutdown);
             trader.Init(Config.GetNow);            

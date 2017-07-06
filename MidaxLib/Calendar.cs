@@ -14,7 +14,7 @@ namespace MidaxLib
         public Calendar(DateTime date)
         {
             string folder = (string)Config.Settings["CALENDAR_PATH"];
-            int time_offset = int.Parse(Config.Settings["TIME_GMT"]);
+            int time_offset = int.Parse(Config.Settings["TIME_GMT_CALENDAR"]);
             int day = date.Day - (int)date.DayOfWeek;
             int month = date.Month;
             int year = date.Year;

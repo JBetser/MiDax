@@ -62,14 +62,14 @@ namespace MidaxLib
 
         public Trade(Row row)
         {
-            _id = (string)row[0];
-            _confirmationTime = new DateTime(((DateTimeOffset)row[1]).Ticks, DateTimeKind.Local);
-            _direction = (SIGNAL_CODE)(int)row[2];
-            _epic = (string)row[3];
-            _price = (decimal)row[4];
-            _size = (int)row[5];
-            _reference = (string)row[6];
-            _tradingTime = new DateTime(((DateTimeOffset)row[7]).Ticks, DateTimeKind.Local);
+            _id = (string)row.GetValue(typeof(string).GetType(), "tradeid");
+            _confirmationTime = new DateTime(((DateTime)row.GetValue(typeof(DateTimeOffset).GetType(), "confirmation_time")).Ticks, DateTimeKind.Local);
+            _direction = (SIGNAL_CODE)(int)row.GetValue(typeof(int).GetType(), "direction");
+            _epic = (string)row.GetValue(typeof(string).GetType(), "mktdataid");
+            _price = (decimal)row.GetValue(typeof(decimal).GetType(), "price");
+            _size = (int)row.GetValue(typeof(int).GetType(), "size");
+            _reference = (string)row.GetValue(typeof(string).GetType(), "traderef");
+            _tradingTime = new DateTime(((DateTime)row.GetValue(typeof(DateTimeOffset).GetType(), "trading_time")).Ticks, DateTimeKind.Local);
         }
 
         public void Publish()

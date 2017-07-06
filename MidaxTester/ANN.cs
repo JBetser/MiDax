@@ -14,7 +14,7 @@ namespace MidaxTester
         {
             TestEngine testEngine = new TestEngine("ANN", dates, generate, generate_from_db, publish_to_db, use_uat_db, fullday);
             testEngine.Settings["TRADING_SIGNAL"] = "ANN_FX_5_2_1_CS.D.EURUSD.TODAY.IP";
-            testEngine.Settings["TIME_GMT"] = "1";
+            testEngine.Settings["TIME_GMT_CALENDAR"] = "1";
             var models = new List<Model>();
             var index = new MarketData("EURUSD:CS.D.EURUSD.TODAY.IP");
             models.Add(new ModelMacDTest(index, 10, 30, 90));

@@ -347,8 +347,11 @@ namespace MidaxLib
             {
                 if (!mktdataidQuotes.ContainsKey(rowSet.Key))
                     mktdataidQuotes[rowSet.Key] = new List<CqlQuote>();
-                foreach (Row row in rowSet.Value.GetRows())
-                    mktdataidQuotes[rowSet.Key].Add(CqlQuote.CreateInstance(type, row));
+                if (rowSet.Value != null)
+                {
+                    foreach (Row row in rowSet.Value.GetRows())
+                        mktdataidQuotes[rowSet.Key].Add(CqlQuote.CreateInstance(type, row));
+                }
                 mktdataidQuotes[rowSet.Key].Reverse();
             }
             return mktdataidQuotes;
@@ -364,11 +367,14 @@ namespace MidaxLib
                     trades[id] = new List<Trade>();
                 RowSet rowSet = executeQuery(string.Format(DB_SELECTION + "where confirmation_time >= {2} and confirmation_time <= {3} ALLOW FILTERING",
                                 DB_BUSINESSDATA, DATATYPE_TRADE, ToUnixTimestamp(startTime), ToUnixTimestamp(stopTime)));
-                foreach (Row row in rowSet.GetRows())
+                if (rowSet != null)
                 {
-                    var mktdataId = (string)row[3];
-                    if (mktdataId == id)
-                        trades[id].Add(new Trade(row));
+                    foreach (Row row in rowSet.GetRows())
+                    {
+                        var mktdataId = (string)row.GetValue(typeof(string).GetType(), "mktdataid");
+                        if (mktdataId == id)
+                            trades[id].Add(new Trade(row));
+                    }
                 }
                 trades[id].Reverse();
             }
@@ -405,10 +411,17 @@ namespace MidaxLib
             if (_session == null)
                 throw new ApplicationException(EXCEPTION_CONNECTION_CLOSED);
             // process previous day
-            updateTime = updateTime.AddDays(-1);
-            updateTime = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, 22, 45, 0, DateTimeKind.Local);
+            if (updateTime.DayOfWeek == DayOfWeek.Monday)
+                updateTime = updateTime.AddDays(-3);
+            else
+                updateTime = updateTime.AddDays(-1);
+            var stopTime = Config.ParseDateTimeLocal(Config.Settings["PUBLISHING_STOP_TIME"]);
+            updateTime = new DateTime(updateTime.Year, updateTime.Month, updateTime.Day, stopTime.Hour, stopTime.Minute, stopTime.Second, DateTimeKind.Local);
             RowSet value = null;
             decimal high = 0m;
+            decimal low = 0m;
+            decimal closeBid = 0m;
+            decimal closeOffer = 0m;
             string indicator = "";
             try
             {
@@ -416,22 +429,25 @@ namespace MidaxLib
                 value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
                     Config.UATSourceDB ? "dummy" : "", indicator, ToUnixTimestamp(updateTime)));
                 high = (decimal)value.First()[0];
+                indicator = "Low_" + mktdataid;
+                value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
+                Config.UATSourceDB ? "dummy" : "", indicator, ToUnixTimestamp(updateTime)));
+                low = (decimal)value.First()[0];
+                indicator = "CloseBid_" + mktdataid;
+                value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
+                    Config.UATSourceDB ? "dummy" : "", indicator, ToUnixTimestamp(updateTime)));
+                closeBid = (decimal)value.First()[0];
+                indicator = "CloseOffer_" + mktdataid;
+                value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
+                    Config.UATSourceDB ? "dummy" : "", indicator, ToUnixTimestamp(updateTime)));
+                closeOffer = (decimal)value.First()[0];
             }
-            catch
+            catch(Exception exc)
             {
-                var errorMsg = "Could not retrieve level indicators for previous COB date. Indicator: " + indicator;
+                var errorMsg = "Could not retrieve level indicators for previous COB date. Indicator: " + indicator + ". " + exc.ToString();
                 Log.Instance.WriteEntry(errorMsg, EventLogEntryType.Warning);
                 return null;
-            }
-            value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
-                Config.UATSourceDB ? "dummy" : "", "Low_" + mktdataid, ToUnixTimestamp(updateTime)));
-            decimal low = (decimal)value.First()[0];
-            value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
-                Config.UATSourceDB ? "dummy" : "", "CloseBid_" + mktdataid, ToUnixTimestamp(updateTime)));
-            decimal closeBid = (decimal)value.First()[0];
-            value = executeQuery(string.Format("select value from historicaldata.{0}indicators where indicatorid='{1}' and trading_time={2}",
-                Config.UATSourceDB ? "dummy" : "", "CloseOffer_" + mktdataid, ToUnixTimestamp(updateTime)));
-            decimal closeOffer = (decimal)value.First()[0];
+            }            
             return new MarketLevels(mktdataid, low, high, closeBid, closeOffer);
         }
 

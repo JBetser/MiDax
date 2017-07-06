@@ -88,7 +88,7 @@ public class Server
                 var robinhood_dow = new ModelRobinHood(dow, 60, 48, 0, 20, 15, new IndicatorVolume(icedow, 60));
                 //models.Add(macD_10_30_90_dax);
                 models.Add(robinhood_eurusd);
-                //models.Add(robinhood_gbpusd);
+                models.Add(robinhood_gbpusd);
                 //models.Add(robinhood_btcusd);
                 //models.Add(robinhood_silver);
                 models.Add(robinhood_dax);

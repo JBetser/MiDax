@@ -8,6 +8,6 @@ md M:\db\node
 xcopy "./bin/Release" "M:\" /Y /E
 xcopy "./db/node" "M:\db\node" /Y /E
 xcopy "./db/registry" "M:\db\registry" /Y /E
-copy /Y config.grid M:\
+copy /Y config_uat.grid M:\config.grid
 copy /Y ..\packages\NLapack.1.0.14\lib\msvcr110.dll M:\
 copy /Y ..\packages\NLapack.1.0.14\lib\msvcp110.dll M:\

@@ -1,4 +1,4 @@
-# Configuration file (08/17/15 22:10:21.130)
+# Configuration file (06/29/17 15:02:16.055)
 
 # Server configuration
 Ice.Admin.ServerId=MidaxServer
@@ -13,6 +13,6 @@ IceMX.Metrics.Debug.GroupBy=id
 IceMX.Metrics.Debug.Disabled=1
 IceMX.Metrics.ByParent.GroupBy=parent
 IceMX.Metrics.ByParent.Disabled=1
-Ice.StdErr=C:\Midax\db\logs/MidaxServer.out
-Ice.StdOut=C:\Midax\db\logs/MidaxServer.out
+Ice.StdErr=C:\Program Files (x86)\Midax\db\logs/MidaxServer.out
+Ice.StdOut=C:\Program Files (x86)\Midax\db\logs/MidaxServer.out
 Ice.Default.Locator=MidaxIceGrid/Locator:default -h 192.168.1.25 -p 5062

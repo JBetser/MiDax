@@ -26,6 +26,22 @@ namespace MidaxLib
         {
         }
 
+        protected DateTime CalcNextTime(DateTime nextTime, DateTime updateTime)
+        {
+            if (updateTime < nextTime)
+                return nextTime;
+            if (nextTime == DateTime.MinValue)
+            {
+                nextTime = updateTime.AddMinutes(60);
+                nextTime = nextTime.AddMinutes(-nextTime.Minute);
+                nextTime = nextTime.AddSeconds(-nextTime.Second);
+                nextTime = nextTime.AddMilliseconds(-nextTime.Millisecond);
+            }
+            else
+                nextTime = nextTime.AddMinutes(60);
+            return nextTime;
+        }
+
         public virtual void Publish(DateTime updateTime)
         {
             if (_levelMktData.Levels.HasValue)
@@ -162,78 +178,169 @@ namespace MidaxLib
 
     public class IndicatorLevelPivot : IndicatorLevel
     {
+        DateTime _nextTime = DateTime.MinValue;
+
         public IndicatorLevelPivot(MarketData mktData)
             : base(mktData, "LVLPivot"){}
 
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {            
+            if (updateTime >= _nextTime)
+            {
+                _nextTime = CalcNextTime(_nextTime, updateTime);
+                if (_nextTime == DateTime.MinValue)
+                    return;
+                Publish(_nextTime, new Price(_levelMktData.Levels.Value.Pivot));
+            }
+        }
+
         public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(_levelMktData.Levels.Value.Pivot));
+            Publish(_nextTime, new Price(_levelMktData.Levels.Value.Pivot));
         }
     }            
 
     public class IndicatorLevelR1 : IndicatorLevel
     {
+        DateTime _nextTime = DateTime.MinValue;
+        
         public IndicatorLevelR1(MarketData mktData)
             : base(mktData, "LVLR1") { }
 
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            if (updateTime >= _nextTime)
+            {
+                _nextTime = CalcNextTime(_nextTime, updateTime);
+                if (_nextTime == DateTime.MinValue)
+                    return;
+                Publish(_nextTime, new Price(_levelMktData.Levels.Value.R1));
+            }
+        }
+
         public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(_levelMktData.Levels.Value.R1));
+            Publish(_nextTime, new Price(_levelMktData.Levels.Value.R1));
         }
     }
 
     public class IndicatorLevelR2 : IndicatorLevel
     {
+        DateTime _nextTime = DateTime.MinValue;
+
         public IndicatorLevelR2(MarketData mktData)
             : base(mktData, "LVLR2") { }
 
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            if (updateTime >= _nextTime)
+            {
+                _nextTime = CalcNextTime(_nextTime, updateTime);
+                if (_nextTime == DateTime.MinValue)
+                    return;
+                Publish(_nextTime, new Price(_levelMktData.Levels.Value.R2));
+            }
+        }
+
         public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(_levelMktData.Levels.Value.R2));
+            Publish(_nextTime, new Price(_levelMktData.Levels.Value.R2));
         }
     }
 
     public class IndicatorLevelR3 : IndicatorLevel
     {
+        DateTime _nextTime = DateTime.MinValue;
+
         public IndicatorLevelR3(MarketData mktData)
             : base(mktData, "LVLR3") { }
 
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            if (updateTime >= _nextTime)
+            {
+                _nextTime = CalcNextTime(_nextTime, updateTime);
+                if (_nextTime == DateTime.MinValue)
+                    return;
+                Publish(_nextTime, new Price(_levelMktData.Levels.Value.R3));
+            }
+        }
+
         public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(_levelMktData.Levels.Value.R3));
+            Publish(_nextTime, new Price(_levelMktData.Levels.Value.R3));
         }
     }
 
     public class IndicatorLevelS1 : IndicatorLevel
     {
+        DateTime _nextTime = DateTime.MinValue;
+
         public IndicatorLevelS1(MarketData mktData)
             : base(mktData, "LVLS1") { }
 
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            if (updateTime >= _nextTime)
+            {
+                _nextTime = CalcNextTime(_nextTime, updateTime);
+                if (_nextTime == DateTime.MinValue)
+                    return;
+                Publish(_nextTime, new Price(_levelMktData.Levels.Value.S1));
+            }
+        }
+
         public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(_levelMktData.Levels.Value.S1));
+            Publish(_nextTime, new Price(_levelMktData.Levels.Value.S1));
         }
     }
 
     public class IndicatorLevelS2 : IndicatorLevel
     {
+        DateTime _nextTime = DateTime.MinValue;
+
         public IndicatorLevelS2(MarketData mktData)
             : base(mktData, "LVLS2") { }
 
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            if (updateTime >= _nextTime)
+            {
+                _nextTime = CalcNextTime(_nextTime, updateTime);
+                if (_nextTime == DateTime.MinValue)
+                    return;
+                Publish(_nextTime, new Price(_levelMktData.Levels.Value.S2));
+            }
+        }
+
         public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(_levelMktData.Levels.Value.S2));
+            Publish(_nextTime, new Price(_levelMktData.Levels.Value.S2));
         }
     }
 
     public class IndicatorLevelS3 : IndicatorLevel
     {
+        DateTime _nextTime = DateTime.MinValue;
+
         public IndicatorLevelS3(MarketData mktData)
             : base(mktData, "LVLS3") { }
 
+        protected override void OnUpdate(MarketData mktData, DateTime updateTime, Price value)
+        {
+            if (updateTime >= _nextTime)
+            {
+                _nextTime = CalcNextTime(_nextTime, updateTime);
+                if (_nextTime == DateTime.MinValue)
+                    return;
+                Publish(_nextTime, new Price(_levelMktData.Levels.Value.S3));
+            }
+        }
+
         public override void publish(DateTime updateTime)
         {
-            Publish(updateTime, new Price(_levelMktData.Levels.Value.S3));
+            Publish(_nextTime, new Price(_levelMktData.Levels.Value.S3));
         }
     }
 

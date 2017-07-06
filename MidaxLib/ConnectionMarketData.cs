@@ -129,9 +129,12 @@ namespace MidaxLib
     {
         public List<MarketData> MarketData = new List<MarketData>();
         public SubscribedTableKey MarketDataTableKey = null;
+        int time_offset_hours = 0;
         
         public void StartListening()
         {
+            if (Config.Settings.ContainsKey("TIME_GMT_MARKETDATA"))
+                time_offset_hours = int.Parse(Config.Settings["TIME_GMT_MARKETDATA"]);            
             string[] epics = (from MarketData mktData in MarketData select mktData.Id).ToArray();
             string epicsMsg = string.Concat((from string epic in epics select epic + ", ").ToArray()).TrimEnd(new char[] { ',', ' ' });
             Log.Instance.WriteEntry("Subscribing to market data: " + epicsMsg + "...", System.Diagnostics.EventLogEntryType.Information);
@@ -160,7 +163,7 @@ namespace MidaxLib
                 L1LsPriceData priceData = L1LsPriceUpdateData(itemPos, itemName, update);
                 foreach (var data in (from MarketData mktData in MarketData where itemName.Contains(mktData.Id) select mktData).ToList())
                 {
-                    var curTime = Config.ParseDateTimeUTC(priceData.UpdateTime);
+                    var curTime = Config.ParseDateTimeUTC(priceData.UpdateTime).AddHours(time_offset_hours);
                     if (Config.PublishingOpen(curTime))
                         data.FireTick(curTime, priceData); // Timestamps from IG are GMT (i.e. equivalent to UTC)
                 }
